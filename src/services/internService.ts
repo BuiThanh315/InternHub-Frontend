@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import type { CreateInternRequest, InternProfile, PageResponse } from '../types';
+import type { CreateInternRequest, UpdateInternRequest, InternProfile, PageResponse } from '../types';
 import { MOCK_INTERN_PROFILES } from './mockData';
 
 let localInterns = [...MOCK_INTERN_PROFILES];
@@ -75,7 +75,7 @@ export const internService = {
     }
   },
 
-  async updateIntern(id: number, request: Partial<InternProfile>): Promise<InternProfile> {
+  async updateIntern(id: number, request: UpdateInternRequest): Promise<InternProfile> {
     try {
       const response = await apiClient.put(`/api/employees/interns/${id}`, request);
       return response.data.data;

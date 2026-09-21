@@ -41,11 +41,12 @@ export interface PageResponse<T> {
 }
 
 export type InternStatus =
-  | 'DRAFT'
+  | 'PENDING'
   | 'SUBMITTED'
   | 'APPROVED'
   | 'INTERNING'
   | 'COMPLETED'
+  | 'REJECTED'
   | 'DROPPED';
 
 export interface InternProfile {
@@ -56,6 +57,9 @@ export interface InternProfile {
   phone: string;
   university: string;
   major: string;
+  appliedPosition?: string;
+  academicYear?: string;
+  notes?: string;
   gpa?: number;
   startDate?: string;
   endDate?: string;
@@ -74,7 +78,7 @@ export type DocumentType =
   | 'TRANSCRIPT'
   | 'OTHER';
 
-export type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type DocumentStatus = 'PENDING' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
 
 export interface DocumentResponse {
   id: number;
@@ -96,10 +100,30 @@ export interface CreateInternRequest {
   phone: string;
   university: string;
   major: string;
+  appliedPosition?: string;
+  academicYear?: string;
+  notes?: string;
   gpa?: number;
   startDate?: string;
   endDate?: string;
   department?: string;
+}
+
+export interface UpdateInternRequest {
+  fullName: string;
+  email: string;
+  phone: string;
+  university: string;
+  major: string;
+  appliedPosition?: string;
+  academicYear?: string;
+  notes?: string;
+  gpa?: number;
+  startDate?: string;
+  endDate?: string;
+  department?: string;
+  mentorId?: number;
+  status: InternStatus;
 }
 
 export interface ReviewDocumentRequest {

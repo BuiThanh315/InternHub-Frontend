@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   CheckCircle2,
   Clock,
@@ -7,73 +7,57 @@ import {
   GraduationCap,
   User,
   ShieldAlert,
+  Download,
 } from 'lucide-react';
-import { Header } from '../../components/layout/Header';
-import { internService } from '../../services/internService';
+import { toast } from 'sonner';
+import { useInterns, useInternDocuments, useUploadDocument } from '../../features/interns/hooks/useInterns';
 import { documentService } from '../../services/documentService';
-import type { InternProfile, DocumentResponse, DocumentType } from '../../types';
+import type { DocumentType } from '../../types';
 
 export const InternDashboard: React.FC = () => {
-  const [profile, setProfile] = useState<InternProfile | null>(null);
-  const [documents, setDocuments] = useState<DocumentResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const internCode = 'INT-2026-001'; // Default logged-in mock intern
+
+  const { data: internPage, isLoading: loadingIntern } = useInterns({ keyword: internCode });
+  const { data: documents = [], isLoading: loadingDocs } = useInternDocuments(internCode);
+  const uploadDocMutation = useUploadDocument();
 
   // Upload new doc state (TM-4)
   const [uploadType, setUploadType] = useState<DocumentType>('CV');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadSuccessMsg, setUploadSuccessMsg] = useState<string | null>(null);
 
-  const internCode = 'INT-2026-001'; // Default logged-in mock intern
-
-  useEffect(() => {
-    loadInternData();
-  }, []);
-
-  const loadInternData = async () => {
-    try {
-      setLoading(true);
-      const [internRes, docRes] = await Promise.all([
-        internService.getInterns({ keyword: internCode }),
-        documentService.getDocumentsByInternCode(internCode),
-      ]);
-
-      if (internRes.content.length > 0) {
-        setProfile(internRes.content[0]);
-      }
-      setDocuments(docRes);
-    } catch (err) {
-      console.error('Lỗi tải dữ liệu Intern Dashboard:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const profile = internPage?.content && internPage.content.length > 0 ? internPage.content[0] : null;
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
-      alert('Vui lòng chọn một tệp tin');
+      toast.error('Vui lòng chọn một tệp tin');
       return;
     }
 
-    try {
-      setUploading(true);
-      const newDoc = await documentService.uploadDocument(internCode, selectedFile, uploadType);
-      setDocuments((prev) => [newDoc, ...prev]);
-      setSelectedFile(null);
-      setUploadSuccessMsg('Tải lên tài liệu thành công! Đang chờ HR thẩm định.');
-      setTimeout(() => setUploadSuccessMsg(null), 4000);
-    } catch (err: any) {
-      alert(err.message || 'Lỗi tải lên tài liệu');
-    } finally {
-      setUploading(false);
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      toast.error('Kích thước tệp vượt quá 5MB. Vui lòng chọn tệp nhỏ hơn.');
+      return;
     }
+
+    uploadDocMutation.mutate(
+      {
+        internCode,
+        file: selectedFile,
+        documentType: uploadType,
+      },
+      {
+        onSuccess: () => {
+          setSelectedFile(null);
+        },
+      }
+    );
   };
 
   const getStepStatus = (step: number) => {
     if (!profile) return 'pending';
     const statusMap: Record<string, number> = {
       SUBMITTED: 1,
+      PENDING: 1,
       APPROVED: 2,
       INTERNING: 3,
       COMPLETED: 4,
@@ -84,320 +68,282 @@ export const InternDashboard: React.FC = () => {
     return 'pending';
   };
 
+  const loading = loadingIntern || loadingDocs;
+
   return (
-    <div className="animate-fade-in">
-      <Header
-        title="Không Gian Thực Tập Sinh (Intern Portal)"
-        subtitle="Theo dõi lộ trình thực tập, tra cứu kết quả thẩm định hồ sơ và nộp tài liệu trực tuyến (TM-4, TM-5)"
-      />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-extrabold tracking-tight text-text-1 font-heading">
+          Không Gian Thực Tập Sinh (Intern Portal)
+        </h1>
+        <p className="text-sm text-text-2 mt-0.5">
+          Theo dõi lộ trình thực tập, tra cứu kết quả thẩm định hồ sơ và nộp tài liệu trực tuyến (TM-4, TM-5)
+        </p>
+      </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-          Đang tải dữ liệu thực tập sinh...
+        <div className="py-16 text-center text-text-3 text-sm animate-pulse">
+          Đang nạp thông tin cá nhân và tài liệu...
         </div>
       ) : (
-      <div style={{ marginTop: '1.5rem' }}>
-        {/* Progress Stepper */}
-        <div className="card" style={{ marginBottom: '2rem' }}>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-            Lộ Trình Kỳ Thực Tập Của Bạn
-          </h3>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            position: 'relative',
-          }}>
-            {[
-              { num: 1, label: 'Nộp Hồ Sơ & CV', desc: 'Đã hoàn tất nộp online' },
-              { num: 2, label: 'HR Phê Duyệt', desc: 'Thẩm định hồ sơ' },
-              { num: 3, label: 'Đang Thực Tập', desc: 'Làm việc cùng Mentor' },
-              { num: 4, label: 'Hoàn Thành', desc: 'Đánh giá & Cấp chứng nhận' },
-            ].map((step) => {
-              const state = getStepStatus(step.num);
-              return (
-                <div
-                  key={step.num}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    flex: 1,
-                    textAlign: 'center',
-                    position: 'relative',
-                    zIndex: 2,
-                  }}
-                >
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    backgroundColor:
-                      state === 'completed' ? 'var(--success)' :
-                      state === 'active' ? 'var(--primary)' : 'var(--border-subtle)',
-                    color: state === 'pending' ? 'var(--text-muted)' : '#fff',
-                    boxShadow: state === 'active' ? '0 0 0 5px var(--primary-glow)' : 'none',
-                    marginBottom: '0.65rem',
-                    transition: 'all 0.2s ease',
-                  }}>
-                    {state === 'completed' ? <CheckCircle2 size={22} /> : step.num}
-                  </div>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 700,
-                    margin: 0,
-                    color: state === 'pending' ? 'var(--text-muted)' : 'var(--text-main)',
-                  }}>
-                    {step.label}
-                  </p>
-                  <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{step.desc}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Profile Card & Mentorship Info */}
-        {profile && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1.2fr 1fr',
-            gap: '1.5rem',
-            marginBottom: '2rem',
-          }}>
-            {/* Student Info */}
-            <div className="card">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--primary-light)',
-                    color: 'var(--primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <GraduationCap size={24} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>{profile.fullName}</h3>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                      Mã TTS: {profile.internCode}
-                    </span>
-                  </div>
-                </div>
-                <span className={`badge ${
-                  profile.status === 'INTERNING' ? 'badge-success' : 'badge-info'
-                }`}>
-                  {profile.status}
-                </span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.85rem' }}>
-                <div>Email: <strong>{profile.email}</strong></div>
-                <div>Điện thoại: <strong>{profile.phone}</strong></div>
-                <div>Trường: <strong>{profile.university}</strong></div>
-                <div>Chuyên ngành: <strong>{profile.major}</strong></div>
-                <div>Điểm GPA: <strong>{profile.gpa ? profile.gpa.toFixed(2) : '-'}</strong></div>
-                <div>Phòng ban: <strong>{profile.department || 'Đang cập nhật'}</strong></div>
-              </div>
-            </div>
-
-            {/* Mentor Info */}
-            <div className="card" style={{ borderLeft: '4px solid #10b981' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.85rem' }}>
-                <User size={20} color="#10b981" />
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>Người Hướng Dẫn Kỹ Thuật (Mentor)</h4>
-              </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                Họ và tên: <strong>{profile.mentorName || 'Lê Văn Hướng Dẫn'}</strong>
-              </p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                Email hỗ trợ: <strong>mentor@internhub.vn</strong>
-              </p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Thời gian thực tập: <strong>{profile.startDate || '01/03/2026'}</strong> đến <strong>{profile.endDate || '30/06/2026'}</strong>
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Upload & Document Management Section (TM-4, TM-5) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem' }}>
-          {/* Document Status List */}
-          <div className="card">
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1rem' }}>
-              Danh Sách Hồ Sơ & Kết Quả Thẩm Định (TM-5)
+        <div className="space-y-6">
+          {/* Progress Stepper */}
+          <div className="p-5 rounded-xl border border-border bg-surface shadow-card">
+            <h3 className="text-sm font-bold text-text-1 font-heading mb-4">
+              Lộ Trình Kỳ Thực Tập Của Bạn
             </h3>
 
-            {documents.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-                Chưa có tài liệu nào được nộp.
-              </p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    style={{
-                      padding: '1rem',
-                      borderRadius: '10px',
-                      border: doc.status === 'REJECTED' ? '1px solid #fecaca' : '1px solid var(--border-default)',
-                      backgroundColor: doc.status === 'REJECTED' ? 'var(--danger-bg)' : 'var(--bg-surface)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FileText size={18} color="var(--primary)" />
-                        <div>
-                          <p style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>{doc.fileName}</p>
-                          <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>
-                            Loại: {doc.documentType} • {(doc.fileSize / (1024 * 1024)).toFixed(2)} MB
-                          </span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { num: 1, label: 'Nộp Hồ Sơ & CV', desc: 'Đã hoàn tất nộp online' },
+                { num: 2, label: 'HR Phê Duyệt', desc: 'Thẩm định hồ sơ' },
+                { num: 3, label: 'Đang Thực Tập', desc: 'Làm việc cùng Mentor' },
+                { num: 4, label: 'Hoàn Thành', desc: 'Đánh giá & Cấp chứng nhận' },
+              ].map((step) => {
+                const state = getStepStatus(step.num);
+                return (
+                  <div key={step.num} className="flex flex-col items-center text-center p-3 rounded-lg bg-surface-2/60">
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs mb-2 transition-all ${
+                        state === 'completed'
+                          ? 'bg-success text-white'
+                          : state === 'active'
+                          ? 'bg-primary text-white ring-4 ring-primary-soft'
+                          : 'bg-border-soft text-text-3'
+                      }`}
+                    >
+                      {state === 'completed' ? <CheckCircle2 size={18} /> : step.num}
+                    </div>
+                    <p className={`text-xs font-bold ${state === 'pending' ? 'text-text-3' : 'text-text-1'}`}>
+                      {step.label}
+                    </p>
+                    <span className="text-[10px] text-text-3 mt-0.5">{step.desc}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Profile Card & Mentorship Info */}
+          {profile && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Student Info */}
+              <div className="lg:col-span-2 p-5 rounded-xl border border-border bg-surface shadow-card space-y-4">
+                <div className="flex items-center justify-between border-b border-border-soft pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary-soft text-primary font-bold text-sm flex items-center justify-center border border-border">
+                      <GraduationCap size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-text-1 font-heading">{profile.fullName}</h3>
+                      <span className="text-xs font-semibold text-primary">Mã TTS: {profile.internCode}</span>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-success-soft text-success border border-success/20">
+                    {profile.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-text-3 block">Email liên hệ:</span>
+                    <strong className="text-text-1 font-semibold">{profile.email}</strong>
+                  </div>
+                  <div>
+                    <span className="text-text-3 block">Số điện thoại:</span>
+                    <strong className="text-text-1 font-semibold">{profile.phone}</strong>
+                  </div>
+                  <div>
+                    <span className="text-text-3 block">Trường đại học:</span>
+                    <strong className="text-text-1 font-semibold">{profile.university}</strong>
+                  </div>
+                  <div>
+                    <span className="text-text-3 block">Chuyên ngành:</span>
+                    <strong className="text-text-1 font-semibold">{profile.major}</strong>
+                  </div>
+                  <div>
+                    <span className="text-text-3 block">Điểm GPA:</span>
+                    <strong className="text-text-1 font-semibold">{profile.gpa ? profile.gpa.toFixed(2) : 'N/A'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-text-3 block">Phòng ban phân bổ:</span>
+                    <strong className="text-text-1 font-semibold">{profile.department || 'Đang cập nhật'}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mentor Info */}
+              <div className="p-5 rounded-xl border border-border bg-surface shadow-card space-y-3 border-l-4 border-l-success">
+                <div className="flex items-center gap-2 text-success font-bold text-sm">
+                  <User size={18} />
+                  <span>Mentor Hướng Dẫn</span>
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  <p className="text-text-2">
+                    Họ và tên: <strong className="text-text-1">{profile.mentorName || 'Lê Văn Hướng Dẫn'}</strong>
+                  </p>
+                  <p className="text-text-2">
+                    Email hỗ trợ: <strong className="text-text-1">mentor@internhub.vn</strong>
+                  </p>
+                  <p className="text-text-2">
+                    Thời gian: <strong className="text-text-1">{profile.startDate || '01/03/2026'}</strong> đến{' '}
+                    <strong className="text-text-1">{profile.endDate || '30/06/2026'}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Upload & Document Management Section (TM-4, TM-5) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Document Status List (2/3) */}
+            <div className="lg:col-span-2 p-5 rounded-xl border border-border bg-surface shadow-card space-y-4">
+              <h3 className="text-sm font-bold text-text-1 font-heading border-b border-border-soft pb-3">
+                Danh Sách Hồ Sơ & Kết Quả Thẩm Định (TM-5)
+              </h3>
+
+              {documents.length === 0 ? (
+                <p className="text-xs text-text-3 text-center py-8">Chưa có tài liệu nào được nộp.</p>
+              ) : (
+                <div className="space-y-3">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className={`p-3.5 rounded-lg border transition-all ${
+                        doc.status === 'REJECTED'
+                          ? 'border-danger/30 bg-danger-soft/30'
+                          : 'border-border bg-surface-2/60'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <FileText size={20} className="text-primary shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <span className="text-xs font-semibold text-text-1 block truncate">
+                              {doc.fileName}
+                            </span>
+                            <span className="text-[11px] text-text-3 block mt-0.5">
+                              Loại: {doc.documentType} · {(doc.fileSize / (1024 * 1024)).toFixed(2)} MB
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {doc.status === 'APPROVED' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-success-soft text-success">
+                              <CheckCircle2 size={12} /> Đã Duyệt
+                            </span>
+                          )}
+                          {(doc.status === 'PENDING' || doc.status === 'PENDING_REVIEW') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-warning-soft text-warning">
+                              <Clock size={12} /> Chờ Duyệt
+                            </span>
+                          )}
+                          {doc.status === 'REJECTED' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-danger-soft text-danger">
+                              <ShieldAlert size={12} /> Từ Chối
+                            </span>
+                          )}
+
+                          <a
+                            href={documentService.getDocumentDownloadUrl(doc.id, 'attachment')}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1 rounded text-text-3 hover:text-text-1 hover:bg-surface transition-colors"
+                            title="Tải về"
+                          >
+                            <Download size={14} />
+                          </a>
                         </div>
                       </div>
 
-                      {doc.status === 'APPROVED' && (
-                        <span className="badge badge-success">
-                          <CheckCircle2 size={12} /> Đã Duyệt
-                        </span>
-                      )}
-                      {doc.status === 'PENDING' && (
-                        <span className="badge badge-warning">
-                          <Clock size={12} /> Chờ Duyệt
-                        </span>
-                      )}
-                      {doc.status === 'REJECTED' && (
-                        <span className="badge badge-danger">
-                          <ShieldAlert size={12} /> Bị Từ Chối
-                        </span>
+                      {/* Lý do từ chối từ HR (TM-5) */}
+                      {doc.status === 'REJECTED' && doc.rejectionReason && (
+                        <div className="mt-2.5 p-2 rounded bg-danger-soft border border-danger/20 text-danger text-[11px]">
+                          <strong>Lý do từ chối từ HR:</strong> {doc.rejectionReason}
+                        </div>
                       )}
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                    {/* Rejection Reason display if rejected (TM-5) */}
-                    {doc.status === 'REJECTED' && doc.rejectionReason && (
-                      <div style={{
-                        marginTop: '0.5rem',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '6px',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px dashed #ef4444',
-                        color: '#b91c1c',
-                        fontSize: '0.78rem',
-                      }}>
-                        <strong>Lý do từ chối từ HR:</strong> {doc.rejectionReason}
+            {/* Upload New Document Dropzone (TM-4) (1/3) */}
+            <div className="p-5 rounded-xl border border-border bg-surface shadow-card space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-text-1 font-heading">
+                  Nộp Thêm Tài Liệu Mới (TM-4)
+                </h3>
+                <p className="text-[11px] text-text-3 mt-0.5">
+                  Bổ sung CV hoặc nộp lại tài liệu bị yêu cầu sửa đổi
+                </p>
+              </div>
+
+              <form onSubmit={handleUploadSubmit} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-text-2 mb-1">
+                    Loại tài liệu cần nộp
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 text-xs rounded-lg bg-bg border border-border text-text-1 focus:outline-none focus:border-primary font-medium"
+                    value={uploadType}
+                    onChange={(e) => setUploadType(e.target.value as DocumentType)}
+                  >
+                    <option value="CV">CV / Sơ Yếu Lý Lịch</option>
+                    <option value="INTERNSHIP_APPLICATION">Đơn Xin Thực Tập</option>
+                    <option value="TRANSCRIPT">Bảng Điểm Tích Lũy</option>
+                    <option value="RECOMMENDATION_LETTER">Giấy Giới Thiệu Từ Trường</option>
+                    <option value="OTHER">Tài Liệu Khác</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-text-2 mb-1">
+                    Chọn tệp tin (PDF/DOCX, tối đa 5MB)
+                  </label>
+                  <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-border rounded-lg bg-surface-2/50 hover:bg-surface-2 cursor-pointer transition-colors text-center">
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.doc"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setSelectedFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+                    {selectedFile ? (
+                      <div>
+                        <FileText size={24} className="text-primary mx-auto mb-1.5" />
+                        <p className="text-xs font-semibold text-text-1 truncate max-w-[200px]">
+                          {selectedFile.name}
+                        </p>
+                        <span className="text-[10px] text-text-3">
+                          {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB · Bấm để đổi tệp
+                        </span>
                       </div>
+                    ) : (
+                      <>
+                        <UploadCloud size={24} className="text-primary mb-1" />
+                        <p className="text-xs font-semibold text-text-1">Bấm để chọn tệp</p>
+                        <span className="text-[10px] text-text-3">Hỗ trợ PDF, DOCX tối đa 5MB</span>
+                      </>
                     )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  </label>
+                </div>
 
-          {/* Upload New Document Dropzone (TM-4) */}
-          <div className="card">
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.4rem' }}>
-              Nộp Thêm Tài Liệu Mới (TM-4)
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-              Bổ sung tài liệu được yêu cầu hoặc nộp lại hồ sơ bị từ chối
-            </p>
-
-            {uploadSuccessMsg && (
-              <div style={{
-                backgroundColor: 'var(--success-bg)',
-                border: '1px solid var(--success-border)',
-                borderRadius: '8px',
-                padding: '0.65rem 0.85rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                color: 'var(--success)',
-                fontSize: '0.825rem',
-                marginBottom: '1rem',
-              }}>
-                <CheckCircle2 size={16} />
-                <span>{uploadSuccessMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleUploadSubmit}>
-              <div className="form-group">
-                <label className="form-label">Loại tài liệu cần nộp</label>
-                <select
-                  className="form-select"
-                  value={uploadType}
-                  onChange={(e) => setUploadType(e.target.value as DocumentType)}
+                <button
+                  type="submit"
+                  disabled={uploadDocMutation.isPending || !selectedFile}
+                  className="w-full py-2 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary-hover shadow-xs transition-colors disabled:opacity-50"
                 >
-                  <option value="CV">CV / Sơ Yếu Lý Lịch</option>
-                  <option value="INTERNSHIP_APPLICATION">Đơn Xin Thực Tập</option>
-                  <option value="TRANSCRIPT">Bảng Điểm Tích Lũy</option>
-                  <option value="RECOMMENDATION_LETTER">Giấy Giới Thiệu Từ Trường</option>
-                  <option value="OTHER">Tài Liệu Khác</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Chọn tệp (PDF/DOCX, tối đa 5MB)</label>
-                <label style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '1.5rem',
-                  border: '2px dashed var(--border-default)',
-                  borderRadius: '10px',
-                  backgroundColor: 'var(--border-subtle)',
-                  cursor: 'pointer',
-                }}>
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.doc"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setSelectedFile(e.target.files[0]);
-                      }
-                    }}
-                  />
-                  {selectedFile ? (
-                    <div style={{ textAlign: 'center' }}>
-                      <FileText size={28} color="var(--primary)" style={{ margin: '0 auto 0.4rem' }} />
-                      <p style={{ fontSize: '0.85rem', fontWeight: 600, margin: 0 }}>{selectedFile.name}</p>
-                      <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>
-                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB - Nhấp để chọn lại
-                      </span>
-                    </div>
-                  ) : (
-                    <>
-                      <UploadCloud size={28} color="var(--primary)" style={{ marginBottom: '0.35rem' }} />
-                      <p style={{ fontSize: '0.825rem', fontWeight: 600, margin: 0 }}>Kéo thả hoặc nhấp để chọn tệp</p>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Hỗ trợ PDF, DOCX tối đa 5MB</span>
-                    </>
-                  )}
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                disabled={uploading || !selectedFile}
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}
-              >
-                {uploading ? 'Đang tải lên...' : 'Tải Lên Hồ Sơ Mới'}
-              </button>
-            </form>
+                  {uploadDocMutation.isPending ? 'Đang tải lên...' : 'Tải Lên Tài Liệu'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );

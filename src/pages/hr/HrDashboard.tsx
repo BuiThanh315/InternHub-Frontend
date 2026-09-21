@@ -1,654 +1,552 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
+  Users,
   GraduationCap,
-  FileCheck2,
   Clock,
   CheckCircle2,
   Search,
   Plus,
-  FileText,
-  Download,
-  X,
+  FileCheck2,
+  MoreVertical,
+  Edit,
+  ExternalLink,
 } from 'lucide-react';
-import { Header } from '../../components/layout/Header';
-import { internService } from '../../services/internService';
+import { useAuth } from '../../contexts/AuthContext';
+import { canEditIntern, canApprove } from '../../lib/permissions';
+import { KpiCard } from '../../components/shared/KpiCard';
+import { DataTable, type Column } from '../../components/shared/DataTable';
+import { StatusBadge } from '../../components/shared/StatusBadge';
+import { FilterBar } from '../../features/interns/components/FilterBar';
+import { BulkActionsBar } from '../../features/interns/components/BulkActionsBar';
+import { InternFormDialog } from '../../features/interns/components/InternFormDialog';
+import { InternEditDialog } from '../../features/interns/components/InternEditDialog';
+import { ConfirmReasonDialog } from '../../components/shared/ConfirmReasonDialog';
+import {
+  useInterns,
+  useCreateIntern,
+  useUpdateIntern,
+  useDocuments,
+  useReviewDocument,
+} from '../../features/interns/hooks/useInterns';
 import { documentService } from '../../services/documentService';
-import type { InternProfile, DocumentResponse, InternStatus, CreateInternRequest } from '../../types';
+import type { InternProfile } from '../../types';
 
+/**
+ * HrDashboard - Clean Code Refactored Version
+ * - Debounced search 300ms
+ * - useMemo on Table columns
+ * - Custom Hooks (useInterns, useCreateIntern, useDocuments, useReviewDocument)
+ * - Mobile card view (docs/spec.md section 4.5)
+ * - Sonner Toast notification on actions
+ */
 export const HrDashboard: React.FC = () => {
-  const [interns, setInterns] = useState<InternProfile[]>([]);
-  const [documents, setDocuments] = useState<DocumentResponse[]>([]);
-  const [keyword, setKeyword] = useState('');
-  const [selectedUniversity, setSelectedUniversity] = useState('');
+  const { role } = useAuth();
+
+  // Search and Filter States
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
-  // Review Modal State (TM-5)
-  const [reviewModalDoc, setReviewModalDoc] = useState<DocumentResponse | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  // Dialog States
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingIntern, setEditingIntern] = useState<InternProfile | null>(null);
+  const [rejectDialogState, setRejectDialogState] = useState<{
+    isOpen: boolean;
+    docId?: number;
+    internCode?: string;
+  }>({ isOpen: false });
 
-  // Create Intern Modal State (TM-1)
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newInternForm, setNewInternForm] = useState<CreateInternRequest>({
-    fullName: '',
-    email: '',
-    phone: '',
-    university: 'Đại Học Bách Khoa',
-    major: 'Khoa Học Máy Tính',
-    gpa: 3.5,
+  // Debounce search input 300ms (Point B - Anti-spam API)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedKeyword(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
+  // Clean Custom Hooks (Point A)
+  const {
+    data: internsData,
+    isLoading: isLoadingInterns,
+    error: internsError,
+    refetch: refetchInterns,
+  } = useInterns({
+    keyword: debouncedKeyword,
+    status: selectedStatus,
   });
 
-  useEffect(() => {
-    loadData();
-  }, [keyword, selectedUniversity, selectedStatus]);
+  const { data: documentsData, isLoading: isLoadingDocs } = useDocuments();
+  const createInternMutation = useCreateIntern();
+  const updateInternMutation = useUpdateIntern();
+  const reviewDocMutation = useReviewDocument();
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [internRes, docRes] = await Promise.all([
-        internService.getInterns({
-          keyword: keyword || undefined,
-          university: selectedUniversity || undefined,
-          status: selectedStatus || undefined,
-        }),
-        documentService.getAllDocuments(),
-      ]);
-      setInterns(internRes.content);
-      setDocuments(docRes);
-    } catch (err) {
-      console.error('Lỗi nạp dữ liệu HR Dashboard:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const interns = internsData?.content || [];
+  const documents = documentsData || [];
 
-  // Xét duyệt tài liệu TM-5
-  const handleApproveDocument = async (docId: number) => {
-    try {
-      const updated = await documentService.reviewDocument(docId, { status: 'APPROVED' });
-      setDocuments((prev) => prev.map((d) => (d.id === docId ? updated : d)));
-      alert('Đã phê duyệt tài liệu thành công!');
-    } catch (err) {
-      alert('Có lỗi xảy ra khi phê duyệt');
-    }
-  };
+  // Calculations for KPI Cards
+  const totalCount = interns.length;
+  const activeCount = interns.filter(
+    (i) => i.status === 'INTERNING' || i.status === 'APPROVED'
+  ).length;
+  const pendingCount = interns.filter(
+    (i) => i.status === 'SUBMITTED' || i.status === 'PENDING'
+  ).length;
+  const completedCount = interns.filter((i) => i.status === 'COMPLETED').length;
 
-  const handleRejectDocument = async () => {
-    if (!reviewModalDoc) return;
-    if (!rejectionReason.trim()) {
-      alert('Vui lòng nhập lý do từ chối để thực tập sinh có thể bổ sung hồ sơ!');
-      return;
-    }
-
-    try {
-      const updated = await documentService.reviewDocument(reviewModalDoc.id, {
-        status: 'REJECTED',
-        rejectionReason,
-      });
-      setDocuments((prev) => prev.map((d) => (d.id === reviewModalDoc.id ? updated : d)));
-      setReviewModalDoc(null);
-      setRejectionReason('');
-      alert('Đã từ chối tài liệu và gửi phản hồi cho thực tập sinh.');
-    } catch (err) {
-      alert('Có lỗi xảy ra khi cập nhật');
-    }
-  };
-
-  // Cập nhật trạng thái TTS TM-2
-  const handleStatusChange = async (internId: number, nextStatus: InternStatus) => {
-    try {
-      const updated = await internService.updateIntern(internId, { status: nextStatus });
-      setInterns((prev) => prev.map((i) => (i.id === internId ? updated : i)));
-    } catch (err) {
-      alert('Không thể cập nhật trạng thái');
-    }
-  };
-
-  // Tạo hồ sơ TTS TM-1
-  const handleCreateIntern = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await internService.createIntern(newInternForm);
-      setShowCreateModal(false);
-      setNewInternForm({
-        fullName: '',
-        email: '',
-        phone: '',
-        university: 'Đại Học Bách Khoa',
-        major: 'Khoa Học Máy Tính',
-        gpa: 3.5,
-      });
-      loadData();
-      alert('Tạo mới hồ sơ thực tập sinh thành công!');
-    } catch (err: any) {
-      alert(err.message || 'Lỗi tạo hồ sơ');
-    }
-  };
-
+  // Documents waiting for review (Việc cần xử lý widget)
   const pendingDocuments = documents.filter((d) => d.status === 'PENDING');
-  const countStatus = (s: InternStatus) => interns.filter((i) => i.status === s).length;
+
+  // Checkbox Selection Handlers
+  const toggleRow = (id: number) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAll = () => {
+    if (selectedRows.length === interns.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(interns.map((i) => i.id));
+    }
+  };
+
+  // useMemo for Columns (Point C - Senior Frontend Performance)
+  const columns: Column<InternProfile>[] = useMemo(() => {
+    return [
+      {
+        key: 'select',
+        header: (
+          <input
+            type="checkbox"
+            checked={interns.length > 0 && selectedRows.length === interns.length}
+            onChange={toggleAll}
+            className="rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]"
+          />
+        ),
+        width: '44px',
+        className: 'text-center',
+        render: (row) => (
+          <input
+            type="checkbox"
+            checked={selectedRows.includes(row.id)}
+            onChange={(e) => {
+              e.stopPropagation();
+              toggleRow(row.id);
+            }}
+            className="rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]"
+          />
+        ),
+      },
+      {
+        key: 'person',
+        header: 'Thực tập sinh',
+        width: '210px',
+        render: (row) => (
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] font-bold text-xs flex items-center justify-center border border-[var(--border)] shrink-0">
+              {row.fullName.charAt(0)}
+            </div>
+            <div className="min-w-0">
+              <span className="font-semibold text-[var(--text-1)] block text-xs leading-tight truncate">
+                {row.fullName}
+              </span>
+              <span className="text-[11px] text-[var(--text-3)] block mt-0.5 truncate">
+                {row.internCode} · {row.email}
+              </span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: 'education',
+        header: 'Học vấn & Ngành',
+        width: '160px',
+        render: (row) => (
+          <div className="min-w-0">
+            <span className="font-medium text-xs text-[var(--text-1)] block truncate">
+              {row.university}
+            </span>
+            <span className="text-[11px] text-[var(--text-3)] block truncate">
+              {row.major}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: 'department',
+        header: 'Phòng ban & Mentor',
+        width: '160px',
+        render: (row) => (
+          <div className="min-w-0">
+            <span className="text-xs font-medium text-[var(--text-1)] block truncate">
+              {row.department || 'Chưa phân bổ'}
+            </span>
+            <span className="text-[11px] text-[var(--text-3)] block truncate">
+              {row.mentorName ? `Mentor: ${row.mentorName}` : 'Chưa có mentor'}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: 'gpa',
+        header: 'GPA',
+        width: '65px',
+        className: 'text-center',
+        render: (row) => (
+          <span className="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold bg-[var(--surface-2)] text-[var(--text-1)] border border-[var(--border)]">
+            {row.gpa ? row.gpa.toFixed(2) : 'N/A'}
+          </span>
+        ),
+      },
+      {
+        key: 'status',
+        header: 'Trạng thái',
+        width: '130px',
+        render: (row) => <StatusBadge status={row.status} />,
+      },
+      {
+        key: 'actions',
+        header: '',
+        width: '70px',
+        className: 'text-right',
+        render: (row) => (
+          <div className="flex items-center justify-end gap-1">
+            {canEditIntern(role) && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingIntern(row);
+                }}
+                title="Chỉnh sửa thông tin"
+                className="p-1 rounded-md text-[var(--text-3)] hover:text-[var(--primary)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <Edit size={15} />
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (canEditIntern(role)) {
+                  setEditingIntern(row);
+                }
+              }}
+              title="Tùy chọn khác"
+              className="p-1 rounded-md text-[var(--text-3)] hover:text-[var(--text-1)] hover:bg-[var(--surface-2)] transition-colors"
+            >
+              <MoreVertical size={15} />
+            </button>
+          </div>
+        ),
+      },
+    ];
+  }, [interns, selectedRows, role]);
+
+  // Mobile Card List Renderer (Point C - Responsive Mobile UX)
+  const renderMobileCard = (row: InternProfile) => (
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start gap-2.5">
+        <div className="w-9 h-9 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] font-bold text-xs flex items-center justify-center shrink-0 border border-[var(--border)]">
+          {row.fullName.charAt(0)}
+        </div>
+        <div>
+          <span className="font-semibold text-sm text-[var(--text-1)] block">
+            {row.fullName}
+          </span>
+          <span className="text-xs text-[var(--text-3)] block mt-0.5">
+            {row.university} · {row.major}
+          </span>
+          <span className="text-xs text-[var(--text-2)] block mt-1">
+            {row.department || 'Chưa phân bổ'} {row.mentorName ? `· Mentor: ${row.mentorName}` : ''}
+          </span>
+        </div>
+      </div>
+      <div className="shrink-0 flex flex-col items-end gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <StatusBadge status={row.status} />
+          {canEditIntern(role) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingIntern(row);
+              }}
+              className="p-1 rounded text-text-3 hover:text-primary hover:bg-surface-2 transition-colors"
+              title="Chỉnh sửa"
+            >
+              <Edit size={14} />
+            </button>
+          )}
+        </div>
+        {row.gpa && (
+          <span className="text-[11px] font-semibold text-[var(--text-2)] bg-[var(--surface-2)] px-1.5 py-0.5 rounded border border-[var(--border)]">
+            GPA: {row.gpa.toFixed(2)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="animate-fade-in">
-      <Header
-        title="Bảng Điều Khiển Nhân Sự (HR Portal)"
-        subtitle="Quản lý hồ sơ thực tập sinh, thẩm định CV & tài liệu ứng tuyển (TM-1, TM-2, TM-3, TM-5)"
-      />
-
-      <div style={{ marginTop: '1.5rem' }}>
-        {/* Metric Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-          gap: '1.25rem',
-          marginBottom: '2rem',
-        }}>
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              backgroundColor: 'var(--primary-light)',
-              color: 'var(--primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <GraduationCap size={24} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>Tổng Thực Tập Sinh</p>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{interns.length}</h3>
-            </div>
-          </div>
-
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              color: '#f59e0b',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Clock size={24} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>Hồ Sơ Mới Chờ Duyệt</p>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{countStatus('SUBMITTED')}</h3>
-            </div>
-          </div>
-
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              color: '#3b82f6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <CheckCircle2 size={24} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>Đang Thực Tập</p>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{countStatus('INTERNING')}</h3>
-            </div>
-          </div>
-
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              color: '#ef4444',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <FileCheck2 size={24} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>CV Chờ Thẩm Định</p>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{pendingDocuments.length}</h3>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1
+            className="text-2xl font-extrabold text-text-1 tracking-tight font-heading"
+          >
+            Quản Lý Thực Tập Sinh
+          </h1>
+          <p className="text-sm text-text-2 mt-0.5">
+            Theo dõi, phân bổ và xét duyệt toàn bộ tiến trình thực tập sinh
+          </p>
         </div>
 
-        {/* Document Review Queue TM-5 */}
-        <div className="card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--primary)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileCheck2 size={20} color="var(--primary)" />
-                <span>Hàng Đợi Thẩm Định CV & Tài Liệu Ứng Tuyển (TM-5)</span>
-              </h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                Xét duyệt các tài liệu và hồ sơ ứng tuyển mới nộp trực tuyến
-              </p>
+        {canEditIntern(role) && (
+          <button
+            onClick={() => setShowCreateDialog(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white hover:bg-primary-hover shadow-xs transition-colors self-start sm:self-auto"
+          >
+            <Plus size={16} /> Thêm Thực Tập Sinh
+          </button>
+        )}
+      </div>
+
+      {/* 4 KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <KpiCard
+          title="Tổng Thực Tập Sinh"
+          value={totalCount}
+          icon={Users}
+          active={selectedStatus === ''}
+          onClick={() => setSelectedStatus('')}
+          subtitle="Toàn bộ hồ sơ"
+        />
+        <KpiCard
+          title="Đang Thực Tập"
+          value={activeCount}
+          icon={GraduationCap}
+          accentColor="var(--success)"
+          active={selectedStatus === 'INTERNING'}
+          onClick={() => setSelectedStatus('INTERNING')}
+          subtitle="Đang trong tiến trình"
+        />
+        <KpiCard
+          title="Hồ Sơ Chờ Duyệt"
+          value={pendingCount}
+          icon={Clock}
+          accentColor="var(--warning)"
+          active={selectedStatus === 'SUBMITTED'}
+          onClick={() => setSelectedStatus('SUBMITTED')}
+          subtitle="Cần HR xử lý"
+        />
+        <KpiCard
+          title="Đã Hoàn Thành"
+          value={completedCount}
+          icon={CheckCircle2}
+          accentColor="var(--info)"
+          active={selectedStatus === 'COMPLETED'}
+          onClick={() => setSelectedStatus('COMPLETED')}
+          subtitle="Kết thúc đúng hạn"
+        />
+      </div>
+
+      {/* Main Grid: 8 cols for Intern List + 4 cols for High Priority Widget (docs/spec.md 3.1) */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        {/* Intern List Section (8/12 width on xl) */}
+        <div className="xl:col-span-8 min-w-0 space-y-4">
+          {selectedRows.length > 0 ? (
+            <BulkActionsBar
+              selectedCount={selectedRows.length}
+              onClearSelection={() => setSelectedRows([])}
+              canDelete={role === 'ADMIN'}
+            />
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-[12px] bg-surface border border-border shadow-card">
+              <FilterBar
+                currentStatus={selectedStatus}
+                onSelectStatus={setSelectedStatus}
+                counts={{
+                  '': totalCount,
+                  INTERNING: activeCount,
+                  SUBMITTED: pendingCount,
+                  COMPLETED: completedCount,
+                }}
+              />
+
+              {/* Debounced search input */}
+              <div className="relative w-full sm:w-60 flex items-center shrink-0">
+                <Search
+                  size={14}
+                  className="absolute left-3 text-text-3 pointer-events-none z-10"
+                />
+                <input
+                  type="text"
+                  placeholder="Tìm theo tên, mã TTS..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full !pl-9 pr-3 py-1.5 text-xs rounded-lg bg-bg border border-border text-text-1 placeholder:text-text-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
             </div>
-            <span className="badge badge-warning">
-              {pendingDocuments.length} tài liệu chờ duyệt
+          )}
+
+          {/* Table Header Row: Result counter as required by docs/spec.md section 5.2 */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-semibold text-text-2">
+              Danh sách thực tập sinh ({interns.length} kết quả)
             </span>
           </div>
 
-          {pendingDocuments.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              🎉 Tất cả tài liệu ứng tuyển hiện tại đều đã được thẩm định!
+          {/* DataTable with Mobile Card Support */}
+          <DataTable
+            columns={columns}
+            data={interns}
+            loading={isLoadingInterns}
+            isFiltered={Boolean(debouncedKeyword || selectedStatus)}
+            error={internsError ? 'Không thể kết nối đến máy chủ. Vui lòng thử lại.' : null}
+            onRetry={refetchInterns}
+            onClearFilter={() => {
+              setSearchInput('');
+              setDebouncedKeyword('');
+              setSelectedStatus('');
+            }}
+            emptyTitle="Chưa có thực tập sinh nào"
+            emptyDescription="Bắt đầu tuyển dụng và thêm hồ sơ thực tập sinh mới vào hệ thống."
+            keyExtractor={(row) => row.id}
+            renderMobileCard={renderMobileCard}
+          />
+        </div>
+
+        {/* High Priority Widget: Việc cần xử lý (4/12 width on xl) */}
+        <div className="xl:col-span-4 min-w-0 p-5 rounded-[12px] bg-surface border border-border shadow-card space-y-4">
+          <div className="flex items-center justify-between border-b border-border-soft pb-3">
+            <div>
+              <h3 className="text-sm font-bold text-text-1 flex items-center gap-1.5 font-heading">
+                <FileCheck2 size={16} className="text-warning" /> Việc Cần Xử Lý
+              </h3>
+              <span className="text-[11px] text-text-3">
+                Ưu tiên cao nhất trong ngày của HR
+              </span>
+            </div>
+            {pendingDocuments.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning-soft text-warning">
+                {pendingDocuments.length}
+              </span>
+            )}
+          </div>
+
+          {isLoadingDocs ? (
+            <div className="space-y-3 animate-pulse">
+              <div className="h-14 bg-surface-2 rounded-lg" />
+              <div className="h-14 bg-surface-2 rounded-lg" />
+            </div>
+          ) : pendingDocuments.length === 0 ? (
+            <div className="py-8 text-center text-xs text-text-3">
+              🎉 Tuyệt vời! Không có tài liệu hoặc CV nào đang chờ duyệt.
             </div>
           ) : (
-            <div className="table-container">
-              <table className="modern-table">
-                <thead>
-                  <tr>
-                    <th>Mã TTS</th>
-                    <th>Loại Tài Liệu</th>
-                    <th>Tên Tệp Tin</th>
-                    <th>Dung Lượng</th>
-                    <th>Thời Gian Nộp</th>
-                    <th>Hành Động Xét Duyệt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingDocuments.map((doc) => (
-                    <tr key={doc.id}>
-                      <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{doc.internCode}</td>
-                      <td>
-                        <span className="badge badge-primary">{doc.documentType}</span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <FileText size={16} color="#64748b" />
-                          <span style={{ fontWeight: 500 }}>{doc.fileName}</span>
-                        </div>
-                      </td>
-                      <td>{(doc.fileSize / (1024 * 1024)).toFixed(2)} MB</td>
-                      <td>{new Date(doc.createdAt).toLocaleDateString('vi-VN')}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <a
-                            href={documentService.getDocumentDownloadUrl(doc.id, 'inline')}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-secondary"
-                            title="Xem trước"
-                          >
-                            <Download size={13} /> Xem Tệp
-                          </a>
-                          <button
-                            onClick={() => handleApproveDocument(doc.id)}
-                            className="btn btn-sm btn-success"
-                          >
-                            Duyệt
-                          </button>
-                          <button
-                            onClick={() => {
-                              setReviewModalDoc(doc);
-                              setRejectionReason('');
-                            }}
-                            className="btn btn-sm btn-danger"
-                          >
-                            Từ Chối
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+              {pendingDocuments.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="p-3 rounded-lg border border-border bg-surface-2 hover:border-primary/50 transition-all flex flex-col gap-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <a
+                        href={documentService.getDocumentDownloadUrl(doc.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-text-1 hover:text-primary block truncate flex items-center gap-1 group"
+                        title="Tải xuống / Xem trước tài liệu"
+                      >
+                        <span className="truncate">{doc.fileName}</span>
+                        <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </a>
+                      <span className="text-[11px] text-text-3 block mt-0.5 truncate">
+                        Mã TTS: <span className="font-medium text-text-2">{doc.internCode}</span> · {doc.documentType}
+                      </span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-warning-soft text-warning shrink-0">
+                      Chờ duyệt
+                    </span>
+                  </div>
+
+                  {canApprove(role) && (
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-border-soft">
+                      <button
+                        onClick={() =>
+                          setRejectDialogState({
+                            isOpen: true,
+                            docId: doc.id,
+                            internCode: doc.internCode,
+                          })
+                        }
+                        className="px-2.5 py-1 text-xs font-semibold rounded-md bg-danger-soft text-danger hover:bg-danger/10 transition-colors"
+                      >
+                        Từ chối
+                      </button>
+                      <button
+                        onClick={() =>
+                          reviewDocMutation.mutate({ id: doc.id, status: 'APPROVED' })
+                        }
+                        className="px-2.5 py-1 text-xs font-semibold rounded-md bg-success text-white hover:bg-success/90 transition-colors shadow-xs"
+                      >
+                        Phê duyệt
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
-
-        {/* Intern List Management TM-3 */}
-        <div className="card">
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '1rem',
-            marginBottom: '1.25rem',
-          }}>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>Danh Sách Hồ Sơ Thực Tập Sinh (TM-3)</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                Tìm kiếm, lọc theo trường/ngành và điều phối trạng thái thực tập (TM-2)
-              </p>
-            </div>
-
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn btn-primary"
-            >
-              <Plus size={16} /> Thêm Hồ Sơ Mới (TM-1)
-            </button>
-          </div>
-
-          {/* Search & Filter Bar */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-            marginBottom: '1.25rem',
-          }}>
-            <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
-              <input
-                type="text"
-                className="form-input"
-                style={{ paddingLeft: '2.2rem', width: '100%' }}
-                placeholder="Tìm tên, mã TTS, email, SĐT..."
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
-            </div>
-
-            <select
-              className="form-select"
-              value={selectedUniversity}
-              onChange={(e) => setSelectedUniversity(e.target.value)}
-            >
-              <option value="">Tất cả trường đại học</option>
-              <option value="Đại Học Bách Khoa">ĐH Bách Khoa</option>
-              <option value="Đại Học Quốc Gia">ĐH Quốc Gia</option>
-              <option value="Đại Học FPT">ĐH FPT</option>
-              <option value="Đại Học Kinh Tế Quốc Dân">ĐH Kinh Tế Quốc Dân</option>
-            </select>
-
-            <select
-              className="form-select"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="SUBMITTED">SUBMITTED (Chờ duyệt)</option>
-              <option value="APPROVED">APPROVED (Đã duyệt)</option>
-              <option value="INTERNING">INTERNING (Đang thực tập)</option>
-              <option value="COMPLETED">COMPLETED (Hoàn thành)</option>
-            </select>
-          </div>
-
-          {/* Table */}
-          <div className="table-container">
-            <table className="modern-table">
-              <thead>
-                <tr>
-                  <th>Mã TTS</th>
-                  <th>Họ và Tên</th>
-                  <th>Trường & Chuyên Ngành</th>
-                  <th>GPA</th>
-                  <th>Mentor Hướng Dẫn</th>
-                  <th>Trạng Thái</th>
-                  <th>Hành Động (TM-2)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
-                      Đang tải hồ sơ...
-                    </td>
-                  </tr>
-                ) : interns.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                      Không tìm thấy hồ sơ thực tập sinh phù hợp
-                    </td>
-                  </tr>
-                ) : (
-                  interns.map((intern) => (
-                    <tr key={intern.id}>
-                      <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{intern.internCode}</td>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{intern.fullName}</div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{intern.email}</span>
-                      </td>
-                      <td>
-                        <div>{intern.university}</div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{intern.major}</span>
-                      </td>
-                      <td>
-                        <span style={{
-                          fontWeight: 700,
-                          color: (intern.gpa || 0) >= 3.5 ? '#10b981' : '#f59e0b',
-                        }}>
-                          {intern.gpa ? intern.gpa.toFixed(2) : '-'}
-                        </span>
-                      </td>
-                      <td>
-                        {intern.mentorName ? (
-                          <span className="badge badge-primary">{intern.mentorName}</span>
-                        ) : (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Chưa gán</span>
-                        )}
-                      </td>
-                      <td>
-                        <span className={`badge ${
-                          intern.status === 'INTERNING' ? 'badge-success' :
-                          intern.status === 'APPROVED' ? 'badge-info' :
-                          intern.status === 'COMPLETED' ? 'badge-neutral' : 'badge-warning'
-                        }`}>
-                          {intern.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.35rem' }}>
-                          {intern.status === 'SUBMITTED' && (
-                            <button
-                              onClick={() => handleStatusChange(intern.id, 'APPROVED')}
-                              className="btn btn-sm btn-primary"
-                            >
-                              Duyệt Tiếp Nhận
-                            </button>
-                          )}
-                          {intern.status === 'APPROVED' && (
-                            <button
-                              onClick={() => handleStatusChange(intern.id, 'INTERNING')}
-                              className="btn btn-sm btn-success"
-                            >
-                              Bắt Đầu TT
-                            </button>
-                          )}
-                          {intern.status === 'INTERNING' && (
-                            <button
-                              onClick={() => handleStatusChange(intern.id, 'COMPLETED')}
-                              className="btn btn-sm btn-secondary"
-                            >
-                              Hoàn Thành
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
 
-      {/* Reject Modal TM-5 */}
-      {reviewModalDoc && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100,
-        }}>
-          <div className="card" style={{ width: '100%', maxWidth: '480px', margin: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'var(--danger)' }}>
-                Từ Chối Tài Liệu ({reviewModalDoc.internCode})
-              </h4>
-              <button
-                onClick={() => setReviewModalDoc(null)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
+      {/* Create Modal */}
+      <InternFormDialog
+        isOpen={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onSubmit={async (values) => {
+          await createInternMutation.mutateAsync(values);
+        }}
+      />
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Tệp: <strong>{reviewModalDoc.fileName}</strong>
-            </p>
+      {/* Edit Modal (TM-2: Chỉnh sửa thông tin & Trạng thái TTS) */}
+      <InternEditDialog
+        isOpen={Boolean(editingIntern)}
+        intern={editingIntern}
+        onClose={() => setEditingIntern(null)}
+        onSubmit={async (values) => {
+          if (editingIntern) {
+            await updateInternMutation.mutateAsync({
+              id: editingIntern.id,
+              data: values,
+            });
+            setEditingIntern(null);
+          }
+        }}
+      />
 
-            <div className="form-group">
-              <label className="form-label">Lý do từ chối (Bắt buộc theo TM-5) *</label>
-              <textarea
-                rows={3}
-                className="form-textarea"
-                placeholder="Ví dụ: Thiếu xác nhận của nhà trường, CV chưa đúng mẫu..."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-              <button
-                onClick={() => setReviewModalDoc(null)}
-                className="btn btn-secondary"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                onClick={handleRejectDocument}
-                className="btn btn-danger"
-              >
-                Xác Nhận Từ Chối
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create Intern Modal TM-1 */}
-      {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100,
-        }}>
-          <div className="card" style={{ width: '100%', maxWidth: '520px', margin: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>
-                Thêm Hồ Sơ Thực Tập Sinh Mới (TM-1)
-              </h4>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateIntern}>
-              <div className="form-group">
-                <label className="form-label">Họ và tên *</label>
-                <input
-                  type="text"
-                  required
-                  className="form-input"
-                  value={newInternForm.fullName}
-                  onChange={(e) => setNewInternForm({ ...newInternForm, fullName: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Email *</label>
-                  <input
-                    type="email"
-                    required
-                    className="form-input"
-                    value={newInternForm.email}
-                    onChange={(e) => setNewInternForm({ ...newInternForm, email: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Số điện thoại *</label>
-                  <input
-                    type="tel"
-                    required
-                    className="form-input"
-                    value={newInternForm.phone}
-                    onChange={(e) => setNewInternForm({ ...newInternForm, phone: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.75rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Trường Đại Học</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={newInternForm.university}
-                    onChange={(e) => setNewInternForm({ ...newInternForm, university: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Điểm GPA</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-input"
-                    value={newInternForm.gpa || ''}
-                    onChange={(e) => setNewInternForm({ ...newInternForm, gpa: parseFloat(e.target.value) })}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Chuyên ngành</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={newInternForm.major}
-                  onChange={(e) => setNewInternForm({ ...newInternForm, major: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="btn btn-secondary"
-                >
-                  Hủy Bỏ
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                >
-                  Tạo Hồ Sơ
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Reject Modal */}
+      <ConfirmReasonDialog
+        isOpen={rejectDialogState.isOpen}
+        title="Từ Chối Tài Liệu"
+        description={`Bạn đang từ chối tài liệu của TTS ${rejectDialogState.internCode}. Thao tác này sẽ gửi thông báo và lưu lại vào audit log.`}
+        isDangerous={true}
+        confirmLabel="Xác nhận từ chối"
+        onConfirm={async (reason) => {
+          if (rejectDialogState.docId) {
+            await reviewDocMutation.mutateAsync({
+              id: rejectDialogState.docId,
+              status: 'REJECTED',
+              reason,
+            });
+          }
+        }}
+        onClose={() => setRejectDialogState({ isOpen: false })}
+      />
     </div>
   );
 };
