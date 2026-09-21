@@ -106,3 +106,20 @@ export interface ReviewDocumentRequest {
   status: 'APPROVED' | 'REJECTED';
   rejectionReason?: string;
 }
+
+export type BackupType = 'AUTOMATIC' | 'MANUAL';
+export type BackupStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED';
+
+export interface BackupHistoryItem {
+  id: number;
+  fileName: string;
+  fileSize: number;
+  formattedSize: string;
+  backupType: BackupType;
+  status: BackupStatus;
+  scope?: string;
+  durationMs?: number;
+  errorMessage?: string;
+  createdBy: string;
+  createdAt: string;
+}
