@@ -27,11 +27,17 @@ export const internService = {
             i.fullName.toLowerCase().includes(kw) ||
             i.email.toLowerCase().includes(kw) ||
             i.internCode.toLowerCase().includes(kw) ||
-            i.phone.includes(kw)
+            i.phone.includes(kw) ||
+            i.university.toLowerCase().includes(kw) ||
+            i.major.toLowerCase().includes(kw) ||
+            (i.department && i.department.toLowerCase().includes(kw))
         );
       }
       if (params?.university) {
-        filtered = filtered.filter((i) => i.university === params.university);
+        filtered = filtered.filter((i) => i.university.toLowerCase().includes(params.university!.toLowerCase()));
+      }
+      if (params?.major) {
+        filtered = filtered.filter((i) => i.major.toLowerCase().includes(params.major!.toLowerCase()));
       }
       if (params?.status) {
         filtered = filtered.filter((i) => i.status === params.status);

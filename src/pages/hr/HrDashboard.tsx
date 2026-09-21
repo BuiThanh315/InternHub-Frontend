@@ -46,6 +46,7 @@ export const HrDashboard: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
   // Dialog States
@@ -74,6 +75,7 @@ export const HrDashboard: React.FC = () => {
   } = useInterns({
     keyword: debouncedKeyword,
     status: selectedStatus,
+    university: selectedUniversity,
   });
 
   const { data: documentsData, isLoading: isLoadingDocs } = useDocuments();
@@ -374,19 +376,34 @@ export const HrDashboard: React.FC = () => {
                 }}
               />
 
-              {/* Debounced search input */}
-              <div className="relative w-full sm:w-60 flex items-center shrink-0">
-                <Search
-                  size={14}
-                  className="absolute left-3 text-text-3 pointer-events-none z-10"
-                />
-                <input
-                  type="text"
-                  placeholder="Tìm theo tên, mã TTS..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-full !pl-9 pr-3 py-1.5 text-xs rounded-lg bg-bg border border-border text-text-1 placeholder:text-text-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                />
+              {/* Filter controls: University Select & Search Input */}
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <select
+                  value={selectedUniversity}
+                  onChange={(e) => setSelectedUniversity(e.target.value)}
+                  className="w-full sm:w-44 px-2.5 py-1.5 text-xs rounded-lg bg-bg border border-border text-text-1 focus:outline-none focus:border-primary font-medium"
+                >
+                  <option value="">Tất cả trường</option>
+                  <option value="Bách Khoa">ĐH Bách Khoa</option>
+                  <option value="FPT">ĐH FPT</option>
+                  <option value="Quốc Gia">ĐH Quốc Gia</option>
+                  <option value="Kinh Tế Quốc Dân">ĐH Kinh Tế Quốc Dân</option>
+                </select>
+
+                {/* Debounced search input */}
+                <div className="relative w-full sm:w-60 flex items-center shrink-0">
+                  <Search
+                    size={14}
+                    className="absolute left-3 text-text-3 pointer-events-none z-10"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Tìm tên, trường, ngành, mã..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="w-full !pl-9 pr-3 py-1.5 text-xs rounded-lg bg-bg border border-border text-text-1 placeholder:text-text-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -403,13 +420,14 @@ export const HrDashboard: React.FC = () => {
             columns={columns}
             data={interns}
             loading={isLoadingInterns}
-            isFiltered={Boolean(debouncedKeyword || selectedStatus)}
+            isFiltered={Boolean(debouncedKeyword || selectedStatus || selectedUniversity)}
             error={internsError ? 'Không thể kết nối đến máy chủ. Vui lòng thử lại.' : null}
             onRetry={refetchInterns}
             onClearFilter={() => {
               setSearchInput('');
               setDebouncedKeyword('');
               setSelectedStatus('');
+              setSelectedUniversity('');
             }}
             emptyTitle="Chưa có thực tập sinh nào"
             emptyDescription="Bắt đầu tuyển dụng và thêm hồ sơ thực tập sinh mới vào hệ thống."
