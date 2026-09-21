@@ -43,4 +43,4 @@
 - [x] **Task 4.1:** Chạy `npm.cmd run build` kiểm tra biên dịch TypeScript và đóng gói bundle (Thành công 100%).
 - [x] **Task 4.2:** Chạy `tsc --noEmit` kiểm tra type safety nghiêm ngặt (0 lỗi).
 - [x] **Task 4.3:** Xác thực luồng chạy thực tế trên trình duyệt (`http://localhost:5173`) với cả 2 role HR và Intern (Đã chụp ảnh kiểm chứng).
-- [ ] **Task 4.4:** Tạo commit chuẩn Conventional Commits: `feat(TM-1-to-TM-5): tich hop module quan ly thuc tap sinh core`.
+- [x] **Task 4.4:** Tạo commit chuẩn Conventional Commits: `feat(TM-1-to-TM-5): tich hop module quan ly thuc tap sinh core va hoan thien UI theo spec`.
