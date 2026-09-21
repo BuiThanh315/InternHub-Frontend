@@ -2,7 +2,29 @@ import { apiClient } from './api';
 import type { CreateInternRequest, UpdateInternRequest, InternProfile, PageResponse } from '../types';
 import { MOCK_INTERN_PROFILES } from './mockData';
 
-let localInterns = [...MOCK_INTERN_PROFILES];
+const STORAGE_KEY = 'internhub_local_interns';
+
+function loadStoredInterns(): InternProfile[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.warn('Failed to load interns from localStorage', e);
+  }
+  return [...MOCK_INTERN_PROFILES];
+}
+
+function saveStoredInterns(interns: InternProfile[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(interns));
+  } catch (e) {
+    console.warn('Failed to save interns to localStorage', e);
+  }
+}
+
+let localInterns = loadStoredInterns();
 
 export const internService = {
   async getInterns(params?: {
@@ -77,6 +99,7 @@ export const internService = {
         updatedAt: new Date().toISOString(),
       };
       localInterns.unshift(newIntern);
+      saveStoredInterns(localInterns);
       return newIntern;
     }
   },
@@ -94,6 +117,7 @@ export const internService = {
           ...request,
           updatedAt: new Date().toISOString(),
         };
+        saveStoredInterns(localInterns);
         return localInterns[index];
       }
       throw new Error('Không tìm thấy thực tập sinh');
