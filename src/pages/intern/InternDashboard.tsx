@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useInterns, useInternDocuments, useUploadDocument } from '../../features/interns/hooks/useInterns';
+import { getInternStepProgress } from '../../features/interns/schema';
 import { documentService } from '../../services/documentService';
 import type { DocumentType } from '../../types';
 
@@ -53,21 +54,6 @@ export const InternDashboard: React.FC = () => {
     );
   };
 
-  const getStepStatus = (step: number) => {
-    if (!profile) return 'pending';
-    const statusMap: Record<string, number> = {
-      SUBMITTED: 1,
-      PENDING: 1,
-      APPROVED: 2,
-      INTERNING: 3,
-      COMPLETED: 4,
-    };
-    const currentStep = statusMap[profile.status] || 1;
-    if (step < currentStep) return 'completed';
-    if (step === currentStep) return 'active';
-    return 'pending';
-  };
-
   const loading = loadingIntern || loadingDocs;
 
   return (
@@ -100,7 +86,7 @@ export const InternDashboard: React.FC = () => {
                 { num: 3, label: 'Đang Thực Tập', desc: 'Làm việc cùng Mentor' },
                 { num: 4, label: 'Hoàn Thành', desc: 'Đánh giá & Cấp chứng nhận' },
               ].map((step) => {
-                const state = getStepStatus(step.num);
+                const state = getInternStepProgress(profile?.status, step.num);
                 return (
                   <div key={step.num} className="flex flex-col items-center text-center p-3 rounded-lg bg-surface-2/60">
                     <div

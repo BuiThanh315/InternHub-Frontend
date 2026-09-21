@@ -8,4 +8,17 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-ui': ['lucide-react', 'sonner', 'clsx', 'tailwind-merge'],
+          'vendor-form': ['react-hook-form', '@hookform/resolvers', 'zod'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 })

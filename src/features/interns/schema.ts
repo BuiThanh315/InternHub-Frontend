@@ -140,6 +140,30 @@ export function getAllowedNextStatuses(currentStatus: InternStatus): { status: I
   }
 }
 
+/**
+ * Helper to determine step status for stepper/progress timeline (DRY)
+ */
+export function getInternStepProgress(
+  currentStatus?: InternStatus | string,
+  stepNumber?: number
+): 'completed' | 'active' | 'pending' {
+  if (!currentStatus || stepNumber === undefined) return 'pending';
+
+  const statusStepMap: Record<string, number> = {
+    SUBMITTED: 1,
+    PENDING: 1,
+    APPROVED: 2,
+    INTERNING: 3,
+    ACTIVE: 3,
+    COMPLETED: 4,
+  };
+
+  const currentStep = statusStepMap[currentStatus.toUpperCase()] || 1;
+  if (stepNumber < currentStep) return 'completed';
+  if (stepNumber === currentStep) return 'active';
+  return 'pending';
+}
+
 // Zod Schema for Intern Creation (docs/spec.md section 7.2)
 export const internFormSchema = z.object({
   fullName: z
