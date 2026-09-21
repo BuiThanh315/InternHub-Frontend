@@ -26,7 +26,7 @@ export const InternFormDialog: React.FC<InternFormDialogProps> = ({
   onClose,
   onSubmit,
   initialData,
-  title = 'Thêm Thực Tập Sinh Mới',
+  title = 'Thêm Hồ Sơ Thực Tập Sinh',
 }) => {
   const {
     register,

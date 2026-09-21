@@ -307,7 +307,7 @@ export const HrDashboard: React.FC = () => {
             onClick={() => setShowCreateDialog(true)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-white hover:bg-primary-hover shadow-xs transition-colors self-start sm:self-auto"
           >
-            <Plus size={16} /> Thêm Thực Tập Sinh
+            <Plus size={16} /> Thêm Hồ Sơ Thực Tập Sinh
           </button>
         )}
       </div>
