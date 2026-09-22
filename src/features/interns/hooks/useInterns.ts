@@ -8,6 +8,7 @@ export interface InternFilterParams {
   keyword?: string;
   status?: string;
   university?: string;
+  department?: string;
   page?: number;
   size?: number;
 }
@@ -17,15 +18,35 @@ export interface InternFilterParams {
  */
 export function useInterns(filters: InternFilterParams) {
   return useQuery({
-    queryKey: ['interns', filters.keyword, filters.status, filters.university, filters.page, filters.size],
+    queryKey: [
+      'interns',
+      filters.keyword,
+      filters.status,
+      filters.university,
+      filters.department,
+      filters.page,
+      filters.size,
+    ],
     queryFn: () =>
       internService.getInterns({
         keyword: filters.keyword || undefined,
         status: filters.status || undefined,
         university: filters.university || undefined,
+        department: filters.department || undefined,
         page: filters.page,
         size: filters.size,
       }),
+  });
+}
+
+/**
+ * useAllInterns - Custom hook fetching the baseline intern list for accurate KPIs and Filter chips
+ */
+export function useAllInterns() {
+  return useQuery({
+    queryKey: ['interns', 'all-baseline'],
+    queryFn: () => internService.getInterns({ size: 200 }),
+    staleTime: 30000,
   });
 }
 

@@ -90,8 +90,12 @@ export const InternEditDialog: React.FC<InternEditDialogProps> = ({
         {/* Form Body */}
         <form
           onSubmit={handleSubmit(async (values) => {
-            await onSubmit(values);
-            onClose();
+            try {
+              await onSubmit(values);
+              onClose();
+            } catch {
+              // Giữ form mở để người dùng xem thông báo lỗi toast từ mutation
+            }
           })}
           className="flex-1 overflow-y-auto p-6 space-y-4"
         >
@@ -192,6 +196,24 @@ export const InternEditDialog: React.FC<InternEditDialogProps> = ({
                 {...register('appliedPosition')}
                 className="w-full px-3 py-2 text-xs rounded-lg bg-bg border border-border text-text-1 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-text-2 mb-1">
+                Điểm GPA (Thang 4.0)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="VD: 3.5"
+                {...register('gpa', { valueAsNumber: true })}
+                className="w-full px-3 py-2 text-xs rounded-lg bg-bg border border-border text-text-1 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              {errors.gpa && (
+                <span className="text-[11px] text-danger mt-1 flex items-center gap-1">
+                  <AlertCircle size={11} /> {errors.gpa.message}
+                </span>
+              )}
             </div>
           </div>
 

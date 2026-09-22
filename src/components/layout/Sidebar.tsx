@@ -4,6 +4,7 @@ import { LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { navConfig, type Role } from '../../lib/permissions';
 import { cn } from '../../lib/utils';
+import { useDocuments } from '../../features/interns/hooks/useInterns';
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -22,6 +23,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const { user, role, logout } = useAuth();
   const currentRole = (role as Role) || 'INTERN';
   const navItems = navConfig[currentRole] || navConfig.INTERN;
+
+  // Lấy dữ liệu số lượng tài liệu chờ duyệt
+  const { data: documents } = useDocuments();
+  const pendingCount = (documents || []).filter((d) => d.status === 'PENDING').length;
 
   const roleBadgeMap: Record<string, { label: string; bg: string; color: string }> = {
     ADMIN: { label: 'Admin', bg: 'var(--danger-soft)', color: 'var(--danger)' },
@@ -70,6 +75,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           )}
           {navItems.map((item) => {
             const Icon = item.icon;
+            // Dynamic badge count cho HR review
+            const badgeCount =
+              item.to === '/hr/review' && pendingCount > 0
+                ? pendingCount
+                : item.badge;
+
             return (
               <NavLink
                 key={item.to}
@@ -77,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
                 title={collapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                    'flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-primary-soft text-primary font-semibold shadow-xs'
                       : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
@@ -85,8 +96,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
                   )
                 }
               >
-                <Icon size={18} className="shrink-0" />
-                {!collapsed && <span className="truncate">{item.label}</span>}
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon size={18} className="shrink-0" />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </div>
+                {!collapsed && badgeCount !== undefined && badgeCount !== null && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-warning-soft text-warning shrink-0">
+                    {badgeCount}
+                  </span>
+                )}
               </NavLink>
             );
           })}

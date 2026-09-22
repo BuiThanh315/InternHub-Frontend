@@ -164,57 +164,83 @@ export function getInternStepProgress(
   return 'pending';
 }
 
-// Zod Schema for Intern Creation (docs/spec.md section 7.2)
-export const internFormSchema = z.object({
-  fullName: z
-    .string()
-    .min(2, 'Họ và tên phải có ít nhất 2 ký tự')
-    .max(100, 'Họ và tên không quá 100 ký tự'),
-  email: z.string().email('Địa chỉ email không hợp lệ'),
-  phone: z
-    .string()
-    .regex(/^(03|05|07|08|09)\d{8}$/, 'Số điện thoại phải gồm 10 chữ số (đầu 03, 05, 07, 08, 09)'),
-  university: z.string().min(2, 'Vui lòng nhập tên trường đại học'),
-  major: z.string().min(2, 'Vui lòng nhập chuyên ngành học'),
-  appliedPosition: z.string().optional(),
-  academicYear: z.string().optional(),
-  notes: z.string().optional(),
-  gpa: z
-    .number()
-    .min(0, 'GPA tối thiểu 0.0')
-    .max(4.0, 'GPA tối đa 4.0')
-    .optional(),
-  department: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-});
+// Zod Schema for Intern Creation (docs/spec.md section 7.2 & BR-2)
+export const internFormSchema = z
+  .object({
+    fullName: z
+      .string()
+      .min(2, 'Họ và tên phải có ít nhất 2 ký tự')
+      .max(100, 'Họ và tên không quá 100 ký tự'),
+    email: z.string().email('Địa chỉ email không hợp lệ'),
+    phone: z
+      .string()
+      .regex(/^(03|05|07|08|09)\d{8}$/, 'Số điện thoại phải gồm 10 chữ số (đầu 03, 05, 07, 08, 09)'),
+    university: z.string().min(2, 'Vui lòng nhập tên trường đại học'),
+    major: z.string().min(2, 'Vui lòng nhập chuyên ngành học'),
+    appliedPosition: z.string().optional(),
+    academicYear: z.string().optional(),
+    notes: z.string().optional(),
+    gpa: z
+      .number()
+      .min(0, 'GPA tối thiểu 0.0')
+      .max(4.0, 'GPA tối đa 4.0')
+      .optional(),
+    department: z.string().optional(),
+    startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
+    endDate: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) >= new Date(data.startDate);
+      }
+      return true;
+    },
+    {
+      message: 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu',
+      path: ['endDate'],
+    }
+  );
 
 export type InternFormValues = z.infer<typeof internFormSchema>;
 
-// Zod Schema for Intern Editing (TM-2)
-export const updateInternFormSchema = z.object({
-  fullName: z
-    .string()
-    .min(2, 'Họ và tên phải có ít nhất 2 ký tự')
-    .max(100, 'Họ và tên không quá 100 ký tự'),
-  email: z.string().email('Địa chỉ email không hợp lệ'),
-  phone: z
-    .string()
-    .regex(/^(03|05|07|08|09)\d{8}$/, 'Số điện thoại phải gồm 10 chữ số (đầu 03, 05, 07, 08, 09)'),
-  university: z.string().min(2, 'Vui lòng nhập tên trường đại học'),
-  major: z.string().min(2, 'Vui lòng nhập chuyên ngành học'),
-  appliedPosition: z.string().optional(),
-  academicYear: z.string().optional(),
-  notes: z.string().optional(),
-  gpa: z
-    .number()
-    .min(0, 'GPA tối thiểu 0.0')
-    .max(4.0, 'GPA tối đa 4.0')
-    .optional(),
-  department: z.string().optional(),
-  startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
-  endDate: z.string().optional(),
-  status: z.custom<InternStatus>(),
-});
+// Zod Schema for Intern Editing (TM-2 & BR-2)
+export const updateInternFormSchema = z
+  .object({
+    fullName: z
+      .string()
+      .min(2, 'Họ và tên phải có ít nhất 2 ký tự')
+      .max(100, 'Họ và tên không quá 100 ký tự'),
+    email: z.string().email('Địa chỉ email không hợp lệ'),
+    phone: z
+      .string()
+      .regex(/^(03|05|07|08|09)\d{8}$/, 'Số điện thoại phải gồm 10 chữ số (đầu 03, 05, 07, 08, 09)'),
+    university: z.string().min(2, 'Vui lòng nhập tên trường đại học'),
+    major: z.string().min(2, 'Vui lòng nhập chuyên ngành học'),
+    appliedPosition: z.string().optional(),
+    academicYear: z.string().optional(),
+    notes: z.string().optional(),
+    gpa: z
+      .number()
+      .min(0, 'GPA tối thiểu 0.0')
+      .max(4.0, 'GPA tối đa 4.0')
+      .optional(),
+    department: z.string().optional(),
+    startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
+    endDate: z.string().optional(),
+    status: z.custom<InternStatus>(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) >= new Date(data.startDate);
+      }
+      return true;
+    },
+    {
+      message: 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu',
+      path: ['endDate'],
+    }
+  );
 
 export type UpdateInternFormValues = z.infer<typeof updateInternFormSchema>;

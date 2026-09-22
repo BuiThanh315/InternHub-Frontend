@@ -21,7 +21,7 @@ export const FilterBar: React.FC<QuickFilterProps> = ({
   const chips: { key: string; label: string; statusKey?: NormalizedStatusKey }[] = [
     { key: '', label: 'Tất cả' },
     { key: 'INTERNING', label: 'Đang thực tập', statusKey: 'active' },
-    { key: 'SUBMITTED', label: 'Chờ duyệt', statusKey: 'pending' },
+    { key: 'PENDING', label: 'Chờ duyệt', statusKey: 'pending' },
     { key: 'COMPLETED', label: 'Hoàn thành', statusKey: 'completed' },
     { key: 'REJECTED', label: 'Từ chối', statusKey: 'rejected' },
   ];

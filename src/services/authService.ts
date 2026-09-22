@@ -1,40 +1,25 @@
 import { apiClient } from './api';
 import type { AuthUser, RoleType } from '../types';
-import { MOCK_AUTH_ACCOUNTS } from './mockData';
 
 export const authService = {
   async login(username: string, password: string): Promise<AuthUser> {
-    try {
-      const response = await apiClient.post('/api/auth/login', { username, password });
-      const data = response.data.data;
-      const authUser: AuthUser = {
-        userId: data.userId,
-        username: data.username,
-        role: (data.role?.replace('ROLE_', '') as RoleType) || 'INTERN',
-        accessToken: data.accessToken,
-        tokenType: data.tokenType || 'Bearer',
-        expiresIn: data.expiresIn,
-      };
-      this.saveSession(authUser);
-      return authUser;
-    } catch (error) {
-      console.warn('Backend API login failed or unavailable, checking mock credentials...', error);
-      // Fallback for demo / offline development
-      const lowerUser = username.toLowerCase().trim();
-      const mock = MOCK_AUTH_ACCOUNTS[lowerUser];
-      if (mock && (password === '123456' || password === mock.username)) {
-        this.saveSession(mock);
-        return mock;
-      }
-      throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác!');
-    }
+    const response = await apiClient.post('/api/auth/login', { username, password });
+    const data = response.data.data;
+    const authUser: AuthUser = {
+      userId: data.userId,
+      username: data.username,
+      role: (data.role?.replace('ROLE_', '') as RoleType) || 'INTERN',
+      accessToken: data.accessToken,
+      tokenType: data.tokenType || 'Bearer',
+      expiresIn: data.expiresIn,
+    };
+    this.saveSession(authUser);
+    return authUser;
   },
 
-  demoLoginAs(role: 'admin' | 'hr' | 'mentor' | 'intern'): AuthUser {
-    const mock = MOCK_AUTH_ACCOUNTS[role];
-    if (!mock) throw new Error(`Role ${role} không tồn tại`);
-    this.saveSession(mock);
-    return mock;
+  async demoLoginAs(role: 'admin' | 'hr' | 'mentor' | 'intern'): Promise<AuthUser> {
+    // Đăng nhập trực tiếp vào Backend để lấy JWT token thật từ DB MySQL
+    return await this.login(role, '123456');
   },
 
   saveSession(authUser: AuthUser) {

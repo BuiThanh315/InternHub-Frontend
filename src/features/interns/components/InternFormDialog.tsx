@@ -180,6 +180,42 @@ export const InternFormDialog: React.FC<InternFormDialogProps> = ({
             </div>
           </div>
 
+          {/* Vị trí ứng tuyển & Ngày bắt đầu */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-2)] mb-1">
+                Vị trí thực tập <span className="text-[var(--danger)]">*</span>
+              </label>
+              <input
+                type="text"
+                {...register('appliedPosition')}
+                placeholder="Backend Java, Frontend React..."
+                className="w-full px-3 py-2 text-sm rounded-lg bg-[var(--bg)] border border-[var(--border)] text-[var(--text-1)] placeholder:text-[var(--text-3)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+              />
+              {errors.appliedPosition && (
+                <p className="mt-1 text-xs text-[var(--danger)] flex items-center gap-1">
+                  <AlertCircle size={12} /> {errors.appliedPosition.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[var(--text-2)] mb-1">
+                Ngày bắt đầu <span className="text-[var(--danger)]">*</span>
+              </label>
+              <input
+                type="date"
+                {...register('startDate')}
+                className="w-full px-3 py-2 text-sm rounded-lg bg-[var(--bg)] border border-[var(--border)] text-[var(--text-1)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+              />
+              {errors.startDate && (
+                <p className="mt-1 text-xs text-[var(--danger)] flex items-center gap-1">
+                  <AlertCircle size={12} /> {errors.startDate.message}
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* GPA & Phòng ban */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>

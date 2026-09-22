@@ -13,20 +13,24 @@ import { toast } from 'sonner';
 import { useInterns, useInternDocuments, useUploadDocument } from '../../features/interns/hooks/useInterns';
 import { getInternStepProgress } from '../../features/interns/schema';
 import { documentService } from '../../services/documentService';
+import { MOCK_INTERN_PROFILES } from '../../services/mockData';
 import type { DocumentType } from '../../types';
 
 export const InternDashboard: React.FC = () => {
   const internCode = 'INT-2026-001'; // Default logged-in mock intern
 
-  const { data: internPage, isLoading: loadingIntern } = useInterns({ keyword: internCode });
-  const { data: documents = [], isLoading: loadingDocs } = useInternDocuments(internCode);
+  const { data: internPage } = useInterns({ keyword: internCode });
+  const { data: documents = [] } = useInternDocuments(internCode);
   const uploadDocMutation = useUploadDocument();
 
   // Upload new doc state (TM-4)
   const [uploadType, setUploadType] = useState<DocumentType>('CV');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const profile = internPage?.content && internPage.content.length > 0 ? internPage.content[0] : null;
+  // Lấy profile từ API backend nếu có, nếu chưa có (hoặc backend chặn quyền INTERN) thì dùng profile mặc định
+  const profile = (internPage?.content && internPage.content.length > 0)
+    ? internPage.content[0]
+    : MOCK_INTERN_PROFILES[0];
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +46,7 @@ export const InternDashboard: React.FC = () => {
 
     uploadDocMutation.mutate(
       {
-        internCode,
+        internCode: profile?.internCode || internCode,
         file: selectedFile,
         documentType: uploadType,
       },
@@ -53,8 +57,6 @@ export const InternDashboard: React.FC = () => {
       }
     );
   };
-
-  const loading = loadingIntern || loadingDocs;
 
   return (
     <div className="space-y-6">
@@ -67,12 +69,7 @@ export const InternDashboard: React.FC = () => {
         </p>
       </div>
 
-      {loading ? (
-        <div className="py-16 text-center text-text-3 text-sm animate-pulse">
-          Đang nạp thông tin cá nhân và tài liệu...
-        </div>
-      ) : (
-        <div className="space-y-6">
+      <div className="space-y-6">
           {/* Progress Stepper */}
           <div className="p-5 rounded-xl border border-border bg-surface shadow-card">
             <h3 className="text-sm font-bold text-text-1 font-heading mb-4">
@@ -90,13 +87,12 @@ export const InternDashboard: React.FC = () => {
                 return (
                   <div key={step.num} className="flex flex-col items-center text-center p-3 rounded-lg bg-surface-2/60">
                     <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs mb-2 transition-all ${
-                        state === 'completed'
+                      className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs mb-2 transition-all ${state === 'completed'
                           ? 'bg-success text-white'
                           : state === 'active'
-                          ? 'bg-primary text-white ring-4 ring-primary-soft'
-                          : 'bg-border-soft text-text-3'
-                      }`}
+                            ? 'bg-primary text-white ring-4 ring-primary-soft'
+                            : 'bg-border-soft text-text-3'
+                        }`}
                     >
                       {state === 'completed' ? <CheckCircle2 size={18} /> : step.num}
                     </div>
@@ -195,11 +191,10 @@ export const InternDashboard: React.FC = () => {
                   {documents.map((doc) => (
                     <div
                       key={doc.id}
-                      className={`p-3.5 rounded-lg border transition-all ${
-                        doc.status === 'REJECTED'
+                      className={`p-3.5 rounded-lg border transition-all ${doc.status === 'REJECTED'
                           ? 'border-danger/30 bg-danger-soft/30'
                           : 'border-border bg-surface-2/60'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 min-w-0">
@@ -231,15 +226,13 @@ export const InternDashboard: React.FC = () => {
                             </span>
                           )}
 
-                          <a
-                            href={documentService.getDocumentDownloadUrl(doc.id, 'attachment')}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1 rounded text-text-3 hover:text-text-1 hover:bg-surface transition-colors"
+                          <button
+                            onClick={() => documentService.downloadDocumentFile(doc.id, doc.fileName)}
+                            className="p-1 rounded text-text-3 hover:text-text-1 hover:bg-surface transition-colors cursor-pointer"
                             title="Tải về"
                           >
                             <Download size={14} />
-                          </a>
+                          </button>
                         </div>
                       </div>
 
@@ -330,7 +323,6 @@ export const InternDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
     </div>
   );
 };

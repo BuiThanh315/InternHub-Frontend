@@ -9,30 +9,14 @@ import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { HrDashboard } from '../pages/hr/HrDashboard';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
-import { useAuth } from '../contexts/AuthContext';
+import { LandingPage } from '../pages/public/LandingPage';
 
 export const AppRoutes: React.FC = () => {
-  const { isAuthenticated, role } = useAuth();
-
-  const getDefaultRedirect = () => {
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
-    switch (role) {
-      case 'ADMIN':
-        return <Navigate to="/admin/dashboard" replace />;
-      case 'HR':
-        return <Navigate to="/hr/dashboard" replace />;
-      case 'MENTOR':
-        return <Navigate to="/mentor/dashboard" replace />;
-      case 'INTERN':
-      default:
-        return <Navigate to="/intern/dashboard" replace />;
-    }
-  };
-
   return (
     <Routes>
-      {/* Root redirect */}
-      <Route path="/" element={getDefaultRedirect()} />
+      {/* Root route: Luôn là Trang Chủ / Landing Page công khai */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/apply" element={<LandingPage />} />
 
       {/* Public Auth Routes */}
       <Route element={<AuthLayout />}>

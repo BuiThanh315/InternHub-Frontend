@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   XCircle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { userService } from '../../services/userService';
 import type { User } from '../../types';
@@ -40,8 +41,9 @@ export const AdminDashboard: React.FC = () => {
     try {
       const updated = await userService.toggleUserStatus(id);
       setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+      toast.success('Đã cập nhật trạng thái người dùng');
     } catch (err) {
-      alert('Không thể thay đổi trạng thái người dùng');
+      toast.error('Không thể thay đổi trạng thái người dùng');
     }
   };
 

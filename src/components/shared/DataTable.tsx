@@ -161,11 +161,11 @@ export function DataTable<T>({
       {/* Desktop & Tablet Table (≥768px or fallback if no mobile card renderer) */}
       <div
         className={cn(
-          'w-full overflow-x-auto rounded-[12px] border border-border bg-surface shadow-card',
+          'w-full overflow-x-auto rounded-[12px] border border-border bg-surface shadow-card scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent',
           renderMobileCard ? 'hidden md:block' : 'block'
         )}
       >
-        <table className="w-full text-left border-collapse min-w-[700px] table-auto">
+        <table className="w-full text-left border-collapse min-w-full table-auto">
           <thead>
             <tr className="bg-surface-2 border-b border-border">
               {columns.map((col, idx) => (
@@ -173,7 +173,7 @@ export function DataTable<T>({
                   key={idx}
                   style={col.width ? { width: col.width, minWidth: col.width } : undefined}
                   className={cn(
-                    'px-3.5 py-3 text-[11px] font-bold text-text-2 uppercase tracking-wider select-none whitespace-nowrap bg-surface-2',
+                    'px-3 py-3 text-[11px] font-bold text-text-2 uppercase tracking-wider select-none whitespace-nowrap bg-surface-2',
                     col.className
                   )}
                 >
@@ -197,7 +197,7 @@ export function DataTable<T>({
                   <td
                     key={cIdx}
                     style={col.width ? { width: col.width, minWidth: col.width } : undefined}
-                    className={cn('px-3.5 py-2.5 text-xs text-text-1 align-middle', col.className)}
+                    className={cn('px-3 py-2 text-xs text-text-1 align-middle', col.className)}
                   >
                     {col.render(row, index)}
                   </td>

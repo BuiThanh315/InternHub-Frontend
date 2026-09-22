@@ -182,172 +182,170 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           {error && (
-            <div style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid #ef4444',
-              borderRadius: '8px',
-              padding: '0.75rem 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              color: '#fca5a5',
-              fontSize: '0.85rem',
-              marginBottom: '1rem',
-            }}>
-              <AlertCircle size={18} />
+            <div className="flex items-center gap-2.5 p-3 mb-4 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+              <AlertCircle size={16} className="shrink-0 text-rose-400" />
               <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label" style={{ color: '#cbd5e1' }}>Họ và tên *</label>
-              <input
-                type="text"
-                className="form-input"
-                style={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
-                placeholder="Nguyễn Văn A"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <div className="form-group">
-                <label className="form-label" style={{ color: '#cbd5e1' }}>Email *</label>
+            <div className="space-y-4">
+              {/* Họ và tên */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Họ và tên <span className="text-rose-400">*</span>
+                </label>
                 <input
-                  type="email"
-                  className="form-input"
-                  style={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
-                  placeholder="sinhvien@edu.vn"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  className="w-full px-3.5 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  placeholder="Nguyễn Văn A"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label" style={{ color: '#cbd5e1' }}>Số điện thoại *</label>
+              {/* Email & Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Email <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    disabled={loading}
+                    className="w-full px-3.5 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="sinhvien@edu.vn"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Số điện thoại <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    disabled={loading}
+                    className="w-full px-3.5 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="0912345678"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* University & GPA */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Trường Đại Học
+                  </label>
+                  <select
+                    disabled={loading}
+                    className="w-full px-3.5 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    value={university}
+                    onChange={(e) => setUniversity(e.target.value)}
+                  >
+                    <option value="Đại Học Bách Khoa">ĐH Bách Khoa</option>
+                    <option value="Đại Học Quốc Gia">ĐH Quốc Gia</option>
+                    <option value="Đại Học FPT">ĐH FPT</option>
+                    <option value="Đại Học Kinh Tế Quốc Dân">ĐH Kinh Tế Quốc Dân</option>
+                    <option value="Học Viện Bưu Chính Viễn Thông">HV Bưu Chính Viễn Thông</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Điểm GPA (Thang 4.0)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="4.0"
+                    disabled={loading}
+                    className="w-full px-3.5 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="3.5"
+                    value={gpa}
+                    onChange={(e) => setGpa(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Major */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Chuyên ngành
+                </label>
                 <input
-                  type="tel"
-                  className="form-input"
-                  style={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
-                  placeholder="0912345678"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  type="text"
+                  disabled={loading}
+                  className="w-full px-3.5 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  placeholder="Khoa Học Máy Tính, KTPM..."
+                  value={major}
+                  onChange={(e) => setMajor(e.target.value)}
                 />
               </div>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.75rem' }}>
-              <div className="form-group">
-                <label className="form-label" style={{ color: '#cbd5e1' }}>Trường Đại Học</label>
-                <select
-                  className="form-select"
-                  style={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
-                  value={university}
-                  onChange={(e) => setUniversity(e.target.value)}
-                >
-                  <option value="Đại Học Bách Khoa">ĐH Bách Khoa</option>
-                  <option value="Đại Học Quốc Gia">ĐH Quốc Gia</option>
-                  <option value="Đại Học FPT">ĐH FPT</option>
-                  <option value="Đại Học Kinh Tế Quốc Dân">ĐH Kinh Tế Quốc Dân</option>
-                  <option value="Học Viện Bưu Chính Viễn Thông">HV Bưu Chính Viễn Thông</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" style={{ color: '#cbd5e1' }}>Điểm GPA</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="4.0"
-                  className="form-input"
-                  style={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
-                  placeholder="3.5"
-                  value={gpa}
-                  onChange={(e) => setGpa(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" style={{ color: '#cbd5e1' }}>Chuyên ngành</label>
-              <input
-                type="text"
-                className="form-input"
-                style={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
-                placeholder="Khoa Học Máy Tính, KTPM..."
-                value={major}
-                onChange={(e) => setMajor(e.target.value)}
-              />
-            </div>
-
-            {/* CV Upload Dropzone */}
-            <div className="form-group">
-              <label className="form-label" style={{ color: '#cbd5e1' }}>Tải lên CV (PDF / DOCX, tối đa 5MB)</label>
-              <label
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '1.25rem',
-                  border: '2px dashed #475569',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(30, 41, 59, 0.5)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <input
-                  type="file"
-                  accept=".pdf,.docx,.doc"
-                  onChange={handleFileChange}
-                  style={{ display: 'none' }}
-                />
-                {cvFile ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#818cf8' }}>
-                    <FileText size={24} />
-                    <div style={{ textAlign: 'left' }}>
-                      <p style={{ fontSize: '0.85rem', fontWeight: 600, margin: 0, color: '#fff' }}>
-                        {cvFile.name}
-                      </p>
-                      <p style={{ fontSize: '0.725rem', color: '#94a3b8', margin: 0 }}>
-                        {(cvFile.size / (1024 * 1024)).toFixed(2)} MB - Nhấp để chọn lại
-                      </p>
+              {/* CV Upload Dropzone */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Tải lên CV (PDF / DOCX, tối đa 5MB)
+                </label>
+                <label className="flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-700 hover:border-indigo-500/60 rounded-xl bg-slate-800/50 hover:bg-slate-800/80 cursor-pointer transition-all duration-150">
+                  <input
+                    type="file"
+                    accept=".pdf,.docx,.doc"
+                    disabled={loading}
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  {cvFile ? (
+                    <div className="flex items-center gap-2.5 text-indigo-400">
+                      <FileText size={24} />
+                      <div className="text-left">
+                        <p className="text-xs font-semibold text-white truncate max-w-xs">
+                          {cvFile.name}
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          {(cvFile.size / (1024 * 1024)).toFixed(2)} MB · Nhấp để chọn lại
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <UploadCloud size={28} className="text-indigo-400 mb-1.5" />
+                      <p className="text-xs font-semibold text-slate-200">
+                        Kéo thả hoặc nhấp để chọn tệp CV
+                      </p>
+                      <span className="text-[11px] text-slate-500 mt-0.5">
+                        Hỗ trợ định dạng PDF, DOCX (tối đa 5MB)
+                      </span>
+                    </>
+                  )}
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-medium rounded-lg shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 cursor-pointer pt-3"
+              >
+                {loading ? (
+                  'Đang gửi hồ sơ...'
                 ) : (
                   <>
-                    <UploadCloud size={28} color="#818cf8" style={{ marginBottom: '0.35rem' }} />
-                    <p style={{ fontSize: '0.825rem', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>
-                      Kéo thả hoặc nhấp để chọn tệp CV
-                    </p>
-                    <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Hỗ trợ định dạng PDF, DOCX (tối đa 5MB)</span>
+                    <GraduationCap size={18} />
+                    <span>Gửi Hồ Sơ Ứng Tuyển</span>
                   </>
                 )}
-              </label>
+              </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '0.8rem', marginTop: '0.5rem' }}
-            >
-              {loading ? (
-                'Đang gửi hồ sơ...'
-              ) : (
-                <>
-                  <GraduationCap size={18} />
-                  <span>Gửi Hồ Sơ Ứng Tuyển</span>
-                </>
-              )}
-            </button>
           </form>
         </div>
       )}

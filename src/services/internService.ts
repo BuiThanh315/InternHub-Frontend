@@ -1,126 +1,62 @@
 import { apiClient } from './api';
 import type { CreateInternRequest, UpdateInternRequest, InternProfile, PageResponse } from '../types';
-import { MOCK_INTERN_PROFILES } from './mockData';
-
-const STORAGE_KEY = 'internhub_local_interns';
-
-function loadStoredInterns(): InternProfile[] {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (e) {
-    console.warn('Failed to load interns from localStorage', e);
-  }
-  return [...MOCK_INTERN_PROFILES];
-}
-
-function saveStoredInterns(interns: InternProfile[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(interns));
-  } catch (e) {
-    console.warn('Failed to save interns to localStorage', e);
-  }
-}
-
-let localInterns = loadStoredInterns();
 
 export const internService = {
   async getInterns(params?: {
     keyword?: string;
     university?: string;
     major?: string;
+    department?: string;
     status?: string;
     page?: number;
     size?: number;
   }): Promise<PageResponse<InternProfile>> {
-    try {
-      const response = await apiClient.get('/api/employees/interns', { params });
-      return response.data.data;
-    } catch (error) {
-      console.warn('Backend API interns failed or offline, using local mock data...', error);
-      let filtered = [...localInterns];
-
-      if (params?.keyword) {
-        const kw = params.keyword.toLowerCase();
-        filtered = filtered.filter(
-          (i) =>
-            i.fullName.toLowerCase().includes(kw) ||
-            i.email.toLowerCase().includes(kw) ||
-            i.internCode.toLowerCase().includes(kw) ||
-            i.phone.includes(kw) ||
-            i.university.toLowerCase().includes(kw) ||
-            i.major.toLowerCase().includes(kw) ||
-            (i.department && i.department.toLowerCase().includes(kw))
-        );
-      }
-      if (params?.university) {
-        filtered = filtered.filter((i) => i.university.toLowerCase().includes(params.university!.toLowerCase()));
-      }
-      if (params?.major) {
-        filtered = filtered.filter((i) => i.major.toLowerCase().includes(params.major!.toLowerCase()));
-      }
-      if (params?.status) {
-        filtered = filtered.filter((i) => i.status === params.status);
-      }
-
-      return {
-        content: filtered,
-        pageNumber: params?.page || 0,
-        pageSize: params?.size || 10,
-        totalElements: filtered.length,
-        totalPages: Math.ceil(filtered.length / (params?.size || 10)) || 1,
-        last: true,
-      };
+    // Lọc bỏ param rỗng để tránh Backend Spring Boot parse lỗi enum status
+    const cleanParams: Record<string, any> = {};
+    if (params) {
+      if (params.keyword && params.keyword.trim()) cleanParams.keyword = params.keyword.trim();
+      if (params.university && params.university.trim()) cleanParams.university = params.university.trim();
+      if (params.major && params.major.trim()) cleanParams.major = params.major.trim();
+      if (params.department && params.department.trim()) cleanParams.department = params.department.trim();
+      if (params.status && params.status.trim()) cleanParams.status = params.status.trim();
+      if (params.page !== undefined) cleanParams.page = params.page;
+      if (params.size !== undefined) cleanParams.size = params.size;
     }
+
+    const response = await apiClient.get('/api/employees/interns', { params: cleanParams });
+    const resData = response.data?.data;
+    // Backend trả về data: { items: [...], currentPage, pageSize, totalItems, totalPages }
+    return {
+      content: resData?.items || resData?.content || [],
+      pageNumber: resData?.currentPage ?? resData?.pageNumber ?? 0,
+      pageSize: resData?.pageSize || 10,
+      totalElements: resData?.totalItems ?? resData?.totalElements ?? 0,
+      totalPages: resData?.totalPages || 1,
+      last: resData?.last ?? true,
+    };
   },
 
   async createIntern(request: CreateInternRequest): Promise<InternProfile> {
-    try {
-      const response = await apiClient.post('/api/employees/interns', request);
-      return response.data.data;
-    } catch (error) {
-      console.warn('Backend API createIntern failed or offline, saving to local mock...', error);
-      const newIntern: InternProfile = {
-        id: localInterns.length + 1,
-        internCode: `INT-2026-${String(localInterns.length + 1).padStart(3, '0')}`,
-        fullName: request.fullName,
-        email: request.email,
-        phone: request.phone,
-        university: request.university,
-        major: request.major,
-        gpa: request.gpa,
-        startDate: request.startDate,
-        endDate: request.endDate,
-        department: request.department,
-        status: 'SUBMITTED',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      localInterns.unshift(newIntern);
-      saveStoredInterns(localInterns);
-      return newIntern;
-    }
+    const payload = {
+      ...request,
+      appliedPosition: request.appliedPosition || 'Thực tập sinh',
+      startDate: request.startDate || new Date().toISOString().split('T')[0],
+      academicYear: request.academicYear || '2022-2026',
+    };
+
+    const response = await apiClient.post('/api/employees/interns', payload);
+    return response.data?.data;
   },
 
   async updateIntern(id: number, request: UpdateInternRequest): Promise<InternProfile> {
-    try {
-      const response = await apiClient.put(`/api/employees/interns/${id}`, request);
-      return response.data.data;
-    } catch (error) {
-      console.warn('Backend API updateIntern failed or offline, updating local mock...', error);
-      const index = localInterns.findIndex((i) => i.id === id);
-      if (index !== -1) {
-        localInterns[index] = {
-          ...localInterns[index],
-          ...request,
-          updatedAt: new Date().toISOString(),
-        };
-        saveStoredInterns(localInterns);
-        return localInterns[index];
-      }
-      throw new Error('Không tìm thấy thực tập sinh');
-    }
+    const payload = {
+      ...request,
+      appliedPosition: request.appliedPosition || 'Thực tập sinh',
+      startDate: request.startDate || new Date().toISOString().split('T')[0],
+      academicYear: request.academicYear || '2022-2026',
+    };
+
+    const response = await apiClient.put(`/api/employees/interns/${id}`, payload);
+    return response.data?.data;
   },
 };

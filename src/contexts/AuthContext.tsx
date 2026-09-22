@@ -1,17 +1,31 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import type { AuthUser, RoleType } from '../types';
 import { authService } from '../services/authService';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: AuthUser | null;
   role: RoleType | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<AuthUser>;
-  demoLogin: (role: 'admin' | 'hr' | 'mentor' | 'intern') => AuthUser;
+  demoLogin: (role: 'admin' | 'hr' | 'mentor' | 'intern') => Promise<AuthUser>;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Fallback mặc định an toàn: đọc trực tiếp session hiện có từ localStorage
+// Tránh crash cây component nếu HMR hoặc component render trước khi Provider bind
+const getDefaultContextValue = (): AuthContextType => {
+  const currentUser = authService.getCurrentUser();
+  return {
+    user: currentUser,
+    role: currentUser?.role || null,
+    isAuthenticated: !!currentUser,
+    login: (username, password) => authService.login(username, password),
+    demoLogin: (role) => authService.demoLoginAs(role),
+    logout: () => authService.logout(),
+  };
+};
+
+export const AuthContext = createContext<AuthContextType>(getDefaultContextValue());
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
@@ -27,8 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return authUser;
   };
 
-  const demoLogin = (targetRole: 'admin' | 'hr' | 'mentor' | 'intern'): AuthUser => {
-    const authUser = authService.demoLoginAs(targetRole);
+  const demoLogin = async (targetRole: 'admin' | 'hr' | 'mentor' | 'intern'): Promise<AuthUser> => {
+    const authUser = await authService.demoLoginAs(targetRole);
     setUser(authUser);
     return authUser;
   };
@@ -38,26 +52,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      role: user ? user.role : null,
+      isAuthenticated: !!user,
+      login,
+      demoLogin,
+      logout,
+    }),
+    [user]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        role: user ? user.role : null,
-        isAuthenticated: !!user,
-        login,
-        demoLogin,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    return getDefaultContextValue();
   }
   return context;
 };

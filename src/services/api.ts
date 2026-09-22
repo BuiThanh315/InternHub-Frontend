@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// Luôn dùng '' trong browser để request đi qua Vite dev server proxy (cùng origin http://localhost:5173), loại bỏ triệt để lỗi CORS Network Error
+const API_BASE_URL = '';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -22,19 +23,26 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor xử lý lỗi xác thực
+// Response interceptor xử lý lỗi xác thực & trích xuất message từ Backend
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token hết hạn hoặc không hợp lệ
+      // Token hết hạn hoặc không hợp lệ -> yêu cầu đăng nhập lại
       const currentPath = window.location.pathname;
-      if (currentPath !== '/login' && currentPath !== '/register') {
+      if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/' && currentPath !== '/apply') {
         localStorage.removeItem('internhub_token');
         localStorage.removeItem('internhub_user');
         window.location.href = '/login?expired=true';
       }
     }
+
+    // Trích xuất thông điệp chi tiết từ Backend nếu có (ví dụ: error.response.data.message)
+    const backendMessage = error.response?.data?.message;
+    if (backendMessage) {
+      error.message = backendMessage;
+    }
+
     return Promise.reject(error);
   }
 );

@@ -241,14 +241,13 @@ export const MentorDashboard: React.FC = () => {
                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{doc.documentType}</span>
                             </div>
                           </div>
-                          <a
-                            href={documentService.getDocumentDownloadUrl(doc.id, 'inline')}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => documentService.previewDocumentFile(doc.id)}
                             className="btn btn-sm btn-secondary"
+                            style={{ cursor: 'pointer' }}
                           >
                             <Download size={12} /> Xem CV
-                          </a>
+                          </button>
                         </div>
                       ))}
                     </div>
