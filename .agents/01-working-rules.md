@@ -12,7 +12,11 @@ Tài liệu này định nghĩa nguyên tắc tối cao và quy trình làm vi�
 > Mọi hành vi tự ý can thiệp mã nguồn, tự động thay đổi cấu trúc dự án, tự cài đặt thư viện hoặc tự ý suy đoán yêu cầu nghiệp vụ đều là vi phạm nghiêm trọng quy tắc làm việc.
 
 ### Các giới hạn cụ thể:
+0. **BẮT BUỘC ĐỌC QUY TẮC PHÂN HỆ TRƯỚC KHI THAO TÁC CẬP NHẬT CODE**:
+   - Bất kỳ khi nào thực hiện cập nhật code cho **Frontend**, Agent **BẮT BUỘC PHẢI ĐỌC QUA CÁC QUY TẮC CỦA FRONTEND** trong thư mục `.agents/` (đặc biệt là `01-working-rules.md`, `03-compliance-constraints.md`, `05-coding-standards.md`) trước khi thao tác.
+   - Ngược lại, bất kỳ khi nào thực hiện cập nhật code cho **Backend**, Agent cũng **BẮT BUỘC PHẢI ĐỌC QUA CÁC QUY TẮC CỦA BACKEND** (`InternHub/AGENTS.md` và `InternHub/.antigravity/rules.md`) trước khi thực hiện.
 1. **Không tự ý cài đặt hoặc gỡ bỏ thư viện**: Cấm tự chạy `npm install`, `npm uninstall`, `yarn add` mà không có sự đồng ý của người dùng.
+
 2. **Không tự ý thay đổi cấu trúc thư mục hoặc di chuyển file**: Mọi thao tác tái cấu trúc (refactoring) phải được đề xuất và phê duyệt.
 3. **Không tự ý thay đổi hợp đồng API (API Contract)**: Không tự ý thay đổi endpoint URL, payload format, hoặc cơ chế xác thực nếu chưa thống nhất với cấu hình của backend.
 4. **Không tự ý suy đoán yêu cầu & Xử lý câu lệnh đa nghĩa**: Khi câu lệnh của người dùng có thể hiểu theo nhiều cách khác nhau hoặc thiếu thông tin, Agent **bắt buộc phải hỏi lại để làm rõ**, tuyệt đối không được tự suy đoán hoặc tự chọn phương án thực thi.

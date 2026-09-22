@@ -3,7 +3,8 @@
 > [!CAUTION]
 > ### CHỈ THỊ BẮT BUỘC CHO MỌI AI AGENT TRONG MỌI PHIÊN LÀM VIỆC (MANDATORY DIRECTIVE)
 > 
-> Trước khi thực hiện BẤT KỲ thao tác nào (đọc/sửa code, chạy lệnh, tạo file, tư vấn giải pháp), AI Agent **BẮT BUỘC PHẢI ĐỌC VÀ TUÂN THỦ NGHIÊM NGẶT** toàn bộ các tài liệu hướng dẫn nằm trong thư mục [`.agents/`](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/).
+> - **BẮT BUỘC ĐỌC QUY TẮC TRƯỚC KHI THAO TÁC (MANDATORY CONTEXT PRE-READING)**: Bất kỳ khi nào thực hiện cập nhật hoặc viết code cho Frontend, AI Agent **BẮT BUỘC PHẢI ĐỌC VÀ TUÂN THỦ TOÀN BỘ QUY TẮC** trong thư mục [`.agents/`](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/). Ngược lại, nếu làm việc với Backend (`InternHub/`), cũng **BẮT BUỘC PHẢI ĐỌC KỸ QUY TẮC CỦA BACKEND** ([AGENTS.md](file:///d:/Certificate_CodeGym/Module%206/InternHub/AGENTS.md) và [.antigravity/rules.md](file:///d:/Certificate_CodeGym/Module%206/InternHub/.antigravity/rules.md)) trước khi code. Tuyệt đối không tự ý suy diễn hoặc code tắt khi chưa nạp ngữ cảnh.
+
 
 ---
 

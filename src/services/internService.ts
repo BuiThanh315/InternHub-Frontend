@@ -16,7 +16,7 @@ export const internService = {
     },
     signal?: AbortSignal
   ): Promise<PageResponse<InternProfile>> {
-    const response = await apiClient.get(API_ENDPOINTS.EMPLOYEE.INTERNS, { params, signal });
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.LIST, { params, signal });
     const raw = response.data.data;
     const items: InternProfile[] = raw.items || raw.content || [];
 
@@ -38,12 +38,12 @@ export const internService = {
   },
 
   async createIntern(request: CreateInternRequest): Promise<InternProfile> {
-    const response = await apiClient.post(API_ENDPOINTS.EMPLOYEE.INTERNS, request);
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.CREATE, request);
     return response.data.data;
   },
 
   async updateIntern(id: number, request: UpdateInternRequest): Promise<InternProfile> {
-    const response = await apiClient.put(API_ENDPOINTS.EMPLOYEE.INTERN_DETAIL(id), request);
+    const response = await apiClient.put(API_ENDPOINTS.INTERN.DETAIL(id), request);
     return response.data.data;
   },
 
