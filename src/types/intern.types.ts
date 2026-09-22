@@ -1,0 +1,66 @@
+import type { GenderType } from './common.types';
+
+// Khớp 100% với backend InternStatus enum
+export type InternStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'INTERNING'
+  | 'COMPLETED'
+  | 'REJECTED';
+
+export interface InternProfile {
+  id: number;
+  internCode: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  gender?: GenderType;
+  address?: string;
+  university: string;
+  major: string;
+  academicYear?: string;
+  appliedPosition: string;
+  startDate: string;
+  endDate?: string;
+  status: InternStatus;
+  notes?: string;
+  gpa?: number;
+  mentorId?: number;
+  mentorName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInternRequest {
+  fullName: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  gender?: GenderType;
+  address?: string;
+  university: string;
+  major: string;
+  academicYear?: string;
+  appliedPosition: string;
+  startDate: string;
+  endDate?: string;
+  notes?: string;
+}
+
+export interface UpdateInternRequest {
+  fullName: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  gender?: GenderType;
+  address?: string;
+  university: string;
+  major: string;
+  academicYear?: string;
+  appliedPosition: string;
+  startDate: string;
+  endDate?: string;
+  status: InternStatus;
+  notes?: string;
+}

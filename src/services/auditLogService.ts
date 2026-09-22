@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import { API_ENDPOINTS } from '../constants/endpoints';
 import type {
   AuditLogItem,
   AuditLogDetail,
@@ -13,10 +14,13 @@ export const auditLogService = {
    * Truy vấn danh sách nhật ký hoạt động có phân trang và bộ lọc đa tiêu chí
    * Gọi trực tiếp Backend REST API (KHÔNG sử dụng Mock API)
    */
-  async getAuditLogs(params: AuditLogFilterParams = {}): Promise<PageResponse<AuditLogItem>> {
+  async getAuditLogs(
+    params: AuditLogFilterParams = {},
+    signal?: AbortSignal
+  ): Promise<PageResponse<AuditLogItem>> {
     const response = await apiClient.get<ApiResponse<PageResponse<AuditLogItem>>>(
-      '/api/system/audit-logs',
-      { params }
+      API_ENDPOINTS.SYSTEM.AUDIT_LOGS,
+      { params, signal }
     );
 
     if (response.data && response.data.data) {
@@ -44,9 +48,10 @@ export const auditLogService = {
   /**
    * Lấy thông tin chi tiết một bản ghi nhật ký hoạt động kèm Request Payload
    */
-  async getAuditLogById(id: number): Promise<AuditLogDetail> {
+  async getAuditLogById(id: number, signal?: AbortSignal): Promise<AuditLogDetail> {
     const response = await apiClient.get<ApiResponse<AuditLogDetail>>(
-      `/api/system/audit-logs/${id}`
+      API_ENDPOINTS.SYSTEM.AUDIT_LOG_DETAIL(id),
+      { signal }
     );
 
     if (response.data && response.data.data) {
@@ -59,9 +64,10 @@ export const auditLogService = {
   /**
    * Lấy số liệu thống kê hoạt động trong ngày hôm nay
    */
-  async getAuditStatistics(): Promise<AuditLogStats> {
+  async getAuditStatistics(signal?: AbortSignal): Promise<AuditLogStats> {
     const response = await apiClient.get<ApiResponse<AuditLogStats>>(
-      '/api/system/audit-logs/statistics'
+      API_ENDPOINTS.SYSTEM.AUDIT_LOG_STATS,
+      { signal }
     );
 
     if (response.data && response.data.data) {
@@ -74,10 +80,11 @@ export const auditLogService = {
   /**
    * Xuất danh sách nhật ký hoạt động ra tệp CSV và tự động tải về
    */
-  async exportAuditLogsCsv(params: AuditLogFilterParams = {}): Promise<void> {
-    const response = await apiClient.get('/api/system/audit-logs/export', {
+  async exportAuditLogsCsv(params: AuditLogFilterParams = {}, signal?: AbortSignal): Promise<void> {
+    const response = await apiClient.get(API_ENDPOINTS.SYSTEM.AUDIT_LOG_EXPORT, {
       params,
       responseType: 'blob',
+      signal,
     });
 
     const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
@@ -95,3 +102,5 @@ export const auditLogService = {
     window.URL.revokeObjectURL(url);
   },
 };
+
+export default auditLogService;

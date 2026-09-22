@@ -1,0 +1,70 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.widgetTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.emptyText {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.docList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.docItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background-color: var(--border-subtle);
+  border: 1px solid var(--border-default);
+}
+
+.docInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.docName {
+  font-size: 0.825rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.docType {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.docActions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.emptyStateCard {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}

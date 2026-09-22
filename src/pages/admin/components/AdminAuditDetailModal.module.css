@@ -1,0 +1,76 @@
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.metaLabel {
+  color: var(--text-muted);
+}
+
+.metaValue {
+  font-weight: 600;
+  margin: 2px 0 0 0;
+}
+
+.monoValue {
+  font-family: monospace;
+  font-weight: 600;
+  margin: 2px 0 0 0;
+}
+
+.sectionBlock {
+  margin-bottom: 1.25rem;
+}
+
+.sectionLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.descText {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 4px 0 0 0;
+}
+
+.codeBox {
+  font-size: 0.75rem;
+  font-family: monospace;
+  background-color: var(--bg-surface);
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin: 4px 0 0 0;
+  word-break: break-all;
+}
+
+.errorLabel {
+  font-size: 0.8rem;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.errorBox {
+  font-size: 0.75rem;
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.08);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin: 4px 0 0 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.jsonBox {
+  font-size: 0.775rem;
+  font-family: monospace;
+  background-color: var(--bg-surface);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin: 4px 0 0 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-default);
+}

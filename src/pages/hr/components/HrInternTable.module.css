@@ -1,0 +1,72 @@
+.tableCard {
+  margin-top: 0;
+}
+
+.codeButton {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.nameText {
+  font-weight: 600;
+}
+
+.subText {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.positionText {
+  font-weight: 600;
+  color: #3b82f6;
+  font-size: 0.85rem;
+}
+
+.startDateText {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+}
+
+.actionButtonsGroup {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.graduatedText {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.emptyCell {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+.paginationContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-default);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.paginationButtons {
+  display: flex;
+  gap: 0.5rem;
+}

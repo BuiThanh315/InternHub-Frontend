@@ -1,0 +1,54 @@
+.reviewCard {
+  margin-bottom: 2rem;
+  border-left: 4px solid var(--primary);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.internCodeCell {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.fileCell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.fileName {
+  font-weight: 500;
+}
+
+.actionsGroup {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}

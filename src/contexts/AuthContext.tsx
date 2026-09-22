@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import type { AuthUser, RoleType } from '../types';
 import { authService } from '../services/authService';
 
@@ -7,7 +7,6 @@ interface AuthContextType {
   role: RoleType | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<AuthUser>;
-  demoLogin: (role: 'admin' | 'hr' | 'mentor' | 'intern') => AuthUser;
   logout: () => void;
 }
 
@@ -16,19 +15,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
 
-  useEffect(() => {
-    const current = authService.getCurrentUser();
-    setUser(current);
-  }, []);
-
   const login = async (username: string, password: string): Promise<AuthUser> => {
     const authUser = await authService.login(username, password);
-    setUser(authUser);
-    return authUser;
-  };
-
-  const demoLogin = (targetRole: 'admin' | 'hr' | 'mentor' | 'intern'): AuthUser => {
-    const authUser = authService.demoLoginAs(targetRole);
     setUser(authUser);
     return authUser;
   };
@@ -45,7 +33,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: user ? user.role : null,
         isAuthenticated: !!user,
         login,
-        demoLogin,
         logout,
       }}
     >

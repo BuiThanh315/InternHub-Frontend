@@ -10,68 +10,70 @@ import { HrDashboard } from '../pages/hr/HrDashboard';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { useAuth } from '../contexts/AuthContext';
+import { ROUTES } from '../constants/routes';
 
 export const AppRoutes: React.FC = () => {
   const { isAuthenticated, role } = useAuth();
 
   const getDefaultRedirect = () => {
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (!isAuthenticated) return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
     switch (role) {
       case 'ADMIN':
-        return <Navigate to="/admin/dashboard" replace />;
+        return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
       case 'HR':
-        return <Navigate to="/hr/dashboard" replace />;
+        return <Navigate to={ROUTES.HR.DASHBOARD} replace />;
       case 'MENTOR':
-        return <Navigate to="/mentor/dashboard" replace />;
+        return <Navigate to={ROUTES.MENTOR.DASHBOARD} replace />;
       case 'INTERN':
       default:
-        return <Navigate to="/intern/dashboard" replace />;
+        return <Navigate to={ROUTES.INTERN.DASHBOARD} replace />;
     }
   };
 
   return (
     <Routes>
       {/* Root redirect */}
-      <Route path="/" element={getDefaultRedirect()} />
+      <Route path={ROUTES.ROOT} element={getDefaultRedirect()} />
 
       {/* Public Auth Routes */}
       <Route element={<AuthLayout />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.AUTH.REGISTER} element={<RegisterPage />} />
       </Route>
 
       {/* Authenticated Dashboard Routes */}
       <Route element={<MainLayout />}>
         {/* Admin Area */}
         <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminDashboard />} />
-          <Route path="/admin/system" element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN.DASHBOARD} element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN.USERS} element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN.SYSTEM} element={<AdminDashboard />} />
         </Route>
 
         {/* HR Area */}
         <Route element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']} />}>
-          <Route path="/hr/dashboard" element={<HrDashboard />} />
-          <Route path="/hr/interns" element={<HrDashboard />} />
-          <Route path="/hr/review" element={<HrDashboard />} />
+          <Route path={ROUTES.HR.DASHBOARD} element={<HrDashboard />} />
+          <Route path={ROUTES.HR.INTERNS} element={<HrDashboard />} />
+          <Route path={ROUTES.HR.REVIEW} element={<HrDashboard />} />
         </Route>
 
         {/* Mentor Area */}
         <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']} />}>
-          <Route path="/mentor/dashboard" element={<MentorDashboard />} />
-          <Route path="/mentor/interns" element={<MentorDashboard />} />
-          <Route path="/mentor/documents" element={<MentorDashboard />} />
+          <Route path={ROUTES.MENTOR.DASHBOARD} element={<MentorDashboard />} />
+          <Route path={ROUTES.MENTOR.INTERNS} element={<MentorDashboard />} />
+          <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
         </Route>
 
         {/* Intern Area */}
         <Route element={<ProtectedRoute allowedRoles={['INTERN', 'ADMIN', 'HR', 'MENTOR']} />}>
-          <Route path="/intern/dashboard" element={<InternDashboard />} />
-          <Route path="/intern/documents" element={<InternDashboard />} />
+          <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
+          <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDashboard />} />
         </Route>
       </Route>
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to={ROUTES.AUTH.LOGIN} replace />} />
     </Routes>
   );
 };
+export default AppRoutes;
