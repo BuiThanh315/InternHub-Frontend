@@ -1,37 +1,39 @@
 import { apiClient } from './api';
 import type { User } from '../types';
-import { MOCK_USERS } from './mockData';
 
-let localUsers = [...MOCK_USERS];
+const normalizeUser = (u: any): User => ({
+  id: u.id,
+  fullName: u.fullName,
+  email: u.email,
+  phone: u.phoneNumber || u.phone || '',
+  phoneNumber: u.phoneNumber || u.phone || '',
+  dateOfBirth: u.dateOfBirth,
+  gender: u.gender,
+  address: u.address,
+  avatarUrl: u.avatarUrl,
+  status: u.status || 'ACTIVE',
+  role: u.role || 'USER',
+  department: u.department || 'Bộ phận Kỹ thuật',
+  position: u.position || 'Nhân sự',
+  createdAt: u.createdAt,
+  updatedAt: u.updatedAt,
+});
 
 export const userService = {
   async getAllUsers(): Promise<User[]> {
-    try {
-      const response = await apiClient.get('/api/users');
-      return response.data.data;
-    } catch (error) {
-      console.warn('Backend API getAllUsers failed or offline, using mock users...', error);
-      return localUsers;
-    }
+    const response = await apiClient.get('/api/employees/users');
+    const list = response.data.data || [];
+    return list.map(normalizeUser);
   },
 
   async getUserById(id: number): Promise<User> {
-    try {
-      const response = await apiClient.get(`/api/users/${id}`);
-      return response.data.data;
-    } catch (error) {
-      const found = localUsers.find((u) => u.id === id);
-      if (found) return found;
-      throw new Error('Không tìm thấy người dùng');
-    }
+    const response = await apiClient.get(`/api/employees/users/${id}`);
+    return normalizeUser(response.data.data);
   },
 
   async toggleUserStatus(id: number): Promise<User> {
-    const index = localUsers.findIndex((u) => u.id === id);
-    if (index !== -1) {
-      localUsers[index].status = localUsers[index].status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-      return localUsers[index];
-    }
-    throw new Error('Người dùng không tồn tại');
+    const response = await apiClient.put(`/api/employees/users/${id}/status`);
+    return normalizeUser(response.data.data);
   },
 };
+export default userService;

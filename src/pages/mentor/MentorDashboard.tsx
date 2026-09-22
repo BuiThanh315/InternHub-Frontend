@@ -5,6 +5,7 @@ import {
   FolderGit2,
   FileText,
   Download,
+  Eye,
   Sparkles,
   BookOpen,
 } from 'lucide-react';
@@ -19,10 +20,14 @@ export const MentorDashboard: React.FC = () => {
   const [selectedInternCode, setSelectedInternCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mentorship notes state
-  const [notes, setNotes] = useState<{ [key: string]: string }>({
-    'INT-2026-001': 'Hoàn thành tốt tuần Onboarding, đang tìm hiểu kiến trúc Microservices và Spring Cloud.',
-    'INT-2026-002': 'Cần hỗ trợ thêm về React Router và quản lý State.',
+  // Mentorship notes state stored in localStorage per real intern
+  const [notes, setNotes] = useState<{ [key: string]: string }>(() => {
+    try {
+      const saved = localStorage.getItem('internhub_mentor_notes');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
   });
   const [activeNoteText, setActiveNoteText] = useState('');
 
@@ -33,20 +38,16 @@ export const MentorDashboard: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [internRes, docRes] = await Promise.all([
-        internService.getInterns(),
-        documentService.getAllDocuments(),
-      ]);
+      const internRes = await internService.getInterns();
+      const items = internRes.items || internRes.content || [];
+      const codes = items.map((i) => i.internCode);
+      const docRes = await documentService.getAllDocuments(codes);
 
-      // Lọc các thực tập sinh thuộc mentorId = 3 hoặc được gán tên mentor
-      const filtered = internRes.content.filter(
-        (i) => i.mentorId === 3 || i.mentorName?.includes('Hướng Dẫn')
-      );
-      setMyInterns(filtered);
+      setMyInterns(items);
       setDocuments(docRes);
-      if (filtered.length > 0) {
-        setSelectedInternCode(filtered[0].internCode);
-        setActiveNoteText(notes[filtered[0].internCode] || '');
+      if (items.length > 0) {
+        setSelectedInternCode(items[0].internCode);
+        setActiveNoteText(notes[items[0].internCode] || '');
       }
     } catch (err) {
       console.error('Lỗi tải dữ liệu Mentor Dashboard:', err);
@@ -62,7 +63,9 @@ export const MentorDashboard: React.FC = () => {
 
   const handleSaveNote = () => {
     if (!selectedInternCode) return;
-    setNotes((prev) => ({ ...prev, [selectedInternCode]: activeNoteText }));
+    const updatedNotes = { ...notes, [selectedInternCode]: activeNoteText };
+    setNotes(updatedNotes);
+    localStorage.setItem('internhub_mentor_notes', JSON.stringify(updatedNotes));
     alert('Đã lưu ghi chú hướng dẫn thành công!');
   };
 
@@ -241,14 +244,22 @@ export const MentorDashboard: React.FC = () => {
                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{doc.documentType}</span>
                             </div>
                           </div>
-                          <a
-                            href={documentService.getDocumentDownloadUrl(doc.id, 'inline')}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-secondary"
-                          >
-                            <Download size={12} /> Xem CV
-                          </a>
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button
+                              onClick={() => documentService.previewDocumentFile(doc.id)}
+                              className="btn btn-sm btn-secondary"
+                              title="Xem tệp tin"
+                            >
+                              <Eye size={12} /> Xem
+                            </button>
+                            <button
+                              onClick={() => documentService.downloadDocumentFile(doc.id, doc.originalFileName)}
+                              className="btn btn-sm btn-secondary"
+                              title="Tải tệp tin về máy"
+                            >
+                              <Download size={12} /> Tải
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>

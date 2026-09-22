@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import {
-  GraduationCap,
-  FileCheck2,
-  Clock,
-  CheckCircle2,
-  Search,
-  Plus,
-  FileText,
-  Download,
-  X,
-} from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Header } from '../../components/layout/Header';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
-import type { InternProfile, DocumentResponse, InternStatus, CreateInternRequest } from '../../types';
+import type {
+  InternProfile,
+  DocumentResponse,
+  DocumentType,
+  InternStatus,
+  CreateInternRequest,
+  UpdateInternRequest,
+} from '../../types';
+import {
+  HrMetricsGrid,
+  HrDocumentReviewTable,
+  HrFilterBar,
+  HrInternTable,
+  CreateInternModal,
+  EditInternModal,
+  DetailInternModal,
+  UploadDocModal,
+  RejectDocModal,
+} from './components';
 
 export const HrDashboard: React.FC = () => {
   const [interns, setInterns] = useState<InternProfile[]>([]);
@@ -22,110 +30,163 @@ export const HrDashboard: React.FC = () => {
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Review Modal State (TM-5)
-  const [reviewModalDoc, setReviewModalDoc] = useState<DocumentResponse | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
-  // Create Intern Modal State (TM-1)
+  // Modal States
+  const [detailIntern, setDetailIntern] = useState<InternProfile | null>(null);
+  const [editIntern, setEditIntern] = useState<InternProfile | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newInternForm, setNewInternForm] = useState<CreateInternRequest>({
-    fullName: '',
-    email: '',
-    phone: '',
-    university: 'Đại Học Bách Khoa',
-    major: 'Khoa Học Máy Tính',
-    gpa: 3.5,
-  });
-
-  useEffect(() => {
-    loadData();
-  }, [keyword, selectedUniversity, selectedStatus]);
+  const [uploadDocIntern, setUploadDocIntern] = useState<InternProfile | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [reviewModalDoc, setReviewModalDoc] = useState<DocumentResponse | null>(null);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [internRes, docRes] = await Promise.all([
-        internService.getInterns({
-          keyword: keyword || undefined,
-          university: selectedUniversity || undefined,
-          status: selectedStatus || undefined,
-        }),
-        documentService.getAllDocuments(),
-      ]);
-      setInterns(internRes.content);
+      setErrorMessage(null);
+
+      const internRes = await internService.getInterns({
+        keyword: keyword || undefined,
+        university: selectedUniversity || undefined,
+        status: selectedStatus || undefined,
+        page,
+        size: 10,
+      });
+
+      const loadedInterns = internRes.items || internRes.content || [];
+      setInterns(loadedInterns);
+      setTotalPages(internRes.totalPages || 1);
+      setTotalItems(internRes.totalItems || loadedInterns.length);
+
+      // Nạp tài liệu từ các thực tập sinh
+      const internCodes = loadedInterns.map((i) => i.internCode);
+      const docRes = await documentService.getAllDocuments(internCodes);
       setDocuments(docRes);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Lỗi nạp dữ liệu HR Dashboard:', err);
+      setErrorMessage(err.message || 'Không thể nạp dữ liệu từ máy chủ backend');
     } finally {
       setLoading(false);
     }
   };
 
-  // Xét duyệt tài liệu TM-5
+  useEffect(() => {
+    loadData();
+  }, [keyword, selectedUniversity, selectedStatus, page]);
+
+  // TM-1: Tạo mới hồ sơ thực tập sinh
+  const handleCreateIntern = async (formData: CreateInternRequest) => {
+    try {
+      await internService.createIntern(formData);
+      setShowCreateModal(false);
+      loadData();
+      alert('Tạo mới hồ sơ thực tập sinh thành công qua API Backend!');
+    } catch (err: any) {
+      alert(err.message || 'Lỗi tạo hồ sơ thực tập sinh');
+    }
+  };
+
+  // TM-2: Chỉnh sửa hồ sơ thực tập sinh
+  const handleSaveEdit = async (id: number, form: UpdateInternRequest) => {
+    try {
+      const updated = await internService.updateIntern(id, form);
+      setInterns((prev) => prev.map((i) => (i.id === id ? updated : i)));
+      if (detailIntern && detailIntern.id === id) {
+        setDetailIntern(updated);
+      }
+      setEditIntern(null);
+      alert('Cập nhật hồ sơ thực tập sinh thành công qua API Backend (PUT)!');
+    } catch (err: any) {
+      alert(err.message || 'Không thể cập nhật hồ sơ');
+    }
+  };
+
+  // TM-2: Điều phối trạng thái nhanh
+  const handleStatusChange = async (internId: number, nextStatus: InternStatus) => {
+    const target = interns.find((i) => i.id === internId);
+    if (!target) return;
+
+    const updatePayload: UpdateInternRequest = {
+      fullName: target.fullName,
+      email: target.email,
+      phone: target.phone,
+      university: target.university,
+      major: target.major,
+      appliedPosition: target.appliedPosition || 'Thực tập sinh',
+      startDate: target.startDate || new Date().toISOString().split('T')[0],
+      endDate: target.endDate,
+      dateOfBirth: target.dateOfBirth,
+      gender: target.gender,
+      address: target.address,
+      notes: target.notes,
+      academicYear: target.academicYear,
+      status: nextStatus,
+    };
+
+    try {
+      const updated = await internService.updateIntern(internId, updatePayload);
+      setInterns((prev) => prev.map((i) => (i.id === internId ? updated : i)));
+      alert(`Đã cập nhật trạng thái hồ sơ sang [${nextStatus}] thành công!`);
+    } catch (err: any) {
+      alert(err.message || 'Không thể cập nhật trạng thái hồ sơ');
+    }
+  };
+
+  // TM-4: Tải lên tài liệu cho TTS
+  const handleUploadDocSubmit = async (docType: DocumentType, file: File) => {
+    if (!uploadDocIntern) return;
+    try {
+      setUploadingDoc(true);
+      const newDoc = await documentService.uploadDocument(
+        uploadDocIntern.internCode,
+        file,
+        docType
+      );
+      setDocuments((prev) => [newDoc, ...prev]);
+      setUploadDocIntern(null);
+      alert('Tải lên tài liệu cho thực tập sinh thành công!');
+    } catch (err: any) {
+      alert(err.message || 'Lỗi tải lên tài liệu');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  // TM-5: Phê duyệt tài liệu
   const handleApproveDocument = async (docId: number) => {
     try {
       const updated = await documentService.reviewDocument(docId, { status: 'APPROVED' });
       setDocuments((prev) => prev.map((d) => (d.id === docId ? updated : d)));
       alert('Đã phê duyệt tài liệu thành công!');
-    } catch (err) {
-      alert('Có lỗi xảy ra khi phê duyệt');
+    } catch (err: any) {
+      alert(err.message || 'Có lỗi xảy ra khi phê duyệt tài liệu');
     }
   };
 
-  const handleRejectDocument = async () => {
+  // TM-5: Từ chối tài liệu
+  const handleRejectDocument = async (reason: string) => {
     if (!reviewModalDoc) return;
-    if (!rejectionReason.trim()) {
-      alert('Vui lòng nhập lý do từ chối để thực tập sinh có thể bổ sung hồ sơ!');
-      return;
-    }
-
     try {
       const updated = await documentService.reviewDocument(reviewModalDoc.id, {
         status: 'REJECTED',
-        rejectionReason,
+        rejectionReason: reason,
       });
       setDocuments((prev) => prev.map((d) => (d.id === reviewModalDoc.id ? updated : d)));
       setReviewModalDoc(null);
-      setRejectionReason('');
-      alert('Đã từ chối tài liệu và gửi phản hồi cho thực tập sinh.');
-    } catch (err) {
-      alert('Có lỗi xảy ra khi cập nhật');
-    }
-  };
-
-  // Cập nhật trạng thái TTS TM-2
-  const handleStatusChange = async (internId: number, nextStatus: InternStatus) => {
-    try {
-      const updated = await internService.updateIntern(internId, { status: nextStatus });
-      setInterns((prev) => prev.map((i) => (i.id === internId ? updated : i)));
-    } catch (err) {
-      alert('Không thể cập nhật trạng thái');
-    }
-  };
-
-  // Tạo hồ sơ TTS TM-1
-  const handleCreateIntern = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await internService.createIntern(newInternForm);
-      setShowCreateModal(false);
-      setNewInternForm({
-        fullName: '',
-        email: '',
-        phone: '',
-        university: 'Đại Học Bách Khoa',
-        major: 'Khoa Học Máy Tính',
-        gpa: 3.5,
-      });
-      loadData();
-      alert('Tạo mới hồ sơ thực tập sinh thành công!');
+      alert('Đã từ chối tài liệu và phản hồi lại cho thực tập sinh.');
     } catch (err: any) {
-      alert(err.message || 'Lỗi tạo hồ sơ');
+      alert(err.message || 'Có lỗi xảy ra khi cập nhật tài liệu');
     }
   };
 
-  const pendingDocuments = documents.filter((d) => d.status === 'PENDING');
+  const pendingDocuments = documents.filter(
+    (d) => d.status === 'PENDING_REVIEW' || (d.status as any) === 'PENDING'
+  );
   const countStatus = (s: InternStatus) => interns.filter((i) => i.status === s).length;
 
   return (
@@ -136,519 +197,114 @@ export const HrDashboard: React.FC = () => {
       />
 
       <div style={{ marginTop: '1.5rem' }}>
-        {/* Metric Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-          gap: '1.25rem',
-          marginBottom: '2rem',
-        }}>
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              backgroundColor: 'var(--primary-light)',
-              color: 'var(--primary)',
+        {errorMessage && (
+          <div
+            style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid #ef4444',
+              borderRadius: '8px',
+              padding: '0.75rem 1rem',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <GraduationCap size={24} />
+              justifyContent: 'space-between',
+              gap: '0.6rem',
+              color: '#fca5a5',
+              fontSize: '0.85rem',
+              marginBottom: '1.25rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AlertCircle size={18} />
+              <span>{errorMessage}</span>
             </div>
-            <div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>Tổng Thực Tập Sinh</p>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{interns.length}</h3>
-            </div>
-          </div>
-
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              color: '#f59e0b',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Clock size={24} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>Hồ Sơ Mới Chờ Duyệt</p>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{countStatus('SUBMITTED')}</h3>
-            </div>
-          </div>
-
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              color: '#3b82f6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <CheckCircle2 size={24} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>Đang Thực Tập</p>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{countStatus('INTERNING')}</h3>
-            </div>
-          </div>
-
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              color: '#ef4444',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <FileCheck2 size={24} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>CV Chờ Thẩm Định</p>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{pendingDocuments.length}</h3>
-            </div>
-          </div>
-        </div>
-
-        {/* Document Review Queue TM-5 */}
-        <div className="card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--primary)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileCheck2 size={20} color="var(--primary)" />
-                <span>Hàng Đợi Thẩm Định CV & Tài Liệu Ứng Tuyển (TM-5)</span>
-              </h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                Xét duyệt các tài liệu và hồ sơ ứng tuyển mới nộp trực tuyến
-              </p>
-            </div>
-            <span className="badge badge-warning">
-              {pendingDocuments.length} tài liệu chờ duyệt
-            </span>
-          </div>
-
-          {pendingDocuments.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              🎉 Tất cả tài liệu ứng tuyển hiện tại đều đã được thẩm định!
-            </div>
-          ) : (
-            <div className="table-container">
-              <table className="modern-table">
-                <thead>
-                  <tr>
-                    <th>Mã TTS</th>
-                    <th>Loại Tài Liệu</th>
-                    <th>Tên Tệp Tin</th>
-                    <th>Dung Lượng</th>
-                    <th>Thời Gian Nộp</th>
-                    <th>Hành Động Xét Duyệt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingDocuments.map((doc) => (
-                    <tr key={doc.id}>
-                      <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{doc.internCode}</td>
-                      <td>
-                        <span className="badge badge-primary">{doc.documentType}</span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <FileText size={16} color="#64748b" />
-                          <span style={{ fontWeight: 500 }}>{doc.fileName}</span>
-                        </div>
-                      </td>
-                      <td>{(doc.fileSize / (1024 * 1024)).toFixed(2)} MB</td>
-                      <td>{new Date(doc.createdAt).toLocaleDateString('vi-VN')}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <a
-                            href={documentService.getDocumentDownloadUrl(doc.id, 'inline')}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-secondary"
-                            title="Xem trước"
-                          >
-                            <Download size={13} /> Xem Tệp
-                          </a>
-                          <button
-                            onClick={() => handleApproveDocument(doc.id)}
-                            className="btn btn-sm btn-success"
-                          >
-                            Duyệt
-                          </button>
-                          <button
-                            onClick={() => {
-                              setReviewModalDoc(doc);
-                              setRejectionReason('');
-                            }}
-                            className="btn btn-sm btn-danger"
-                          >
-                            Từ Chối
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Intern List Management TM-3 */}
-        <div className="card">
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '1rem',
-            marginBottom: '1.25rem',
-          }}>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>Danh Sách Hồ Sơ Thực Tập Sinh (TM-3)</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                Tìm kiếm, lọc theo trường/ngành và điều phối trạng thái thực tập (TM-2)
-              </p>
-            </div>
-
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn btn-primary"
+              onClick={loadData}
+              className="btn btn-sm btn-secondary"
+              style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
             >
-              <Plus size={16} /> Thêm Hồ Sơ Mới (TM-1)
+              <RefreshCw size={12} /> Thử lại
             </button>
           </div>
+        )}
 
-          {/* Search & Filter Bar */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-            marginBottom: '1.25rem',
-          }}>
-            <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
-              <input
-                type="text"
-                className="form-input"
-                style={{ paddingLeft: '2.2rem', width: '100%' }}
-                placeholder="Tìm tên, mã TTS, email, SĐT..."
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
-            </div>
+        <HrMetricsGrid
+          totalInterns={interns.length}
+          pendingInterns={countStatus('PENDING')}
+          interningInterns={countStatus('INTERNING')}
+          pendingDocuments={pendingDocuments.length}
+        />
 
-            <select
-              className="form-select"
-              value={selectedUniversity}
-              onChange={(e) => setSelectedUniversity(e.target.value)}
-            >
-              <option value="">Tất cả trường đại học</option>
-              <option value="Đại Học Bách Khoa">ĐH Bách Khoa</option>
-              <option value="Đại Học Quốc Gia">ĐH Quốc Gia</option>
-              <option value="Đại Học FPT">ĐH FPT</option>
-              <option value="Đại Học Kinh Tế Quốc Dân">ĐH Kinh Tế Quốc Dân</option>
-            </select>
+        <HrDocumentReviewTable
+          documents={documents}
+          onApprove={handleApproveDocument}
+          onOpenRejectModal={(doc) => setReviewModalDoc(doc)}
+        />
 
-            <select
-              className="form-select"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="SUBMITTED">SUBMITTED (Chờ duyệt)</option>
-              <option value="APPROVED">APPROVED (Đã duyệt)</option>
-              <option value="INTERNING">INTERNING (Đang thực tập)</option>
-              <option value="COMPLETED">COMPLETED (Hoàn thành)</option>
-            </select>
-          </div>
+        <div className="card">
+          <HrFilterBar
+            keyword={keyword}
+            onKeywordChange={setKeyword}
+            selectedUniversity={selectedUniversity}
+            onUniversityChange={setSelectedUniversity}
+            selectedStatus={selectedStatus}
+            onStatusChange={setSelectedStatus}
+            onOpenCreateModal={() => setShowCreateModal(true)}
+          />
 
-          {/* Table */}
-          <div className="table-container">
-            <table className="modern-table">
-              <thead>
-                <tr>
-                  <th>Mã TTS</th>
-                  <th>Họ và Tên</th>
-                  <th>Trường & Chuyên Ngành</th>
-                  <th>GPA</th>
-                  <th>Mentor Hướng Dẫn</th>
-                  <th>Trạng Thái</th>
-                  <th>Hành Động (TM-2)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
-                      Đang tải hồ sơ...
-                    </td>
-                  </tr>
-                ) : interns.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                      Không tìm thấy hồ sơ thực tập sinh phù hợp
-                    </td>
-                  </tr>
-                ) : (
-                  interns.map((intern) => (
-                    <tr key={intern.id}>
-                      <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{intern.internCode}</td>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{intern.fullName}</div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{intern.email}</span>
-                      </td>
-                      <td>
-                        <div>{intern.university}</div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{intern.major}</span>
-                      </td>
-                      <td>
-                        <span style={{
-                          fontWeight: 700,
-                          color: (intern.gpa || 0) >= 3.5 ? '#10b981' : '#f59e0b',
-                        }}>
-                          {intern.gpa ? intern.gpa.toFixed(2) : '-'}
-                        </span>
-                      </td>
-                      <td>
-                        {intern.mentorName ? (
-                          <span className="badge badge-primary">{intern.mentorName}</span>
-                        ) : (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Chưa gán</span>
-                        )}
-                      </td>
-                      <td>
-                        <span className={`badge ${
-                          intern.status === 'INTERNING' ? 'badge-success' :
-                          intern.status === 'APPROVED' ? 'badge-info' :
-                          intern.status === 'COMPLETED' ? 'badge-neutral' : 'badge-warning'
-                        }`}>
-                          {intern.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.35rem' }}>
-                          {intern.status === 'SUBMITTED' && (
-                            <button
-                              onClick={() => handleStatusChange(intern.id, 'APPROVED')}
-                              className="btn btn-sm btn-primary"
-                            >
-                              Duyệt Tiếp Nhận
-                            </button>
-                          )}
-                          {intern.status === 'APPROVED' && (
-                            <button
-                              onClick={() => handleStatusChange(intern.id, 'INTERNING')}
-                              className="btn btn-sm btn-success"
-                            >
-                              Bắt Đầu TT
-                            </button>
-                          )}
-                          {intern.status === 'INTERNING' && (
-                            <button
-                              onClick={() => handleStatusChange(intern.id, 'COMPLETED')}
-                              className="btn btn-sm btn-secondary"
-                            >
-                              Hoàn Thành
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <HrInternTable
+            interns={interns}
+            loading={loading}
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onViewDetail={(intern) => setDetailIntern(intern)}
+            onOpenEdit={(intern) => setEditIntern(intern)}
+            onOpenUpload={(intern) => setUploadDocIntern(intern)}
+            onStatusChange={handleStatusChange}
+          />
         </div>
       </div>
 
-      {/* Reject Modal TM-5 */}
-      {reviewModalDoc && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100,
-        }}>
-          <div className="card" style={{ width: '100%', maxWidth: '480px', margin: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'var(--danger)' }}>
-                Từ Chối Tài Liệu ({reviewModalDoc.internCode})
-              </h4>
-              <button
-                onClick={() => setReviewModalDoc(null)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
+      <CreateInternModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateIntern}
+      />
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Tệp: <strong>{reviewModalDoc.fileName}</strong>
-            </p>
+      <EditInternModal
+        intern={editIntern}
+        onClose={() => setEditIntern(null)}
+        onSave={handleSaveEdit}
+      />
 
-            <div className="form-group">
-              <label className="form-label">Lý do từ chối (Bắt buộc theo TM-5) *</label>
-              <textarea
-                rows={3}
-                className="form-textarea"
-                placeholder="Ví dụ: Thiếu xác nhận của nhà trường, CV chưa đúng mẫu..."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-              />
-            </div>
+      <DetailInternModal
+        intern={detailIntern}
+        documents={documents}
+        onClose={() => setDetailIntern(null)}
+        onOpenEdit={(intern) => {
+          setDetailIntern(null);
+          setEditIntern(intern);
+        }}
+        onOpenUpload={(intern) => {
+          setDetailIntern(null);
+          setUploadDocIntern(intern);
+        }}
+      />
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-              <button
-                onClick={() => setReviewModalDoc(null)}
-                className="btn btn-secondary"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                onClick={handleRejectDocument}
-                className="btn btn-danger"
-              >
-                Xác Nhận Từ Chối
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <UploadDocModal
+        intern={uploadDocIntern}
+        uploading={uploadingDoc}
+        onClose={() => setUploadDocIntern(null)}
+        onSubmit={handleUploadDocSubmit}
+      />
 
-      {/* Create Intern Modal TM-1 */}
-      {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100,
-        }}>
-          <div className="card" style={{ width: '100%', maxWidth: '520px', margin: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>
-                Thêm Hồ Sơ Thực Tập Sinh Mới (TM-1)
-              </h4>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateIntern}>
-              <div className="form-group">
-                <label className="form-label">Họ và tên *</label>
-                <input
-                  type="text"
-                  required
-                  className="form-input"
-                  value={newInternForm.fullName}
-                  onChange={(e) => setNewInternForm({ ...newInternForm, fullName: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Email *</label>
-                  <input
-                    type="email"
-                    required
-                    className="form-input"
-                    value={newInternForm.email}
-                    onChange={(e) => setNewInternForm({ ...newInternForm, email: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Số điện thoại *</label>
-                  <input
-                    type="tel"
-                    required
-                    className="form-input"
-                    value={newInternForm.phone}
-                    onChange={(e) => setNewInternForm({ ...newInternForm, phone: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.75rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Trường Đại Học</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={newInternForm.university}
-                    onChange={(e) => setNewInternForm({ ...newInternForm, university: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Điểm GPA</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-input"
-                    value={newInternForm.gpa || ''}
-                    onChange={(e) => setNewInternForm({ ...newInternForm, gpa: parseFloat(e.target.value) })}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Chuyên ngành</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={newInternForm.major}
-                  onChange={(e) => setNewInternForm({ ...newInternForm, major: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="btn btn-secondary"
-                >
-                  Hủy Bỏ
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                >
-                  Tạo Hồ Sơ
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <RejectDocModal
+        doc={reviewModalDoc}
+        onClose={() => setReviewModalDoc(null)}
+        onSubmit={handleRejectDocument}
+      />
     </div>
   );
 };
+export default HrDashboard;

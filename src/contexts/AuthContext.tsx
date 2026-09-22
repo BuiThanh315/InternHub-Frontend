@@ -7,7 +7,6 @@ interface AuthContextType {
   role: RoleType | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<AuthUser>;
-  demoLogin: (role: 'admin' | 'hr' | 'mentor' | 'intern') => AuthUser;
   logout: () => void;
 }
 
@@ -27,12 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return authUser;
   };
 
-  const demoLogin = (targetRole: 'admin' | 'hr' | 'mentor' | 'intern'): AuthUser => {
-    const authUser = authService.demoLoginAs(targetRole);
-    setUser(authUser);
-    return authUser;
-  };
-
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -45,7 +38,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: user ? user.role : null,
         isAuthenticated: !!user,
         login,
-        demoLogin,
         logout,
       }}
     >

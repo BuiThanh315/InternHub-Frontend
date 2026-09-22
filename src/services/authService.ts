@@ -1,40 +1,38 @@
 import { apiClient } from './api';
+import { API_ENDPOINTS } from '../constants/endpoints';
 import type { AuthUser, RoleType } from '../types';
-import { MOCK_AUTH_ACCOUNTS } from './mockData';
 
 export const authService = {
   async login(username: string, password: string): Promise<AuthUser> {
     try {
-      const response = await apiClient.post('/api/auth/login', { username, password });
+      const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, { username, password });
       const data = response.data.data;
+      const roleRaw = data.role ? data.role.toUpperCase().replace('ROLE_', '') : 'INTERN';
       const authUser: AuthUser = {
         userId: data.userId,
         username: data.username,
-        role: (data.role?.replace('ROLE_', '') as RoleType) || 'INTERN',
+        role: (roleRaw as RoleType) || 'INTERN',
         accessToken: data.accessToken,
         tokenType: data.tokenType || 'Bearer',
         expiresIn: data.expiresIn,
       };
       this.saveSession(authUser);
       return authUser;
-    } catch (error) {
-      console.warn('Backend API login failed or unavailable, checking mock credentials...', error);
-      // Fallback for demo / offline development
-      const lowerUser = username.toLowerCase().trim();
-      const mock = MOCK_AUTH_ACCOUNTS[lowerUser];
-      if (mock && (password === '123456' || password === mock.username)) {
-        this.saveSession(mock);
-        return mock;
+    } catch (error: any) {
+      if (error instanceof Error) {
+        throw error;
       }
       throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác!');
     }
   },
 
-  demoLoginAs(role: 'admin' | 'hr' | 'mentor' | 'intern'): AuthUser {
-    const mock = MOCK_AUTH_ACCOUNTS[role];
-    if (!mock) throw new Error(`Role ${role} không tồn tại`);
-    this.saveSession(mock);
-    return mock;
+  async getMe(): Promise<{ username: string; authorities: any[] } | null> {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.AUTH.ME);
+      return response.data.data;
+    } catch {
+      return null;
+    }
   },
 
   saveSession(authUser: AuthUser) {
@@ -57,3 +55,4 @@ export const authService = {
     localStorage.removeItem('internhub_user');
   },
 };
+export default authService;

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { LogIn, Lock, User as UserIcon, AlertCircle, Sparkles, ArrowRight } from 'lucide-react';
+import { LogIn, Lock, User as UserIcon, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { ROUTES } from '../../constants/routes';
 
 export const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -10,7 +11,7 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
 
-  const { login, demoLogin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const isExpired = searchParams.get('expired') === 'true';
@@ -18,17 +19,17 @@ export const LoginPage: React.FC = () => {
   const handleRedirect = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        navigate('/admin/dashboard');
+        navigate(ROUTES.ADMIN.DASHBOARD);
         break;
       case 'HR':
-        navigate('/hr/dashboard');
+        navigate(ROUTES.HR.DASHBOARD);
         break;
       case 'MENTOR':
-        navigate('/mentor/dashboard');
+        navigate(ROUTES.MENTOR.DASHBOARD);
         break;
       case 'INTERN':
       default:
-        navigate('/intern/dashboard');
+        navigate(ROUTES.INTERN.DASHBOARD);
         break;
     }
   };
@@ -50,11 +51,6 @@ export const LoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoLogin = (role: 'admin' | 'hr' | 'mentor' | 'intern') => {
-    const authUser = demoLogin(role);
-    handleRedirect(authUser.role);
   };
 
   return (
@@ -123,7 +119,7 @@ export const LoginPage: React.FC = () => {
                 borderColor: '#334155',
                 color: '#fff',
               }}
-              placeholder="admin, hr, mentor, intern..."
+              placeholder="Tên đăng nhập hoặc email..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
@@ -170,114 +166,16 @@ export const LoginPage: React.FC = () => {
         </button>
       </form>
 
-      {/* Demo Quick-Login section */}
-      <div style={{
-        marginTop: '2rem',
-        padding: '1.25rem',
-        borderRadius: '12px',
-        backgroundColor: 'rgba(30, 41, 59, 0.7)',
-        border: '1px solid rgba(51, 65, 85, 0.8)',
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          marginBottom: '0.85rem',
-          color: '#fbbf24',
-          fontSize: '0.8rem',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.04em',
-        }}>
-          <Sparkles size={14} />
-          <span>Trải Nghiệm Nhanh Theo Vai Trò (Demo)</span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('admin')}
-            style={{
-              padding: '0.55rem',
-              borderRadius: '8px',
-              border: '1px solid #ef4444',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              color: '#f87171',
-              fontWeight: 600,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
-            🛡️ Quyền Admin
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('hr')}
-            style={{
-              padding: '0.55rem',
-              borderRadius: '8px',
-              border: '1px solid #3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              color: '#60a5fa',
-              fontWeight: 600,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
-            👔 Quyền HR
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('mentor')}
-            style={{
-              padding: '0.55rem',
-              borderRadius: '8px',
-              border: '1px solid #10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              color: '#34d399',
-              fontWeight: 600,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
-            🧑‍🏫 Quyền Mentor
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('intern')}
-            style={{
-              padding: '0.55rem',
-              borderRadius: '8px',
-              border: '1px solid #8b5cf6',
-              backgroundColor: 'rgba(139, 92, 246, 0.1)',
-              color: '#a78bfa',
-              fontWeight: 600,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
-            🎓 Quyền Thực Tập Sinh
-          </button>
-        </div>
-      </div>
-
       {/* Switch to Register */}
       <div style={{
-        marginTop: '1.75rem',
+        marginTop: '2rem',
         textAlign: 'center',
         fontSize: '0.875rem',
         color: '#94a3b8',
       }}>
         <span>Bạn là sinh viên muốn ứng tuyển thực tập? </span>
         <Link
-          to="/register"
+          to={ROUTES.AUTH.REGISTER}
           style={{
             color: '#818cf8',
             fontWeight: 600,
@@ -292,3 +190,4 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
+export default LoginPage;

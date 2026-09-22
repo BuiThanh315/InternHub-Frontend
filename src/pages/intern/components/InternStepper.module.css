@@ -1,0 +1,66 @@
+.container {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--text-main, #0f172a);
+}
+
+.stepperTrack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.stepCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s;
+}
+
+.completed {
+  background-color: var(--success, #10b981);
+  color: #ffffff;
+}
+
+.active {
+  background-color: var(--primary, #3b82f6);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.pending {
+  background-color: var(--border-default, #e2e8f0);
+  color: var(--text-muted, #94a3b8);
+}
+
+.stepLabel {
+  font-size: 0.875rem;
+  color: var(--text-main, #1e293b);
+}
+
+.stepDesc {
+  font-size: 0.725rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 0.125rem;
+}
