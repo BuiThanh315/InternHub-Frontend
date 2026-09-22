@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import type { AuthUser, RoleType } from '../types';
 import { authService } from '../services/authService';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: AuthUser | null;
   role: RoleType | null;
   isAuthenticated: boolean;
@@ -10,7 +10,20 @@ interface AuthContextType {
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Fallback mặc định an toàn: đọc trực tiếp session hiện có từ localStorage
+// Tránh crash cây component nếu HMR hoặc component render trước khi Provider bind
+const getDefaultContextValue = (): AuthContextType => {
+  const currentUser = authService.getCurrentUser();
+  return {
+    user: currentUser,
+    role: currentUser?.role || null,
+    isAuthenticated: !!currentUser,
+    login: (username, password) => authService.login(username, password),
+    logout: () => authService.logout(),
+  };
+};
+
+export const AuthContext = createContext<AuthContextType>(getDefaultContextValue());
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
@@ -26,25 +39,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      role: user ? user.role : null,
+      isAuthenticated: !!user,
+      login,
+      logout,
+    }),
+    [user]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        role: user ? user.role : null,
-        isAuthenticated: !!user,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    return getDefaultContextValue();
   }
   return context;
 };

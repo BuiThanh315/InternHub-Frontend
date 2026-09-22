@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, CheckCircle2, FolderGit2 } from 'lucide-react';
-
 import { Header } from '../../components/layout/Header';
 import { MentorDetailPanel } from './components';
 import { internService } from '../../services/internService';
@@ -73,9 +72,27 @@ export const MentorDashboard: React.FC = () => {
 
       <div style={{ marginTop: '1.5rem' }}>
         {/* Metric Overview Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1.25rem',
+            marginBottom: '2rem',
+          }}
+        >
           <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--primary-light)',
+                color: 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Users size={24} />
             </div>
             <div>
@@ -85,7 +102,18 @@ export const MentorDashboard: React.FC = () => {
           </div>
 
           <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                color: '#10b981',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <CheckCircle2 size={24} />
             </div>
             <div>
@@ -97,7 +125,18 @@ export const MentorDashboard: React.FC = () => {
           </div>
 
           <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                color: '#3b82f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <FolderGit2 size={24} />
             </div>
             <div>
@@ -108,7 +147,14 @@ export const MentorDashboard: React.FC = () => {
         </div>
 
         {/* 2-Column Layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) minmax(360px, 1fr)', gap: '1.5rem', alignItems: 'start' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(320px, 1fr) minmax(360px, 1fr)',
+            gap: '1.5rem',
+            alignItems: 'start',
+          }}
+        >
           {/* Left Column: Assigned Interns List */}
           <div className="card">
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>
@@ -152,7 +198,16 @@ export const MentorDashboard: React.FC = () => {
                         </span>
                       </div>
 
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginTop: '0.5rem' }}>
+                      <div
+                        style={{
+                          fontSize: '0.8rem',
+                          color: 'var(--text-secondary)',
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '0.4rem',
+                          marginTop: '0.5rem',
+                        }}
+                      >
                         <div>Trường: <strong>{intern.university}</strong></div>
                         <div>Ngành: <strong>{intern.major}</strong></div>
                         <div>GPA: <strong>{intern.gpa || '-'}</strong></div>

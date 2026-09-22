@@ -72,14 +72,22 @@ export const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.appliedPosition.trim() || !formData.startDate) {
+    if (
+      !formData.fullName.trim() ||
+      !formData.email.trim() ||
+      !formData.phone.trim() ||
+      !formData.appliedPosition.trim() ||
+      !formData.startDate
+    ) {
       setErrorMessage('Vui lòng điền đầy đủ các thông tin bắt buộc (*)');
       return;
     }
 
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
     if (!phoneRegex.test(formData.phone.trim())) {
-      setErrorMessage('Số điện thoại phải gồm 10 chữ số hợp lệ theo định dạng Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09)');
+      setErrorMessage(
+        'Số điện thoại phải gồm 10 chữ số hợp lệ theo định dạng Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09)'
+      );
       return;
     }
 
@@ -159,7 +167,13 @@ export const RegisterPage: React.FC = () => {
         />
 
         <div className={styles.submitBtn}>
-          <Button variant="primary" size="lg" type="submit" disabled={loading} style={{ width: '100%' }}>
+          <Button
+            variant="primary"
+            size="lg"
+            type="submit"
+            disabled={loading}
+            style={{ width: '100%' }}
+          >
             {loading ? 'Đang Nộp Hồ Sơ...' : 'Xác Nhận & Nộp Hồ Sơ Ứng Tuyển'}
           </Button>
         </div>

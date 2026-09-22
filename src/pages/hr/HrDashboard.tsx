@@ -308,4 +308,5 @@ export const HrDashboard: React.FC = () => {
     </div>
   );
 };
+
 export default HrDashboard;

@@ -55,7 +55,7 @@ export const documentService = {
     const response = await apiClient.get(API_ENDPOINTS.DOCUMENT.BY_INTERN(internCode), {
       signal,
     });
-    const list = response.data.data || [];
+    const list = response.data?.data || [];
     return list.map(normalizeDoc);
   },
 
@@ -88,7 +88,7 @@ export const documentService = {
       request,
       { signal }
     );
-    return normalizeDoc(response.data.data);
+    return normalizeDoc(response.data?.data);
   },
 
   getDocumentDownloadUrl(documentId: number, disposition: 'inline' | 'attachment' = 'inline'): string {
@@ -111,4 +111,5 @@ export const documentService = {
     document.body.removeChild(a);
   },
 };
+
 export default documentService;

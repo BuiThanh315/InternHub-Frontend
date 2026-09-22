@@ -114,3 +114,5 @@ export const InternDashboard: React.FC = () => {
     </div>
   );
 };
+
+export default InternDashboard;

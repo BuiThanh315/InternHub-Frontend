@@ -9,14 +9,14 @@ import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { HrDashboard } from '../pages/hr/HrDashboard';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
+import { LandingPage } from '../pages/public/LandingPage';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../constants/routes';
 
 export const AppRoutes: React.FC = () => {
   const { isAuthenticated, role } = useAuth();
 
-  const getDefaultRedirect = () => {
-    if (!isAuthenticated) return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
+  const getDashboardRedirect = () => {
     switch (role) {
       case 'ADMIN':
         return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
@@ -32,8 +32,12 @@ export const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      {/* Root redirect */}
-      <Route path={ROUTES.ROOT} element={getDefaultRedirect()} />
+      {/* Root route: Nếu đã đăng nhập -> chuyển sang Dashboard tương ứng, nếu chưa -> Landing Page */}
+      <Route
+        path={ROUTES.ROOT}
+        element={isAuthenticated ? getDashboardRedirect() : <LandingPage />}
+      />
+      <Route path="/apply" element={<LandingPage />} />
 
       {/* Public Auth Routes */}
       <Route element={<AuthLayout />}>
@@ -76,4 +80,5 @@ export const AppRoutes: React.FC = () => {
     </Routes>
   );
 };
+
 export default AppRoutes;

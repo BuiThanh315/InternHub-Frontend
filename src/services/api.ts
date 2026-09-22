@@ -77,10 +77,15 @@ apiClient.interceptors.response.use(
         errorMessage = data?.message || 'Dữ liệu bị trùng lặp trong hệ thống';
       }
 
-      // Xử lý tự động dọn session và điều hướng khi 401
+      // Xử lý tự động dọn session và điều hướng khi 401 (không redirect khi đang ở các trang công khai)
       if (status === 401) {
         const currentPath = window.location.pathname;
-        if (currentPath !== '/login' && currentPath !== '/register') {
+        if (
+          currentPath !== '/login' &&
+          currentPath !== '/register' &&
+          currentPath !== '/apply' &&
+          currentPath !== '/'
+        ) {
           localStorage.removeItem('internhub_token');
           localStorage.removeItem('internhub_user');
           window.location.href = '/login?expired=true';

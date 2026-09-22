@@ -11,6 +11,7 @@ export const authService = {
       const authUser: AuthUser = {
         userId: data.userId,
         username: data.username,
+        fullName: data.fullName,
         role: (roleRaw as RoleType) || 'INTERN',
         accessToken: data.accessToken,
         tokenType: data.tokenType || 'Bearer',
@@ -55,4 +56,5 @@ export const authService = {
     localStorage.removeItem('internhub_user');
   },
 };
+
 export default authService;
