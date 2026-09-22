@@ -12,17 +12,17 @@ export interface ApiResponse<T> {
 }
 
 export interface PageResponse<T> {
-  items: T[];
-  content: T[]; // alias backward compatibility
-  currentPage: number;
-  pageNumber: number; // alias
+  content: T[];
+  items?: T[];
+  pageNumber: number;
+  currentPage?: number;
   pageSize: number;
-  totalItems: number;
-  totalElements: number; // alias
+  totalElements: number;
+  totalItems?: number;
   totalPages: number;
-  isFirst: boolean;
-  isLast: boolean;
-  last: boolean; // alias
-  hasNext: boolean;
-  hasPrevious: boolean;
+  last: boolean;
+  isLast?: boolean;
+  isFirst?: boolean;
+  hasNext?: boolean;
+  hasPrevious?: boolean;
 }
