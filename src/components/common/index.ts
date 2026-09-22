@@ -19,4 +19,4 @@ export * from './Pagination/Pagination.types';
 export * from './ErrorBoundary/ErrorBoundary';
 export * from './ErrorBoundary/ErrorBoundary.types';
 
-export * from './ApiConsoleModal';
+export * from './ApiConsole/ApiConsoleModal';

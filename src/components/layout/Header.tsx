@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, CheckCircle, WifiOff, Terminal } from 'lucide-react';
 import { checkBackendHealth } from '../../services/api';
-import { ApiConsoleModal } from '../common/ApiConsoleModal';
+import { ApiConsoleModal } from '../common';
 
 export const Header: React.FC<{ title: string; subtitle?: string }> = ({ title, subtitle }) => {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
