@@ -1,148 +1,229 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  FileCheck2,
+  GraduationCap,
+  FolderGit2,
+  LogOut,
+  ShieldCheck,
+  Building2,
+  FileText,
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { navConfig, type Role } from '../../lib/permissions';
-import { cn } from '../../lib/utils';
-import { useDocuments } from '../../features/interns/hooks/useInterns';
 
-interface SidebarProps {
-  collapsed?: boolean;
-  onToggleCollapse?: () => void;
-}
-
-/**
- * Sidebar - App Shell navigation adhering to docs/spec.md section 2.2:
- * - Desktop: 236px fixed width
- * - Tablet: Collapses to 64px icon-rail
- * - Items mapped from navConfig[role] in lib/permissions.ts
- * - Active: bg --primary-soft, text --primary, font-weight 600
- * - User block at the bottom with avatar fallback & logout
- */
-export const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
+export const Sidebar: React.FC = () => {
   const { user, role, logout } = useAuth();
-  const currentRole = (role as Role) || 'INTERN';
-  const navItems = navConfig[currentRole] || navConfig.INTERN;
 
-  // Lấy dữ liệu số lượng tài liệu chờ duyệt
-  const { data: documents } = useDocuments();
-  const pendingCount = (documents || []).filter((d) => d.status === 'PENDING').length;
-
-  const roleBadgeMap: Record<string, { label: string; bg: string; color: string }> = {
-    ADMIN: { label: 'Admin', bg: 'var(--danger-soft)', color: 'var(--danger)' },
-    HR: { label: 'HR Dept', bg: 'var(--primary-soft)', color: 'var(--primary)' },
-    MENTOR: { label: 'Mentor', bg: 'var(--success-soft)', color: 'var(--success)' },
-    INTERN: { label: 'Intern', bg: 'var(--info-soft)', color: 'var(--info)' },
+  const getNavLinks = () => {
+    switch (role) {
+      case 'ADMIN':
+        return [
+          { to: '/admin/dashboard', label: 'Bảng Điều Khiển', icon: LayoutDashboard },
+          { to: '/admin/users', label: 'Quản Lý Người Dùng', icon: Users },
+          { to: '/admin/system', label: 'Giám Sát Hệ Thống', icon: ShieldCheck },
+        ];
+      case 'HR':
+        return [
+          { to: '/hr/dashboard', label: 'Bảng Điều Khiển HR', icon: LayoutDashboard },
+          { to: '/hr/interns', label: 'Hồ Sơ Thực Tập Sinh', icon: GraduationCap },
+          { to: '/hr/review', label: 'Duyệt Tài Liệu & CV', icon: FileCheck2 },
+        ];
+      case 'MENTOR':
+        return [
+          { to: '/mentor/dashboard', label: 'Bảng Điều Khiển Mentor', icon: LayoutDashboard },
+          { to: '/mentor/interns', label: 'TTS Phụ Trách', icon: Users },
+          { to: '/mentor/documents', label: 'Tài Liệu Hướng Dẫn', icon: FolderGit2 },
+        ];
+      case 'INTERN':
+      default:
+        return [
+          { to: '/intern/dashboard', label: 'Tiến Độ Thực Tập', icon: LayoutDashboard },
+          { to: '/intern/documents', label: 'Hồ Sơ & Tài Liệu', icon: FileText },
+        ];
+    }
   };
 
-  const roleInfo = roleBadgeMap[currentRole] || roleBadgeMap.INTERN;
+  const roleLabels: Record<string, { title: string; color: string }> = {
+    ADMIN: { title: 'Quản Trị Viên', color: '#ef4444' },
+    HR: { title: 'Chuyên Viên HR', color: '#3b82f6' },
+    MENTOR: { title: 'Người Hướng Dẫn', color: '#10b981' },
+    INTERN: { title: 'Thực Tập Sinh', color: '#8b5cf6' },
+  };
 
-  // Fallback avatar initial
-  const userInitial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'U';
+  const currentRoleInfo = role ? roleLabels[role] || { title: role, color: '#6b7280' } : null;
 
   return (
-    <aside
-      className={cn(
-        'h-screen sticky top-0 flex flex-col justify-between border-r border-border transition-all duration-300 z-20',
-        'bg-surface text-text-1',
-        collapsed ? 'w-16' : 'w-[236px]'
-      )}
-    >
-      {/* Brand & Logo Header */}
-      <div>
-        <div className="h-16 flex items-center px-4 border-b border-border-soft gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
-            IH
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <h1 className="text-base font-extrabold tracking-tight text-text-1 truncate leading-tight">
-                Intern<span className="text-primary">Hub</span>
-              </h1>
-              <p className="text-[11px] text-text-3 truncate font-medium">
-                Enterprise Portal
-              </p>
-            </div>
-          )}
+    <aside style={{
+      width: '260px',
+      backgroundColor: 'var(--bg-sidebar)',
+      color: 'var(--sidebar-text)',
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      position: 'sticky',
+      top: 0,
+      borderRight: '1px solid #1e293b',
+      zIndex: 40,
+    }}>
+      {/* Brand Header */}
+      <div style={{
+        padding: '1.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        borderBottom: '1px solid #1e293b'
+      }}>
+        <div style={{
+          width: '38px',
+          height: '38px',
+          borderRadius: '10px',
+          background: 'var(--primary-gradient)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          boxShadow: '0 4px 12px var(--primary-glow)',
+        }}>
+          <Building2 size={22} />
         </div>
-
-        {/* Navigation List */}
-        <nav className="p-3 space-y-1.5 overflow-y-auto max-h-[calc(100vh-140px)]">
-          {!collapsed && (
-            <div className="px-3 py-1.5 text-[11px] font-bold text-[var(--text-3)] uppercase tracking-wider">
-              Menu Chính
-            </div>
-          )}
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            // Dynamic badge count cho HR review
-            const badgeCount =
-              item.to === '/hr/review' && pendingCount > 0
-                ? pendingCount
-                : item.badge;
-
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                title={collapsed ? item.label : undefined}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary-soft text-primary font-semibold shadow-xs'
-                      : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
-                    collapsed && 'justify-center px-2'
-                  )
-                }
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <Icon size={18} className="shrink-0" />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </div>
-                {!collapsed && badgeCount !== undefined && badgeCount !== null && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-warning-soft text-warning shrink-0">
-                    {badgeCount}
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
+        <div>
+          <h1 style={{
+            fontSize: '1.2rem',
+            color: '#fff',
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
+            margin: 0,
+          }}>
+            Intern<span style={{ color: '#818cf8' }}>Hub</span>
+          </h1>
+          <p style={{ fontSize: '0.7rem', color: '#64748b', margin: 0 }}>Enterprise Portal</p>
+        </div>
       </div>
 
-      {/* User Info & Logout Footer */}
-      <div className="p-3 border-t border-border-soft bg-surface-2">
-        <div className="flex items-center gap-2.5">
-          {/* Avatar with fallback */}
-          <div className="w-9 h-9 rounded-full bg-primary-soft text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-border">
-            {userInitial}
+      {/* User Role Card */}
+      {user && (
+        <div style={{
+          margin: '1.25rem 1rem',
+          padding: '0.85rem',
+          borderRadius: '10px',
+          background: 'rgba(30, 41, 59, 0.7)',
+          border: '1px solid rgba(51, 65, 85, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+        }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            backgroundColor: currentRoleInfo?.color || '#4f46e5',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 700,
+            fontSize: '0.85rem',
+          }}>
+            {user.username.charAt(0).toUpperCase()}
           </div>
-
-          {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-text-1 truncate block">
-                  {user?.fullName || 'Người Dùng'}
-                </span>
-              </div>
-              <span
-                className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold mt-0.5"
-                style={{ backgroundColor: roleInfo.bg, color: roleInfo.color }}
-              >
-                {roleInfo.label}
-              </span>
-            </div>
-          )}
-
-          <button
-            onClick={logout}
-            title="Đăng xuất"
-            className="p-1.5 rounded-md text-[var(--text-3)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors shrink-0"
-          >
-            <LogOut size={16} />
-          </button>
+          <div style={{ overflow: 'hidden' }}>
+            <p style={{
+              color: '#fff',
+              fontSize: '0.825rem',
+              fontWeight: 600,
+              margin: 0,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
+              {user.fullName || user.username}
+            </p>
+            <span style={{
+              display: 'inline-block',
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              color: currentRoleInfo?.color,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              {currentRoleInfo?.title}
+            </span>
+          </div>
         </div>
+      )}
+
+      {/* Navigation List */}
+      <nav style={{ flex: 1, padding: '0.5rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <p style={{
+          fontSize: '0.68rem',
+          fontWeight: 700,
+          color: '#475569',
+          textTransform: 'uppercase',
+          padding: '0.5rem 0.75rem',
+          letterSpacing: '0.05em',
+          margin: 0,
+        }}>
+          Chức Năng Chính
+        </p>
+
+        {getNavLinks().map((link) => {
+          const Icon = link.icon;
+          return (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              style={({ isActive }) => ({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.7rem 0.85rem',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: isActive ? '#fff' : '#94a3b8',
+                backgroundColor: isActive ? '#4f46e5' : 'transparent',
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+              })}
+            >
+              <Icon size={18} />
+              <span>{link.label}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* Logout Footer */}
+      <div style={{ padding: '1rem', borderTop: '1px solid #1e293b' }}>
+        <button
+          onClick={logout}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.65rem 0.85rem',
+            borderRadius: '8px',
+            backgroundColor: 'transparent',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#f87171',
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+        >
+          <LogOut size={16} />
+          <span>Đăng Xuất</span>
+        </button>
       </div>
     </aside>
   );

@@ -1,0 +1,78 @@
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.searchInput {
+  padding: 0.5rem 1rem 0.5rem 2.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+  font-size: 0.85rem;
+  width: 240px;
+  color: var(--text-main);
+}
+
+.select {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.tableMessage {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+.userName {
+  font-weight: 600;
+}
+
+.subText {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dateText {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+}

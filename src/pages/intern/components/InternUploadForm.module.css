@@ -1,0 +1,39 @@
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: var(--text-main, #0f172a);
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 1.25rem;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border: 2px dashed var(--border-default, #cbd5e1);
+  border-radius: 10px;
+  background-color: var(--border-subtle, #f8fafc);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.dropzone:hover {
+  border-color: var(--primary, #3b82f6);
+}
+
+.fileCenter {
+  text-align: center;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+}

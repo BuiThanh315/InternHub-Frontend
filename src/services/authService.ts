@@ -1,25 +1,39 @@
 import { apiClient } from './api';
+import { API_ENDPOINTS } from '../constants/endpoints';
 import type { AuthUser, RoleType } from '../types';
 
 export const authService = {
   async login(username: string, password: string): Promise<AuthUser> {
-    const response = await apiClient.post('/api/auth/login', { username, password });
-    const data = response.data.data;
-    const authUser: AuthUser = {
-      userId: data.userId,
-      username: data.username,
-      role: (data.role?.replace('ROLE_', '') as RoleType) || 'INTERN',
-      accessToken: data.accessToken,
-      tokenType: data.tokenType || 'Bearer',
-      expiresIn: data.expiresIn,
-    };
-    this.saveSession(authUser);
-    return authUser;
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, { username, password });
+      const data = response.data.data;
+      const roleRaw = data.role ? data.role.toUpperCase().replace('ROLE_', '') : 'INTERN';
+      const authUser: AuthUser = {
+        userId: data.userId,
+        username: data.username,
+        fullName: data.fullName,
+        role: (roleRaw as RoleType) || 'INTERN',
+        accessToken: data.accessToken,
+        tokenType: data.tokenType || 'Bearer',
+        expiresIn: data.expiresIn,
+      };
+      this.saveSession(authUser);
+      return authUser;
+    } catch (error: any) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác!');
+    }
   },
 
-  async demoLoginAs(role: 'admin' | 'hr' | 'mentor' | 'intern'): Promise<AuthUser> {
-    // Đăng nhập trực tiếp vào Backend để lấy JWT token thật từ DB MySQL
-    return await this.login(role, '123456');
+  async getMe(): Promise<{ username: string; authorities: any[] } | null> {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.AUTH.ME);
+      return response.data.data;
+    } catch {
+      return null;
+    }
   },
 
   saveSession(authUser: AuthUser) {
@@ -42,3 +56,5 @@ export const authService = {
     localStorage.removeItem('internhub_user');
   },
 };
+
+export default authService;

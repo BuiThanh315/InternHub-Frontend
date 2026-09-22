@@ -1,0 +1,55 @@
+.filterHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.filterControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.searchWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  color: var(--text-muted);
+}
+
+.searchInput {
+  padding-left: 2.2rem;
+  width: 100%;
+}
+
+.selectUniversity {
+  width: auto;
+  min-width: 170px;
+}
+
+.selectStatus {
+  width: auto;
+  min-width: 160px;
+}

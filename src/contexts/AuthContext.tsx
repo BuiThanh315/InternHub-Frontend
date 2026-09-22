@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import type { AuthUser, RoleType } from '../types';
 import { authService } from '../services/authService';
 
@@ -7,7 +7,6 @@ export interface AuthContextType {
   role: RoleType | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<AuthUser>;
-  demoLogin: (role: 'admin' | 'hr' | 'mentor' | 'intern') => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -20,7 +19,6 @@ const getDefaultContextValue = (): AuthContextType => {
     role: currentUser?.role || null,
     isAuthenticated: !!currentUser,
     login: (username, password) => authService.login(username, password),
-    demoLogin: (role) => authService.demoLoginAs(role),
     logout: () => authService.logout(),
   };
 };
@@ -30,19 +28,8 @@ export const AuthContext = createContext<AuthContextType>(getDefaultContextValue
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
 
-  useEffect(() => {
-    const current = authService.getCurrentUser();
-    setUser(current);
-  }, []);
-
   const login = async (username: string, password: string): Promise<AuthUser> => {
     const authUser = await authService.login(username, password);
-    setUser(authUser);
-    return authUser;
-  };
-
-  const demoLogin = async (targetRole: 'admin' | 'hr' | 'mentor' | 'intern'): Promise<AuthUser> => {
-    const authUser = await authService.demoLoginAs(targetRole);
     setUser(authUser);
     return authUser;
   };
@@ -58,7 +45,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       role: user ? user.role : null,
       isAuthenticated: !!user,
       login,
-      demoLogin,
       logout,
     }),
     [user]

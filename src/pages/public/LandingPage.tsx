@@ -64,6 +64,7 @@ export const LandingPage: React.FC = () => {
         university: university.trim(),
         major: major.trim(),
         appliedPosition,
+        startDate: new Date().toISOString().split('T')[0],
       });
 
       // 2. Nếu có đính kèm file CV / Đơn, gọi API upload TM-4

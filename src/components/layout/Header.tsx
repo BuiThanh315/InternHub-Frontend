@@ -1,29 +1,22 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Sparkles, Activity } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { Activity, CheckCircle, WifiOff, Terminal } from 'lucide-react';
+import { checkBackendHealth } from '../../services/api';
+import { ApiConsoleModal } from '../common';
 
 export const Header: React.FC<{ title: string; subtitle?: string }> = ({ title, subtitle }) => {
-  const { role, demoLogin } = useAuth();
-  const navigate = useNavigate();
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [showApiConsole, setShowApiConsole] = useState(false);
 
-  const handleQuickSwitch = (newRole: 'admin' | 'hr' | 'mentor' | 'intern') => {
-    demoLogin(newRole);
-    switch (newRole) {
-      case 'admin':
-        navigate('/admin/dashboard');
-        break;
-      case 'hr':
-        navigate('/hr/dashboard');
-        break;
-      case 'mentor':
-        navigate('/mentor/dashboard');
-        break;
-      case 'intern':
-        navigate('/intern/dashboard');
-        break;
-    }
+  const checkHealth = async () => {
+    const res = await checkBackendHealth();
+    setBackendStatus(res.isConnected ? 'online' : 'offline');
   };
+
+  useEffect(() => {
+    checkHealth();
+    const interval = setInterval(checkHealth, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <header style={{
@@ -44,73 +37,71 @@ export const Header: React.FC<{ title: string; subtitle?: string }> = ({ title, 
         {subtitle && <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', margin: 0 }}>{subtitle}</p>}
       </div>
 
-      {/* Right controls: Demo Role Switcher & System Status */}
+      {/* Right controls: System Status & API Console */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
         {/* Backend Gateway Status Indicator */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          padding: '0.35rem 0.75rem',
-          borderRadius: 'var(--radius-full)',
-          backgroundColor: 'var(--success-bg)',
-          border: '1px solid var(--success-border)',
-          color: 'var(--success)',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-        }}>
-          <Activity size={14} />
-          <span>API Gateway : 8080</span>
-        </div>
-
-        {/* Quick Demo Switcher Bar */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          backgroundColor: 'var(--border-subtle)',
-          padding: '0.25rem 0.5rem',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border-default)',
-        }}>
-          <div style={{
+        <div
+          onClick={checkHealth}
+          title="Nhấp để kiểm tra lại kết nối Backend Microservices"
+          style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.3rem',
-            color: 'var(--text-muted)',
+            gap: '0.4rem',
+            padding: '0.35rem 0.75rem',
+            borderRadius: 'var(--radius-full)',
+            backgroundColor: backendStatus === 'online' ? 'var(--success-bg)' : backendStatus === 'offline' ? 'rgba(239, 68, 68, 0.1)' : 'var(--border-subtle)',
+            border: `1px solid ${backendStatus === 'online' ? 'var(--success-border)' : backendStatus === 'offline' ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-default)'}`,
+            color: backendStatus === 'online' ? 'var(--success)' : backendStatus === 'offline' ? '#ef4444' : 'var(--text-muted)',
             fontSize: '0.75rem',
             fontWeight: 600,
-            paddingRight: '0.4rem',
-          }}>
-            <Sparkles size={13} color="#f59e0b" />
-            <span>Chuyển Vai Trò:</span>
-          </div>
-
-          {(['admin', 'hr', 'mentor', 'intern'] as const).map((r) => {
-            const isCurrent = role?.toLowerCase() === r;
-            return (
-              <button
-                key={r}
-                onClick={() => handleQuickSwitch(r)}
-                style={{
-                  padding: '0.25rem 0.6rem',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  borderRadius: '6px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  backgroundColor: isCurrent ? 'var(--primary)' : 'transparent',
-                  color: isCurrent ? '#fff' : 'var(--text-secondary)',
-                  transition: 'all 0.15s ease',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {r}
-              </button>
-            );
-          })}
+            cursor: 'pointer',
+          }}
+        >
+          {backendStatus === 'online' ? (
+            <>
+              <CheckCircle size={14} />
+              <span>Backend Online (Port 8080)</span>
+            </>
+          ) : backendStatus === 'offline' ? (
+            <>
+              <WifiOff size={14} />
+              <span>Backend Offline (Mất kết nối)</span>
+            </>
+          ) : (
+            <>
+              <Activity size={14} className="animate-spin" />
+              <span>Đang kiểm tra API...</span>
+            </>
+          )}
         </div>
+
+        {/* API Console Launcher Button */}
+        <button
+          onClick={() => setShowApiConsole(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            padding: '0.4rem 0.85rem',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+            border: '1px solid rgba(99, 102, 241, 0.4)',
+            color: '#818cf8',
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+          title="Mở Bảng Điều Khiển & Thao Tác Trực Tiếp Toàn Bộ API Backend"
+        >
+          <Terminal size={15} />
+          <span>API Console</span>
+        </button>
       </div>
+
+      {/* Live API Console Modal */}
+      <ApiConsoleModal isOpen={showApiConsole} onClose={() => setShowApiConsole(false)} />
     </header>
   );
 };
+export default Header;
