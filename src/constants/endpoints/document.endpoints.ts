@@ -1,8 +1,9 @@
 export const DOCUMENT_ENDPOINTS = {
-  BASE: '/api/documents',
-  UPLOAD: '/api/documents/upload',
-  BY_INTERN: (internCode: string) => `/api/documents/intern/${internCode}`,
-  DOWNLOAD: (id: number | string) => `/api/documents/${id}/download`,
-  REVIEW: (id: number | string) => `/api/documents/${id}/review`,
-  PENDING: '/api/documents/pending',
+  BASE: '/api/interns',
+  UPLOAD: (internCode: string) => `/api/interns/${internCode}/documents`,
+  BY_INTERN: (internCode: string) => `/api/interns/${internCode}/documents`,
+  DOWNLOAD: (id: number | string) => `/api/interns/documents/${id}/download`,
+  REVIEW: (id: number | string) => `/api/interns/documents/${id}/review`,
+  PENDING: '/api/interns/documents/pending',
 } as const;
+

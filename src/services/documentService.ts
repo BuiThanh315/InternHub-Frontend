@@ -32,7 +32,7 @@ export const documentService = {
     formData.append('documentType', documentType);
 
     const response = await apiClient.post(
-      `/api/employees/interns/${internCode}/documents`,
+      API_ENDPOINTS.DOCUMENT.UPLOAD(internCode),
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -52,7 +52,7 @@ export const documentService = {
     internCode: string,
     signal?: AbortSignal
   ): Promise<DocumentResponse[]> {
-    const response = await apiClient.get(`/api/employees/interns/${internCode}/documents`, {
+    const response = await apiClient.get(API_ENDPOINTS.DOCUMENT.BY_INTERN(internCode), {
       signal,
     });
     const list = response.data.data || [];
@@ -65,7 +65,7 @@ export const documentService = {
     }
     const docPromises = internCodes.map((code) =>
       apiClient
-        .get(`/api/employees/interns/${code}/documents`, { signal })
+        .get(API_ENDPOINTS.DOCUMENT.BY_INTERN(code), { signal })
         .catch(() => null)
     );
     const results = await Promise.all(docPromises);
@@ -93,7 +93,7 @@ export const documentService = {
 
   getDocumentDownloadUrl(documentId: number, disposition: 'inline' | 'attachment' = 'inline'): string {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    return `${baseUrl}/api/employees/interns/documents/${documentId}/download?disposition=${disposition}`;
+    return `${baseUrl}/api/interns/documents/${documentId}/download?disposition=${disposition}`;
   },
 
   previewDocumentFile(documentId: number) {

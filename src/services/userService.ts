@@ -44,7 +44,7 @@ export const userService = {
    */
   async getAllUsers(signal?: AbortSignal): Promise<User[]> {
     const response = await apiClient.get<ApiResponse<RawUserPayload[]>>(
-      API_ENDPOINTS.EMPLOYEE.USERS,
+      API_ENDPOINTS.USER.LIST,
       { signal }
     );
     const list = response.data?.data || [];
@@ -56,7 +56,7 @@ export const userService = {
    */
   async getUserById(id: number, signal?: AbortSignal): Promise<User> {
     const response = await apiClient.get<ApiResponse<RawUserPayload>>(
-      API_ENDPOINTS.EMPLOYEE.USER_DETAIL(id),
+      API_ENDPOINTS.USER.DETAIL(id),
       { signal }
     );
     if (response.data && response.data.data) {
@@ -69,8 +69,8 @@ export const userService = {
    * Khóa hoặc mở khóa trạng thái tài khoản người dùng trực tiếp trên Backend
    */
   async toggleUserStatus(id: number, signal?: AbortSignal): Promise<User> {
-    const response = await apiClient.put<ApiResponse<RawUserPayload>>(
-      API_ENDPOINTS.EMPLOYEE.USER_STATUS(id),
+    const response = await apiClient.patch<ApiResponse<RawUserPayload>>(
+      API_ENDPOINTS.USER.STATUS(id),
       {},
       { signal }
     );

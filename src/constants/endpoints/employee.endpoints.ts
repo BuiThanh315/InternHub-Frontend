@@ -1,11 +1,19 @@
 export const EMPLOYEE_ENDPOINTS = {
   BASE: '/api/employees',
-  INTERNS: '/api/employees/interns',
-  INTERN_DETAIL: (id: number | string) => `/api/employees/interns/${id}`,
-  INTERN_STATUS: (id: number | string) => `/api/employees/interns/${id}/status`,
+  
+  // Intern & Program Service (/api/interns)
+  INTERNS: '/api/interns',
+  INTERN_DETAIL: (id: number | string) => `/api/interns/${id}`,
+  INTERN_STATUS: (id: number | string) => `/api/interns/${id}/status`,
+  INTERN_DOCUMENTS: (internCode: string) => `/api/interns/${internCode}/documents`,
+  
+  // Identity & Access Service (/api/users)
+  USERS: '/api/users',
+  USER_DETAIL: (id: number | string) => `/api/users/${id}`,
+  USER_STATUS: (id: number | string) => `/api/users/${id}/status`,
+
+  // Metadata / Legacy
   DEPARTMENTS: '/api/employees/departments',
   POSITIONS: '/api/employees/positions',
-  USERS: '/api/employees/users',
-  USER_DETAIL: (id: number | string) => `/api/employees/users/${id}`,
-  USER_STATUS: (id: number | string) => `/api/employees/users/${id}/status`,
 } as const;
+
