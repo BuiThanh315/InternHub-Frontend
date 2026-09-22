@@ -31,11 +31,7 @@ export const MentorDashboard: React.FC = () => {
   });
   const [activeNoteText, setActiveNoteText] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     try {
       setLoading(true);
       const internRes = await internService.getInterns();
@@ -54,7 +50,11 @@ export const MentorDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [notes]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSelectIntern = (code: string) => {
     setSelectedInternCode(code);

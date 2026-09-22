@@ -1,0 +1,71 @@
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.titleWithIcon {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fileNameCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fileNameText {
+  font-weight: 600;
+  font-family: monospace;
+  font-size: 0.825rem;
+}
+
+.sizeText {
+  font-weight: 500;
+  font-size: 0.825rem;
+}
+
+.dateText {
+  font-size: 0.825rem;
+}
+
+.durationText {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+}
+
+.creatorText {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tableMessage {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}

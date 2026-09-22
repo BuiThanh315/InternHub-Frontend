@@ -1,0 +1,203 @@
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpiCard {
+  padding: 1rem;
+}
+
+.kpiLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.kpiValuePrimary {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 4px 0 0 0;
+  color: var(--primary);
+}
+
+.kpiValueSuccess {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 4px 0 0 0;
+  color: #10b981;
+}
+
+.kpiValueDanger {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 4px 0 0 0;
+  color: #ef4444;
+}
+
+.kpiSubText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 4px 0 0 0;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.titleWithIcon {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filterBar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: var(--bg-surface);
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+  margin-bottom: 1.5rem;
+}
+
+.searchBox {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.filterInput {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.2rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  font-size: 0.825rem;
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.filterSelect,
+.filterDate {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  font-size: 0.825rem;
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.dateCell {
+  font-size: 0.825rem;
+  white-space: nowrap;
+}
+
+.userCell {
+  font-weight: 600;
+  font-size: 0.825rem;
+}
+
+.roleSub {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+}
+
+.actionMono {
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.descCell {
+  font-size: 0.825rem;
+  max-width: 280px;
+}
+
+.descText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.endpointSub {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.ipCell {
+  font-size: 0.825rem;
+  font-family: monospace;
+  color: var(--text-muted);
+}
+
+.tableMessage {
+  text-align: center;
+  padding: 2.5rem;
+  color: var(--text-muted);
+}
+
+.paginationRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-default);
+}
+
+.paginationInfo {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sizeSelect {
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  font-size: 0.825rem;
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.pageNum {
+  font-size: 0.85rem;
+  font-weight: 600;
+}

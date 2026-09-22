@@ -45,7 +45,7 @@ export const HrDashboard: React.FC = () => {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [reviewModalDoc, setReviewModalDoc] = useState<DocumentResponse | null>(null);
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage(null);
@@ -67,17 +67,18 @@ export const HrDashboard: React.FC = () => {
       const internCodes = loadedInterns.map((i) => i.internCode);
       const docRes = await documentService.getAllDocuments(internCodes);
       setDocuments(docRes);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Lỗi nạp dữ liệu HR Dashboard:', err);
-      setErrorMessage(err.message || 'Không thể nạp dữ liệu từ máy chủ backend');
+      const msg = err instanceof Error ? err.message : 'Không thể nạp dữ liệu từ máy chủ backend';
+      setErrorMessage(msg);
     } finally {
       setLoading(false);
     }
-  };
+  }, [keyword, selectedUniversity, selectedStatus, page]);
 
   useEffect(() => {
     loadData();
-  }, [keyword, selectedUniversity, selectedStatus, page]);
+  }, [loadData]);
 
   // TM-1: Tạo mới hồ sơ thực tập sinh
   const handleCreateIntern = async (formData: CreateInternRequest) => {

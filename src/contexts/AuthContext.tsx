@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import type { AuthUser, RoleType } from '../types';
 import { authService } from '../services/authService';
 
@@ -14,11 +14,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
-
-  useEffect(() => {
-    const current = authService.getCurrentUser();
-    setUser(current);
-  }, []);
 
   const login = async (username: string, password: string): Promise<AuthUser> => {
     const authUser = await authService.login(username, password);

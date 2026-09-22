@@ -10,7 +10,7 @@ export interface User {
   gender?: GenderType;
   address?: string;
   avatarUrl?: string;
-  status?: 'ACTIVE' | 'INACTIVE';
+  status?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
   role?: RoleType;
   department?: string;
   position?: string;
