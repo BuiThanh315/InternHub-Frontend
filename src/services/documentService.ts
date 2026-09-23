@@ -83,7 +83,7 @@ export const documentService = {
     request: ReviewDocumentRequest,
     signal?: AbortSignal
   ): Promise<DocumentResponse> {
-    const response = await apiClient.put(
+    const response = await apiClient.patch(
       API_ENDPOINTS.DOCUMENT.REVIEW(documentId),
       request,
       { signal }
