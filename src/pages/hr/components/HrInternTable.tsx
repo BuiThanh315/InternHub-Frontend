@@ -13,6 +13,8 @@ interface HrInternTableProps {
   onViewDetail: (intern: InternProfile) => void;
   onOpenEdit: (intern: InternProfile) => void;
   onOpenUpload: (intern: InternProfile) => void;
+  onOpenApprove: (intern: InternProfile) => void;
+  onOpenReject: (intern: InternProfile) => void;
   onStatusChange: (internId: number, nextStatus: InternStatus) => void;
 }
 
@@ -26,6 +28,8 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
   onViewDetail,
   onOpenEdit,
   onOpenUpload,
+  onOpenApprove,
+  onOpenReject,
   onStatusChange,
 }) => {
   const getBadgeClass = (status: InternStatus) => {
@@ -141,17 +145,17 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                         <>
                           <button
                             type="button"
-                            onClick={() => onStatusChange(intern.id, 'APPROVED')}
+                            onClick={() => onOpenApprove(intern)}
                             className="btn btn-sm btn-primary"
-                            title="Phê duyệt hồ sơ"
+                            title="Phê duyệt tiếp nhận hồ sơ"
                           >
                             Tiếp Nhận
                           </button>
                           <button
                             type="button"
-                            onClick={() => onStatusChange(intern.id, 'REJECTED')}
+                            onClick={() => onOpenReject(intern)}
                             className="btn btn-sm btn-danger"
-                            title="Từ chối hồ sơ"
+                            title="Từ chối hồ sơ ứng viên"
                           >
                             Từ Chối
                           </button>
@@ -169,11 +173,11 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                           </button>
                           <button
                             type="button"
-                            onClick={() => onStatusChange(intern.id, 'REJECTED')}
+                            onClick={() => onOpenReject(intern)}
                             className="btn btn-sm btn-secondary"
-                            title="Từ chối/hủy"
+                            title="Hủy tiếp nhận / Từ chối hồ sơ"
                           >
-                            Hủy
+                            Hủy Tiếp Nhận
                           </button>
                         </>
                       )}

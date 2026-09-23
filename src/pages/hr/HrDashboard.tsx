@@ -21,6 +21,8 @@ import {
   DetailInternModal,
   UploadDocModal,
   RejectDocModal,
+  ApproveConfirmModal,
+  RejectInternModal,
 } from './components';
 
 export const HrDashboard: React.FC = () => {
@@ -44,6 +46,13 @@ export const HrDashboard: React.FC = () => {
   const [uploadDocIntern, setUploadDocIntern] = useState<InternProfile | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [reviewModalDoc, setReviewModalDoc] = useState<DocumentResponse | null>(null);
+
+  // TM-11 Decision Modal States
+  const [approveIntern, setApproveIntern] = useState<InternProfile | null>(null);
+  const [rejectIntern, setRejectIntern] = useState<InternProfile | null>(null);
+  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
+  const [decisionError, setDecisionError] = useState<string | null>(null);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
 
   const loadData = React.useCallback(async () => {
     try {
@@ -79,6 +88,15 @@ export const HrDashboard: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (successToast) {
+      const timer = setTimeout(() => {
+        setSuccessToast(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [successToast]);
 
   // TM-1: Tạo mới hồ sơ thực tập sinh
   const handleCreateIntern = async (formData: CreateInternRequest) => {
@@ -185,6 +203,51 @@ export const HrDashboard: React.FC = () => {
     }
   };
 
+  // TM-11: Phê duyệt hồ sơ TTS
+  const handleApproveDecision = async () => {
+    if (!approveIntern) return;
+    try {
+      setIsSubmittingDecision(true);
+      setDecisionError(null);
+      await internService.submitDecision(approveIntern.id, { decision: 'APPROVED' });
+      setSuccessToast(`Đã phê duyệt tiếp nhận hồ sơ thực tập sinh ${approveIntern.fullName} (${approveIntern.internCode}) thành công!`);
+      setApproveIntern(null);
+      if (detailIntern && detailIntern.id === approveIntern.id) {
+        setDetailIntern(null);
+      }
+      await loadData();
+    } catch (err: any) {
+      console.error('Lỗi khi phê duyệt hồ sơ:', err);
+      setDecisionError(err.response?.data?.message || err.message || 'Không thể phê duyệt hồ sơ.');
+    } finally {
+      setIsSubmittingDecision(false);
+    }
+  };
+
+  // TM-11: Từ chối hồ sơ TTS
+  const handleRejectDecision = async (reason: string) => {
+    if (!rejectIntern) return;
+    try {
+      setIsSubmittingDecision(true);
+      setDecisionError(null);
+      await internService.submitDecision(rejectIntern.id, {
+        decision: 'REJECTED',
+        rejectionReason: reason,
+      });
+      setSuccessToast(`Đã từ chối hồ sơ của ứng viên ${rejectIntern.fullName} (${rejectIntern.internCode}).`);
+      setRejectIntern(null);
+      if (detailIntern && detailIntern.id === rejectIntern.id) {
+        setDetailIntern(null);
+      }
+      await loadData();
+    } catch (err: any) {
+      console.error('Lỗi khi từ chối hồ sơ:', err);
+      setDecisionError(err.response?.data?.message || err.message || 'Không thể từ chối hồ sơ.');
+    } finally {
+      setIsSubmittingDecision(false);
+    }
+  };
+
   const pendingDocuments = documents.filter(
     (d) => d.status === 'PENDING_REVIEW' || (d.status as any) === 'PENDING'
   );
@@ -198,6 +261,41 @@ export const HrDashboard: React.FC = () => {
       />
 
       <div style={{ marginTop: '1.5rem' }}>
+        {successToast && (
+          <div
+            style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid var(--success)',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.85rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.75rem',
+              color: 'var(--success)',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              marginBottom: '1.25rem',
+              animation: 'fadeIn 0.25s ease',
+            }}
+          >
+            <span>✓ {successToast}</span>
+            <button
+              type="button"
+              onClick={() => setSuccessToast(null)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--success)',
+                cursor: 'pointer',
+                fontWeight: 700,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {errorMessage && (
           <div
             style={{
@@ -262,6 +360,14 @@ export const HrDashboard: React.FC = () => {
             onViewDetail={(intern) => setDetailIntern(intern)}
             onOpenEdit={(intern) => setEditIntern(intern)}
             onOpenUpload={(intern) => setUploadDocIntern(intern)}
+            onOpenApprove={(intern) => {
+              setDecisionError(null);
+              setApproveIntern(intern);
+            }}
+            onOpenReject={(intern) => {
+              setDecisionError(null);
+              setRejectIntern(intern);
+            }}
             onStatusChange={handleStatusChange}
           />
         </div>
@@ -291,6 +397,14 @@ export const HrDashboard: React.FC = () => {
           setDetailIntern(null);
           setUploadDocIntern(intern);
         }}
+        onOpenApprove={(intern) => {
+          setDecisionError(null);
+          setApproveIntern(intern);
+        }}
+        onOpenReject={(intern) => {
+          setDecisionError(null);
+          setRejectIntern(intern);
+        }}
       />
 
       <UploadDocModal
@@ -304,6 +418,31 @@ export const HrDashboard: React.FC = () => {
         doc={reviewModalDoc}
         onClose={() => setReviewModalDoc(null)}
         onSubmit={handleRejectDocument}
+      />
+
+      {/* TM-11: Modals Phê Duyệt & Từ Chối Hồ Sơ */}
+      <ApproveConfirmModal
+        intern={approveIntern}
+        isOpen={Boolean(approveIntern)}
+        isSubmitting={isSubmittingDecision}
+        errorMessage={decisionError}
+        onClose={() => {
+          setApproveIntern(null);
+          setDecisionError(null);
+        }}
+        onConfirm={handleApproveDecision}
+      />
+
+      <RejectInternModal
+        intern={rejectIntern}
+        isOpen={Boolean(rejectIntern)}
+        isSubmitting={isSubmittingDecision}
+        errorMessage={decisionError}
+        onClose={() => {
+          setRejectIntern(null);
+          setDecisionError(null);
+        }}
+        onConfirm={handleRejectDecision}
       />
     </div>
   );
