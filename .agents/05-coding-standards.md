@@ -101,6 +101,11 @@ import './InternTable.css';
 - **Spring Boot**: Đếm trang từ `0` (`0-indexed`).
 - **Frontend UI**: Hiển thị trang bắt đầu từ `1` (`1-indexed`).
 - **Quy tắc**: Tự động trừ 1 khi gửi request (`params.page = pageUI - 1`) và cộng 1 khi nhận response (`pageUI = pageBE + 1`).
+- **Kích thước trang chuẩn & Tự ẩn phân trang (Tham chiếu [08-ui-ux-guidelines.md](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/08-ui-ux-guidelines.md))**:
+  + Mặc định hiển thị tối đa **10 dòng / trang** (`DEFAULT_PAGE_SIZE = 10`), vừa vặn khung nhìn 1080p không cần cuộn chuột.
+  + **Tự động ẩn thanh phân trang** khi dữ liệu $\le$ 10 dòng hoặc chỉ có 1 trang (`totalItems <= 10` hoặc `totalPages <= 1`).
+  + **Chống Double-Click & Loader**: Khi đang tải dữ liệu (`isLoading = true`), thanh phân trang phải tạm khóa click (`pointer-events: none`) và hiển thị mini-loader, ngăn người dùng bấm dồn dập nhiều lần.
+
 
 ---
 
@@ -119,6 +124,8 @@ import './InternTable.css';
   ```
 - **Nghiêm cấm viết inline styles** (`style={{ marginTop: '16px', color: 'red' }}`) cho các thuộc tính layout, spacing, typography hoặc màu sắc.
 - Chỉ cho phép dùng inline `style` cho các giá trị động thực sự tính toán theo runtime (ví dụ: `style={{ width: `${percent}%` }}`).
+- **Tuyệt đối cấm hardcode mã màu Hex trong CSS Modules (Tham chiếu [08-ui-ux-guidelines.md](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/08-ui-ux-guidelines.md))**: 100% màu sắc phải dùng Design Tokens ngữ nghĩa từ `src/index.css` (`var(--text-main)`, `var(--bg-card)`, `var(--border-default)`, `var(--primary)`...) để tự động thích ứng hoàn hảo 2 chiều Light/Dark Mode.
+
 
 ---
 
@@ -130,6 +137,8 @@ import './InternTable.css';
 - **Khi Mutation thất bại**:
   1. Hiển thị thông báo lỗi cụ thể (từ `AppError.message` hoặc bôi đỏ ô input từ `AppError.fieldErrors`).
   2. **TUYỆT ĐỐI KHÔNG ĐÓNG MODAL / FORM**, giữ nguyên dữ liệu người dùng đã nhập để họ chỉnh sửa, tránh làm mất công sức nhập liệu.
+- **Triết lý Modal-First UX & Hạn chế chuyển trang**: Ưu tiên thực hiện mọi thao tác thêm/xem/sửa/xóa ngay trong Modal / Drawer trên trang hiện tại để bảo toàn bộ lọc tìm kiếm và số trang (Chi tiết xem tại [08-ui-ux-guidelines.md](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/08-ui-ux-guidelines.md)).
+
 
 ---
 
@@ -208,4 +217,17 @@ Mọi Error Boundary trong dự án bắt buộc phải đáp ứng:
 1. **Không hiển thị màn hình trắng**: Luôn hiển thị giao diện Fallback UI thân thiện với người dùng.
 2. **Nút Thử lại (Retry Action)**: Cung cấp nút bấm cho phép người dùng kích hoạt reset state của component hoặc tải lại trang cục bộ.
 3. **Thông tin kỹ thuật an toàn**: Trong môi trường `development`, hiển thị `error.message` và `componentStack` bên trong khối accordion thu gọn. Trong môi trường `production`, chỉ hiển thị thông báo chung: *"Đã xảy ra sự cố không mong muốn. Vui lòng thử lại sau."*
+
+---
+
+## 11. Tiêu Chuẩn Thiết Kế UX/UI & Trải Nghiệm Người Dùng (Tham Chiếu 08-ui-ux-guidelines.md)
+
+Mọi lập trình viên và AI Agent khi xây dựng hoặc cập nhật thành phần giao diện bắt buộc phải đọc và tuân thủ toàn diện [08-ui-ux-guidelines.md](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/08-ui-ux-guidelines.md) với các nguyên tắc cốt lõi:
+1. **Modal-First UX & Cấu trúc 3 khối**: Header cố định, Body cuộn độc lập (`overflow-y: auto`), **Sticky Footer luôn ghim nút bấm ở đáy**. Bảo toàn 100% ngữ cảnh (bộ lọc, số trang), cấm modal lồng modal.
+2. **Độ rõ nét chữ & Đổi màu Border khi Focus/Select**: Đạt chuẩn WCAG AA, chữ gõ/chọn nổi bật (`font-weight: 500/600`, size 15-16px). Khi select/focus vào `<Input>`, `<Select>`, `<textarea>`, `<SearchBar>`, viền chuyển màu `var(--primary)` kèm hào quang `var(--primary-glow)`.
+3. **Bảng 10 dòng & Tự ẩn phân trang**: Tự ẩn thanh phân trang khi $\le 10$ bản ghi, khóa `pointer-events: none` chống double-click và hiển thị loader khi đổi trang.
+4. **5 Trạng thái giao diện Zero-Jank**: Skeleton Shimmer (cấm chữ Loading thô), Rich Empty State có icon và nút CTA, Error State kèm Retry.
+5. **Thao tác nguy hiểm**: Nghiêm cấm `window.confirm()`, bắt buộc dùng Confirmation Modal nguy hiểm nền đỏ nhạt chỉ rõ đối tượng bị xóa và nút `variant="danger"`.
+6. **Responsive & Custom Scrollbar**: Bảng cuộn ngang cục bộ trên Desktop kèm cột đinh cố định (Mã TTS, Thao tác); chuyển sang thẻ Card dọc trên Mobile; thanh cuộn custom siêu mảnh 6-8px bo tròn.
+
 

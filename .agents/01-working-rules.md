@@ -13,7 +13,7 @@ Tài liệu này định nghĩa nguyên tắc tối cao và quy trình làm vi�
 
 ### Các giới hạn cụ thể:
 0. **BẮT BUỘC ĐỌC QUY TẮC PHÂN HỆ TRƯỚC KHI THAO TÁC CẬP NHẬT CODE**:
-   - Bất kỳ khi nào thực hiện cập nhật code cho **Frontend**, Agent **BẮT BUỘC PHẢI ĐỌC QUA CÁC QUY TẮC CỦA FRONTEND** trong thư mục `.agents/` (đặc biệt là `01-working-rules.md`, `03-compliance-constraints.md`, `05-coding-standards.md`) trước khi thao tác.
+   - Bất kỳ khi nào thực hiện cập nhật code cho **Frontend**, Agent **BẮT BUỘC PHẢI ĐỌC QUA CÁC QUY TẮC CỦA FRONTEND** trong thư mục `.agents/` (đặc biệt là `01-working-rules.md`, `03-compliance-constraints.md`, `05-coding-standards.md`, `08-ui-ux-guidelines.md`) trước khi thao tác.
    - Ngược lại, bất kỳ khi nào thực hiện cập nhật code cho **Backend**, Agent cũng **BẮT BUỘC PHẢI ĐỌC QUA CÁC QUY TẮC CỦA BACKEND** (`InternHub/AGENTS.md` và `InternHub/.antigravity/rules.md`) trước khi thực hiện.
 1. **Không tự ý cài đặt hoặc gỡ bỏ thư viện**: Cấm tự chạy `npm install`, `npm uninstall`, `yarn add` mà không có sự đồng ý của người dùng.
 
@@ -76,6 +76,13 @@ Tài liệu này định nghĩa nguyên tắc tối cao và quy trình làm vi�
       + Agent **BẮT BUỘC PHẢI LẬP TỨC PHÁT CẢNH BÁO**.
       + **CHỈ RÕ ĐIỂM VI PHẠM** (trích dẫn điều khoản cụ thể) và nêu rõ hậu quả/rủi ro kỹ thuật.
       + Tuyệt đối không được âm thầm làm theo khi chưa cảnh báo và nhận được sự tái xác nhận từ người dùng.
+18. **TUÂN THỦ TOÀN DIỆN BỘ QUY CHUẨN THIẾT KẾ UX/UI (08-UI-UX-GUIDELINES.MD)**:
+    - **Triết lý Modal-First UX**: 90% tác vụ CRUD bắt buộc diễn ra trong Modal / Drawer ngay trên trang để bảo toàn bộ lọc tìm kiếm và vị trí trang; cấu trúc Modal chuẩn 3 khối với Header, Body cuộn độc lập và **Sticky Footer luôn ghim nút bấm ở đáy**.
+    - **Độ rõ nét chữ & Đổi màu border khi select**: Text đạt chuẩn tương phản WCAG AA, chữ gõ vào/chọn mang màu đen đậm/trắng sáng nổi bật (`font-weight: 500/600`). Khi select/focus vào `<Input>`, `<Select>`, `<textarea>`, `<SearchBar>`, viền ngoài đổi màu sang `var(--primary)` kèm hào quang `var(--primary-glow)`.
+    - **Bảng 10 dòng & Tự động ẩn phân trang**: Mặc định hiển thị tối đa 10 dòng/trang; tự động ẩn thanh phân trang khi `<= 10 dòng` hoặc 1 trang; nút phân trang có khóa chống Double-Click và loader khi chuyển trang.
+    - **Giao diện đa thiết bị & Thanh cuộn tinh tế**: Desktop dùng khung App Shell cố định, bảng nhiều cột chỉ cuộn ngang trong khung kèm cột đinh cố định (Sticky Columns); dùng thanh cuộn siêu mảnh (6px-8px). Mobile tự động chuyển bảng sang dạng thẻ Card dọc.
+    - **Zero-Jank 5 States**: Bắt buộc dùng Skeleton Shimmer (cấm chữ Loading thô), Rich Empty State có Icon + Tiêu đề + Hướng dẫn + Nút CTA, Error State kèm Retry.
+    - **Tuyệt đối cấm hardcode mã màu Hex trong CSS Modules**; cấm `window.confirm()` và bắt buộc dùng Confirmation Modal nguy hiểm nền đỏ nhạt cho thao tác xóa.
 
 ---
 

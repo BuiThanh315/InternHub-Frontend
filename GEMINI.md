@@ -16,7 +16,7 @@ Nhiệm vụ của bạn là hỗ trợ người dùng xây dựng, bảo trì, 
 
 ---
 
-## 2. Toàn Bộ 27 Nguyên Tắc Bất Biến (27 Non-Negotiable Rules)
+## 2. Toàn Bộ 34 Nguyên Tắc Bất Biến (34 Non-Negotiable Rules)
 
 ### 🏛️ Trụ Cột I: Giao Thức Phối Hợp Người - AI
 1. **KHÔNG TỰ Ý ĐƯA RA QUYẾT ĐỊNH**: Mọi thay đổi về cấu trúc thư mục, thư viện, logic nghiệp vụ hay can thiệp mã nguồn đều phải thông qua sự đồng ý rõ ràng của người dùng.
@@ -66,6 +66,21 @@ Nhiệm vụ của bạn là hỗ trợ người dùng xây dựng, bảo trì, 
     - Nếu câu lệnh của người dùng có thể hiểu theo nhiều cách khác nhau hoặc thiếu thông tin, Agent **bắt buộc phải hỏi lại để làm rõ**, tuyệt đối không tự ý suy đoán và ra quyết định.
     - Nếu yêu cầu của người dùng đi ngược lại bất kỳ quy tắc nào trong bộ quy chuẩn này, Agent **bắt buộc phải lập tức phát cảnh báo, chỉ rõ đích danh điều khoản vi phạm và nêu rủi ro kỹ thuật**, tuyệt đối không âm thầm làm theo khi chưa cảnh báo và nhận được sự tái xác nhận từ người dùng.
 
+### 🎨 Trụ Cột VI: Tiêu Chuẩn Thiết Kế UX/UI & Trải Nghiệm Người Dùng Toàn Diện
+28. **TUÂN THỦ HỆ THỐNG DESIGN TOKENS & CẤM HARDCODE MÃ MÀU HEX**: 100% màu sắc, khoảng cách, bo góc và đổ bóng bắt buộc phải sử dụng các CSS Variables ngữ nghĩa định nghĩa trong `src/index.css` (`var(--text-main)`, `var(--bg-card)`, `var(--border-default)`, `var(--primary)`...). Nghiêm cấm tuyệt đối viết mã màu Hex (`#ffffff`, `#1e293b`, `#000`) trong các file `.module.css`. Đảm bảo hệ thống tự thích ứng 2 chiều Dark Mode và Light Mode không lỗi màu.
+29. **QUY CHUẨN MODAL-FIRST UX & CẤU TRÚC 3 KHỐI BẢO TOÀN NGỮ CẢNH (HẠN CHẾ CHUYỂN TRANG)**: 90% thao tác nghiệp vụ (CRUD: Thêm, Xem, Sửa, Xóa, Duyệt, Upload) bắt buộc thực hiện thông qua Modal / Drawer ngay trên trang hiện tại để bảo toàn 100% bộ lọc tìm kiếm và vị trí phân trang. Mọi Modal bắt buộc tuân theo cấu trúc 3 khối: Header cố định, Body cuộn độc lập và **Sticky Footer ghim nút bấm cố định ở đáy**. Có cơ chế chống mất dữ liệu khi vô tình click backdrop và nghiêm cấm mở "Modal lồng Modal".
+30. **QUY CHUẨN ĐỘ TƯƠNG PHẢN CHỮ & UX ĐỔI MÀU BORDER KHI SELECT TOÀN BỘ FORM CONTROLS**: Tỷ lệ tương phản chữ phải đạt chuẩn WCAG AA (>= 4.5:1 đến 7:1), chữ nhập/chọn mang màu đen đậm/trắng sáng nổi bật (`font-weight: 500/600`, size 15-16px chống lỗi Safari auto-zoom). Khi người dùng select/focus vào `<Input>`, `<Select>`, `<textarea>`, `<SearchBar>`, viền ngoài (`border`) lập tức đổi màu mượt mà sang `var(--primary)` kèm hào quang ánh sáng bao quanh (`box-shadow: 0 0 0 3px var(--primary-glow)`).
+31. **QUY CHUẨN BẢNG DỮ LIỆU TỐI ĐA 10 DÒNG, PHÂN TRANG TỰ ẨN, CHỐNG DOUBLE-CLICK & LOADER**:
+    - Mặc định mọi bảng dữ liệu hiển thị tối đa **10 dòng / trang** (tỷ lệ vàng vừa khít màn hình 1080p không cần cuộn).
+    - **Tự động ẩn thanh phân trang khi `<= 10 dòng`** (`totalItems <= 10` hoặc `totalPages <= 1`) để loại bỏ rác thị giác, đồng thời tự động hoàn thiện bo góc đáy bảng liền mạch với Card.
+    - Nút bấm phân trang đáp ứng đầy đủ tiêu chí Button, có cơ chế khóa tương tác (`pointer-events: none`) chống Double-Click và hiển thị loader khi đang tải dữ liệu trang mới.
+32. **QUY CHUẨN 5 TRẠNG THÁI GIAO DIỆN BẮT BUỘC (SKELETON, EMPTY CÓ CTA, ERROR RETRY, SUCCESS TOAST, DISABLED)**: Mọi bảng/danh sách bắt buộc xử lý đủ 5 trạng thái. Cấm dùng dòng chữ Loading thô sơ ➔ Bắt buộc dùng Skeleton Loader dạng sóng Shimmer chống giật layout (CLS). Cấm dòng chữ Empty trơ trọi ➔ Bắt buộc có Icon minh họa + Tiêu đề + Hướng dẫn + Nút CTA hành động (*"Tạo mới"* hoặc *"Đặt lại bộ lọc"*). Error State có nút Thử lại (Retry Action).
+33. **QUY CHUẨN THAO TÁC NGUY HIỂM & KHẢ NĂNG TIẾP CẬN (DESTRUCTIVE CONFIRMATION MODAL & WCAG AA)**: Nghiêm cấm tuyệt đối `window.confirm()`. Mọi thao tác xóa/từ chối bắt buộc mở Confirmation Modal nguy hiểm nền đỏ nhạt, nêu đích danh đối tượng bị xóa và nút xác nhận `variant="danger"`. Khi submit form lỗi, tuyệt đối không đóng modal và không xóa form, giữ nguyên dữ liệu và bôi đỏ trường lỗi từ Spring Boot. Đảm bảo hỗ trợ phím tắt `Esc`, `Enter` và `aria-label` cho nút icon-only.
+34. **QUY CHUẨN ĐA THIẾT BỊ, THANH CUỘN CỤC BỘ & CỘT ĐINH CỐ ĐỊNH (RESPONSIVE, CUSTOM SCROLLBAR & STICKY COLUMNS)**:
+    - **Desktop**: Khung sườn App Shell cố định. Bảng nhiều cột chỉ cuộn ngang cục bộ (`overflow-x: auto`), cấm tràn ngang toàn trang. Cột Mã TTS bên trái và Cột Thao Tác bên phải luôn ghim cố định (`sticky`) khi cuộn ngang.
+    - **Custom Sleek Scrollbar**: Tùy biến thanh cuộn siêu mảnh (6px–8px), bo tròn 9999px, tự làm đậm khi hover, tương thích cả Dark/Light Mode.
+    - **Mobile**: Tự động chuyển đổi bảng dữ liệu sang Danh Sách Dạng Thẻ Card dọc với nút bấm lớn dễ thao tác bằng ngón tay (Touch target >= 44px).
+
 ---
 
 ## 3. Bản Đồ Tài Liệu Bắt Buộc Đọc Trong Thư Mục `.agents/`
@@ -81,6 +96,7 @@ Mỗi khi tiếp nhận một yêu cầu liên quan đến dự án này, hãy c
 | **05** | [05-coding-standards.md](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/05-coding-standards.md) | Tiêu chuẩn Clean Code, thứ tự import 5 tầng, CSS scoping, tiện ích formatters |
 | **06** | [06-testing-verification.md](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/06-testing-verification.md) | Quy trình kiểm thử tự động, checklist nghiệm thu bằng dữ liệu và tài khoản thực tế |
 | **07** | [07-debugging-troubleshooting.md](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/07-debugging-troubleshooting.md) | Phân loại lỗi Frontend vs Backend, quy trình báo cáo lỗi Backend cho người dùng |
+| **08** | [08-ui-ux-guidelines.md](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/08-ui-ux-guidelines.md) | Toàn bộ 11 chương quy chuẩn thiết kế UX/UI, Modal-First, Design Tokens, 10 dòng tự ẩn phân trang, Sleek Scrollbar |
 
 ---
 
