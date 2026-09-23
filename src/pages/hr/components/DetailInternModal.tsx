@@ -10,6 +10,8 @@ interface DetailInternModalProps {
   onClose: () => void;
   onOpenEdit: (intern: InternProfile) => void;
   onOpenUpload: (intern: InternProfile) => void;
+  onOpenApprove?: (intern: InternProfile) => void;
+  onOpenReject?: (intern: InternProfile) => void;
 }
 
 export const DetailInternModal: React.FC<DetailInternModalProps> = ({
@@ -18,6 +20,8 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
   onClose,
   onOpenEdit,
   onOpenUpload,
+  onOpenApprove,
+  onOpenReject,
 }) => {
   if (!intern) return null;
 
@@ -151,6 +155,21 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
           <div>Ngày kết thúc: <strong>{intern.endDate || '-'}</strong></div>
           <div>Giới tính: <strong>{intern.gender || '-'}</strong></div>
           <div>Địa chỉ: <strong>{intern.address || '-'}</strong></div>
+          {intern.reviewedBy && (
+            <div>
+              Người xét duyệt: <strong style={{ color: 'var(--primary)' }}>{intern.reviewedBy}</strong>
+            </div>
+          )}
+          {intern.reviewedAt && (
+            <div>
+              Thời điểm duyệt: <strong>{new Date(intern.reviewedAt).toLocaleString('vi-VN')}</strong>
+            </div>
+          )}
+          {intern.rejectionReason && (
+            <div style={{ gridColumn: '1 / -1', color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+              <strong>Lý do từ chối:</strong> {intern.rejectionReason}
+            </div>
+          )}
           <div style={{ gridColumn: '1 / -1' }}>
             Ghi chú: <em>{intern.notes || 'Không có'}</em>
           </div>
@@ -243,25 +262,53 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {intern.status === 'PENDING' && onOpenApprove && onOpenReject && (
+            <>
+              <button
+                type="button"
+                onClick={() => onOpenApprove(intern)}
+                className="btn btn-primary"
+                style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}
+              >
+                Tiếp Nhận Hồ Sơ
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenReject(intern)}
+                className="btn btn-danger"
+              >
+                Từ Chối Hồ Sơ
+              </button>
+            </>
+          )}
+          {intern.status === 'APPROVED' && onOpenReject && (
+            <button
+              type="button"
+              onClick={() => onOpenReject(intern)}
+              className="btn btn-danger"
+            >
+              Hủy Tiếp Nhận
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onOpenEdit(intern)}
             className="btn btn-secondary"
           >
-            <Edit3 size={15} /> Chỉnh Sửa Hồ Sơ (PUT)
+            <Edit3 size={15} /> Chỉnh Sửa
           </button>
           <button
             type="button"
             onClick={() => onOpenUpload(intern)}
             className="btn btn-secondary"
           >
-            <Upload size={15} /> Tải Lên Tệp (POST)
+            <Upload size={15} /> Tải Lên Tệp
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="btn btn-primary"
+            className="btn btn-secondary"
           >
             Đóng
           </button>

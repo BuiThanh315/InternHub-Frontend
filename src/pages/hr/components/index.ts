@@ -7,3 +7,5 @@ export * from './EditInternModal';
 export * from './DetailInternModal';
 export * from './UploadDocModal';
 export * from './RejectDocModal';
+export * from './ApproveConfirmModal';
+export * from './RejectInternModal';
