@@ -69,14 +69,20 @@ export const InternProfileCard: React.FC<InternProfileCardProps> = ({ profile })
           <h4 className={styles.mentorTitle}>Người Hướng Dẫn Kỹ Thuật (Mentor)</h4>
         </div>
         <p className={styles.mentorText}>
-          Họ và tên: <strong>{profile.mentorName || 'Lê Hoàng Nam (Mentor)'}</strong>
+          Họ và tên: <strong>{profile.mentorName || 'Chưa phân công'}</strong>
         </p>
-        <p className={styles.mentorText}>
-          Email hỗ trợ: <strong>nam.le@internhub.com</strong>
-        </p>
+        {profile.mentorName ? (
+          <p className={styles.mentorText}>
+            Trạng thái: <strong>Đã phân công cán bộ hướng dẫn kỹ thuật</strong>
+          </p>
+        ) : (
+          <p className={styles.mentorText} style={{ color: 'var(--text-muted)' }}>
+            Thông tin liên hệ: <em>Đang chờ bộ phận Nhân sự phân công</em>
+          </p>
+        )}
         <p className={styles.mentorText} style={{ margin: 0 }}>
-          Thời gian thực tập: <strong>{formatDate(profile.startDate)}</strong> đến{' '}
-          <strong>{formatDate(profile.endDate || '2026-06-30')}</strong>
+          Thời gian thực tập: <strong>{formatDate(profile.startDate) || 'Chưa cập nhật'}</strong> đến{' '}
+          <strong>{formatDate(profile.endDate) || 'Chưa cập nhật'}</strong>
         </p>
       </div>
     </div>

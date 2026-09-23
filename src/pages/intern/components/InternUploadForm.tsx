@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UploadCloud, FileText, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { DocumentType } from '../../../types';
 import styles from './InternUploadForm.module.css';
 
@@ -16,22 +17,24 @@ export const InternUploadForm: React.FC<InternUploadFormProps> = ({ onUpload, is
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
-      alert('Vui lòng chọn một tệp tin (PDF / DOCX)');
+      toast.error('Vui lòng chọn một tệp tin (PDF / DOCX)');
       return;
     }
     try {
       await onUpload(selectedFile, uploadType);
       setSelectedFile(null);
-      setSuccessMsg('Tải lên tài liệu thành công qua API Backend! Đang chờ HR thẩm định.');
+      const msg = 'Tải lên tài liệu thành công! Đang chờ HR thẩm định.';
+      setSuccessMsg(msg);
+      toast.success(msg);
       setTimeout(() => setSuccessMsg(null), 5000);
     } catch (err: any) {
-      alert(err.message || 'Lỗi tải lên tài liệu');
+      toast.error(err.message || 'Lỗi tải lên tài liệu');
     }
   };
 
   return (
     <div className="card">
-      <h3 className={styles.title}>Nộp Thêm Tài Liệu Mới (TM-4)</h3>
+      <h3 className={styles.title}>Nộp Thêm Tài Liệu Mới</h3>
       <p className={styles.subtitle}>
         Tải lên CV hoặc Đơn xin thực tập để HR xét duyệt (chấp nhận PDF, DOCX tối đa 5MB)
       </p>
@@ -59,7 +62,7 @@ export const InternUploadForm: React.FC<InternUploadFormProps> = ({ onUpload, is
       <form onSubmit={handleSubmit}>
         <div className="form-group" style={{ marginBottom: '1rem' }}>
           <label className="form-label" style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.85rem', fontWeight: 500 }}>
-            Loại tài liệu cần nộp (TM-4) *
+            Loại tài liệu cần nộp *
           </label>
           <select
             className="form-select"

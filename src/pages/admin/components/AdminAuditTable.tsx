@@ -1,7 +1,7 @@
 import React from 'react';
-import { RefreshCw, CheckCircle2, AlertCircle, Eye } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Eye } from 'lucide-react';
 
-import { Button } from '../../../components/common/Button/Button';
+import { Button, Skeleton } from '../../../components/common';
 import { formatDateTime } from '../../../utils/formatters';
 import type { AuditLogItem } from '../../../types';
 import styles from './AdminAuditTable.module.css';
@@ -45,12 +45,18 @@ export const AdminAuditTable: React.FC<AdminAuditTableProps> = ({
         </thead>
         <tbody>
           {loading ? (
-            <tr>
-              <td colSpan={8} className={styles.tableMessage}>
-                <RefreshCw size={20} className="animate-spin" style={{ margin: '0 auto 0.5rem auto' }} />
-                <p style={{ margin: 0 }}>Đang tải dữ liệu nhật ký hoạt động từ Backend...</p>
-              </td>
-            </tr>
+            Array.from({ length: 5 }).map((_, index) => (
+              <tr key={`skeleton-${index}`}>
+                <td><Skeleton width="130px" height="18px" /></td>
+                <td><Skeleton width="100px" height="18px" /></td>
+                <td><Skeleton width="80px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                <td><Skeleton width="90px" height="18px" /></td>
+                <td><Skeleton width="160px" height="18px" /></td>
+                <td><Skeleton width="90px" height="18px" /></td>
+                <td><Skeleton width="70px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                <td><Skeleton width="60px" height="30px" /></td>
+              </tr>
+            ))
           ) : logs.length === 0 ? (
             <tr>
               <td colSpan={8} className={styles.tableMessage}>

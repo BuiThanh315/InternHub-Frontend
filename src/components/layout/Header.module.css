@@ -1,0 +1,166 @@
+.header {
+  height: 64px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin-top: -1.5rem;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  margin-bottom: 1.5rem;
+  width: calc(100% + 3rem);
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menuBtn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: var(--radius-sm);
+  align-items: center;
+  justify-content: center;
+}
+
+.menuBtn:hover {
+  background-color: var(--border-subtle);
+}
+
+.titleBox {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.subtitle {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 500px;
+}
+
+.rightControls {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.statusOnline {
+  background-color: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success);
+}
+
+.statusOffline {
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+}
+
+.statusChecking {
+  background-color: var(--border-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+}
+
+.apiConsoleBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.75rem;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-light);
+  border: 1px solid var(--border-focus);
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.apiConsoleBtn:hover {
+  filter: brightness(0.95);
+}
+
+.themeToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background-color: var(--border-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.themeToggleBtn:hover {
+  background-color: var(--border-default);
+}
+
+@media (max-width: 1024px) {
+  .menuBtn {
+    display: flex;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .apiConsoleBtn span {
+    display: none;
+  }
+
+  .statusIndicator span {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    margin-top: -1rem;
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+    margin-bottom: 1rem;
+    width: calc(100% + 1.5rem);
+    padding: 0 0.75rem;
+  }
+}

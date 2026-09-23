@@ -25,9 +25,9 @@ export const HrFilterBar: React.FC<HrFilterBarProps> = ({
     <>
       <div className={styles.filterHeader}>
         <div>
-          <h3 className={styles.title}>Danh Sách Hồ Sơ Thực Tập Sinh (TM-3)</h3>
+          <h3 className={styles.title}>Danh Sách Hồ Sơ Thực Tập Sinh</h3>
           <p className={styles.subtitle}>
-            Tìm kiếm, lọc qua API Backend và điều phối trạng thái thực tập (TM-2)
+            Tìm kiếm, lọc danh sách và điều phối trạng thái thực tập sinh
           </p>
         </div>
 
@@ -36,7 +36,7 @@ export const HrFilterBar: React.FC<HrFilterBarProps> = ({
           onClick={onOpenCreateModal}
           className="btn btn-primary"
         >
-          <Plus size={16} /> Thêm Hồ Sơ Mới (TM-1)
+          <Plus size={16} /> Thêm Hồ Sơ Mới
         </button>
       </div>
 

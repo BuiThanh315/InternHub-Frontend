@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Users, Database, FileText } from 'lucide-react';
 
 import { Header } from '../../components/layout/Header';
@@ -14,8 +15,21 @@ import styles from './AdminDashboard.module.css';
 type AdminTab = 'users' | 'backups' | 'audit-logs';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('users');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+    if (location.pathname.includes('/system')) return 'backups';
+    return 'users';
+  });
   const [users, setUsers] = useState<User[]>([]);
+
+  // Đồng bộ tab khi URL route thay đổi từ Sidebar
+  useEffect(() => {
+    if (location.pathname.includes('/system')) {
+      setActiveTab('backups');
+    } else if (location.pathname.includes('/users')) {
+      setActiveTab('users');
+    }
+  }, [location.pathname]);
 
   return (
     <div className={`animate-fade-in ${styles.container}`}>
@@ -30,6 +44,7 @@ export const AdminDashboard: React.FC = () => {
       {/* Main Tab Navigation */}
       <div className={styles.tabNav}>
         <button
+          type="button"
           onClick={() => setActiveTab('users')}
           className={`${styles.tabBtn} ${
             activeTab === 'users' ? styles.tabActive : styles.tabInactive
@@ -39,21 +54,23 @@ export const AdminDashboard: React.FC = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('backups')}
           className={`${styles.tabBtn} ${
             activeTab === 'backups' ? styles.tabActive : styles.tabInactive
           }`}
         >
-          <Database size={16} /> Sao Lưu Dữ Liệu (TM-8)
+          <Database size={16} /> Sao Lưu Dữ Liệu
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('audit-logs')}
           className={`${styles.tabBtn} ${
             activeTab === 'audit-logs' ? styles.tabActive : styles.tabInactive
           }`}
         >
-          <FileText size={16} /> Nhật Ký Hoạt Động (TM-9)
+          <FileText size={16} /> Nhật Ký Hoạt Động
         </button>
       </div>
 

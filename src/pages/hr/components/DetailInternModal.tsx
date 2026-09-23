@@ -1,8 +1,9 @@
 import React from 'react';
-import { User, X, FileText, Eye, Download, Edit3, Upload } from 'lucide-react';
+import { User, FileText, Eye, Download, Edit3, Upload } from 'lucide-react';
 import type { InternProfile, DocumentResponse } from '../../../types';
+import { Modal, Button } from '../../../components/common';
 import { documentService } from '../../../services/documentService';
-import { formatFileSize } from '../../../utils/formatters';
+import { formatFileSize, formatPhoneNumber, getInternStatusLabel } from '../../../utils/formatters';
 
 interface DetailInternModalProps {
   intern: InternProfile | null;
@@ -39,44 +40,43 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-      }}
+    <Modal
+      isOpen={!!intern}
+      onClose={onClose}
+      title={`Chi Tiết Hồ Sơ: ${intern.fullName} (${intern.internCode})`}
+      size="lg"
+      footer={
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', width: '100%', flexWrap: 'wrap' }}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => onOpenEdit(intern)}
+            leftIcon={<Edit3 size={15} />}
+          >
+            Chỉnh Sửa Hồ Sơ
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => onOpenUpload(intern)}
+            leftIcon={<Upload size={15} />}
+          >
+            Tải Lên Tệp
+          </Button>
+          <Button type="button" variant="primary" onClick={onClose}>
+            Đóng
+          </Button>
+        </div>
+      }
     >
-      <div
-        className="card"
-        style={{
-          width: '100%',
-          maxWidth: '640px',
-          margin: '1rem',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '1.25rem',
-          }}
-        >
+      <div>
+        {/* Header Profile Summary */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <div
               style={{
-                width: '36px',
-                height: '36px',
+                width: '40px',
+                height: '40px',
                 borderRadius: '50%',
                 backgroundColor: 'var(--primary-light)',
                 color: 'var(--primary)',
@@ -92,71 +92,65 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
               <h4 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
                 {intern.fullName}
               </h4>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  color: 'var(--primary)',
-                }}
-              >
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)' }}>
                 Mã TTS: {intern.internCode}
               </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className={`badge ${getBadgeClass(intern.status)}`}>
-              {intern.status}
-            </span>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-muted)',
-              }}
-            >
-              <X size={20} />
-            </button>
-          </div>
+          <span className={`badge ${getBadgeClass(intern.status)}`}>
+            {getInternStatusLabel(intern.status)}
+          </span>
         </div>
 
         {/* Profile Info Grid */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '0.85rem',
-            fontSize: '0.825rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '0.75rem',
+            marginBottom: '1.5rem',
             padding: '1rem',
-            borderRadius: '8px',
             backgroundColor: 'var(--border-subtle)',
-            marginBottom: '1.25rem',
+            borderRadius: '10px',
+            fontSize: '0.85rem',
           }}
         >
-          <div>Email: <strong>{intern.email}</strong></div>
-          <div>Số điện thoại: <strong>{intern.phone}</strong></div>
-          <div>Trường Đại học: <strong>{intern.university}</strong></div>
-          <div>Chuyên ngành: <strong>{intern.major}</strong></div>
           <div>
-            Vị trí ứng tuyển:{' '}
-            <strong style={{ color: '#3b82f6' }}>
-              {intern.appliedPosition || '-'}
-            </strong>
+            <span style={{ color: 'var(--text-muted)' }}>Email:</span>{' '}
+            <strong>{intern.email}</strong>
           </div>
-          <div>Niên khóa: <strong>{intern.academicYear || '-'}</strong></div>
-          <div>Ngày bắt đầu: <strong>{intern.startDate || '-'}</strong></div>
-          <div>Ngày kết thúc: <strong>{intern.endDate || '-'}</strong></div>
-          <div>Giới tính: <strong>{intern.gender || '-'}</strong></div>
-          <div>Địa chỉ: <strong>{intern.address || '-'}</strong></div>
-          <div style={{ gridColumn: '1 / -1' }}>
-            Ghi chú: <em>{intern.notes || 'Không có'}</em>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Điện thoại:</span>{' '}
+            <strong>{formatPhoneNumber(intern.phone)}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Trường ĐH:</span>{' '}
+            <strong>{intern.university}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Chuyên ngành:</span>{' '}
+            <strong>{intern.major}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Vị trí ứng tuyển:</span>{' '}
+            <strong>{intern.appliedPosition || 'Chưa phân bổ'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Ngày bắt đầu:</span>{' '}
+            <strong>{intern.startDate || 'Chưa thiết lập'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Niên khóa:</span>{' '}
+            <strong>{intern.academicYear || 'Chưa có'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Giới tính:</span>{' '}
+            <strong>{intern.gender === 'MALE' ? 'Nam' : intern.gender === 'FEMALE' ? 'Nữ' : 'Khác'}</strong>
           </div>
         </div>
 
-        {/* Attached Documents for this Intern */}
+        {/* Document Section */}
         <h5
           style={{
             fontSize: '0.95rem',
@@ -168,53 +162,49 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
           }}
         >
           <FileText size={16} color="var(--primary)" />
-          <span>Tài Liệu Đính Kèm ({internDocs.length})</span>
+          <span>Danh Sách Hồ Sơ & Tài Liệu Đã Nộp ({internDocs.length})</span>
         </h5>
 
         {internDocs.length === 0 ? (
-          <p
-            style={{
-              fontSize: '0.8rem',
-              color: 'var(--text-muted)',
-              fontStyle: 'italic',
-              marginBottom: '1.25rem',
-            }}
-          >
-            Chưa có tài liệu hoặc CV nào được nộp cho thực tập sinh này.
-          </p>
-        ) : (
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-              marginBottom: '1.25rem',
+              padding: '1.5rem',
+              textAlign: 'center',
+              backgroundColor: 'var(--border-subtle)',
+              borderRadius: '8px',
+              color: 'var(--text-muted)',
+              fontSize: '0.85rem',
             }}
           >
+            Thực tập sinh này chưa nộp tài liệu nào lên hệ thống.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {internDocs.map((doc) => (
               <div
                 key={doc.id}
                 style={{
-                  padding: '0.65rem 0.85rem',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-default)',
-                  backgroundColor: 'var(--bg-surface)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  padding: '0.75rem',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--bg-card)',
                 }}
               >
-                <div>
-                  <p style={{ fontSize: '0.825rem', fontWeight: 600, margin: 0 }}>
-                    {doc.originalFileName || doc.fileName}
-                  </p>
-                  <span
-                    style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}
-                  >
-                    {doc.documentType} • {formatFileSize(doc.fileSize)} •{' '}
-                    {doc.status}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <FileText size={18} color="var(--primary)" />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                      {doc.originalFileName || doc.fileName}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {doc.documentType} • {formatFileSize(doc.fileSize)} • Trạng thái: {doc.status}
+                    </span>
+                  </div>
                 </div>
+
                 <div style={{ display: 'flex', gap: '0.35rem' }}>
                   <button
                     type="button"
@@ -242,31 +232,9 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             ))}
           </div>
         )}
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-          <button
-            type="button"
-            onClick={() => onOpenEdit(intern)}
-            className="btn btn-secondary"
-          >
-            <Edit3 size={15} /> Chỉnh Sửa Hồ Sơ (PUT)
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenUpload(intern)}
-            className="btn btn-secondary"
-          >
-            <Upload size={15} /> Tải Lên Tệp (POST)
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-primary"
-          >
-            Đóng
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
+
+export default DetailInternModal;

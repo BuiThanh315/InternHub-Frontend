@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { toast } from 'sonner';
+import { UploadCloud } from 'lucide-react';
 import type { InternProfile, DocumentType } from '../../../types';
+import { Modal, Button } from '../../../components/common';
 
 interface UploadDocModalProps {
   intern: InternProfile | null;
@@ -23,7 +25,7 @@ export const UploadDocModal: React.FC<UploadDocModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      alert('Vui lòng chọn một tệp tin');
+      toast.error('Vui lòng chọn một tệp tin');
       return;
     }
     await onSubmit(docType, file);
@@ -31,118 +33,76 @@ export const UploadDocModal: React.FC<UploadDocModalProps> = ({
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-      }}
+    <Modal
+      isOpen={!!intern}
+      onClose={onClose}
+      title={`Tải Lên Tài Liệu Cho: ${intern.fullName}`}
+      size="md"
+      footer={
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', width: '100%' }}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={uploading}>
+            Hủy Bỏ
+          </Button>
+          <Button type="submit" form="upload-doc-form" variant="primary" isLoading={uploading}>
+            Tải Lên Tệp Tin
+          </Button>
+        </div>
+      }
     >
-      <div
-        className="card"
-        style={{ width: '100%', maxWidth: '480px', margin: '1rem' }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '1rem',
-          }}
-        >
-          <div>
-            <h4 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
-              Nộp Tài Liệu Mới (TM-4)
-            </h4>
-            <span
-              style={{
-                fontSize: '0.78rem',
-                color: 'var(--primary)',
-                fontWeight: 700,
-              }}
-            >
-              TTS: {intern.fullName} ({intern.internCode})
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-muted)',
-            }}
+      <form id="upload-doc-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="form-label">Loại tài liệu cần nộp *</label>
+          <select
+            className="form-select"
+            value={docType}
+            onChange={(e) => setDocType(e.target.value as DocumentType)}
           >
-            <X size={20} />
-          </button>
+            <option value="CV">CV / Hồ Sơ Ứng Tuyển</option>
+            <option value="APPLICATION_FORM">Đơn Xin Thực Tập</option>
+            <option value="TRANSCRIPT">Bảng Điểm Đại Học</option>
+            <option value="REPORT">Báo Cáo Thực Tập</option>
+            <option value="CERTIFICATE">Chứng Chỉ / Giấy Khen</option>
+          </select>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Loại tài liệu cần nộp *</label>
-            <select
-              className="form-select"
-              value={docType}
-              onChange={(e) => setDocType(e.target.value as DocumentType)}
-            >
-              <option value="CV">CV / Sơ Yếu Lý Lịch (CV)</option>
-              <option value="APPLICATION_LETTER">
-                Đơn Xin Thực Tập (APPLICATION_LETTER)
-              </option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
-              Chọn tệp tin (PDF / DOCX, tối đa 5MB) *
-            </label>
-            <input
-              type="file"
-              accept=".pdf,.docx,.doc"
-              required
-              className="form-input"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setFile(e.target.files[0]);
-                }
-              }}
-            />
-          </div>
-
+        <div className="form-group">
+          <label className="form-label">Chọn tệp tin (PDF, DOCX - Tối đa 10MB) *</label>
           <div
             style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '0.5rem',
-              marginTop: '1.25rem',
+              border: '2px dashed var(--border-default)',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              textAlign: 'center',
+              backgroundColor: 'var(--border-subtle)',
+              cursor: 'pointer',
             }}
+            onClick={() => document.getElementById('file-upload-input')?.click()}
           >
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-secondary"
-            >
-              Hủy Bỏ
-            </button>
-            <button
-              type="submit"
-              disabled={uploading || !file}
-              className="btn btn-primary"
-            >
-              {uploading ? 'Đang tải lên...' : 'Tải Lên Qua API (POST)'}
-            </button>
+            <UploadCloud size={32} color="var(--primary)" style={{ margin: '0 auto 0.5rem auto' }} />
+            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem' }}>
+              {file ? file.name : 'Bấm vào đây để chọn tệp tin tải lên'}
+            </p>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {file
+                ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
+                : 'Hỗ trợ các định dạng PDF, DOC, DOCX'}
+            </p>
           </div>
-        </form>
-      </div>
-    </div>
+          <input
+            id="file-upload-input"
+            type="file"
+            accept=".pdf,.doc,.docx"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                setFile(e.target.files[0]);
+              }
+            }}
+          />
+        </div>
+      </form>
+    </Modal>
   );
 };
+
+export default UploadDocModal;
