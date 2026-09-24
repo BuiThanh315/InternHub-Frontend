@@ -1,9 +1,10 @@
-import React from 'react';
-import { User, FileText, Eye, Download, Edit3, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, X, FileText, Eye, Download, Edit3, Upload } from 'lucide-react';
 import type { InternProfile, DocumentResponse } from '../../../types';
 import { Modal, Button } from '../../../components/common';
 import { documentService } from '../../../services/documentService';
-import { formatFileSize, formatPhoneNumber, getInternStatusLabel } from '../../../utils/formatters';
+import { internService } from '../../../services/internService';
+import { formatFileSize, formatDateTime } from '../../../utils/formatters';
 
 interface DetailInternModalProps {
   intern: InternProfile | null;
@@ -11,6 +12,9 @@ interface DetailInternModalProps {
   onClose: () => void;
   onOpenEdit: (intern: InternProfile) => void;
   onOpenUpload: (intern: InternProfile) => void;
+  onOpenApprove?: (intern: InternProfile) => void;
+  onOpenReject?: (intern: InternProfile) => void;
+  onUpdateIntern?: (updated: InternProfile) => void;
 }
 
 export const DetailInternModal: React.FC<DetailInternModalProps> = ({
@@ -19,8 +23,50 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
   onClose,
   onOpenEdit,
   onOpenUpload,
+  onOpenApprove,
+  onOpenReject,
+  onUpdateIntern,
 }) => {
   if (!intern) return null;
+
+  const [currentEmailStatus, setCurrentEmailStatus] = useState<'PENDING' | 'SENT' | 'FAILED' | null | undefined>(
+    intern.emailStatus
+  );
+  const [currentSentAt, setCurrentSentAt] = useState<string | null | undefined>(intern.emailSentAt);
+  const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    setCurrentEmailStatus(intern.emailStatus);
+    setCurrentSentAt(intern.emailSentAt);
+  }, [intern]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 1 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const handleResendEmail = async () => {
+    if (isResending || cooldown > 0) return;
+    setIsResending(true);
+    try {
+      const updated = await internService.resendDecisionEmail(intern.id);
+      setCurrentEmailStatus(updated.emailStatus || 'PENDING');
+      setCurrentSentAt(updated.emailSentAt);
+      setCooldown(45); // Cooldown đếm ngược 45 giây
+      if (onUpdateIntern) onUpdateIntern(updated);
+    } catch (err: any) {
+      if (err?.response?.status === 429) {
+        const retryAfter = err.response.data?.data?.retryAfter || 45;
+        setCooldown(retryAfter);
+      }
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const internDocs = documents.filter((d) => d.internCode === intern.internCode);
 
@@ -98,9 +144,82 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             </div>
           </div>
 
-          <span className={`badge ${getBadgeClass(intern.status)}`}>
-            {getInternStatusLabel(intern.status)}
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className={`badge ${getBadgeClass(intern.status)}`}>
+                {intern.status}
+              </span>
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Email Notification Status Meta-Info (TM-12) */}
+            {(intern.status === 'APPROVED' || intern.status === 'REJECTED') && (
+              <div
+                style={{
+                  fontSize: '0.72rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  color:
+                    currentEmailStatus === 'FAILED'
+                      ? 'var(--danger, #ef4444)'
+                      : 'var(--text-muted, #64748b)',
+                  fontWeight: 500,
+                }}
+              >
+                {currentEmailStatus === 'SENT' && (
+                  <span>
+                    ✓ Đã gửi email thông báo
+                    {currentSentAt ? ` · ${formatDateTime(currentSentAt)}` : ''}
+                  </span>
+                )}
+
+                {currentEmailStatus === 'PENDING' && (
+                  <span>⏳ Đang gửi email...</span>
+                )}
+
+                {currentEmailStatus === 'FAILED' && (
+                  <>
+                    <span>✗ Gửi email thất bại</span>
+                    {cooldown > 0 ? (
+                      <span style={{ color: 'var(--text-muted, #94a3b8)', fontStyle: 'italic' }}>
+                        (Gửi lại sau {cooldown}s)
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendEmail}
+                        disabled={isResending}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--primary, #3b82f6)',
+                          textDecoration: 'underline',
+                          cursor: isResending ? 'not-allowed' : 'pointer',
+                          padding: 0,
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {isResending ? 'Đang gửi...' : 'Gửi lại'}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Profile Info Grid */}
@@ -136,17 +255,28 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             <span style={{ color: 'var(--text-muted)' }}>Vị trí ứng tuyển:</span>{' '}
             <strong>{intern.appliedPosition || 'Chưa phân bổ'}</strong>
           </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Ngày bắt đầu:</span>{' '}
-            <strong>{intern.startDate || 'Chưa thiết lập'}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Niên khóa:</span>{' '}
-            <strong>{intern.academicYear || 'Chưa có'}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Giới tính:</span>{' '}
-            <strong>{intern.gender === 'MALE' ? 'Nam' : intern.gender === 'FEMALE' ? 'Nữ' : 'Khác'}</strong>
+          <div>Niên khóa: <strong>{intern.academicYear || '-'}</strong></div>
+          <div>Ngày bắt đầu: <strong>{intern.startDate || '-'}</strong></div>
+          <div>Ngày kết thúc: <strong>{intern.endDate || '-'}</strong></div>
+          <div>Giới tính: <strong>{intern.gender || '-'}</strong></div>
+          <div>Địa chỉ: <strong>{intern.address || '-'}</strong></div>
+          {intern.reviewedBy && (
+            <div>
+              Người xét duyệt: <strong style={{ color: 'var(--primary)' }}>{intern.reviewedBy}</strong>
+            </div>
+          )}
+          {intern.reviewedAt && (
+            <div>
+              Thời điểm duyệt: <strong>{new Date(intern.reviewedAt).toLocaleString('vi-VN')}</strong>
+            </div>
+          )}
+          {intern.rejectionReason && (
+            <div style={{ gridColumn: '1 / -1', color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+              <strong>Lý do từ chối:</strong> {intern.rejectionReason}
+            </div>
+          )}
+          <div style={{ gridColumn: '1 / -1' }}>
+            Ghi chú: <em>{intern.notes || 'Không có'}</em>
           </div>
         </div>
 
@@ -232,6 +362,58 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             ))}
           </div>
         )}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {intern.status === 'PENDING' && onOpenApprove && onOpenReject && (
+            <>
+              <button
+                type="button"
+                onClick={() => onOpenApprove(intern)}
+                className="btn btn-primary"
+                style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}
+              >
+                Tiếp Nhận Hồ Sơ
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenReject(intern)}
+                className="btn btn-danger"
+              >
+                Từ Chối Hồ Sơ
+              </button>
+            </>
+          )}
+          {intern.status === 'APPROVED' && onOpenReject && (
+            <button
+              type="button"
+              onClick={() => onOpenReject(intern)}
+              className="btn btn-danger"
+            >
+              Hủy Tiếp Nhận
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onOpenEdit(intern)}
+            className="btn btn-secondary"
+          >
+            <Edit3 size={15} /> Chỉnh Sửa
+          </button>
+          <button
+            type="button"
+            onClick={() => onOpenUpload(intern)}
+            className="btn btn-secondary"
+          >
+            <Upload size={15} /> Tải Lên Tệp
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-secondary"
+          >
+            Đóng
+          </button>
+        </div>
       </div>
     </Modal>
   );
