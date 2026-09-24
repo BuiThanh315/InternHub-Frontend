@@ -418,6 +418,10 @@ export const HrDashboard: React.FC = () => {
           setDecisionError(null);
           setRejectIntern(intern);
         }}
+        onUpdateIntern={(updated) => {
+          setDetailIntern(updated);
+          setInterns((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+        }}
       />
 
       <UploadDocModal

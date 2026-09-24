@@ -109,6 +109,11 @@ export const internService = {
     const response = await apiClient.patch(API_ENDPOINTS.INTERN.DECISION(id), request, { signal });
     return response.data?.data;
   },
+
+  async resendDecisionEmail(id: number, signal?: AbortSignal): Promise<InternProfile> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.RESEND_DECISION_EMAIL(id), {}, { signal });
+    return response.data?.data;
+  },
 };
 
 export default internService;
