@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '../Button/Button';
+import { toast } from 'sonner';
 import { apiClient } from '../../../services/api';
 import { ENDPOINTS, type ApiEndpointConfig } from './apiConsole.config';
 import styles from './ApiConsoleModal.module.css';
@@ -66,7 +67,7 @@ export const ApiConsoleModal: React.FC<ApiConsoleModalProps> = ({ isOpen, onClos
           parsedBody = JSON.parse(requestBodyText);
         } catch (e) {
           const errMsg = e instanceof Error ? e.message : 'Lỗi cú pháp';
-          alert('JSON Payload không hợp lệ: ' + errMsg);
+          toast.error('JSON Payload không hợp lệ: ' + errMsg);
           setLoading(false);
           return;
         }

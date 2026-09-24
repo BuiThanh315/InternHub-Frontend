@@ -1,11 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, CheckCircle, WifiOff, Terminal } from 'lucide-react';
+import { Activity, CheckCircle, WifiOff, Terminal, Menu, Sun, Moon } from 'lucide-react';
 import { checkBackendHealth } from '../../services/api';
 import { ApiConsoleModal } from '../common';
+import { useLayout } from '../../layouts/MainLayout';
+import styles from './Header.module.css';
 
-export const Header: React.FC<{ title: string; subtitle?: string }> = ({ title, subtitle }) => {
+interface HeaderProps {
+  title?: string;
+  subtitle?: string;
+  onToggleSidebar?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  title = 'Bảng Điều Khiển Doanh Nghiệp',
+  subtitle,
+  onToggleSidebar,
+}) => {
+  const layout = useLayout();
+  const handleToggle = onToggleSidebar || layout.toggleSidebar;
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [showApiConsole, setShowApiConsole] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return (
+      localStorage.getItem('theme') === 'dark' ||
+      document.documentElement.getAttribute('data-theme') === 'dark'
+    );
+  });
 
   const checkHealth = async () => {
     const res = await checkBackendHealth();
@@ -18,44 +38,64 @@ export const Header: React.FC<{ title: string; subtitle?: string }> = ({ title, 
     return () => clearInterval(interval);
   }, []);
 
+  const toggleTheme = () => {
+    const nextTheme = isDarkMode ? 'light' : 'dark';
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+  };
+
+  // Đồng bộ theme khi khởi động
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    setIsDarkMode(savedTheme === 'dark');
+  }, []);
+
+  const getStatusClass = () => {
+    if (backendStatus === 'online') return styles.statusOnline;
+    if (backendStatus === 'offline') return styles.statusOffline;
+    return styles.statusChecking;
+  };
+
   return (
-    <header style={{
-      height: '70px',
-      backgroundColor: 'var(--bg-surface)',
-      borderBottom: '1px solid var(--border-default)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 2rem',
-      position: 'sticky',
-      top: 0,
-      zIndex: 30,
-    }}>
-      {/* Title & Subtitle */}
-      <div>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{title}</h2>
-        {subtitle && <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', margin: 0 }}>{subtitle}</p>}
+    <header className={styles.header}>
+      {/* Left section: Hamburger button & Title */}
+      <div className={styles.leftSection}>
+        <button
+          type="button"
+          className={styles.menuBtn}
+          onClick={handleToggle}
+          aria-label="Mở thanh điều hướng"
+        >
+          <Menu size={22} />
+        </button>
+        <div className={styles.titleBox}>
+          <h2 className={styles.title}>{title}</h2>
+          {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+        </div>
       </div>
 
-      {/* Right controls: System Status & API Console */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      {/* Right controls: Theme Switcher, System Status & API Console */}
+      <div className={styles.rightControls}>
+        {/* Dark/Light Mode Switcher */}
+        <button
+          type="button"
+          className={styles.themeToggleBtn}
+          onClick={toggleTheme}
+          title={isDarkMode ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
+          aria-label="Chuyển chế độ giao diện"
+        >
+          {isDarkMode ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
+
         {/* Backend Gateway Status Indicator */}
         <div
           onClick={checkHealth}
+          className={`${styles.statusIndicator} ${getStatusClass()}`}
           title="Nhấp để kiểm tra lại kết nối Backend Microservices"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            padding: '0.35rem 0.75rem',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: backendStatus === 'online' ? 'var(--success-bg)' : backendStatus === 'offline' ? 'rgba(239, 68, 68, 0.1)' : 'var(--border-subtle)',
-            border: `1px solid ${backendStatus === 'online' ? 'var(--success-border)' : backendStatus === 'offline' ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-default)'}`,
-            color: backendStatus === 'online' ? 'var(--success)' : backendStatus === 'offline' ? '#ef4444' : 'var(--text-muted)',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          role="button"
+          tabIndex={0}
         >
           {backendStatus === 'online' ? (
             <>
@@ -65,33 +105,21 @@ export const Header: React.FC<{ title: string; subtitle?: string }> = ({ title, 
           ) : backendStatus === 'offline' ? (
             <>
               <WifiOff size={14} />
-              <span>Backend Offline (Mất kết nối)</span>
+              <span>Backend Offline</span>
             </>
           ) : (
             <>
               <Activity size={14} className="animate-spin" />
-              <span>Đang kiểm tra API...</span>
+              <span>Đang kiểm tra...</span>
             </>
           )}
         </div>
 
         {/* API Console Launcher Button */}
         <button
+          type="button"
+          className={styles.apiConsoleBtn}
           onClick={() => setShowApiConsole(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            padding: '0.4rem 0.85rem',
-            borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(99, 102, 241, 0.15)',
-            border: '1px solid rgba(99, 102, 241, 0.4)',
-            color: '#818cf8',
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
           title="Mở Bảng Điều Khiển & Thao Tác Trực Tiếp Toàn Bộ API Backend"
         >
           <Terminal size={15} />
@@ -104,4 +132,5 @@ export const Header: React.FC<{ title: string; subtitle?: string }> = ({ title, 
     </header>
   );
 };
+
 export default Header;

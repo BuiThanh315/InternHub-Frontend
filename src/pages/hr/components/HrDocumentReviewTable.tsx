@@ -26,10 +26,10 @@ export const HrDocumentReviewTable: React.FC<HrDocumentReviewTableProps> = ({
         <div>
           <h3 className={styles.title}>
             <FileCheck2 size={20} color="var(--primary)" />
-            <span>Hàng Đợi Thẩm Định CV & Tài Liệu Ứng Tuyển (TM-5)</span>
+            <span>Hàng Đợi Thẩm Định CV & Tài Liệu Ứng Tuyển</span>
           </h3>
           <p className={styles.subtitle}>
-            Xét duyệt các tài liệu nộp trực tuyến kèm Bearer Token (Phê duyệt hoặc Từ chối có lý do)
+            Xét duyệt các tài liệu nộp trực tuyến (Phê duyệt hoặc Từ chối có phản hồi lý do)
           </p>
         </div>
         <span className="badge badge-warning">

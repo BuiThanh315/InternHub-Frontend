@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { toast } from 'sonner';
+import { AlertTriangle } from 'lucide-react';
 import type { DocumentResponse } from '../../../types';
+import { Modal, Button } from '../../../components/common';
 
 interface RejectDocModalProps {
   doc: DocumentResponse | null;
@@ -14,121 +16,78 @@ export const RejectDocModal: React.FC<RejectDocModalProps> = ({
   onSubmit,
 }) => {
   const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   if (!doc) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reason.trim() || reason.trim().length < 5) {
-      alert(
-        'Lý do từ chối phải có tối thiểu 5 ký tự để ứng viên hiểu rõ nguyên nhân và bổ sung hồ sơ!'
-      );
+      toast.error('Lý do từ chối phải có tối thiểu 5 ký tự để ứng viên hiểu rõ nguyên nhân và bổ sung hồ sơ!');
       return;
     }
-    await onSubmit(reason.trim());
-    setReason('');
+
+    try {
+      setSubmitting(true);
+      await onSubmit(reason.trim());
+      setReason('');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-      }}
+    <Modal
+      isOpen={!!doc}
+      onClose={onClose}
+      title="Từ Chối Tài Liệu & Phản Hồi Lý Do"
+      size="md"
+      footer={
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', width: '100%' }}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
+            Hủy Bỏ
+          </Button>
+          <Button type="submit" form="reject-doc-form" variant="danger" isLoading={submitting}>
+            Xác Nhận Từ Chối
+          </Button>
+        </div>
+      }
     >
-      <div
-        className="card"
-        style={{ width: '100%', maxWidth: '480px', margin: '1rem' }}
-      >
+      <form id="reject-doc-form" onSubmit={handleSubmit}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: '0.6rem',
+            padding: '0.75rem',
+            borderRadius: '8px',
+            backgroundColor: 'var(--danger-bg)',
+            border: '1px solid var(--danger-border)',
+            color: 'var(--danger)',
+            fontSize: '0.825rem',
             marginBottom: '1rem',
           }}
         >
-          <h4
-            style={{
-              fontSize: '1.1rem',
-              fontWeight: 700,
-              margin: 0,
-              color: 'var(--danger)',
-            }}
-          >
-            Từ Chối Tài Liệu ({doc.internCode})
-          </h4>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <X size={20} />
-          </button>
+          <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+          <span>
+            Bạn đang từ chối tệp: <strong>{doc.originalFileName || doc.fileName}</strong> của TTS <strong>{doc.internCode}</strong>
+          </span>
         </div>
 
-        <p
-          style={{
-            fontSize: '0.85rem',
-            color: 'var(--text-secondary)',
-            marginBottom: '1rem',
-          }}
-        >
-          Tệp: <strong>{doc.originalFileName || doc.fileName}</strong>
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">
-              Lý do từ chối (Bắt buộc tối thiểu 5 ký tự theo backend) *
-            </label>
-            <textarea
-              rows={3}
-              className="form-textarea"
-              placeholder="Ví dụ: Thiếu chữ ký xác nhận của khoa, CV chưa đúng mẫu chuẩn..."
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '0.5rem',
-              marginTop: '1rem',
-            }}
-          >
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-secondary"
-            >
-              Hủy bỏ
-            </button>
-            <button
-              type="submit"
-              className="btn btn-danger"
-            >
-              Xác Nhận Từ Chối
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="form-group">
+          <label className="form-label">Lý do từ chối cụ thể *</label>
+          <textarea
+            required
+            rows={4}
+            className="form-textarea"
+            placeholder="Ví dụ: Tệp tin scan bị mờ, thiếu chữ ký xác nhận của nhà trường hoặc bảng điểm chưa cập nhật học kỳ mới nhất..."
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </div>
+      </form>
+    </Modal>
   );
 };
+
+export default RejectDocModal;

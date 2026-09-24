@@ -19,4 +19,7 @@ export * from './Pagination/Pagination.types';
 export * from './ErrorBoundary/ErrorBoundary';
 export * from './ErrorBoundary/ErrorBoundary.types';
 
+export * from './Skeleton';
+export * from './Modal/ConfirmModal';
+
 export * from './ApiConsole/ApiConsoleModal';

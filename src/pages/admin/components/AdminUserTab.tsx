@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { Button } from '../../../components/common/Button/Button';
-import { Alert } from '../../../components/common/Alert/Alert';
+import { Button, Alert, Skeleton, Pagination, ConfirmModal } from '../../../components/common';
 import { userService } from '../../../services/userService';
-import { formatDateTime } from '../../../utils/formatters';
+import { formatDateTime, formatPhoneNumber } from '../../../utils/formatters';
 import type { User } from '../../../types';
 import styles from './AdminUserTab.module.css';
 
@@ -18,7 +18,14 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
   const [selectedRole, setSelectedRole] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const pageSize = 10;
+
+  // Confirm lock modal state
+  const [userToLock, setUserToLock] = useState<User | null>(null);
+  const [lockingUser, setLockingUser] = useState(false);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -41,22 +48,32 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
     loadUsers();
   }, [loadUsers]);
 
-  const handleToggleStatus = async (id: number) => {
+  const executeToggleStatus = async (user: User) => {
     try {
-      setActionSuccess(null);
-      setErrorMessage(null);
-      const updated = await userService.toggleUserStatus(id);
-      const updatedList = users.map((u) => (u.id === id ? updated : u));
+      setLockingUser(true);
+      const updated = await userService.toggleUserStatus(user.id);
+      const updatedList = users.map((u) => (u.id === user.id ? updated : u));
       setUsers(updatedList);
       if (onUsersChange) {
         onUsersChange(updatedList);
       }
-      setActionSuccess(
+      toast.success(
         `Đã ${updated.status === 'ACTIVE' ? 'mở khóa' : 'khóa'} tài khoản ${updated.fullName} thành công.`
       );
+      setUserToLock(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể thay đổi trạng thái người dùng';
-      setErrorMessage(msg);
+      toast.error(msg);
+    } finally {
+      setLockingUser(false);
+    }
+  };
+
+  const handleStatusButtonClick = (user: User) => {
+    if (user.status === 'ACTIVE') {
+      setUserToLock(user);
+    } else {
+      executeToggleStatus(user);
     }
   };
 
@@ -68,6 +85,9 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
     const matchRole = selectedRole === 'ALL' || u.role === selectedRole;
     return matchKw && matchRole;
   });
+
+  const totalPages = Math.ceil(filteredUsers.length / pageSize) || 1;
+  const paginatedUsers = filteredUsers.slice(page * pageSize, (page + 1) * pageSize);
 
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
@@ -98,53 +118,47 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
             <Search size={16} color="var(--text-muted)" className={styles.searchIcon} />
             <input
               type="text"
-              placeholder="Tìm tên, email, phòng ban..."
+              placeholder="Tìm theo tên, email, phòng ban..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(0);
+              }}
               className={styles.searchInput}
             />
           </div>
 
           <select
             value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-            className={styles.select}
+            onChange={(e) => {
+              setSelectedRole(e.target.value);
+              setPage(0);
+            }}
+            className={styles.roleSelect}
           >
-            <option value="ALL">Tất cả vai trò</option>
-            <option value="ADMIN">Quản trị viên (Admin)</option>
-            <option value="HR">Nhân sự (HR)</option>
-            <option value="MENTOR">Người hướng dẫn</option>
-            <option value="INTERN">Thực tập sinh</option>
+            <option value="ALL">Tất Cả Vai Trò</option>
+            <option value="ADMIN">Quản Trị Viên (ADMIN)</option>
+            <option value="HR">Nhân Sự (HR)</option>
+            <option value="MENTOR">Người Hướng Dẫn (MENTOR)</option>
+            <option value="INTERN">Thực Tập Sinh (INTERN)</option>
           </select>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadUsers}
-            title="Tải lại danh sách"
-          >
-            <RefreshCw size={15} />
+          <Button variant="secondary" size="sm" onClick={loadUsers} isLoading={loading}>
+            <RefreshCw size={14} /> Tải Lại
           </Button>
         </div>
       </div>
-
-      {actionSuccess && (
-        <Alert
-          type="success"
-          message={actionSuccess}
-          onClose={() => setActionSuccess(null)}
-        />
-      )}
 
       {errorMessage && (
         <Alert
           type="error"
           message={errorMessage}
           onClose={() => setErrorMessage(null)}
+          className="mb-4"
         />
       )}
 
-      {/* User Table */}
+      {/* Users Table */}
       <div className="table-container">
         <table className="modern-table">
           <thead>
@@ -160,19 +174,31 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={7} className={styles.tableMessage}>
-                  Đang tải danh sách người dùng từ API Backend...
-                </td>
-              </tr>
-            ) : filteredUsers.length === 0 ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <tr key={`skeleton-${index}`}>
+                  <td><Skeleton width="130px" height="18px" /></td>
+                  <td>
+                    <Skeleton width="150px" height="18px" style={{ marginBottom: '4px' }} />
+                    <Skeleton width="100px" height="14px" />
+                  </td>
+                  <td>
+                    <Skeleton width="110px" height="18px" style={{ marginBottom: '4px' }} />
+                    <Skeleton width="80px" height="14px" />
+                  </td>
+                  <td><Skeleton width="70px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                  <td><Skeleton width="90px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                  <td><Skeleton width="120px" height="18px" /></td>
+                  <td><Skeleton width="80px" height="30px" /></td>
+                </tr>
+              ))
+            ) : paginatedUsers.length === 0 ? (
               <tr>
                 <td colSpan={7} className={styles.tableMessage}>
                   Không tìm thấy người dùng nào phù hợp với bộ lọc
                 </td>
               </tr>
             ) : (
-              filteredUsers.map((u) => (
+              paginatedUsers.map((u) => (
                 <tr key={u.id}>
                   <td>
                     <div className={styles.userName}>{u.fullName}</div>
@@ -180,7 +206,7 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
                   <td>
                     <div>{u.email}</div>
                     <span className={styles.subText}>
-                      {u.phone || 'Chưa cập nhật'}
+                      {u.phone ? formatPhoneNumber(u.phone) : 'Chưa cập nhật'}
                     </span>
                   </td>
                   <td>
@@ -210,7 +236,7 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
                     <Button
                       variant={u.status === 'ACTIVE' ? 'danger' : 'primary'}
                       size="sm"
-                      onClick={() => handleToggleStatus(u.id)}
+                      onClick={() => handleStatusButtonClick(u)}
                     >
                       {u.status === 'ACTIVE' ? 'Khóa TK' : 'Mở Khóa'}
                     </Button>
@@ -221,6 +247,31 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
           </tbody>
         </table>
       </div>
+
+      <div style={{ marginTop: '1rem' }}>
+        <Pagination
+          currentPage={page + 1}
+          totalPages={totalPages}
+          totalItems={filteredUsers.length}
+          pageSize={pageSize}
+          onPageChange={(p) => setPage(p - 1)}
+        />
+      </div>
+
+      {/* Confirm Lock Modal */}
+      {userToLock && (
+        <ConfirmModal
+          isOpen={!!userToLock}
+          title="Xác nhận khóa tài khoản"
+          message={`Bạn có chắc chắn muốn khóa tài khoản của ${userToLock.fullName} (${userToLock.email})? Người dùng này sẽ không thể đăng nhập vào hệ thống sau khi bị khóa.`}
+          confirmText="Khóa Tài Khoản"
+          cancelText="Hủy Bỏ"
+          variant="danger"
+          isLoading={lockingUser}
+          onConfirm={() => executeToggleStatus(userToLock)}
+          onClose={() => setUserToLock(null)}
+        />
+      )}
     </div>
   );
 };

@@ -10,10 +10,17 @@ import {
   ShieldCheck,
   Building2,
   FileText,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import styles from './Sidebar.module.css';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const { user, role, logout } = useAuth();
 
   const getNavLinks = () => {
@@ -55,176 +62,94 @@ export const Sidebar: React.FC = () => {
   const currentRoleInfo = role ? roleLabels[role] || { title: role, color: '#6b7280' } : null;
 
   return (
-    <aside style={{
-      width: '260px',
-      backgroundColor: 'var(--bg-sidebar)',
-      color: 'var(--sidebar-text)',
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100vh',
-      position: 'sticky',
-      top: 0,
-      borderRight: '1px solid #1e293b',
-      zIndex: 40,
-    }}>
-      {/* Brand Header */}
-      <div style={{
-        padding: '1.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        borderBottom: '1px solid #1e293b'
-      }}>
-        <div style={{
-          width: '38px',
-          height: '38px',
-          borderRadius: '10px',
-          background: 'var(--primary-gradient)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          boxShadow: '0 4px 12px var(--primary-glow)',
-        }}>
-          <Building2 size={22} />
-        </div>
-        <div>
-          <h1 style={{
-            fontSize: '1.2rem',
-            color: '#fff',
-            fontWeight: 800,
-            letterSpacing: '-0.02em',
-            margin: 0,
-          }}>
-            Intern<span style={{ color: '#818cf8' }}>Hub</span>
-          </h1>
-          <p style={{ fontSize: '0.7rem', color: '#64748b', margin: 0 }}>Enterprise Portal</p>
-        </div>
-      </div>
-
-      {/* User Role Card */}
-      {user && (
-        <div style={{
-          margin: '1.25rem 1rem',
-          padding: '0.85rem',
-          borderRadius: '10px',
-          background: 'rgba(30, 41, 59, 0.7)',
-          border: '1px solid rgba(51, 65, 85, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-        }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            backgroundColor: currentRoleInfo?.color || '#4f46e5',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 700,
-            fontSize: '0.85rem',
-          }}>
-            {user.username.charAt(0).toUpperCase()}
+    <>
+      {isOpen && <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />}
+      <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
+        {/* Brand Header */}
+        <div className={styles.brandHeader}>
+          <div className={styles.brandLogo}>
+            <Building2 size={22} />
           </div>
-          <div style={{ overflow: 'hidden' }}>
-            <p style={{
-              color: '#fff',
-              fontSize: '0.825rem',
-              fontWeight: 600,
-              margin: 0,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}>
-              {user.fullName || user.username}
-            </p>
-            <span style={{
-              display: 'inline-block',
-              fontSize: '0.65rem',
-              fontWeight: 700,
-              color: currentRoleInfo?.color,
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-            }}>
-              {currentRoleInfo?.title}
-            </span>
+          <div style={{ flex: 1 }}>
+            <h1 className={styles.brandName}>
+              Intern<span className={styles.brandHighlight}>Hub</span>
+            </h1>
+            <p className={styles.brandSub}>Enterprise Portal</p>
           </div>
-        </div>
-      )}
-
-      {/* Navigation List */}
-      <nav style={{ flex: 1, padding: '0.5rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-        <p style={{
-          fontSize: '0.68rem',
-          fontWeight: 700,
-          color: '#475569',
-          textTransform: 'uppercase',
-          padding: '0.5rem 0.75rem',
-          letterSpacing: '0.05em',
-          margin: 0,
-        }}>
-          Chức Năng Chính
-        </p>
-
-        {getNavLinks().map((link) => {
-          const Icon = link.icon;
-          return (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              style={({ isActive }) => ({
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.7rem 0.85rem',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                color: isActive ? '#fff' : '#94a3b8',
-                backgroundColor: isActive ? '#4f46e5' : 'transparent',
-                textDecoration: 'none',
-                transition: 'all 0.15s ease',
-              })}
+              }}
+              aria-label="Đóng thanh điều hướng"
             >
-              <Icon size={18} />
-              <span>{link.label}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
+              <X size={20} />
+            </button>
+          )}
+        </div>
 
-      {/* Logout Footer */}
-      <div style={{ padding: '1rem', borderTop: '1px solid #1e293b' }}>
-        <button
-          onClick={logout}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            padding: '0.65rem 0.85rem',
-            borderRadius: '8px',
-            backgroundColor: 'transparent',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#f87171',
-            cursor: 'pointer',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          <LogOut size={16} />
-          <span>Đăng Xuất</span>
-        </button>
-      </div>
-    </aside>
+        {/* User Role Card */}
+        {user && (
+          <div className={styles.userCard}>
+            <div
+              className={styles.userAvatar}
+              style={{ backgroundColor: currentRoleInfo?.color || 'var(--primary)' }}
+            >
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+            <div className={styles.userInfo}>
+              <p className={styles.userName}>
+                {user.fullName || user.username}
+              </p>
+              <span
+                className={styles.userRole}
+                style={{ color: currentRoleInfo?.color }}
+              >
+                {currentRoleInfo?.title}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation List */}
+        <nav className={styles.nav}>
+          <p className={styles.navHeading}>Chức Năng Chính</p>
+
+          {getNavLinks().map((link) => {
+            const Icon = link.icon;
+            return (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+                }
+              >
+                <Icon size={18} />
+                <span>{link.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* Logout Footer */}
+        <div className={styles.logoutContainer}>
+          <button type="button" onClick={logout} className={styles.logoutBtn}>
+            <LogOut size={16} />
+            <span>Đăng Xuất</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
+
+export default Sidebar;

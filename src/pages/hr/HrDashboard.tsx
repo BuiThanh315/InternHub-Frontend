@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
@@ -38,6 +39,8 @@ export const HrDashboard: React.FC = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [totalPending, setTotalPending] = useState(0);
+  const [totalInterning, setTotalInterning] = useState(0);
 
   // Modal States
   const [detailIntern, setDetailIntern] = useState<InternProfile | null>(null);
@@ -59,18 +62,29 @@ export const HrDashboard: React.FC = () => {
       setLoading(true);
       setErrorMessage(null);
 
-      const internRes = await internService.getInterns({
-        keyword: keyword || undefined,
-        university: selectedUniversity || undefined,
-        status: selectedStatus || undefined,
-        page,
-        size: 10,
-      });
+      const [internRes, pendingRes, interningRes] = await Promise.all([
+        internService.getInterns({
+          keyword: keyword || undefined,
+          university: selectedUniversity || undefined,
+          status: selectedStatus || undefined,
+          page,
+          size: 10,
+        }),
+        internService.getInterns({ status: 'PENDING', size: 1 }).catch(() => null),
+        internService.getInterns({ status: 'INTERNING', size: 1 }).catch(() => null),
+      ]);
 
       const loadedInterns = internRes.items || internRes.content || [];
       setInterns(loadedInterns);
       setTotalPages(internRes.totalPages || 1);
       setTotalItems(internRes.totalItems || loadedInterns.length);
+
+      if (pendingRes) {
+        setTotalPending(pendingRes.totalItems ?? 0);
+      }
+      if (interningRes) {
+        setTotalInterning(interningRes.totalItems ?? 0);
+      }
 
       // Nạp tài liệu từ các thực tập sinh
       const internCodes = loadedInterns.map((i) => i.internCode);
@@ -104,13 +118,13 @@ export const HrDashboard: React.FC = () => {
       await internService.createIntern(formData);
       setShowCreateModal(false);
       loadData();
-      alert('Tạo mới hồ sơ thực tập sinh thành công qua API Backend!');
+      toast.success('Tạo mới hồ sơ thực tập sinh thành công!');
     } catch (err: any) {
-      alert(err.message || 'Lỗi tạo hồ sơ thực tập sinh');
+      toast.error(err.message || 'Lỗi tạo hồ sơ thực tập sinh');
     }
   };
 
-  // TM-2: Chỉnh sửa hồ sơ thực tập sinh
+  // Chỉnh sửa hồ sơ thực tập sinh
   const handleSaveEdit = async (id: number, form: UpdateInternRequest) => {
     try {
       const updated = await internService.updateIntern(id, form);
@@ -119,13 +133,13 @@ export const HrDashboard: React.FC = () => {
         setDetailIntern(updated);
       }
       setEditIntern(null);
-      alert('Cập nhật hồ sơ thực tập sinh thành công qua API Backend (PUT)!');
+      toast.success('Cập nhật hồ sơ thực tập sinh thành công!');
     } catch (err: any) {
-      alert(err.message || 'Không thể cập nhật hồ sơ');
+      toast.error(err.message || 'Không thể cập nhật hồ sơ');
     }
   };
 
-  // TM-2: Điều phối trạng thái nhanh
+  // Điều phối trạng thái nhanh
   const handleStatusChange = async (internId: number, nextStatus: InternStatus) => {
     const target = interns.find((i) => i.id === internId);
     if (!target) return;
@@ -150,13 +164,13 @@ export const HrDashboard: React.FC = () => {
     try {
       const updated = await internService.updateIntern(internId, updatePayload);
       setInterns((prev) => prev.map((i) => (i.id === internId ? updated : i)));
-      alert(`Đã cập nhật trạng thái hồ sơ sang [${nextStatus}] thành công!`);
+      toast.success(`Đã cập nhật trạng thái hồ sơ sang [${nextStatus}] thành công!`);
     } catch (err: any) {
-      alert(err.message || 'Không thể cập nhật trạng thái hồ sơ');
+      toast.error(err.message || 'Không thể cập nhật trạng thái hồ sơ');
     }
   };
 
-  // TM-4: Tải lên tài liệu cho TTS
+  // Tải lên tài liệu cho TTS
   const handleUploadDocSubmit = async (docType: DocumentType, file: File) => {
     if (!uploadDocIntern) return;
     try {
@@ -168,26 +182,26 @@ export const HrDashboard: React.FC = () => {
       );
       setDocuments((prev) => [newDoc, ...prev]);
       setUploadDocIntern(null);
-      alert('Tải lên tài liệu cho thực tập sinh thành công!');
+      toast.success('Tải lên tài liệu cho thực tập sinh thành công!');
     } catch (err: any) {
-      alert(err.message || 'Lỗi tải lên tài liệu');
+      toast.error(err.message || 'Lỗi tải lên tài liệu');
     } finally {
       setUploadingDoc(false);
     }
   };
 
-  // TM-5: Phê duyệt tài liệu
+  // Phê duyệt tài liệu
   const handleApproveDocument = async (docId: number) => {
     try {
       const updated = await documentService.reviewDocument(docId, { status: 'APPROVED' });
       setDocuments((prev) => prev.map((d) => (d.id === docId ? updated : d)));
-      alert('Đã phê duyệt tài liệu thành công!');
+      toast.success('Đã phê duyệt tài liệu thành công!');
     } catch (err: any) {
-      alert(err.message || 'Có lỗi xảy ra khi phê duyệt tài liệu');
+      toast.error(err.message || 'Có lỗi xảy ra khi phê duyệt tài liệu');
     }
   };
 
-  // TM-5: Từ chối tài liệu
+  // Từ chối tài liệu
   const handleRejectDocument = async (reason: string) => {
     if (!reviewModalDoc) return;
     try {
@@ -197,9 +211,9 @@ export const HrDashboard: React.FC = () => {
       });
       setDocuments((prev) => prev.map((d) => (d.id === reviewModalDoc.id ? updated : d)));
       setReviewModalDoc(null);
-      alert('Đã từ chối tài liệu và phản hồi lại cho thực tập sinh.');
+      toast.success('Đã từ chối tài liệu và phản hồi lại cho thực tập sinh.');
     } catch (err: any) {
-      alert(err.message || 'Có lỗi xảy ra khi cập nhật tài liệu');
+      toast.error(err.message || 'Có lỗi xảy ra khi cập nhật tài liệu');
     }
   };
 
@@ -251,13 +265,12 @@ export const HrDashboard: React.FC = () => {
   const pendingDocuments = documents.filter(
     (d) => d.status === 'PENDING_REVIEW' || (d.status as any) === 'PENDING'
   );
-  const countStatus = (s: InternStatus) => interns.filter((i) => i.status === s).length;
 
   return (
     <div className="animate-fade-in">
       <Header
         title="Bảng Điều Khiển Nhân Sự (HR Portal)"
-        subtitle="Quản lý hồ sơ thực tập sinh, thẩm định CV & tài liệu ứng tuyển (TM-1, TM-2, TM-3, TM-5)"
+        subtitle="Quản lý hồ sơ thực tập sinh, thẩm định CV & tài liệu ứng tuyển doanh nghiệp"
       />
 
       <div style={{ marginTop: '1.5rem' }}>
@@ -299,15 +312,15 @@ export const HrDashboard: React.FC = () => {
         {errorMessage && (
           <div
             style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid #ef4444',
+              backgroundColor: 'var(--danger-bg)',
+              border: '1px solid var(--danger-border)',
               borderRadius: '8px',
               padding: '0.75rem 1rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: '0.6rem',
-              color: '#fca5a5',
+              color: 'var(--danger)',
               fontSize: '0.85rem',
               marginBottom: '1.25rem',
             }}
@@ -327,9 +340,9 @@ export const HrDashboard: React.FC = () => {
         )}
 
         <HrMetricsGrid
-          totalInterns={interns.length}
-          pendingInterns={countStatus('PENDING')}
-          interningInterns={countStatus('INTERNING')}
+          totalInterns={totalItems}
+          pendingInterns={totalPending}
+          interningInterns={totalInterning}
           pendingDocuments={pendingDocuments.length}
         />
 

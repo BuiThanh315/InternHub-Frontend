@@ -63,7 +63,7 @@ export const internService = {
       ...request,
       appliedPosition: request.appliedPosition || 'Thực tập sinh',
       startDate: request.startDate || new Date().toISOString().split('T')[0],
-      academicYear: request.academicYear || '2022-2026',
+      academicYear: request.academicYear,
     };
 
     const response = await apiClient.post(API_ENDPOINTS.INTERN.CREATE, payload);
@@ -75,7 +75,7 @@ export const internService = {
       ...request,
       appliedPosition: request.appliedPosition || 'Thực tập sinh',
       startDate: request.startDate || new Date().toISOString().split('T')[0],
-      academicYear: request.academicYear || '2022-2026',
+      academicYear: request.academicYear,
     };
 
     const response = await apiClient.put(API_ENDPOINTS.INTERN.DETAIL(id), payload);

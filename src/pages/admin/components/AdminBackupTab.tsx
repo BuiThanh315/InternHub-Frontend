@@ -9,9 +9,9 @@ import {
   Download,
   Trash2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { Button } from '../../../components/common/Button/Button';
-import { Alert } from '../../../components/common/Alert/Alert';
+import { Button, Alert, Skeleton, ConfirmModal } from '../../../components/common';
 import { backupService } from '../../../services/backupService';
 import { formatDateTime, formatFileSize } from '../../../utils/formatters';
 import type { BackupHistoryItem } from '../../../types';
@@ -22,7 +22,10 @@ export const AdminBackupTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [triggering, setTriggering] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Confirm delete modal state
+  const [backupToDelete, setBackupToDelete] = useState<BackupHistoryItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadBackups = useCallback(async () => {
     try {
@@ -46,13 +49,12 @@ export const AdminBackupTab: React.FC = () => {
     try {
       setTriggering(true);
       setErrorMessage(null);
-      setSuccessMessage(null);
       const newBackup = await backupService.triggerManualBackup();
       setBackups((prev) => [newBackup, ...prev]);
-      setSuccessMessage(`Đã khởi tạo bản sao lưu thành công: ${newBackup.fileName}`);
+      toast.success(`Đã khởi tạo bản sao lưu thành công: ${newBackup.fileName}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể kích hoạt sao lưu thủ công';
-      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setTriggering(false);
     }
@@ -62,25 +64,26 @@ export const AdminBackupTab: React.FC = () => {
     try {
       setErrorMessage(null);
       await backupService.downloadBackup(b.id, b.fileName);
-      setSuccessMessage(`Đang tải tệp sao lưu: ${b.fileName}`);
+      toast.success(`Đang tải tệp sao lưu: ${b.fileName}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể tải tệp sao lưu từ máy chủ.';
-      setErrorMessage(msg);
+      toast.error(msg);
     }
   };
 
-  const handleDeleteBackup = async (id: number) => {
-    const isConfirmed = window.confirm('Bạn có chắc chắn muốn xóa bản sao lưu này? Thao tác này không thể hoàn tác.');
-    if (!isConfirmed) return;
-
+  const executeDeleteBackup = async (b: BackupHistoryItem) => {
     try {
+      setDeleting(true);
       setErrorMessage(null);
-      await backupService.deleteBackup(id);
-      setBackups((prev) => prev.filter((b) => b.id !== id));
-      setSuccessMessage('Đã xóa bản sao lưu thành công khỏi máy chủ.');
+      await backupService.deleteBackup(b.id);
+      setBackups((prev) => prev.filter((item) => item.id !== b.id));
+      toast.success('Đã xóa bản sao lưu thành công khỏi máy chủ.');
+      setBackupToDelete(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể xóa bản sao lưu từ máy chủ.';
-      setErrorMessage(msg);
+      toast.error(msg);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -90,7 +93,7 @@ export const AdminBackupTab: React.FC = () => {
         <div>
           <h3 className={styles.titleWithIcon}>
             <Database size={20} color="var(--primary)" />
-            Sao Lưu Dữ Liệu Hệ Thống Định Kỳ (TM-8)
+            Sao Lưu Dữ Liệu Hệ Thống Định Kỳ
           </h3>
           <p className={styles.subtitle}>
             Snapshot toàn bộ cơ sở dữ liệu MySQL, nén định dạng .sql.gz và tự động xoay vòng 30 ngày
@@ -114,6 +117,7 @@ export const AdminBackupTab: React.FC = () => {
             size="sm"
             onClick={handleTriggerBackup}
             disabled={triggering}
+            isLoading={triggering}
           >
             <Play size={16} />
             {triggering ? 'Đang sao lưu...' : 'Sao Lưu Ngay'}
@@ -121,19 +125,12 @@ export const AdminBackupTab: React.FC = () => {
         </div>
       </div>
 
-      {successMessage && (
-        <Alert
-          type="success"
-          message={successMessage}
-          onClose={() => setSuccessMessage(null)}
-        />
-      )}
-
       {errorMessage && (
         <Alert
           type="error"
           message={errorMessage}
           onClose={() => setErrorMessage(null)}
+          className="mb-4"
         />
       )}
 
@@ -153,15 +150,21 @@ export const AdminBackupTab: React.FC = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={7} className={styles.tableMessage}>
-                  Đang tải danh sách bản sao lưu từ API Backend...
-                </td>
-              </tr>
+              Array.from({ length: 4 }).map((_, index) => (
+                <tr key={`skeleton-${index}`}>
+                  <td><Skeleton width="180px" height="18px" /></td>
+                  <td><Skeleton width="70px" height="18px" /></td>
+                  <td><Skeleton width="60px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                  <td><Skeleton width="90px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                  <td><Skeleton width="140px" height="18px" /></td>
+                  <td><Skeleton width="100px" height="18px" /></td>
+                  <td><Skeleton width="120px" height="30px" /></td>
+                </tr>
+              ))
             ) : backups.length === 0 ? (
               <tr>
                 <td colSpan={7} className={styles.tableMessage}>
-                  Chưa có bản sao lưu nào trong hệ thống
+                  Chưa có bản ghi sao lưu nào trong hệ thống
                 </td>
               </tr>
             ) : (
@@ -173,62 +176,40 @@ export const AdminBackupTab: React.FC = () => {
                       <span className={styles.fileNameText}>{b.fileName}</span>
                     </div>
                   </td>
-                  <td className={styles.sizeText}>
-                    {b.formattedSize || formatFileSize(b.fileSize)}
+                  <td className={styles.metaText}>{formatFileSize(b.fileSize)}</td>
+                  <td>
+                    <span className="badge badge-secondary">{b.backupType}</span>
                   </td>
                   <td>
-                    <span
-                      className={`badge ${
-                        b.backupType === 'AUTOMATIC' ? 'badge-info' : 'badge-primary'
-                      }`}
-                    >
-                      {b.backupType === 'AUTOMATIC' ? 'Tự Động' : 'Thủ Công'}
-                    </span>
-                  </td>
-                  <td>
-                    {b.status === 'SUCCESS' && (
+                    {b.status === 'SUCCESS' ? (
                       <span className="badge badge-success">
                         <CheckCircle2 size={12} /> Thành Công
                       </span>
-                    )}
-                    {b.status === 'IN_PROGRESS' && (
-                      <span className="badge badge-warning">
-                        <RefreshCw size={12} className="animate-spin" /> Đang Chạy
-                      </span>
-                    )}
-                    {b.status === 'FAILED' && (
+                    ) : (
                       <span className="badge badge-danger">
                         <AlertCircle size={12} /> Thất Bại
                       </span>
                     )}
                   </td>
+                  <td className={styles.metaText}>{formatDateTime(b.createdAt)}</td>
+                  <td className={styles.metaText}>{b.createdBy}</td>
                   <td>
-                    <div className={styles.dateText}>{formatDateTime(b.createdAt)}</div>
-                    {b.durationMs && (
-                      <span className={styles.durationText}>
-                        Thời gian chạy: {(b.durationMs / 1000).toFixed(2)}s
-                      </span>
-                    )}
-                  </td>
-                  <td className={styles.creatorText}>{b.createdBy}</td>
-                  <td>
-                    <div className={styles.actionButtons}>
+                    <div className={styles.actions}>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDownloadBackup(b)}
-                        disabled={b.status !== 'SUCCESS'}
-                        title="Tải tệp .sql.gz"
+                        title="Tải tệp .sql.gz về máy"
                       >
-                        <Download size={14} />
+                        <Download size={14} /> Tải
                       </Button>
                       <Button
                         variant="danger"
                         size="sm"
-                        onClick={() => handleDeleteBackup(b.id)}
-                        title="Xóa bản sao lưu"
+                        onClick={() => setBackupToDelete(b)}
+                        title="Xóa bản sao lưu khỏi ổ đĩa"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={14} /> Xóa
                       </Button>
                     </div>
                   </td>
@@ -238,6 +219,21 @@ export const AdminBackupTab: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Confirm Delete Modal */}
+      {backupToDelete && (
+        <ConfirmModal
+          isOpen={!!backupToDelete}
+          title="Xác nhận xóa bản sao lưu"
+          message={`Bạn có chắc chắn muốn xóa bản sao lưu ${backupToDelete.fileName}? Thao tác này sẽ xóa vĩnh viễn tệp nén khỏi máy chủ và không thể hoàn tác.`}
+          confirmText="Xóa Bản Sao Lưu"
+          cancelText="Hủy Bỏ"
+          variant="danger"
+          isLoading={deleting}
+          onConfirm={() => executeDeleteBackup(backupToDelete)}
+          onClose={() => setBackupToDelete(null)}
+        />
+      )}
     </div>
   );
 };

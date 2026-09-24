@@ -1,6 +1,8 @@
 import React from 'react';
-import { Eye, Edit3, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Edit3, Upload, SearchX } from 'lucide-react';
 import type { InternProfile, InternStatus } from '../../../types';
+import { Skeleton, Pagination } from '../../../components/common';
+import { getInternStatusLabel, formatPhoneNumber } from '../../../utils/formatters';
 import styles from './HrInternTable.module.css';
 
 interface HrInternTableProps {
@@ -59,20 +61,38 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
               <th>Vị Trí Ứng Tuyển</th>
               <th>Trạng Thái</th>
               <th>Thao Tác Hồ Sơ</th>
-              <th>Điều Phối Trạng Thái (TM-2)</th>
+              <th>Điều Phối Trạng Thái</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={7} className={styles.emptyCell}>
-                  Đang tải danh sách thực tập sinh qua API Backend...
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, index) => (
+                <tr key={`skeleton-${index}`}>
+                  <td><Skeleton width="90px" height="18px" /></td>
+                  <td>
+                    <Skeleton width="140px" height="18px" style={{ marginBottom: '4px' }} />
+                    <Skeleton width="180px" height="14px" />
+                  </td>
+                  <td>
+                    <Skeleton width="130px" height="18px" style={{ marginBottom: '4px' }} />
+                    <Skeleton width="110px" height="14px" />
+                  </td>
+                  <td><Skeleton width="120px" height="18px" /></td>
+                  <td><Skeleton width="80px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                  <td><Skeleton width="150px" height="30px" /></td>
+                  <td><Skeleton width="130px" height="30px" /></td>
+                </tr>
+              ))
             ) : interns.length === 0 ? (
               <tr>
                 <td colSpan={7} className={styles.emptyCell}>
-                  Không tìm thấy hồ sơ thực tập sinh phù hợp trong cơ sở dữ liệu
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '2rem' }}>
+                    <SearchX size={36} color="var(--text-muted)" />
+                    <h4 style={{ margin: 0, fontWeight: 700 }}>Không tìm thấy hồ sơ thực tập sinh</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Không có kết quả phù hợp với từ khóa hoặc bộ lọc tìm kiếm hiện tại.
+                    </p>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -91,7 +111,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                   <td>
                     <div className={styles.nameText}>{intern.fullName}</div>
                     <span className={styles.subText}>
-                      {intern.email} • {intern.phone}
+                      {intern.email} • {formatPhoneNumber(intern.phone)}
                     </span>
                   </td>
                   <td>
@@ -108,7 +128,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                   </td>
                   <td>
                     <span className={`badge ${getBadgeClass(intern.status)}`}>
-                      {intern.status}
+                      {getInternStatusLabel(intern.status)}
                     </span>
                   </td>
                   <td>
@@ -125,7 +145,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                         type="button"
                         onClick={() => onOpenEdit(intern)}
                         className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
-                        title="Chỉnh sửa thông tin hồ sơ (PUT)"
+                        title="Chỉnh sửa thông tin hồ sơ"
                       >
                         <Edit3 size={12} /> Sửa
                       </button>
@@ -133,7 +153,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                         type="button"
                         onClick={() => onOpenUpload(intern)}
                         className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
-                        title="Nộp tệp tin cho TTS này (POST)"
+                        title="Nộp tệp tin cho TTS này"
                       >
                         <Upload size={12} /> Tải Tệp
                       </button>
@@ -225,31 +245,17 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
         </table>
       </div>
 
-      <div className={styles.paginationContainer}>
-        <div>
-          Trang {page + 1} / {totalPages || 1} • Tổng số {totalItems} hồ sơ
-        </div>
-        <div className={styles.paginationButtons}>
-          <button
-            type="button"
-            disabled={page === 0}
-            onClick={() => onPageChange(Math.max(0, page - 1))}
-            className="btn btn-sm btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-          >
-            <ChevronLeft size={14} /> Trước
-          </button>
-          <button
-            type="button"
-            disabled={page >= totalPages - 1}
-            onClick={() => onPageChange(page + 1)}
-            className="btn btn-sm btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-          >
-            Sau <ChevronRight size={14} />
-          </button>
-        </div>
+      <div style={{ marginTop: '1rem' }}>
+        <Pagination
+          currentPage={page + 1}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={10}
+          onPageChange={(newPage) => onPageChange(newPage - 1)}
+        />
       </div>
     </>
   );
 };
+
+export default HrInternTable;
