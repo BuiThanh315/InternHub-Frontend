@@ -1,0 +1,12 @@
+.twoColLayout {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(340px, 1.2fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .twoColLayout {
+    grid-template-columns: 1fr;
+  }
+}

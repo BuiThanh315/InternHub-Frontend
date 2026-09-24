@@ -63,7 +63,7 @@ export const internService = {
       ...request,
       appliedPosition: request.appliedPosition || 'Thực tập sinh',
       startDate: request.startDate || new Date().toISOString().split('T')[0],
-      academicYear: request.academicYear || '2022-2026',
+      academicYear: request.academicYear,
     };
 
     const response = await apiClient.post(API_ENDPOINTS.INTERN.CREATE, payload);
@@ -75,7 +75,7 @@ export const internService = {
       ...request,
       appliedPosition: request.appliedPosition || 'Thực tập sinh',
       startDate: request.startDate || new Date().toISOString().split('T')[0],
-      academicYear: request.academicYear || '2022-2026',
+      academicYear: request.academicYear,
     };
 
     const response = await apiClient.put(API_ENDPOINTS.INTERN.DETAIL(id), payload);
@@ -107,6 +107,11 @@ export const internService = {
     signal?: AbortSignal
   ): Promise<InternProfile> {
     const response = await apiClient.patch(API_ENDPOINTS.INTERN.DECISION(id), request, { signal });
+    return response.data?.data;
+  },
+
+  async resendDecisionEmail(id: number, signal?: AbortSignal): Promise<InternProfile> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.RESEND_DECISION_EMAIL(id), {}, { signal });
     return response.data?.data;
   },
 };

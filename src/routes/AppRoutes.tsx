@@ -1,15 +1,13 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthLayout } from '../layouts/AuthLayout';
 import { MainLayout } from '../layouts/MainLayout';
 import { ProtectedRoute } from './ProtectedRoute';
-import { LoginPage } from '../pages/auth/LoginPage';
-import { RegisterPage } from '../pages/auth/RegisterPage';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { HrDashboard } from '../pages/hr/HrDashboard';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { LandingPage } from '../pages/public/LandingPage';
+import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../constants/routes';
 
@@ -38,12 +36,11 @@ export const AppRoutes: React.FC = () => {
         element={isAuthenticated ? getDashboardRedirect() : <LandingPage />}
       />
       <Route path="/apply" element={<LandingPage />} />
+      <Route path="/onboarding/activate" element={<OnboardingActivationPage />} />
 
-      {/* Public Auth Routes */}
-      <Route element={<AuthLayout />}>
-        <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTES.AUTH.REGISTER} element={<RegisterPage />} />
-      </Route>
+      {/* Chuyển hướng các route auth cũ sang Landing Page (Popup Modal & Form nộp CV) */}
+      <Route path="/login" element={<Navigate to="/?login=true" replace />} />
+      <Route path="/register" element={<Navigate to="/#apply-form" replace />} />
 
       {/* Authenticated Dashboard Routes */}
       <Route element={<MainLayout />}>
@@ -76,7 +73,7 @@ export const AppRoutes: React.FC = () => {
       </Route>
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to={ROUTES.AUTH.LOGIN} replace />} />
+      <Route path="*" element={<Navigate to={ROUTES.ROOT} replace />} />
     </Routes>
   );
 };

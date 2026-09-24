@@ -32,8 +32,8 @@ const normalizeUser = (u: RawUserPayload): User => ({
   avatarUrl: u.avatarUrl,
   status: u.status || 'ACTIVE',
   role: u.role || 'USER',
-  department: u.department || 'Bộ phận Kỹ thuật',
-  position: u.position || 'Nhân sự',
+  department: u.department || '',
+  position: u.position || '',
   createdAt: u.createdAt,
   updatedAt: u.updatedAt,
 });

@@ -12,7 +12,8 @@ export const Pagination: React.FC<PaginationProps> = ({
   className = '',
   showInfo = true,
 }) => {
-  if (totalPages <= 0) return null;
+  // Tự động ẩn thanh phân trang khi <= 1 trang hoặc tổng bản ghi <= kích thước trang
+  if (totalPages <= 1 || (totalItems !== undefined && totalItems <= pageSize)) return null;
 
   const getPageNumbers = () => {
     const delta = 1;

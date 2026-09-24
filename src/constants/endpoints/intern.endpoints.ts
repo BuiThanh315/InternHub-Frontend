@@ -6,5 +6,6 @@ export const INTERN_ENDPOINTS = {
   UPDATE: (id: number | string) => `/api/interns/${id}`,
   STATUS: (id: number | string) => `/api/interns/${id}/status`,
   DECISION: (id: number | string) => `/api/interns/${id}/decision`,
+  RESEND_DECISION_EMAIL: (id: number | string) => `/api/interns/${id}/resend-decision-email`,
   DOCUMENTS: (internCode: string) => `/api/interns/${internCode}/documents`,
 } as const;

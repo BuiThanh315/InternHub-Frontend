@@ -81,14 +81,12 @@ apiClient.interceptors.response.use(
       if (status === 401) {
         const currentPath = window.location.pathname;
         if (
-          currentPath !== '/login' &&
-          currentPath !== '/register' &&
           currentPath !== '/apply' &&
           currentPath !== '/'
         ) {
           localStorage.removeItem('internhub_token');
           localStorage.removeItem('internhub_user');
-          window.location.href = '/login?expired=true';
+          window.location.href = '/?expired=true&login=true';
         }
       }
     } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {

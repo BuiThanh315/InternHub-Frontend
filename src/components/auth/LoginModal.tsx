@@ -1,52 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { LogIn, Lock, User as UserIcon, ArrowRight, Eye, EyeOff } from 'lucide-react';
-import { Button, Alert } from '../../components/common';
+import { useNavigate } from 'react-router-dom';
+import { LogIn, Lock, User as UserIcon, Eye, EyeOff, Building2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { Modal } from '../common/Modal/Modal';
+import { Button } from '../common/Button/Button';
+import { Alert } from '../common/Alert/Alert';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
 import type { RoleType } from '../../types';
-import styles from './LoginPage.module.css';
+import styles from './LoginModal.module.css';
 
-export const LoginPage: React.FC = () => {
+export interface LoginModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isExpired?: boolean;
+}
+
+export const LoginModal: React.FC<LoginModalProps> = ({
+  isOpen,
+  onClose,
+  isExpired = false,
+}) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
 
-  const { login, isAuthenticated, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const isExpired = searchParams.get('expired') === 'true';
-
-  const handleRedirect = React.useCallback(
-    (role: RoleType | string) => {
-      switch (role) {
-        case 'ADMIN':
-          navigate(ROUTES.ADMIN.DASHBOARD, { replace: true });
-          break;
-        case 'HR':
-          navigate(ROUTES.HR.DASHBOARD, { replace: true });
-          break;
-        case 'MENTOR':
-          navigate(ROUTES.MENTOR.DASHBOARD, { replace: true });
-          break;
-        case 'INTERN':
-        default:
-          navigate(ROUTES.INTERN.DASHBOARD, { replace: true });
-          break;
-      }
-    },
-    [navigate]
-  );
-
-  // Tự động chuyển hướng nếu người dùng đã có phiên đăng nhập từ trước
+  // Reset form khi modal mở/đóng
   useEffect(() => {
-    if (isAuthenticated && user) {
-      handleRedirect(user.role);
+    if (isOpen) {
+      setError(null);
     }
-  }, [isAuthenticated, user, handleRedirect]);
+  }, [isOpen]);
+
+  const handleRedirect = (role: RoleType | string) => {
+    switch (role) {
+      case 'ADMIN':
+        navigate(ROUTES.ADMIN.DASHBOARD, { replace: true });
+        break;
+      case 'HR':
+        navigate(ROUTES.HR.DASHBOARD, { replace: true });
+        break;
+      case 'MENTOR':
+        navigate(ROUTES.MENTOR.DASHBOARD, { replace: true });
+        break;
+      case 'INTERN':
+      default:
+        navigate(ROUTES.INTERN.DASHBOARD, { replace: true });
+        break;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,25 +67,29 @@ export const LoginPage: React.FC = () => {
       setLoading(true);
       setError(null);
       const authUser = await login(username.trim(), password);
+      toast.success(`Chào mừng ${authUser.fullName || authUser.username}!`);
+      onClose();
       handleRedirect(authUser.role);
-    } catch (err: any) {
-      setError(err.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Đăng nhập không thành công. Vui lòng kiểm tra lại tài khoản.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className={`animate-fade-in ${styles.container}`}>
-      {/* Header */}
+    <Modal isOpen={isOpen} onClose={onClose} size="md">
       <div className={styles.header}>
-        <h2 className={styles.title}>Đăng Nhập Hệ Thống</h2>
+        <div className={styles.iconWrapper}>
+          <Building2 size={24} />
+        </div>
+        <h3 className={styles.title}>Đăng Nhập Cổng Nội Bộ</h3>
         <p className={styles.subtitle}>
-          Nhập thông tin tài khoản để truy cập không gian làm việc của bạn.
+          Dành cho cán bộ quản lý, nhân sự, mentor và thực tập sinh đã có tài khoản
         </p>
       </div>
 
-      {/* Thông báo phiên làm việc hết hạn */}
       {isExpired && (
         <Alert
           type="warning"
@@ -86,7 +98,6 @@ export const LoginPage: React.FC = () => {
         />
       )}
 
-      {/* Thông báo lỗi */}
       {error && (
         <Alert
           type="error"
@@ -96,7 +107,6 @@ export const LoginPage: React.FC = () => {
         />
       )}
 
-      {/* Form Đăng Nhập Chuẩn Xác Thực Backend Spring Security */}
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.fieldGroup}>
           <label className={styles.label}>Tên đăng nhập / Email</label>
@@ -109,9 +119,10 @@ export const LoginPage: React.FC = () => {
               required
               disabled={loading}
               className={styles.input}
-              placeholder="Tên đăng nhập hoặc email..."
+              placeholder="admin, hr_manager, ..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              autoFocus
             />
           </div>
         </div>
@@ -143,36 +154,20 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        <div className={styles.submitBtn}>
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            disabled={loading}
-            style={{ width: '100%' }}
-          >
-            <LogIn size={18} />
-            <span>{loading ? 'Đang xác thực...' : 'Đăng Nhập'}</span>
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          disabled={loading}
+          isLoading={loading}
+          style={{ width: '100%', marginTop: '0.25rem' }}
+        >
+          <LogIn size={18} />
+          <span>{loading ? 'Đang xác thực...' : 'Đăng Nhập'}</span>
+        </Button>
       </form>
-
-      {/* Điều hướng đến Đăng ký hoặc Trang chủ */}
-      <div className={styles.footer}>
-        <div>
-          <span>Bạn là sinh viên muốn ứng tuyển thực tập? </span>
-          <Link to={ROUTES.AUTH.REGISTER} className={styles.registerLink}>
-            Nộp hồ sơ ngay <ArrowRight size={14} />
-          </Link>
-        </div>
-        <div>
-          <Link to={ROUTES.ROOT} className={styles.backHomeLink}>
-            ← Quay lại Trang Chủ InternHub
-          </Link>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 };
 
-export default LoginPage;
+export default LoginModal;

@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, CheckCircle2, FolderGit2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
+import { Skeleton } from '../../components/common';
 import { MentorDetailPanel } from './components';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
+import { getInternStatusLabel, formatPhoneNumber } from '../../utils/formatters';
 import type { InternProfile, DocumentResponse } from '../../types';
+import styles from './MentorDashboard.module.css';
 
 export const MentorDashboard: React.FC = () => {
   const [myInterns, setMyInterns] = useState<InternProfile[]>([]);
@@ -12,7 +16,7 @@ export const MentorDashboard: React.FC = () => {
   const [selectedInternCode, setSelectedInternCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mentorship notes state stored in localStorage per real intern
+  // Ghi chú đánh giá thực tập sinh lưu trữ theo mã TTS thực tế
   const [notes, setNotes] = useState<{ [key: string]: string }>(() => {
     try {
       const saved = localStorage.getItem('internhub_mentor_notes');
@@ -58,7 +62,7 @@ export const MentorDashboard: React.FC = () => {
     const updated = { ...notes, [selectedInternCode]: activeNoteText };
     setNotes(updated);
     localStorage.setItem('internhub_mentor_notes', JSON.stringify(updated));
-    alert('Đã lưu ghi chú đánh giá thực tập sinh thành công!');
+    toast.success('Đã lưu ghi chú đánh giá thực tập sinh thành công!');
   };
 
   const selectedInternInfo = myInterns.find((i) => i.internCode === selectedInternCode) || null;
@@ -107,8 +111,8 @@ export const MentorDashboard: React.FC = () => {
                 width: '48px',
                 height: '48px',
                 borderRadius: '12px',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                color: '#10b981',
+                backgroundColor: 'var(--success-bg)',
+                color: 'var(--success)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -130,8 +134,8 @@ export const MentorDashboard: React.FC = () => {
                 width: '48px',
                 height: '48px',
                 borderRadius: '12px',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                color: '#3b82f6',
+                backgroundColor: 'var(--info-bg)',
+                color: 'var(--info)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -146,15 +150,8 @@ export const MentorDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* 2-Column Layout */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(320px, 1fr) minmax(360px, 1fr)',
-            gap: '1.5rem',
-            alignItems: 'start',
-          }}
-        >
+        {/* 2-Column Responsive Layout */}
+        <div className={styles.twoColLayout}>
           {/* Left Column: Assigned Interns List */}
           <div className="card">
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>
@@ -162,9 +159,11 @@ export const MentorDashboard: React.FC = () => {
             </h3>
 
             {loading ? (
-              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-                Đang nạp danh sách thực tập sinh...
-              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <Skeleton variant="card" height="110px" />
+                <Skeleton variant="card" height="110px" />
+                <Skeleton variant="card" height="110px" />
+              </div>
             ) : myInterns.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
                 Bạn chưa được phân công thực tập sinh nào.
@@ -194,7 +193,7 @@ export const MentorDashboard: React.FC = () => {
                           </span>
                         </div>
                         <span className={`badge ${intern.status === 'INTERNING' ? 'badge-success' : 'badge-info'}`}>
-                          {intern.status}
+                          {getInternStatusLabel(intern.status)}
                         </span>
                       </div>
 
@@ -211,7 +210,7 @@ export const MentorDashboard: React.FC = () => {
                         <div>Trường: <strong>{intern.university}</strong></div>
                         <div>Ngành: <strong>{intern.major}</strong></div>
                         <div>GPA: <strong>{intern.gpa || '-'}</strong></div>
-                        <div>SĐT: <strong>{intern.phone}</strong></div>
+                        <div>SĐT: <strong>{formatPhoneNumber(intern.phone)}</strong></div>
                       </div>
                     </div>
                   );

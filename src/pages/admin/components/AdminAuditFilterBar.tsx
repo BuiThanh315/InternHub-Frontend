@@ -44,7 +44,7 @@ export const AdminAuditFilterBar: React.FC<AdminAuditFilterBarProps> = ({
         <div>
           <h3 className={styles.titleWithIcon}>
             <FileText size={20} color="var(--primary)" />
-            Nhật Ký Hoạt Động Hệ Thống (Audit Logs - TM-9)
+            Nhật Ký Hoạt Động Hệ Thống (Audit Logs)
           </h3>
           <p className={styles.subtitle}>
             Ghi vết tự động toàn bộ thao tác người dùng và hệ thống theo thời gian thực (Real-time DB)

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   UploadCloud,
   FileText,
@@ -15,9 +15,32 @@ import {
 } from 'lucide-react';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
+import { LoginModal } from '../../components/auth/LoginModal';
 import type { DocumentType } from '../../types';
 
 export const LandingPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(
+    () => searchParams.get('login') === 'true' || searchParams.get('expired') === 'true'
+  );
+  const isExpired = searchParams.get('expired') === 'true';
+
+  useEffect(() => {
+    if (searchParams.get('login') === 'true' || searchParams.get('expired') === 'true') {
+      setIsLoginModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const handleCloseLoginModal = () => {
+    setIsLoginModalOpen(false);
+    if (searchParams.get('login') || searchParams.get('expired')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('login');
+      nextParams.delete('expired');
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
+
   // Tab state: 'new' = nộp hồ sơ ứng tuyển mới, 'existing' = bổ sung tài liệu theo mã TTS
   const [activeTab, setActiveTab] = useState<'new' | 'existing'>('new');
 
@@ -25,12 +48,12 @@ export const LandingPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [university, setUniversity] = useState('Đại Học Bách Khoa');
-  const [major, setMajor] = useState('Khoa Học Máy Tính');
+  const [university, setUniversity] = useState('');
+  const [major, setMajor] = useState('');
   const [appliedPosition, setAppliedPosition] = useState('Thực Tập Sinh Backend');
   const [newFile, setNewFile] = useState<File | null>(null);
 
-  // Form state: Bổ sung tài liệu vào mã TTS đã có (TM-4 Public)
+  // Form state: Bổ sung tài liệu vào mã TTS đã có (Public Upload)
   const [existingCode, setExistingCode] = useState('');
   const [existingDocType, setExistingDocType] = useState<DocumentType>('CV');
   const [existingFile, setExistingFile] = useState<File | null>(null);
@@ -44,7 +67,7 @@ export const LandingPage: React.FC = () => {
     internCode: string;
   } | null>(null);
 
-  // Xử lý nộp hồ sơ ứng tuyển mới (TM-1 + TM-4)
+  // Xử lý nộp hồ sơ ứng tuyển mới
   const handleApplyNew = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim() || !phone.trim()) {
@@ -67,7 +90,7 @@ export const LandingPage: React.FC = () => {
         startDate: new Date().toISOString().split('T')[0],
       });
 
-      // 2. Nếu có đính kèm file CV / Đơn, gọi API upload TM-4
+      // 2. Nếu có đính kèm file CV / Đơn, gọi API upload tài liệu
       if (newFile && profile.internCode) {
         await documentService.uploadDocument(profile.internCode, newFile, 'CV');
       }
@@ -90,7 +113,7 @@ export const LandingPage: React.FC = () => {
     }
   };
 
-  // Xử lý upload bổ sung tài liệu không cần đăng nhập (TM-4 Public)
+  // Xử lý upload bổ sung tài liệu không cần đăng nhập (Public Document Upload)
   const handleUploadExisting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!existingCode.trim()) {
@@ -157,13 +180,14 @@ export const LandingPage: React.FC = () => {
             >
               Nộp Hồ Sơ Trực Tuyến
             </a>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-500/25 transition-all"
+            <button
+              type="button"
+              onClick={() => setIsLoginModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
             >
               <LogIn size={14} />
               <span>Đăng Nhập Cổng Nội Bộ</span>
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -205,7 +229,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Main Form Section (TM-4 / TM-1) */}
+      {/* Main Form Section */}
       <section id="apply-form" className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pb-20">
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-xl p-6 sm:p-8">
           {/* Tab Selector */}
@@ -338,6 +362,7 @@ export const LandingPage: React.FC = () => {
                   </label>
                   <input
                     type="text"
+                    placeholder="VD: Đại Học Bách Khoa, ĐHQG..."
                     value={university}
                     onChange={(e) => setUniversity(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -350,6 +375,7 @@ export const LandingPage: React.FC = () => {
                   </label>
                   <input
                     type="text"
+                    placeholder="VD: Kỹ Thuật Phần Mềm, CNTT..."
                     value={major}
                     onChange={(e) => setMajor(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -405,7 +431,7 @@ export const LandingPage: React.FC = () => {
             </form>
           )}
 
-          {/* TAB 2: BỔ SUNG TÀI LIỆU VÀO MÃ TTS ĐÃ CÓ (TM-4 PUBLIC) */}
+          {/* TAB 2: BỔ SUNG TÀI LIỆU VÀO MÃ TTS ĐÃ CÓ (PUBLIC UPLOAD) */}
           {activeTab === 'existing' && (
             <form onSubmit={handleUploadExisting} className="space-y-4">
               <div>
@@ -430,7 +456,7 @@ export const LandingPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Loại tài liệu cần bổ sung (TM-4)
+                  Loại tài liệu cần bổ sung
                 </label>
                 <select
                   value={existingDocType}
@@ -476,7 +502,7 @@ export const LandingPage: React.FC = () => {
                         Bấm để chọn tệp tài liệu cần nộp
                       </p>
                       <span className="text-[11px] text-slate-400 mt-0.5">
-                        Hỗ trợ PDF, DOCX tối đa 5MB (TM-4 Public Endpoint)
+                        Hỗ trợ định dạng PDF, DOCX dung lượng tối đa 5MB
                       </span>
                     </>
                   )}
@@ -500,15 +526,26 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© 2026 InternHub Enterprise Portal. Giải pháp Quản trị Thực tập sinh toàn diện.</p>
           <div className="flex items-center gap-4">
-            <Link to="/login" className="hover:text-white transition-colors">
+            <button
+              type="button"
+              onClick={() => setIsLoginModalOpen(true)}
+              className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-xs text-slate-400"
+            >
               Cổng Quản Trị
-            </Link>
+            </button>
             <a href="#apply-form" className="hover:text-white transition-colors">
               Nộp CV & Hồ Sơ
             </a>
           </div>
         </div>
       </footer>
+
+      {/* Popup Đăng Nhập Cổng Nội Bộ */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={handleCloseLoginModal}
+        isExpired={isExpired}
+      />
     </div>
   );
 };

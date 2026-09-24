@@ -12,7 +12,7 @@ interface InternDocumentListProps {
 export const InternDocumentList: React.FC<InternDocumentListProps> = ({ documents }) => {
   return (
     <div className="card">
-      <h3 className={styles.title}>Danh Sách Hồ Sơ & Kết Quả Thẩm Định (TM-5)</h3>
+      <h3 className={styles.title}>Danh Sách Hồ Sơ & Kết Quả Thẩm Định</h3>
 
       {documents.length === 0 ? (
         <p className={styles.emptyText}>Chưa có tài liệu nào được nộp cho mã thực tập sinh này.</p>

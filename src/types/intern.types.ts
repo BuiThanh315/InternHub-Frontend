@@ -27,6 +27,10 @@ export interface InternProfile {
   rejectionReason?: string | null;
   reviewedBy?: string | null;
   reviewedAt?: string | null;
+  emailStatus?: 'PENDING' | 'SENT' | 'FAILED' | null;
+  emailSentAt?: string | null;
+  emailRetryCount?: number | null;
+  lastEmailSentAt?: string | null;
   notes?: string;
   gpa?: number;
   mentorId?: number;

@@ -13,11 +13,11 @@ export interface ApiEndpointConfig {
 export const ENDPOINTS: ApiEndpointConfig[] = [
   {
     id: 'ping',
-    name: '1. Ping Gateway & Employee Service',
+    name: '1. Ping Gateway & Identity Service',
     category: 'SYSTEM',
     method: 'GET',
     url: '/api/employees',
-    description: 'Kiểm tra thông luồng API Gateway (8080) sang Employee Service (8081)',
+    description: 'Kiểm tra thông luồng API Gateway (8080) sang Identity & Access Service (8081)',
   },
   {
     id: 'login-hr',
@@ -25,8 +25,8 @@ export const ENDPOINTS: ApiEndpointConfig[] = [
     category: 'AUTH',
     method: 'POST',
     url: '/api/auth/login',
-    description: 'Xác thực tài khoản HR (hr / 123456) và cấp Bearer JWT Token',
-    defaultBody: { username: 'hr', password: '123456' },
+    description: 'Xác thực tài khoản HR (hr_manager / 123456) và cấp Bearer JWT Token',
+    defaultBody: { username: 'hr_manager', password: '123456' },
   },
   {
     id: 'login-admin',
@@ -48,7 +48,7 @@ export const ENDPOINTS: ApiEndpointConfig[] = [
   },
   {
     id: 'create-intern',
-    name: '5. Tạo Mới Hồ Sơ Thực Tập Sinh (TM-1)',
+    name: '5. Tạo Mới Hồ Sơ Thực Tập Sinh',
     category: 'INTERN',
     method: 'POST',
     url: '/api/interns',
@@ -68,7 +68,7 @@ export const ENDPOINTS: ApiEndpointConfig[] = [
   },
   {
     id: 'update-intern',
-    name: '6. Cập Nhật Trạng Thái & Thông Tin (TM-2)',
+    name: '6. Cập Nhật Trạng Thái & Thông Tin',
     category: 'INTERN',
     method: 'PUT',
     url: '/api/interns/1',
@@ -100,7 +100,7 @@ export const ENDPOINTS: ApiEndpointConfig[] = [
   },
   {
     id: 'review-doc',
-    name: '8. Thẩm Định Phê Duyệt Tài Liệu (TM-5)',
+    name: '8. Thẩm Định Phê Duyệt Tài Liệu',
     category: 'DOCS',
     method: 'PATCH',
     url: '/api/interns/documents/1/review',

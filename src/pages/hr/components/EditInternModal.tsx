@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import type { InternProfile, UpdateInternRequest } from '../../../types';
+import { Modal, Button } from '../../../components/common';
 
 interface EditInternModalProps {
   intern: InternProfile | null;
@@ -14,6 +14,7 @@ export const EditInternModal: React.FC<EditInternModalProps> = ({
   onSave,
 }) => {
   const [editForm, setEditForm] = useState<UpdateInternRequest | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (intern) {
@@ -42,260 +43,201 @@ export const EditInternModal: React.FC<EditInternModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave(intern.id, editForm);
+    try {
+      setSaving(true);
+      await onSave(intern.id, editForm);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-      }}
+    <Modal
+      isOpen={!!intern}
+      onClose={onClose}
+      title={`Chỉnh Sửa Hồ Sơ: ${intern.fullName} (${intern.internCode})`}
+      size="lg"
+      footer={
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', width: '100%' }}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
+            Hủy Bỏ
+          </Button>
+          <Button type="submit" form="edit-intern-form" variant="primary" isLoading={saving}>
+            Lưu Thay Đổi
+          </Button>
+        </div>
+      }
     >
-      <div
-        className="card"
-        style={{
-          width: '100%',
-          maxWidth: '580px',
-          margin: '1rem',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '1.25rem',
-          }}
-        >
-          <div>
-            <h4 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
-              Chỉnh Sửa Hồ Sơ TTS (TM-2)
-            </h4>
-            <span
-              style={{
-                fontSize: '0.78rem',
-                color: 'var(--primary)',
-                fontWeight: 700,
-              }}
-            >
-              {intern.internCode} - {intern.fullName}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <X size={20} />
-          </button>
+      <form id="edit-intern-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="form-label">Họ và tên *</label>
+          <input
+            type="text"
+            required
+            className="form-input"
+            value={editForm.fullName}
+            onChange={(e) =>
+              setEditForm({ ...editForm, fullName: e.target.value })
+            }
+          />
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1rem',
+          }}
+        >
           <div className="form-group">
-            <label className="form-label">Họ và tên *</label>
+            <label className="form-label">Email liên hệ *</label>
             <input
-              type="text"
+              type="email"
               required
               className="form-input"
-              value={editForm.fullName}
+              value={editForm.email}
               onChange={(e) =>
-                setEditForm({ ...editForm, fullName: e.target.value })
+                setEditForm({ ...editForm, email: e.target.value })
               }
             />
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.75rem',
-            }}
-          >
-            <div className="form-group">
-              <label className="form-label">Email *</label>
-              <input
-                type="email"
-                required
-                className="form-input"
-                value={editForm.email}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, email: e.target.value })
-                }
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Số điện thoại *</label>
-              <input
-                type="tel"
-                required
-                className="form-input"
-                value={editForm.phone}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, phone: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1.3fr 1fr',
-              gap: '0.75rem',
-            }}
-          >
-            <div className="form-group">
-              <label className="form-label">Trường Đại học *</label>
-              <input
-                type="text"
-                required
-                className="form-input"
-                value={editForm.university}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, university: e.target.value })
-                }
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Chuyên ngành *</label>
-              <input
-                type="text"
-                required
-                className="form-input"
-                value={editForm.major}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, major: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1.4fr 1fr',
-              gap: '0.75rem',
-            }}
-          >
-            <div className="form-group">
-              <label className="form-label">Vị trí thực tập *</label>
-              <input
-                type="text"
-                required
-                className="form-input"
-                value={editForm.appliedPosition}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, appliedPosition: e.target.value })
-                }
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Trạng thái (Status) *</label>
-              <select
-                className="form-select"
-                value={editForm.status}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, status: e.target.value as any })
-                }
-              >
-                <option value="PENDING">PENDING (Chờ tiếp nhận)</option>
-                <option value="APPROVED">APPROVED (Đã duyệt)</option>
-                <option value="INTERNING">INTERNING (Đang thực tập)</option>
-                <option value="COMPLETED">COMPLETED (Hoàn thành)</option>
-                <option value="REJECTED">REJECTED (Bị từ chối)</option>
-              </select>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.75rem',
-            }}
-          >
-            <div className="form-group">
-              <label className="form-label">Ngày bắt đầu *</label>
-              <input
-                type="date"
-                required
-                className="form-input"
-                value={editForm.startDate}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, startDate: e.target.value })
-                }
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Ngày kết thúc</label>
-              <input
-                type="date"
-                className="form-input"
-                value={editForm.endDate || ''}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    endDate: e.target.value || undefined,
-                  })
-                }
-              />
-            </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Ghi chú hướng dẫn / đánh giá</label>
-            <textarea
-              rows={3}
-              className="form-textarea"
-              value={editForm.notes || ''}
+            <label className="form-label">Số điện thoại *</label>
+            <input
+              type="tel"
+              required
+              className="form-input"
+              value={editForm.phone}
               onChange={(e) =>
-                setEditForm({ ...editForm, notes: e.target.value })
+                setEditForm({ ...editForm, phone: e.target.value })
               }
-              placeholder="Nhập ghi chú hoặc yêu cầu bổ sung..."
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1rem',
+          }}
+        >
+          <div className="form-group">
+            <label className="form-label">Trường Đại Học</label>
+            <input
+              type="text"
+              className="form-input"
+              value={editForm.university}
+              onChange={(e) =>
+                setEditForm({ ...editForm, university: e.target.value })
+              }
             />
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '0.5rem',
-              marginTop: '1.25rem',
-            }}
-          >
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-secondary"
-            >
-              Hủy Bỏ
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-            >
-              Lưu Thay Đổi Qua API (PUT)
-            </button>
+          <div className="form-group">
+            <label className="form-label">Chuyên ngành</label>
+            <input
+              type="text"
+              className="form-input"
+              value={editForm.major}
+              onChange={(e) =>
+                setEditForm({ ...editForm, major: e.target.value })
+              }
+            />
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1rem',
+          }}
+        >
+          <div className="form-group">
+            <label className="form-label">Vị trí thực tập</label>
+            <input
+              type="text"
+              className="form-input"
+              value={editForm.appliedPosition}
+              onChange={(e) =>
+                setEditForm({ ...editForm, appliedPosition: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Trạng thái hồ sơ</label>
+            <select
+              className="form-select"
+              value={editForm.status}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  status: e.target.value as any,
+                })
+              }
+            >
+              <option value="PENDING">Chờ Tiếp Nhận (PENDING)</option>
+              <option value="APPROVED">Đã Phê Duyệt (APPROVED)</option>
+              <option value="INTERNING">Đang Thực Tập (INTERNING)</option>
+              <option value="COMPLETED">Đã Hoàn Thành (COMPLETED)</option>
+              <option value="REJECTED">Từ Chối (REJECTED)</option>
+            </select>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1rem',
+          }}
+        >
+          <div className="form-group">
+            <label className="form-label">Ngày bắt đầu</label>
+            <input
+              type="date"
+              className="form-input"
+              value={editForm.startDate || ''}
+              onChange={(e) =>
+                setEditForm({ ...editForm, startDate: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Ngày kết thúc</label>
+            <input
+              type="date"
+              className="form-input"
+              value={editForm.endDate || ''}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  endDate: e.target.value || undefined,
+                })
+              }
+            />
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Ghi chú hướng dẫn / đánh giá</label>
+          <textarea
+            rows={3}
+            className="form-textarea"
+            value={editForm.notes || ''}
+            onChange={(e) =>
+              setEditForm({ ...editForm, notes: e.target.value })
+            }
+            placeholder="Nhập ghi chú hoặc yêu cầu bổ sung..."
+          />
+        </div>
+      </form>
+    </Modal>
   );
 };
+
+export default EditInternModal;

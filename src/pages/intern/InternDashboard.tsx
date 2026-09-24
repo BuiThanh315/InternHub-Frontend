@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
+import { Skeleton } from '../../components/common';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -9,6 +11,7 @@ import { InternStepper } from './components/InternStepper';
 import { InternProfileCard } from './components/InternProfileCard';
 import { InternDocumentList } from './components/InternDocumentList';
 import { InternUploadForm } from './components/InternUploadForm';
+import styles from './InternDashboard.module.css';
 
 export const InternDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -55,11 +58,17 @@ export const InternDashboard: React.FC = () => {
   }, [loadInternData]);
 
   const handleUploadDocument = async (file: File, type: DocumentType) => {
-    const codeToUpload = profile?.internCode || 'INT-2026-0001';
+    if (!profile?.internCode) {
+      toast.warning('Hồ sơ của bạn chưa có mã thực tập sinh để tải lên tài liệu.');
+      return;
+    }
     setIsUploading(true);
     try {
-      const newDoc = await documentService.uploadDocument(codeToUpload, file, type);
+      const newDoc = await documentService.uploadDocument(profile.internCode, file, type);
       setDocuments((prev) => [newDoc, ...prev]);
+      toast.success('Đã tải tài liệu lên thành công!');
+    } catch (err: any) {
+      toast.error(err.message || 'Tải tài liệu thất bại');
     } finally {
       setIsUploading(false);
     }
@@ -69,15 +78,23 @@ export const InternDashboard: React.FC = () => {
     <div className="animate-fade-in">
       <Header
         title="Không Gian Thực Tập Sinh (Intern Portal)"
-        subtitle="Theo dõi lộ trình thực tập, tra cứu kết quả thẩm định hồ sơ và nộp tài liệu trực tuyến (TM-4, TM-5)"
+        subtitle="Theo dõi lộ trình thực tập, tra cứu kết quả thẩm định hồ sơ và nộp tài liệu trực tuyến"
       />
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-          Đang nạp dữ liệu hồ sơ từ API Backend...
+        <div className={styles.skeletonContainer}>
+          <Skeleton variant="rectangular" height="90px" />
+          <div className={styles.contentGrid}>
+            <Skeleton variant="card" height="240px" />
+            <Skeleton variant="card" height="240px" />
+          </div>
+          <div className={styles.contentGrid}>
+            <Skeleton variant="card" height="320px" />
+            <Skeleton variant="card" height="320px" />
+          </div>
         </div>
       ) : (
-        <div style={{ marginTop: '1.5rem' }}>
+        <div className={styles.dashboardContainer}>
           {errorMessage && (
             <div
               style={{
@@ -105,7 +122,7 @@ export const InternDashboard: React.FC = () => {
           {profile && <InternProfileCard profile={profile} />}
 
           {/* Danh sách tài liệu & Form nộp tài liệu */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem' }}>
+          <div className={styles.contentGrid}>
             <InternDocumentList documents={documents} />
             <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
           </div>

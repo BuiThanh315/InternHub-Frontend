@@ -1,17 +1,39 @@
-import React from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
+import styles from './MainLayout.module.css';
+
+interface LayoutContextType {
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
+  closeSidebar: () => void;
+}
+
+const LayoutContext = createContext<LayoutContextType>({
+  isSidebarOpen: false,
+  toggleSidebar: () => {},
+  closeSidebar: () => {},
+});
+
+export const useLayout = () => useContext(LayoutContext);
 
 export const MainLayout: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setIsSidebarOpen(false);
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-body)' }}>
-      <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <main style={{ flex: 1, padding: '2rem', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
-          <Outlet />
-        </main>
+    <LayoutContext.Provider value={{ isSidebarOpen, toggleSidebar, closeSidebar }}>
+      <div className={styles.layoutWrapper}>
+        <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+        <div className={styles.contentWrapper}>
+          <main className={styles.mainContent}>
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </LayoutContext.Provider>
   );
 };
 

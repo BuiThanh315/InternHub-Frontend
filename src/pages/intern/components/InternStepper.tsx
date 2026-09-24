@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, AlertOctagon } from 'lucide-react';
 import type { InternStatus } from '../../../types';
 import styles from './InternStepper.module.css';
 
@@ -15,6 +15,8 @@ const STEPS = [
 ];
 
 export const InternStepper: React.FC<InternStepperProps> = ({ status }) => {
+  const isRejected = status === 'REJECTED';
+
   const getStepStatus = (step: number) => {
     if (!status) return 'pending';
     const statusMap: Record<string, number> = {
@@ -50,6 +52,15 @@ export const InternStepper: React.FC<InternStepperProps> = ({ status }) => {
           );
         })}
       </div>
+
+      {isRejected && (
+        <div className={styles.rejectedAlert}>
+          <AlertOctagon size={18} />
+          <span>
+            Hồ sơ hiện tại đang ở trạng thái <strong>Bị Từ Chối (REJECTED)</strong>. Vui lòng kiểm tra lý do thẩm định tài liệu bên dưới hoặc liên hệ HR để nộp lại.
+          </span>
+        </div>
+      )}
     </div>
   );
 };
