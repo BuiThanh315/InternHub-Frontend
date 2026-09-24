@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, FileText, Eye, Download, Edit3, Upload } from 'lucide-react';
+import { User, FileText, Eye, Download, Edit3, Upload, CheckCircle, XCircle } from 'lucide-react';
 import type { InternProfile, DocumentResponse } from '../../../types';
 import { Modal, Button } from '../../../components/common';
 import { documentService } from '../../../services/documentService';
@@ -11,6 +11,8 @@ interface DetailInternModalProps {
   onClose: () => void;
   onOpenEdit: (intern: InternProfile) => void;
   onOpenUpload: (intern: InternProfile) => void;
+  onOpenApprove?: (intern: InternProfile) => void;
+  onOpenReject?: (intern: InternProfile) => void;
 }
 
 export const DetailInternModal: React.FC<DetailInternModalProps> = ({
@@ -19,6 +21,8 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
   onClose,
   onOpenEdit,
   onOpenUpload,
+  onOpenApprove,
+  onOpenReject,
 }) => {
   if (!intern) return null;
 
@@ -47,6 +51,36 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
       size="lg"
       footer={
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', width: '100%', flexWrap: 'wrap' }}>
+          {intern.status === 'PENDING' && onOpenApprove && onOpenReject && (
+            <>
+              <Button
+                type="button"
+                variant="success"
+                onClick={() => onOpenApprove(intern)}
+                leftIcon={<CheckCircle size={15} />}
+              >
+                Tiếp Nhận Hồ Sơ
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => onOpenReject(intern)}
+                leftIcon={<XCircle size={15} />}
+              >
+                Từ Chối Hồ Sơ
+              </Button>
+            </>
+          )}
+          {intern.status === 'APPROVED' && onOpenReject && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => onOpenReject(intern)}
+              leftIcon={<XCircle size={15} />}
+            >
+              Hủy Tiếp Nhận
+            </Button>
+          )}
           <Button
             type="button"
             variant="secondary"
@@ -137,16 +171,45 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             <strong>{intern.appliedPosition || 'Chưa phân bổ'}</strong>
           </div>
           <div>
-            <span style={{ color: 'var(--text-muted)' }}>Ngày bắt đầu:</span>{' '}
-            <strong>{intern.startDate || 'Chưa thiết lập'}</strong>
-          </div>
-          <div>
             <span style={{ color: 'var(--text-muted)' }}>Niên khóa:</span>{' '}
             <strong>{intern.academicYear || 'Chưa có'}</strong>
           </div>
           <div>
             <span style={{ color: 'var(--text-muted)' }}>Giới tính:</span>{' '}
             <strong>{intern.gender === 'MALE' ? 'Nam' : intern.gender === 'FEMALE' ? 'Nữ' : 'Khác'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Địa chỉ:</span>{' '}
+            <strong>{intern.address || 'Chưa có'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Ngày bắt đầu:</span>{' '}
+            <strong>{intern.startDate || 'Chưa thiết lập'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Ngày kết thúc:</span>{' '}
+            <strong>{intern.endDate || 'Chưa thiết lập'}</strong>
+          </div>
+          {intern.reviewedBy && (
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>Người xét duyệt:</span>{' '}
+              <strong style={{ color: 'var(--primary)' }}>{intern.reviewedBy}</strong>
+            </div>
+          )}
+          {intern.reviewedAt && (
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>Thời điểm duyệt:</span>{' '}
+              <strong>{new Date(intern.reviewedAt).toLocaleString('vi-VN')}</strong>
+            </div>
+          )}
+          {intern.rejectionReason && (
+            <div style={{ gridColumn: '1 / -1', color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+              <strong>Lý do từ chối:</strong> {intern.rejectionReason}
+            </div>
+          )}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Ghi chú:</span>{' '}
+            <em>{intern.notes || 'Không có'}</em>
           </div>
         </div>
 
@@ -232,6 +295,7 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             ))}
           </div>
         )}
+
       </div>
     </Modal>
   );

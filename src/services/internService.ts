@@ -1,6 +1,12 @@
 import { apiClient } from './api';
 import { API_ENDPOINTS } from '../constants/endpoints';
-import type { CreateInternRequest, InternProfile, PageResponse, UpdateInternRequest } from '../types';
+import type {
+  CreateInternRequest,
+  InternDecisionRequest,
+  InternProfile,
+  PageResponse,
+  UpdateInternRequest,
+} from '../types';
 
 export const internService = {
   async getInterns(
@@ -93,6 +99,15 @@ export const internService = {
       ...existing,
     };
     return this.updateIntern(id, payload);
+  },
+  
+  async submitDecision(
+    id: number,
+    request: InternDecisionRequest,
+    signal?: AbortSignal
+  ): Promise<InternProfile> {
+    const response = await apiClient.patch(API_ENDPOINTS.INTERN.DECISION(id), request, { signal });
+    return response.data?.data;
   },
 };
 

@@ -24,12 +24,20 @@ export interface InternProfile {
   startDate: string;
   endDate?: string;
   status: InternStatus;
+  rejectionReason?: string | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
   notes?: string;
   gpa?: number;
   mentorId?: number;
   mentorName?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface InternDecisionRequest {
+  decision: 'APPROVED' | 'REJECTED';
+  rejectionReason?: string;
 }
 
 export interface CreateInternRequest {
