@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User, X, FileText, Eye, Download, Edit3, Upload } from 'lucide-react';
+import { User, X, FileText, Eye, Download, Edit3, Upload, CheckCircle, XCircle } from 'lucide-react';
 import type { InternProfile, DocumentResponse } from '../../../types';
 import { Modal, Button } from '../../../components/common';
 import { documentService } from '../../../services/documentService';
 import { internService } from '../../../services/internService';
-import { formatFileSize, formatDateTime } from '../../../utils/formatters';
+import { formatFileSize, formatDateTime, formatPhoneNumber } from '../../../utils/formatters';
 
 interface DetailInternModalProps {
   intern: InternProfile | null;
@@ -93,6 +93,36 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
       size="lg"
       footer={
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', width: '100%', flexWrap: 'wrap' }}>
+          {intern.status === 'PENDING' && onOpenApprove && onOpenReject && (
+            <>
+              <Button
+                type="button"
+                variant="success"
+                onClick={() => onOpenApprove(intern)}
+                leftIcon={<CheckCircle size={15} />}
+              >
+                Tiếp Nhận Hồ Sơ
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => onOpenReject(intern)}
+                leftIcon={<XCircle size={15} />}
+              >
+                Từ Chối Hồ Sơ
+              </Button>
+            </>
+          )}
+          {intern.status === 'APPROVED' && onOpenReject && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => onOpenReject(intern)}
+              leftIcon={<XCircle size={15} />}
+            >
+              Hủy Tiếp Nhận
+            </Button>
+          )}
           <Button
             type="button"
             variant="secondary"
@@ -255,19 +285,36 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             <span style={{ color: 'var(--text-muted)' }}>Vị trí ứng tuyển:</span>{' '}
             <strong>{intern.appliedPosition || 'Chưa phân bổ'}</strong>
           </div>
-          <div>Niên khóa: <strong>{intern.academicYear || '-'}</strong></div>
-          <div>Ngày bắt đầu: <strong>{intern.startDate || '-'}</strong></div>
-          <div>Ngày kết thúc: <strong>{intern.endDate || '-'}</strong></div>
-          <div>Giới tính: <strong>{intern.gender || '-'}</strong></div>
-          <div>Địa chỉ: <strong>{intern.address || '-'}</strong></div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Niên khóa:</span>{' '}
+            <strong>{intern.academicYear || 'Chưa có'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Giới tính:</span>{' '}
+            <strong>{intern.gender === 'MALE' ? 'Nam' : intern.gender === 'FEMALE' ? 'Nữ' : 'Khác'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Địa chỉ:</span>{' '}
+            <strong>{intern.address || 'Chưa có'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Ngày bắt đầu:</span>{' '}
+            <strong>{intern.startDate || 'Chưa thiết lập'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Ngày kết thúc:</span>{' '}
+            <strong>{intern.endDate || 'Chưa thiết lập'}</strong>
+          </div>
           {intern.reviewedBy && (
             <div>
-              Người xét duyệt: <strong style={{ color: 'var(--primary)' }}>{intern.reviewedBy}</strong>
+              <span style={{ color: 'var(--text-muted)' }}>Người xét duyệt:</span>{' '}
+              <strong style={{ color: 'var(--primary)' }}>{intern.reviewedBy}</strong>
             </div>
           )}
           {intern.reviewedAt && (
             <div>
-              Thời điểm duyệt: <strong>{new Date(intern.reviewedAt).toLocaleString('vi-VN')}</strong>
+              <span style={{ color: 'var(--text-muted)' }}>Thời điểm duyệt:</span>{' '}
+              <strong>{formatDateTime(intern.reviewedAt)}</strong>
             </div>
           )}
           {intern.rejectionReason && (
@@ -276,7 +323,8 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             </div>
           )}
           <div style={{ gridColumn: '1 / -1' }}>
-            Ghi chú: <em>{intern.notes || 'Không có'}</em>
+            <span style={{ color: 'var(--text-muted)' }}>Ghi chú:</span>{' '}
+            <em>{intern.notes || 'Không có'}</em>
           </div>
         </div>
 
@@ -363,57 +411,6 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {intern.status === 'PENDING' && onOpenApprove && onOpenReject && (
-            <>
-              <button
-                type="button"
-                onClick={() => onOpenApprove(intern)}
-                className="btn btn-primary"
-                style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}
-              >
-                Tiếp Nhận Hồ Sơ
-              </button>
-              <button
-                type="button"
-                onClick={() => onOpenReject(intern)}
-                className="btn btn-danger"
-              >
-                Từ Chối Hồ Sơ
-              </button>
-            </>
-          )}
-          {intern.status === 'APPROVED' && onOpenReject && (
-            <button
-              type="button"
-              onClick={() => onOpenReject(intern)}
-              className="btn btn-danger"
-            >
-              Hủy Tiếp Nhận
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => onOpenEdit(intern)}
-            className="btn btn-secondary"
-          >
-            <Edit3 size={15} /> Chỉnh Sửa
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenUpload(intern)}
-            className="btn btn-secondary"
-          >
-            <Upload size={15} /> Tải Lên Tệp
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-secondary"
-          >
-            Đóng
-          </button>
-        </div>
       </div>
     </Modal>
   );
