@@ -101,3 +101,7 @@
 .togglePasswordBtn:hover {
   color: var(--text-main, #0f172a);
 }
+
+.submitBtn {
+  margin-top: 0.25rem;
+}

@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogIn, Lock, User as UserIcon, Eye, EyeOff, Building2 } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+  Building2,
+  Eye,
+  EyeOff,
+  Lock,
+  LogIn,
+  User as UserIcon,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
-import { Modal } from '../common/Modal/Modal';
-import { Button } from '../common/Button/Button';
-import { Alert } from '../common/Alert/Alert';
-import { useAuth } from '../../contexts/AuthContext';
-import { ROUTES } from '../../constants/routes';
-import type { RoleType } from '../../types';
-import styles from './LoginModal.module.css';
+import { ROUTES } from "../../constants/routes";
+import { useAuth } from "../../contexts/AuthContext";
+import type { RoleType } from "../../types";
+import { Alert } from "../common/Alert/Alert";
+import { Button } from "../common/Button/Button";
+import { Modal } from "../common/Modal/Modal";
+import styles from "./LoginModal.module.css";
 
 export interface LoginModalProps {
   isOpen: boolean;
@@ -22,8 +29,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   isExpired = false,
 }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,16 +47,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const handleRedirect = (role: RoleType | string) => {
     switch (role) {
-      case 'ADMIN':
+      case "ADMIN":
         navigate(ROUTES.ADMIN.DASHBOARD, { replace: true });
         break;
-      case 'HR':
+      case "HR":
         navigate(ROUTES.HR.DASHBOARD, { replace: true });
         break;
-      case 'MENTOR':
+      case "MENTOR":
         navigate(ROUTES.MENTOR.DASHBOARD, { replace: true });
         break;
-      case 'INTERN':
+      case "INTERN":
       default:
         navigate(ROUTES.INTERN.DASHBOARD, { replace: true });
         break;
@@ -59,7 +66,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
-      setError('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu');
+      setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
       return;
     }
 
@@ -71,7 +78,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       onClose();
       handleRedirect(authUser.role);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Đăng nhập không thành công. Vui lòng kiểm tra lại tài khoản.';
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Đăng nhập không thành công. Vui lòng kiểm tra lại tài khoản.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -86,7 +96,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         </div>
         <h3 className={styles.title}>Đăng Nhập Cổng Nội Bộ</h3>
         <p className={styles.subtitle}>
-          Dành cho cán bộ quản lý, nhân sự, mentor và thực tập sinh đã có tài khoản
+          Dành cho cán bộ quản lý, nhân sự, mentor và thực tập sinh đã có tài
+          khoản
         </p>
       </div>
 
@@ -134,7 +145,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <Lock size={18} />
             </span>
             <input
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               required
               disabled={loading}
               className={styles.input}
@@ -147,7 +158,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               disabled={loading}
               onClick={() => setShowPassword(!showPassword)}
               className={styles.togglePasswordBtn}
-              title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -160,10 +171,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           size="lg"
           disabled={loading}
           isLoading={loading}
-          style={{ width: '100%', marginTop: '0.25rem' }}
+          leftIcon={<LogIn size={18} />}
+          fullWidth
+          className={styles.submitBtn}
         >
-          <LogIn size={18} />
-          <span>{loading ? 'Đang xác thực...' : 'Đăng Nhập'}</span>
+          {loading ? "Đang xác thực..." : "Đăng Nhập"}
         </Button>
       </form>
     </Modal>
