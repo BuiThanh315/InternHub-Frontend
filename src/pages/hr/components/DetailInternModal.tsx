@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, X, FileText, Eye, Download, Edit3, Upload } from 'lucide-react';
 import type { InternProfile, DocumentResponse } from '../../../types';
 import { documentService } from '../../../services/documentService';
-import { formatFileSize } from '../../../utils/formatters';
+import { internService } from '../../../services/internService';
+import { formatFileSize, formatDateTime } from '../../../utils/formatters';
 
 interface DetailInternModalProps {
   intern: InternProfile | null;
@@ -12,6 +13,7 @@ interface DetailInternModalProps {
   onOpenUpload: (intern: InternProfile) => void;
   onOpenApprove?: (intern: InternProfile) => void;
   onOpenReject?: (intern: InternProfile) => void;
+  onUpdateIntern?: (updated: InternProfile) => void;
 }
 
 export const DetailInternModal: React.FC<DetailInternModalProps> = ({
@@ -22,8 +24,48 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
   onOpenUpload,
   onOpenApprove,
   onOpenReject,
+  onUpdateIntern,
 }) => {
   if (!intern) return null;
+
+  const [currentEmailStatus, setCurrentEmailStatus] = useState<'PENDING' | 'SENT' | 'FAILED' | null | undefined>(
+    intern.emailStatus
+  );
+  const [currentSentAt, setCurrentSentAt] = useState<string | null | undefined>(intern.emailSentAt);
+  const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    setCurrentEmailStatus(intern.emailStatus);
+    setCurrentSentAt(intern.emailSentAt);
+  }, [intern]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 1 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const handleResendEmail = async () => {
+    if (isResending || cooldown > 0) return;
+    setIsResending(true);
+    try {
+      const updated = await internService.resendDecisionEmail(intern.id);
+      setCurrentEmailStatus(updated.emailStatus || 'PENDING');
+      setCurrentSentAt(updated.emailSentAt);
+      setCooldown(45); // Cooldown đếm ngược 45 giây
+      if (onUpdateIntern) onUpdateIntern(updated);
+    } catch (err: any) {
+      if (err?.response?.status === 429) {
+        const retryAfter = err.response.data?.data?.retryAfter || 45;
+        setCooldown(retryAfter);
+      }
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const internDocs = documents.filter((d) => d.internCode === intern.internCode);
 
@@ -108,22 +150,81 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className={`badge ${getBadgeClass(intern.status)}`}>
-              {intern.status}
-            </span>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-muted)',
-              }}
-            >
-              <X size={20} />
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className={`badge ${getBadgeClass(intern.status)}`}>
+                {intern.status}
+              </span>
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Email Notification Status Meta-Info (TM-12) */}
+            {(intern.status === 'APPROVED' || intern.status === 'REJECTED') && (
+              <div
+                style={{
+                  fontSize: '0.72rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  color:
+                    currentEmailStatus === 'FAILED'
+                      ? 'var(--danger, #ef4444)'
+                      : 'var(--text-muted, #64748b)',
+                  fontWeight: 500,
+                }}
+              >
+                {currentEmailStatus === 'SENT' && (
+                  <span>
+                    ✓ Đã gửi email thông báo
+                    {currentSentAt ? ` · ${formatDateTime(currentSentAt)}` : ''}
+                  </span>
+                )}
+
+                {currentEmailStatus === 'PENDING' && (
+                  <span>⏳ Đang gửi email...</span>
+                )}
+
+                {currentEmailStatus === 'FAILED' && (
+                  <>
+                    <span>✗ Gửi email thất bại</span>
+                    {cooldown > 0 ? (
+                      <span style={{ color: 'var(--text-muted, #94a3b8)', fontStyle: 'italic' }}>
+                        (Gửi lại sau {cooldown}s)
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendEmail}
+                        disabled={isResending}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--primary, #3b82f6)',
+                          textDecoration: 'underline',
+                          cursor: isResending ? 'not-allowed' : 'pointer',
+                          padding: 0,
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {isResending ? 'Đang gửi...' : 'Gửi lại'}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

@@ -10,6 +10,7 @@ import { HrDashboard } from '../pages/hr/HrDashboard';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { LandingPage } from '../pages/public/LandingPage';
+import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../constants/routes';
 
@@ -38,6 +39,7 @@ export const AppRoutes: React.FC = () => {
         element={isAuthenticated ? getDashboardRedirect() : <LandingPage />}
       />
       <Route path="/apply" element={<LandingPage />} />
+      <Route path="/onboarding/activate" element={<OnboardingActivationPage />} />
 
       {/* Public Auth Routes */}
       <Route element={<AuthLayout />}>
