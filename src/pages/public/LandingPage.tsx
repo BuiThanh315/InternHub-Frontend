@@ -12,22 +12,49 @@ import {
   ShieldCheck,
   Search,
   LogIn,
+  UserPlus,
+  Copy,
+  Check,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
 import { LoginModal } from '../../components/auth/LoginModal';
-import type { DocumentType } from '../../types';
+import { RegisterModal } from '../../components/auth/RegisterModal';
+import { useAuth } from '../../contexts/AuthContext';
+import type { DocumentType, GenderType } from '../../types';
 
 export const LandingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user: authUser } = useAuth();
+
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(
     () => searchParams.get('login') === 'true' || searchParams.get('expired') === 'true'
   );
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(
+    () => searchParams.get('register') === 'true'
+  );
   const isExpired = searchParams.get('expired') === 'true';
+
+  const [registeredUser, setRegisteredUser] = useState<{
+    userId: number;
+    username: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    dateOfBirth?: string;
+    gender?: GenderType;
+    address?: string;
+  } | null>(null);
+
+  const [copiedCode, setCopiedCode] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('login') === 'true' || searchParams.get('expired') === 'true') {
       setIsLoginModalOpen(true);
+    }
+    if (searchParams.get('register') === 'true') {
+      setIsRegisterModalOpen(true);
     }
   }, [searchParams]);
 
@@ -41,6 +68,25 @@ export const LandingPage: React.FC = () => {
     }
   };
 
+  const handleCloseRegisterModal = () => {
+    setIsRegisterModalOpen(false);
+    if (searchParams.get('register')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('register');
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
+
+  const handleSwitchToRegister = () => {
+    handleCloseLoginModal();
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    handleCloseRegisterModal();
+    setIsLoginModalOpen(true);
+  };
+
   // Tab state: 'new' = nộp hồ sơ ứng tuyển mới, 'existing' = bổ sung tài liệu theo mã TTS
   const [activeTab, setActiveTab] = useState<'new' | 'existing'>('new');
 
@@ -51,6 +97,11 @@ export const LandingPage: React.FC = () => {
   const [university, setUniversity] = useState('');
   const [major, setMajor] = useState('');
   const [appliedPosition, setAppliedPosition] = useState('Thực Tập Sinh Backend');
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState<GenderType>('MALE');
+  const [address, setAddress] = useState('');
+  const [notes, setNotes] = useState('');
   const [newFile, setNewFile] = useState<File | null>(null);
 
   // Form state: Bổ sung tài liệu vào mã TTS đã có (Public Upload)
@@ -67,7 +118,32 @@ export const LandingPage: React.FC = () => {
     internCode: string;
   } | null>(null);
 
-  // Xử lý nộp hồ sơ ứng tuyển mới
+  // Xử lý khi đăng ký thành công: Tự động điền dữ liệu và cuộn xuống form nộp hồ sơ
+  const handleRegisterSuccess = (user: {
+    userId: number;
+    username: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    dateOfBirth?: string;
+    gender?: GenderType;
+    address?: string;
+  }) => {
+    setRegisteredUser(user);
+    setFullName(user.fullName);
+    setEmail(user.email);
+    setPhone(user.phoneNumber);
+    if (user.dateOfBirth) setDateOfBirth(user.dateOfBirth);
+    if (user.gender) setGender(user.gender);
+    if (user.address) setAddress(user.address);
+
+    const formElement = document.getElementById('apply-form');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Xử lý nộp hồ sơ ứng tuyển mới (Gọi API TM-10 applyOnline)
   const handleApplyNew = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim() || !phone.trim()) {
@@ -79,15 +155,21 @@ export const LandingPage: React.FC = () => {
       setLoading(true);
       setErrorMsg(null);
 
-      // 1. Tạo hồ sơ thực tập sinh qua API
-      const profile = await internService.createIntern({
+      // 1. Tạo hồ sơ thực tập sinh qua API TM-10 (applyOnline)
+      const effectiveUserId = registeredUser?.userId || (authUser?.userId);
+      const profile = await internService.applyOnline({
+        userId: effectiveUserId,
         fullName: fullName.trim(),
         email: email.trim(),
         phone: phone.trim(),
         university: university.trim(),
         major: major.trim(),
         appliedPosition,
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: startDate || new Date().toISOString().split('T')[0],
+        dateOfBirth: dateOfBirth || undefined,
+        gender: gender || undefined,
+        address: address.trim() || undefined,
+        notes: notes.trim() || undefined,
       });
 
       // 2. Nếu có đính kèm file CV / Đơn, gọi API upload tài liệu
@@ -97,7 +179,7 @@ export const LandingPage: React.FC = () => {
 
       setSuccessInfo({
         title: 'Nộp Hồ Sơ Ứng Tuyển Thành Công!',
-        description: `Hồ sơ của bạn đã được ghi nhận vào hệ thống InternHub. Vui lòng lưu lại Mã TTS này để tra cứu lộ trình và nộp bổ sung tài liệu khi cần.`,
+        description: `Hồ sơ của bạn đã được ghi nhận và liên kết thành công với tài khoản. Trạng thái hiện tại: PENDING (Chờ HR xét duyệt). Vui lòng lưu lại Mã TTS này để theo dõi tiến độ xét duyệt.`,
         internCode: profile.internCode,
       });
 
@@ -105,7 +187,13 @@ export const LandingPage: React.FC = () => {
       setFullName('');
       setEmail('');
       setPhone('');
+      setUniversity('');
+      setMajor('');
+      setAddress('');
+      setDateOfBirth('');
+      setNotes('');
       setNewFile(null);
+      setRegisteredUser(null);
     } catch (err: any) {
       setErrorMsg(err.message || 'Có lỗi xảy ra khi nộp hồ sơ. Vui lòng thử lại.');
     } finally {
@@ -180,6 +268,14 @@ export const LandingPage: React.FC = () => {
             >
               Nộp Hồ Sơ Trực Tuyến
             </a>
+            <button
+              type="button"
+              onClick={() => setIsRegisterModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-white/10 hover:bg-white/15 transition-all border border-white/10 cursor-pointer"
+            >
+              <UserPlus size={14} />
+              <span>Đăng Ký Tài Khoản</span>
+            </button>
             <button
               type="button"
               onClick={() => setIsLoginModalOpen(true)}
@@ -271,14 +367,45 @@ export const LandingPage: React.FC = () => {
             <div className="mb-6 p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
               <div className="flex items-start gap-3">
                 <CheckCircle2 size={24} className="text-emerald-400 shrink-0 mt-0.5" />
-                <div className="space-y-2">
-                  <h4 className="font-bold text-sm text-white">{successInfo.title}</h4>
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <h4 className="font-bold text-sm text-white">{successInfo.title}</h4>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
+                      Trạng thái: PENDING (Chờ duyệt)
+                    </span>
+                  </div>
                   <p className="text-xs text-emerald-200 leading-relaxed">
                     {successInfo.description}
                   </p>
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 font-mono text-xs font-bold text-emerald-300">
-                    <span>Mã TTS của bạn:</span>
-                    <strong className="text-white text-sm">{successInfo.internCode}</strong>
+                  <div className="flex items-center gap-2 pt-1">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 font-mono text-xs font-bold text-emerald-300">
+                      <span>Mã TTS:</span>
+                      <strong className="text-white text-sm">{successInfo.internCode}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(successInfo.internCode);
+                        setCopiedCode(true);
+                        toast.success('Đã sao chép Mã TTS vào clipboard!');
+                        setTimeout(() => setCopiedCode(false), 2000);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-900/60 hover:bg-emerald-900 text-emerald-200 text-xs transition-colors cursor-pointer border border-emerald-500/30"
+                      title="Sao chép mã thực tập sinh"
+                    >
+                      {copiedCode ? <Check size={14} className="text-emerald-300" /> : <Copy size={14} />}
+                      <span>{copiedCode ? 'Đã sao chép' : 'Sao chép'}</span>
+                    </button>
+                  </div>
+                  <div className="pt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsLoginModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md transition-colors cursor-pointer"
+                    >
+                      <LogIn size={13} />
+                      <span>Đăng Nhập Cổng Nội Bộ Tra Cứu</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -296,6 +423,21 @@ export const LandingPage: React.FC = () => {
           {/* TAB 1: ỨNG TUYỂN MỚI */}
           {activeTab === 'new' && (
             <form onSubmit={handleApplyNew} className="space-y-4">
+              {/* Linked Account Badge */}
+              {registeredUser && (
+                <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-indigo-400" />
+                    <span>
+                      Đang liên kết tài khoản: <strong>{registeredUser.fullName}</strong> (@{registeredUser.username})
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono bg-indigo-950 px-2 py-0.5 rounded text-indigo-300 border border-indigo-500/30">
+                    User #{registeredUser.userId}
+                  </span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
@@ -358,10 +500,11 @@ export const LandingPage: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Trường Đại Học / Cao Đẳng
+                    Trường Đại Học / Cao Đẳng <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
+                    required
                     placeholder="VD: Đại Học Bách Khoa, ĐHQG..."
                     value={university}
                     onChange={(e) => setUniversity(e.target.value)}
@@ -371,13 +514,39 @@ export const LandingPage: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Chuyên ngành
+                    Chuyên ngành <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
+                    required
                     placeholder="VD: Kỹ Thuật Phần Mềm, CNTT..."
                     value={major}
                     onChange={(e) => setMajor(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Ngày dự kiến bắt đầu
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Địa chỉ cư trú
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="VD: Cầu Giấy, Hà Nội"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -545,6 +714,15 @@ export const LandingPage: React.FC = () => {
         isOpen={isLoginModalOpen}
         onClose={handleCloseLoginModal}
         isExpired={isExpired}
+        onSwitchToRegister={handleSwitchToRegister}
+      />
+
+      {/* Popup Đăng Ký Tài Khoản Thực Tập Sinh */}
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={handleCloseRegisterModal}
+        onSwitchToLogin={handleSwitchToLogin}
+        onRegisterSuccess={handleRegisterSuccess}
       />
     </div>
   );

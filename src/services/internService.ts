@@ -1,6 +1,7 @@
 import { apiClient } from './api';
 import { API_ENDPOINTS } from '../constants/endpoints';
 import type {
+  ApplyInternRequest,
   CreateInternRequest,
   InternDecisionRequest,
   InternProfile,
@@ -67,6 +68,18 @@ export const internService = {
     };
 
     const response = await apiClient.post(API_ENDPOINTS.INTERN.CREATE, payload);
+    return response.data?.data;
+  },
+
+  async applyOnline(request: ApplyInternRequest): Promise<InternProfile> {
+    const payload = {
+      ...request,
+      appliedPosition: request.appliedPosition || 'Thực tập sinh',
+      startDate: request.startDate || new Date().toISOString().split('T')[0],
+      academicYear: request.academicYear,
+    };
+
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.APPLY, payload);
     return response.data?.data;
   },
 

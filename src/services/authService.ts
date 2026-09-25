@@ -1,6 +1,6 @@
 import { apiClient } from './api';
 import { API_ENDPOINTS } from '../constants/endpoints';
-import type { AuthUser, RoleType } from '../types';
+import type { AuthUser, RegisterRequest, RegisterResponse, RoleType } from '../types';
 
 export const authService = {
   async login(username: string, password: string): Promise<AuthUser> {
@@ -25,6 +25,11 @@ export const authService = {
       }
       throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác!');
     }
+  },
+
+  async register(data: RegisterRequest): Promise<RegisterResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.REGISTER, data);
+    return response.data?.data;
   },
 
   async getMe(): Promise<{ username: string; authorities: any[] } | null> {

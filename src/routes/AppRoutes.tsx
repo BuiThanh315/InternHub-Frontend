@@ -40,7 +40,7 @@ export const AppRoutes: React.FC = () => {
 
       {/* Chuyển hướng các route auth cũ sang Landing Page (Popup Modal & Form nộp CV) */}
       <Route path="/login" element={<Navigate to="/?login=true" replace />} />
-      <Route path="/register" element={<Navigate to="/#apply-form" replace />} />
+      <Route path="/register" element={<Navigate to="/?register=true" replace />} />
 
       {/* Authenticated Dashboard Routes */}
       <Route element={<MainLayout />}>

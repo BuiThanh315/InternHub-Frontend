@@ -10,6 +10,7 @@ export type InternStatus =
 
 export interface InternProfile {
   id: number;
+  userId?: number | null;
   internCode: string;
   fullName: string;
   email: string;
@@ -74,5 +75,22 @@ export interface UpdateInternRequest {
   startDate: string;
   endDate?: string;
   status: InternStatus;
+  notes?: string;
+}
+
+export interface ApplyInternRequest {
+  userId?: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  gender?: GenderType;
+  address?: string;
+  university: string;
+  major: string;
+  academicYear?: string;
+  appliedPosition: string;
+  startDate: string;
+  endDate?: string;
   notes?: string;
 }
