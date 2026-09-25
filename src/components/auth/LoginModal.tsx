@@ -22,12 +22,14 @@ export interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   isExpired?: boolean;
+  onSwitchToRegister?: () => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
   isExpired = false,
+  onSwitchToRegister,
 }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -177,6 +179,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         >
           {loading ? "Đang xác thực..." : "Đăng Nhập"}
         </Button>
+
+        {onSwitchToRegister && (
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mt-2">
+            <span>Chưa có tài khoản thực tập sinh?</span>
+            <button
+              type="button"
+              onClick={onSwitchToRegister}
+              className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2 transition-colors cursor-pointer bg-transparent border-none p-0"
+            >
+              Đăng ký ngay
+            </button>
+          </div>
+        )}
       </form>
     </Modal>
   );
