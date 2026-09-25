@@ -11,6 +11,7 @@ import { InternStepper } from './components/InternStepper';
 import { InternProfileCard } from './components/InternProfileCard';
 import { InternDocumentList } from './components/InternDocumentList';
 import { InternUploadForm } from './components/InternUploadForm';
+import { InternEmptyState } from './components/InternEmptyState';
 import styles from './InternDashboard.module.css';
 
 export const InternDashboard: React.FC = () => {
@@ -21,33 +22,24 @@ export const InternDashboard: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const loadInternData = useCallback(async () => {
+  const loadInternData = useCallback(() => {
     try {
       setLoading(true);
       setErrorMessage(null);
 
-      // Tìm hồ sơ TTS tương ứng trong hệ thống
-      const internRes = await internService.getInterns();
-      const internList = internRes.items || internRes.content || [];
+      // Lấy hồ sơ thực tập sinh tương ứng từ lưu trữ phiên người dùng (tránh gọi GET /api/interns gây 403)
+      const currentProfile = internService.getLocalProfile(user?.userId);
+      setProfile(currentProfile);
 
-      let currentProfile: InternProfile | null = null;
-      if (internList.length > 0) {
-        currentProfile =
-          internList.find(
-            (i) =>
-              i.email === user?.username ||
-              i.fullName.toLowerCase().includes(user?.username || '')
-          ) || internList[0];
-        setProfile(currentProfile);
-      }
-
-      if (currentProfile) {
-        const docRes = await documentService.getDocumentsByInternCode(currentProfile.internCode);
-        setDocuments(docRes);
+      if (currentProfile?.internCode) {
+        const localDocs = internService.getLocalDocuments(currentProfile.internCode);
+        setDocuments(localDocs);
+      } else {
+        setDocuments([]);
       }
     } catch (err: any) {
       console.error('Lỗi tải dữ liệu Intern Dashboard:', err);
-      setErrorMessage(err.message || 'Không thể kết nối đến máy chủ backend');
+      setErrorMessage(err.message || 'Không thể tải dữ liệu hồ sơ');
     } finally {
       setLoading(false);
     }
@@ -65,6 +57,7 @@ export const InternDashboard: React.FC = () => {
     setIsUploading(true);
     try {
       const newDoc = await documentService.uploadDocument(profile.internCode, file, type);
+      internService.saveLocalDocument(profile.internCode, newDoc);
       setDocuments((prev) => [newDoc, ...prev]);
       toast.success('Đã tải tài liệu lên thành công!');
     } catch (err: any) {
@@ -115,17 +108,23 @@ export const InternDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Lộ trình thực tập */}
-          <InternStepper status={profile?.status} />
+          {!profile ? (
+            <InternEmptyState userName={user?.fullName || user?.username} />
+          ) : (
+            <>
+              {/* Lộ trình thực tập */}
+              <InternStepper status={profile.status} />
 
-          {/* Thông tin cá nhân & Mentor */}
-          {profile && <InternProfileCard profile={profile} />}
+              {/* Thông tin cá nhân & Mentor */}
+              <InternProfileCard profile={profile} />
 
-          {/* Danh sách tài liệu & Form nộp tài liệu */}
-          <div className={styles.contentGrid}>
-            <InternDocumentList documents={documents} />
-            <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
-          </div>
+              {/* Danh sách tài liệu & Form nộp tài liệu */}
+              <div className={styles.contentGrid}>
+                <InternDocumentList documents={documents} />
+                <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

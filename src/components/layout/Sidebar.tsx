@@ -11,8 +11,10 @@ import {
   Building2,
   FileText,
   X,
+  User as UserIcon,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { ROUTES } from '../../constants/routes';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
@@ -34,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       case 'HR':
         return [
           { to: '/hr/dashboard', label: 'Bảng Điều Khiển HR', icon: LayoutDashboard },
+          { to: '/hr/programs', label: 'Chương Trình Thực Tập', icon: FolderGit2 },
           { to: '/hr/interns', label: 'Hồ Sơ Thực Tập Sinh', icon: GraduationCap },
           { to: '/hr/review', label: 'Duyệt Tài Liệu & CV', icon: FileCheck2 },
         ];
@@ -44,10 +47,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           { to: '/mentor/documents', label: 'Tài Liệu Hướng Dẫn', icon: FolderGit2 },
         ];
       case 'INTERN':
+      case 'USER':
       default:
         return [
-          { to: '/intern/dashboard', label: 'Tiến Độ Thực Tập', icon: LayoutDashboard },
-          { to: '/intern/documents', label: 'Hồ Sơ & Tài Liệu', icon: FileText },
+          { to: ROUTES.INTERN.DASHBOARD, label: 'Tiến Độ Thực Tập', icon: LayoutDashboard },
+          { to: ROUTES.INTERN.APPLY, label: 'Nộp Hồ Sơ Ứng Tuyển', icon: GraduationCap },
+          { to: ROUTES.INTERN.DOCUMENTS, label: 'Quản Lý Tài Liệu', icon: FileText },
+          { to: ROUTES.INTERN.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },
         ];
     }
   };
@@ -57,6 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
     HR: { title: 'Chuyên Viên HR', color: '#3b82f6' },
     MENTOR: { title: 'Người Hướng Dẫn', color: '#10b981' },
     INTERN: { title: 'Thực Tập Sinh', color: '#8b5cf6' },
+    USER: { title: 'Thực Tập Sinh', color: '#8b5cf6' },
   };
 
   const currentRoleInfo = role ? roleLabels[role] || { title: role, color: '#6b7280' } : null;

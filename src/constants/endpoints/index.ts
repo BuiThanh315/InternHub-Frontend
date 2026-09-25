@@ -5,6 +5,7 @@ import { USER_ENDPOINTS } from './user.endpoints';
 import { DOCUMENT_ENDPOINTS } from './document.endpoints';
 import { SYSTEM_ENDPOINTS } from './system.endpoints';
 import { CONTRACT_ENDPOINTS } from './contract.endpoints';
+import { PROGRAM_ENDPOINTS } from './program.endpoints';
 
 export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
@@ -14,6 +15,7 @@ export const API_ENDPOINTS = {
   DOCUMENT: DOCUMENT_ENDPOINTS,
   SYSTEM: SYSTEM_ENDPOINTS,
   CONTRACT: CONTRACT_ENDPOINTS,
+  PROGRAM: PROGRAM_ENDPOINTS,
 } as const;
 
 export * from './auth.endpoints';
@@ -23,5 +25,6 @@ export * from './user.endpoints';
 export * from './document.endpoints';
 export * from './system.endpoints';
 export * from './contract.endpoints';
+export * from './program.endpoints';
 
 

@@ -10,6 +10,7 @@ export type InternStatus =
 
 export interface InternProfile {
   id: number;
+  userId?: number | null;
   internCode: string;
   fullName: string;
   email: string;
@@ -35,6 +36,11 @@ export interface InternProfile {
   gpa?: number;
   mentorId?: number;
   mentorName?: string;
+  programId?: number | null;
+  programCode?: string | null;
+  programName?: string | null;
+  needsReassignment?: boolean;
+  reassignmentReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +48,7 @@ export interface InternProfile {
 export interface InternDecisionRequest {
   decision: 'APPROVED' | 'REJECTED';
   rejectionReason?: string;
+  programId?: number;
 }
 
 export interface CreateInternRequest {
@@ -74,5 +81,22 @@ export interface UpdateInternRequest {
   startDate: string;
   endDate?: string;
   status: InternStatus;
+  notes?: string;
+}
+
+export interface ApplyInternRequest {
+  userId?: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  gender?: GenderType;
+  address?: string;
+  university: string;
+  major: string;
+  academicYear?: string;
+  appliedPosition: string;
+  startDate: string;
+  endDate?: string;
   notes?: string;
 }
