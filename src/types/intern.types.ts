@@ -35,6 +35,11 @@ export interface InternProfile {
   gpa?: number;
   mentorId?: number;
   mentorName?: string;
+  programId?: number | null;
+  programCode?: string | null;
+  programName?: string | null;
+  needsReassignment?: boolean;
+  reassignmentReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +47,7 @@ export interface InternProfile {
 export interface InternDecisionRequest {
   decision: 'APPROVED' | 'REJECTED';
   rejectionReason?: string;
+  programId?: number;
 }
 
 export interface CreateInternRequest {
