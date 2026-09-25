@@ -7,6 +7,7 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { HrDashboard } from '../pages/hr/HrDashboard';
+import { HrProgramManagementPage } from '../pages/hr/programs/HrProgramManagementPage';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { LandingPage } from '../pages/public/LandingPage';
@@ -59,6 +60,7 @@ export const AppRoutes: React.FC = () => {
         {/* HR Area */}
         <Route element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']} />}>
           <Route path={ROUTES.HR.DASHBOARD} element={<HrDashboard />} />
+          <Route path={ROUTES.HR.PROGRAMS} element={<HrProgramManagementPage />} />
           <Route path={ROUTES.HR.INTERNS} element={<HrDashboard />} />
           <Route path={ROUTES.HR.REVIEW} element={<HrDashboard />} />
         </Route>
