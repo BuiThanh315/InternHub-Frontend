@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
-import { CheckCircle2, X, AlertCircle, Info, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { CheckCircle2, X, AlertCircle, Info, Loader2, FolderGit2 } from 'lucide-react';
 import type { ApproveConfirmModalProps } from './ApproveConfirmModal.types';
+import type { ProgramDetailResponse } from '../../../../types';
+import { programService } from '../../../../services/programService';
 import styles from './ApproveConfirmModal.module.css';
 
 export const ApproveConfirmModal: React.FC<ApproveConfirmModalProps> = ({
@@ -11,6 +13,37 @@ export const ApproveConfirmModal: React.FC<ApproveConfirmModalProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const [programs, setPrograms] = useState<ProgramDetailResponse[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | ''>('');
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState<boolean>(false);
+  const [programFetchError, setProgramFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoadingPrograms(true);
+      setProgramFetchError(null);
+      setSelectedProgramId('');
+      programService.getPrograms({ size: 100 })
+        .then((res) => {
+          // Lọc các chương trình đang mở tuyển hoặc đang hoạt động (PLANNING hoặc OPEN)
+          const activePrograms = (res.items || []).filter(
+            (p) => (p.status === 'PLANNING' || p.status === 'OPEN') && p.isRecruitmentOpen
+          );
+          setPrograms(activePrograms);
+          if (activePrograms.length > 0) {
+            setSelectedProgramId(activePrograms[0].id);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load programs:', err);
+          setProgramFetchError('Không thể tải danh sách chương trình thực tập.');
+        })
+        .finally(() => {
+          setIsLoadingPrograms(false);
+        });
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen && !isSubmitting) {
@@ -22,6 +55,15 @@ export const ApproveConfirmModal: React.FC<ApproveConfirmModalProps> = ({
   }, [isOpen, isSubmitting, onClose]);
 
   if (!isOpen || !intern) return null;
+
+  const selectedProgram = programs.find((p) => p.id === selectedProgramId);
+  const isSelectedFull = selectedProgram ? selectedProgram.currentInterns >= selectedProgram.maxInterns : false;
+
+  const handleSubmit = () => {
+    if (selectedProgramId && !isSelectedFull) {
+      onConfirm(selectedProgramId as number);
+    }
+  };
 
   return (
     <div
@@ -93,10 +135,60 @@ export const ApproveConfirmModal: React.FC<ApproveConfirmModalProps> = ({
             </div>
           </div>
 
+          {/* Chọn chương trình thực tập (Bắt buộc theo TM-15/18) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <FolderGit2 size={16} />
+              Gán vào Chương Trình Thực Tập <span style={{ color: 'var(--danger)' }}>*</span>
+            </label>
+            {isLoadingPrograms ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <Loader2 size={16} className="animate-spin" /> Đang tải danh sách chương trình...
+              </div>
+            ) : programFetchError ? (
+              <p style={{ color: 'var(--danger)', fontSize: '0.825rem', margin: 0 }}>{programFetchError}</p>
+            ) : programs.length === 0 ? (
+              <div style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', fontSize: '0.825rem' }}>
+                Không có chương trình thực tập nào đang mở tiếp nhận hồ sơ. Vui lòng tạo hoặc mở tuyển ít nhất một chương trình trước khi duyệt.
+              </div>
+            ) : (
+              <select
+                value={selectedProgramId}
+                onChange={(e) => setSelectedProgramId(Number(e.target.value))}
+                disabled={isSubmitting}
+                style={{
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-default)',
+                  backgroundColor: 'var(--bg-body)',
+                  color: 'var(--text-main)',
+                  fontSize: '0.875rem',
+                  outline: 'none',
+                }}
+              >
+                {programs.map((p) => {
+                  const isFull = p.currentInterns >= p.maxInterns;
+                  return (
+                    <option key={p.id} value={p.id} disabled={isFull}>
+                      [{p.programCode}] {p.name} - {p.departmentName} ({p.currentInterns}/{p.maxInterns} TTS){isFull ? ' - ĐÃ ĐẦY' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+
+            {selectedProgram && (
+              <div style={{ fontSize: '0.785rem', color: isSelectedFull ? 'var(--danger)' : 'var(--text-muted)', marginTop: '0.2rem' }}>
+                Thời gian kỳ thực tập: <strong>{selectedProgram.startDate}</strong> đến <strong>{selectedProgram.endDate}</strong> ({selectedProgram.durationWeeks} tuần)
+                {isSelectedFull && <div style={{ fontWeight: 600, color: 'var(--danger)' }}>Chương trình này đã đạt giới hạn chỉ tiêu ({selectedProgram.maxInterns} TTS). Vui lòng chọn chương trình khác.</div>}
+              </div>
+            )}
+          </div>
+
           <div className={styles.noteBanner}>
             <Info size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
             <span>
-              Sau khi được tiếp nhận, hồ sơ sẽ chuyển sang trạng thái <strong>ĐÃ DUYỆT (APPROVED)</strong> và sẵn sàng để quản lý phân công Mentor hướng dẫn ở bước kế tiếp.
+              Sau khi được tiếp nhận, hồ sơ sẽ chuyển sang trạng thái <strong>ĐÃ DUYỆT (APPROVED)</strong> và tự động liên kết với kỳ thực tập đã chọn.
             </span>
           </div>
         </div>
@@ -114,8 +206,8 @@ export const ApproveConfirmModal: React.FC<ApproveConfirmModalProps> = ({
           <button
             type="button"
             className="btn btn-primary"
-            onClick={onConfirm}
-            disabled={isSubmitting}
+            onClick={handleSubmit}
+            disabled={isSubmitting || !selectedProgramId || isSelectedFull || programs.length === 0}
             style={{ minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           >
             {isSubmitting ? (
@@ -135,3 +227,4 @@ export const ApproveConfirmModal: React.FC<ApproveConfirmModalProps> = ({
     </div>
   );
 };
+

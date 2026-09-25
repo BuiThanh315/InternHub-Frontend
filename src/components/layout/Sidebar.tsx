@@ -36,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       case 'HR':
         return [
           { to: '/hr/dashboard', label: 'Bảng Điều Khiển HR', icon: LayoutDashboard },
+          { to: '/hr/programs', label: 'Chương Trình Thực Tập', icon: FolderGit2 },
           { to: '/hr/interns', label: 'Hồ Sơ Thực Tập Sinh', icon: GraduationCap },
           { to: '/hr/review', label: 'Duyệt Tài Liệu & CV', icon: FileCheck2 },
         ];
