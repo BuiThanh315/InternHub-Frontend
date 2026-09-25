@@ -6,17 +6,20 @@
   bottom: 0;
   background-color: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(8px);
-  z-index: 9999;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .modalCard {
   width: 100%;
   max-width: 1100px;
   height: 88vh;
+  max-height: 850px;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -26,6 +29,20 @@
   border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
   color: #f8fafc;
+  margin: auto;
+  box-sizing: border-box;
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .header {

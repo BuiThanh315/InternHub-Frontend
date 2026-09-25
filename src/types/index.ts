@@ -4,4 +4,5 @@ export * from './user.types';
 export * from './intern.types';
 export * from './document.types';
 export * from './system.types';
+export * from './contract.types';
 export * from './program.types';
