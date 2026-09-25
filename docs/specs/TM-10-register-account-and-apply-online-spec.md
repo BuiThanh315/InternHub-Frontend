@@ -16,6 +16,7 @@
 | :---: | :---: | :---: | :---: | :---: | :--- |
 | **v1.0** | 2026-09-25 | Senior Frontend AI Pair-Programmer | `TM-10` | Tạo mới Spec Frontend | Khởi tạo tài liệu đặc tả toàn diện cho giao diện Đăng ký tài khoản và Nộp hồ sơ trực tuyến có liên kết định danh người dùng (`userId`), đồng bộ với Backend TM-10 đã merge. |
 | **v1.1** | 2026-09-25 | Senior Frontend AI Pair-Programmer | `TM-10` | Tái cấu trúc UX/UI Wizard 2 Bước | Chuyển đổi Form Đăng ký sang quy trình Stepper Wizard 2 bước (Bước 1: Thiết lập tài khoản & đo độ mạnh mật khẩu; Bước 2: Điền thông tin cá nhân liên kết) giúp giảm tải nhận thức và tối ưu hóa trải nghiệm người dùng trên cả Mobile và Desktop. |
+| **v1.2** | 2026-09-25 | Senior Frontend AI Pair-Programmer | `TM-10` | Tái cấu trúc Luồng Nộp Hồ Sơ Chuyên Sâu | Chuyển form nộp hồ sơ từ Landing Page sang route chuyên trách `/intern/apply` (`InternApplyPage`) với thông tin cá nhân điền sẵn từ tài khoản; nâng cấp `InternDashboard` với `InternEmptyState` (Onboarding Hero) khi intern chưa nộp hồ sơ; thay form Landing Page bằng Vị trí tuyển dụng và CTA thông minh. |
 
 ---
 
@@ -337,6 +338,13 @@ Dưới đây là checklist chi tiết từng đầu việc để theo dõi ti�
 - [x] **T-4.4:** Kiểm thử luồng Nộp hồ sơ kèm tệp CV $\rightarrow$ Kiểm tra liên kết `userId` và sinh mã TTS chuẩn.
 - [x] **T-4.5:** Chạy kiểm tra TypeScript (`npm run build` hoặc `tsc -b`) và linter (`oxlint`), đảm bảo không có cảnh báo hay lỗi biên dịch nào.
 
+### Phase 5: Cổng Thực Tập Sinh Độc Lập & Loại Bỏ Lệnh Gọi API Bị Hạn Chế (403 Forbidden)
+- [x] **T-5.1:** Thiết kế hệ thống tuyến đường độc lập cho Intern: `/intern/dashboard`, `/intern/apply`, `/intern/documents`, `/intern/profile`.
+- [x] **T-5.2:** Cập nhật Sidebar: Tách biệt phân hệ ứng viên `INTERN` / `USER`, điều hướng riêng biệt với HR/Mentor/Admin.
+- [x] **T-5.3:** Loại bỏ triệt để lệnh gọi `internService.getInterns()` (`GET /api/interns`) trong `InternDashboard.tsx`, `InternDocumentsPage.tsx`, `InternProfilePage.tsx` do endpoint Backend yêu cầu quyền HR/ADMIN/MENTOR.
+- [x] **T-5.4:** Triển khai cơ chế lưu trữ cục bộ theo phiên người dùng (`internService.saveLocalProfile`, `getLocalProfile`, `saveLocalDocument`, `getLocalDocuments`), hiển thị tức thì hồ sơ và trạng thái mà không gây lỗi 403 Forbidden.
+- [x] **T-5.5:** Tạo component `InternEmptyState` hiển thị trang chào đón thân thiện khi tài khoản chưa nộp hồ sơ, điều hướng trực tiếp sang form nộp hồ sơ.
+
 ---
 
 ## 11. Acceptance Criteria Checklist (Tiêu Chí Nghiệm Thu)
@@ -351,3 +359,6 @@ Dưới đây là checklist chi tiết từng đầu việc để theo dõi ti�
 - [x] **AC-8:** Bấm nộp hồ sơ gửi request `POST /api/interns/apply` kèm `userId`, nhận về Mã thực tập sinh chuẩn `INT-YYYY-XXXX` và trạng thái `PENDING`.
 - [x] **AC-9:** Nếu có chọn file CV, hệ thống tự động tải file lên qua `POST /api/interns/{internCode}/documents` thành công.
 - [x] **AC-10:** Kết quả hiển thị thẻ thành công với Mã TTS nổi bật, không phát sinh lỗi biên dịch TypeScript hay vi phạm linter.
+- [x] **AC-11:** Người dùng vai trò `INTERN` truy cập các trang Dashboard, Tài liệu và Hồ sơ cá nhân không bị phát sinh lỗi 403 Forbidden do gọi `GET /api/interns` hay `GET /api/interns/{code}/documents`.
+- [x] **AC-12:** Khi tài khoản Intern chưa nộp hồ sơ, trang hiển thị `InternEmptyState` tinh gọn, chuyên nghiệp và có nút kêu gọi nộp hồ sơ trực tuyến.
+- [x] **AC-13:** Khi tài khoản Intern đã nộp hồ sơ, hệ thống tải thông tin tức thì từ phiên lưu trữ và hiển thị thanh tiến trình Stepper cùng hồ sơ đã nộp một cách trực quan.

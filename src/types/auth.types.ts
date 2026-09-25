@@ -4,6 +4,12 @@ export interface AuthUser {
   userId: number;
   username: string;
   fullName?: string;
+  email?: string;
+  phoneNumber?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: GenderType;
+  address?: string;
   role: RoleType;
   accessToken: string;
   tokenType: string;

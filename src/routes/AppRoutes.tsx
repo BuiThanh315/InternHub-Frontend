@@ -6,6 +6,9 @@ import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { HrDashboard } from '../pages/hr/HrDashboard';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
+import { InternApplyPage } from '../pages/intern/InternApplyPage';
+import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
+import { InternProfilePage } from '../pages/intern/InternProfilePage';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +26,7 @@ export const AppRoutes: React.FC = () => {
       case 'MENTOR':
         return <Navigate to={ROUTES.MENTOR.DASHBOARD} replace />;
       case 'INTERN':
+      case 'USER':
       default:
         return <Navigate to={ROUTES.INTERN.DASHBOARD} replace />;
     }
@@ -35,7 +39,16 @@ export const AppRoutes: React.FC = () => {
         path={ROUTES.ROOT}
         element={isAuthenticated ? getDashboardRedirect() : <LandingPage />}
       />
-      <Route path="/apply" element={<LandingPage />} />
+      <Route
+        path="/apply"
+        element={
+          isAuthenticated ? (
+            <Navigate to={ROUTES.INTERN.APPLY} replace />
+          ) : (
+            <Navigate to="/?register=true" replace />
+          )
+        }
+      />
       <Route path="/onboarding/activate" element={<OnboardingActivationPage />} />
 
       {/* Chuyển hướng các route auth cũ sang Landing Page (Popup Modal & Form nộp CV) */}
@@ -65,10 +78,12 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
         </Route>
 
-        {/* Intern Area */}
-        <Route element={<ProtectedRoute allowedRoles={['INTERN', 'ADMIN', 'HR', 'MENTOR']} />}>
+        {/* Intern Dedicated Area (Khu vực độc lập cho Thực Tập Sinh) */}
+        <Route element={<ProtectedRoute allowedRoles={['INTERN', 'USER', 'ADMIN']} />}>
           <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
-          <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDashboard />} />
+          <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
+          <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
+          <Route path={ROUTES.INTERN.PROFILE} element={<InternProfilePage />} />
         </Route>
       </Route>
 
