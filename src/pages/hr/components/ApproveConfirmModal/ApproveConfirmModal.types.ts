@@ -6,5 +6,6 @@ export interface ApproveConfirmModalProps {
   isSubmitting: boolean;
   errorMessage?: string | null;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (programId: number) => void;
 }
+

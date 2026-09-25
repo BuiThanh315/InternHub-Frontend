@@ -217,13 +217,13 @@ export const HrDashboard: React.FC = () => {
     }
   };
 
-  // TM-11: Phê duyệt hồ sơ TTS
-  const handleApproveDecision = async () => {
+  // TM-11 & TM-15: Phê duyệt hồ sơ TTS và gán vào chương trình thực tập
+  const handleApproveDecision = async (programId: number) => {
     if (!approveIntern) return;
     try {
       setIsSubmittingDecision(true);
       setDecisionError(null);
-      await internService.submitDecision(approveIntern.id, { decision: 'APPROVED' });
+      await internService.submitDecision(approveIntern.id, { decision: 'APPROVED', programId });
       setSuccessToast(`Đã phê duyệt tiếp nhận hồ sơ thực tập sinh ${approveIntern.fullName} (${approveIntern.internCode}) thành công!`);
       setApproveIntern(null);
       if (detailIntern && detailIntern.id === approveIntern.id) {
