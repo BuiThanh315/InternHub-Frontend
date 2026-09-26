@@ -9,4 +9,8 @@ export const INTERN_ENDPOINTS = {
   RESEND_DECISION_EMAIL: (id: number | string) => `/api/interns/${id}/resend-decision-email`,
   DOCUMENTS: (internCode: string) => `/api/interns/${internCode}/documents`,
   APPLY: '/api/interns/apply',
+  MENTORS: '/api/interns/mentors',
+  ASSIGN_MENTOR: (id: number | string) => `/api/interns/${id}/assign-mentor`,
+  REVOKE_MENTOR: (id: number | string) => `/api/interns/${id}/mentor`,
+  MENTOR_HISTORY: (id: number | string) => `/api/interns/${id}/mentor-history`,
 } as const;

@@ -40,12 +40,14 @@
 | `--text-3` | `#9599A8` | `#686E7E` | Placeholder, meta, timestamp |
 | `--primary` | `#4F46E5` | `#8B85FF` | CTA chính, active state, link |
 | `--primary-soft` | `#EEF0FF` | `#232244` | Nền active nav, badge nhấn |
-| `--success` / `--success-soft` | `#0E9F6E` / `#E8F9F1` | `#3CCB93` / `#123527` | Đang thực tập / Hoàn thành tích cực |
-| `--warning` / `--warning-soft` | `#D97706` / `#FEF6E7` | `#F0A93C` / `#3A2A0D` | Chờ duyệt, cần chú ý |
-| `--danger` / `--danger-soft` | `#E1493F` / `#FCEAE9` | `#F17069` / `#3B1C1A` | Từ chối, lỗi, xoá |
-| `--info` / `--info-soft` | `#7C5CFC` / `#F1EDFF` | `#A996FF` / `#2A2245` | Hoàn thành trung tính, thông tin |
+| `--success` / `--success-soft` | `#0E9F6E` / `#E8F9F1` | `#3CCB93` / `#123527` | Đang thực tập (`INTERNING`) / Tích cực |
+| `--warning` / `--warning-soft` | `#D97706` / `#FEF6E7` | `#F0A93C` / `#3A2A0D` | Chờ duyệt (`PENDING`), cần chú ý |
+| `--sky` / `--sky-soft` | `#0284C7` / `#E0F2FE` | `#38BDF8` / `#0C4A6E` | Đã tiếp nhận hồ sơ (`APPROVED`), chờ gán Mentor |
+| `--danger` / `--danger-soft` | `#E1493F` / `#FCEAE9` | `#F17069` / `#3B1C1A` | Chấm dứt sớm (`TERMINATED`), lỗi, xoá |
+| `--info` / `--info-soft` | `#7C5CFC` / `#F1EDFF` | `#A996FF` / `#2A2245` | Hoàn thành chu kỳ (`COMPLETED`), thông tin |
+| `--neutral` / `--neutral-soft` | `#4B5563` / `#F3F4F6` | `#9CA3AF` / `#1F2937` | Tạm dừng (`ON_HOLD`), bảo lưu thực tập |
 
-> **Nguyên tắc dùng màu**: `primary` chỉ dùng cho hành động/điều hướng, **KHÔNG** dùng `primary` để biểu diễn status "tích cực" (tránh nhầm với `success`). Mỗi status chỉ có đúng 1 cặp màu (solid + soft), không tự phối màu mới.
+> **Nguyên tắc dùng màu**: `primary` chỉ dùng cho hành động/điều hướng, **KHÔNG** dùng `primary` để biểu diễn status "tích cực" (tránh nhầm với `success`). Mỗi status chỉ có đúng 1 cặp màu (solid + soft), không tự phối màu mới. Status `REJECTED` (không tiếp nhận hồ sơ) sử dụng màu trung tính dịu nhẹ `--text-2` trên nền `--surface-2` (border `--border`) để phân biệt rành mạch với vi phạm kỷ luật `--danger` (`TERMINATED`).
 
 ### 1.2 Typography
 - **Font chính**: Inter (UI text toàn bộ).
@@ -186,18 +188,21 @@ Dưới 768px, bảng chuyển thành danh sách card dọc: avatar + tên trên
 
 ## 6. Status System
 
-### 6.1 Danh sách trạng thái chính thức
-| Status key | Label | Màu | Ý nghĩa |
+### 6.1 Danh sách trạng thái chính thức (Khớp 100% Backend & Frontend)
+| Status key (DB & API) | Label UI | Màu / Token | Ý nghĩa nghiệp vụ |
 | :--- | :--- | :--- | :--- |
-| `pending` | Chờ duyệt | `warning` | Hồ sơ mới nộp/ứng tuyển, chưa được HR duyệt |
-| `active` | Đang thực tập | `success` | Đã ký, đang trong thời gian thực tập |
-| `on_hold` | Tạm dừng | `--text-2` trên `--border-soft` | Nghỉ phép dài hạn, tạm ngưng có lý do (không dùng danger) |
-| `completed` | Hoàn thành | `info` | Kết thúc đúng hạn, đã có đánh giá cuối kỳ |
-| `rejected` | Từ chối | `danger` | Hồ sơ không được duyệt |
-| `terminated` | Chấm dứt sớm | `danger` | Kết thúc trước hạn, có lý do |
+| `PENDING` | Chờ duyệt | `warning` (`--warning` / `--warning-soft`) | Hồ sơ mới nộp/ứng tuyển, chưa được HR xét duyệt |
+| `APPROVED` | Đã duyệt tiếp nhận | `sky` (`--sky` / `--sky-soft`) | Đã duyệt vào chương trình, chờ xếp Mentor hoặc chờ ngày bắt đầu |
+| `INTERNING` | Đang thực tập | `success` (`--success` / `--success-soft`) | Đang thực tập chính thức (thỏa mãn điều kiện kép: có Mentor VÀ Program ONGOING) |
+| `ON_HOLD` | Tạm dừng | `neutral` (`--neutral` / `--neutral-soft`) | Nghỉ phép dài hạn / tạm ngưng thực tập có lý do (không liên quan cascade hủy program) |
+| `COMPLETED` | Hoàn thành | `info` (`--info` / `--info-soft`) | Hoàn thành trọn vẹn chương trình đúng hạn, có đánh giá cuối kỳ |
+| `REJECTED` | Không tiếp nhận | `slate` (`--text-2` trên `--surface-2`) | Hồ sơ không đạt yêu cầu ở vòng xét duyệt ban đầu |
+| `TERMINATED` | Buộc thôi việc | `danger` (`--danger` / `--danger-soft`) | Chấm dứt kỷ luật / dừng thực tập trước hạn do vi phạm |
+
+> **Lưu ý nghiệp vụ Cascade Hủy Program**: Khi chương trình thực tập bị hủy (CANCELLED), hệ thống **GIỮ NGUYÊN** trạng thái `APPROVED` hoặc `INTERNING` của thực tập sinh và kích hoạt cờ hành động riêng `needs_reassignment = true` kèm lý do để HR điều phối lại — tuyệt đối **KHÔNG** chuyển sang `ON_HOLD`.
 
 ### 6.2 Nguyên tắc
-- Mỗi status có đúng 1 badge component dùng chung (`<StatusBadge status="active" />`), tự tra `statusConfig` — **cấm hard-code class màu tại nơi dùng**.
+- Mỗi status có đúng 1 badge component dùng chung (`<StatusBadge status="INTERNING" />`), tự tra `statusConfig` — **cấm hard-code class màu tại nơi dùng**.
 - Badge luôn có **dot + label**, không dùng màu nền đơn thuần không chữ (accessibility).
 - Chuyển trạng thái không được sửa trực tiếp trên badge; phải qua hành động rõ ràng (menu hành động hoặc dialog xác nhận) để giữ audit log.
 

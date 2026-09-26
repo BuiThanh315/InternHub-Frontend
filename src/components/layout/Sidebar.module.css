@@ -9,17 +9,38 @@
   top: 0;
   border-right: 1px solid var(--border-subtle);
   z-index: 50;
-  transition: transform 0.25s ease;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s ease;
   flex-shrink: 0;
+}
+
+.navContainer {
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chế độ thu gọn (Mini Sidebar) */
+.sidebarCollapsed {
+  width: 72px;
+}
+
+.sidebarCollapsed .brandHeader {
+  justify-content: center;
+  padding: 1.25rem 0.5rem;
 }
 
 .brandHeader {
-  padding: 1.5rem;
+  padding: 1.25rem 1rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
   border-bottom: 1px solid var(--border-subtle);
+  min-height: 70px;
+  box-sizing: border-box;
+  position: relative;
 }
 
 .brandLogo {
@@ -32,10 +53,17 @@
   justify-content: center;
   color: #ffffff;
   box-shadow: 0 4px 12px var(--primary-glow);
+  flex-shrink: 0;
+}
+
+.brandInfo {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .brandName {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   color: #ffffff;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -47,20 +75,65 @@
 }
 
 .brandSub {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   margin: 0;
 }
 
+/* Nút thu gọn Sidebar trên Desktop: dạng pill tab tinh tế nằm ngay mép phải hoặc trên header */
+.desktopCollapseBtn {
+  position: absolute;
+  right: -13px;
+  top: 22px;
+  z-index: 60;
+  background-color: var(--bg-surface, #1e293b);
+  border: 1px solid var(--border-default, #334155);
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.desktopCollapseBtn:hover {
+  background-color: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  transform: scale(1.1);
+}
+
+.mobileCloseBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+}
+
 .userCard {
-  margin: 1.25rem 1rem;
-  padding: 0.85rem;
+  margin: 1rem 0.75rem;
+  padding: 0.75rem;
   border-radius: var(--radius-md);
   background: rgba(30, 41, 59, 0.7);
   border: 1px solid rgba(51, 65, 85, 0.5);
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  transition: all var(--transition-fast);
+}
+
+.userCardCollapsed {
+  margin: 1rem auto;
+  padding: 0.4rem;
+  background: transparent;
+  border: none;
+  justify-content: center;
 }
 
 .userAvatar {
@@ -73,10 +146,12 @@
   justify-content: center;
   font-weight: 700;
   font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .userInfo {
   overflow: hidden;
+  white-space: nowrap;
 }
 
 .userName {
@@ -99,7 +174,7 @@
 
 .nav {
   flex: 1;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -113,6 +188,7 @@
   padding: 0.5rem 0.75rem;
   letter-spacing: 0.05em;
   margin: 0;
+  white-space: nowrap;
 }
 
 .navLink {
@@ -126,6 +202,21 @@
   color: var(--sidebar-text);
   text-decoration: none;
   transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.navLinkCollapsed {
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+.navIcon {
+  flex-shrink: 0;
+}
+
+.navLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .navLink:hover {
@@ -139,7 +230,7 @@
 }
 
 .logoutContainer {
-  padding: 1rem;
+  padding: 0.85rem;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -147,6 +238,7 @@
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.75rem;
   padding: 0.65rem 0.85rem;
   border-radius: var(--radius-md);
@@ -157,6 +249,12 @@
   font-size: 0.85rem;
   font-weight: 600;
   transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.logoutBtnCollapsed {
+  justify-content: center;
+  padding: 0.65rem 0;
 }
 
 .logoutBtn:hover {
@@ -177,10 +275,19 @@
     z-index: 50;
     transform: translateX(-100%);
     box-shadow: var(--shadow-xl);
+    width: 260px !important;
   }
 
   .sidebarOpen {
     transform: translateX(0);
+  }
+
+  .desktopCollapseBtn {
+    display: none;
+  }
+
+  .mobileCloseBtn {
+    display: flex;
   }
 
   .backdrop {

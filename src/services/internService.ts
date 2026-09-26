@@ -193,6 +193,37 @@ export const internService = {
     const response = await apiClient.post(API_ENDPOINTS.INTERN.RESEND_DECISION_EMAIL(id), {}, { signal });
     return response.data?.data;
   },
+
+  async getAvailableMentors(signal?: AbortSignal): Promise<import('../types').MentorOption[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MENTORS, { signal });
+    return response.data?.data || [];
+  },
+
+  async assignMentor(
+    id: number,
+    payload: import('../types').AssignMentorRequest,
+    signal?: AbortSignal
+  ): Promise<InternProfile> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.ASSIGN_MENTOR(id), payload, { signal });
+    return response.data?.data;
+  },
+
+  async revokeMentor(
+    id: number,
+    payload: import('../types').RevokeMentorRequest,
+    signal?: AbortSignal
+  ): Promise<InternProfile> {
+    const response = await apiClient.delete(API_ENDPOINTS.INTERN.REVOKE_MENTOR(id), { data: payload, signal });
+    return response.data?.data;
+  },
+
+  async getMentorHistory(
+    id: number,
+    signal?: AbortSignal
+  ): Promise<import('../types').MentorAssignmentResponse[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MENTOR_HISTORY(id), { signal });
+    return response.data?.data || [];
+  },
 };
 
 export default internService;

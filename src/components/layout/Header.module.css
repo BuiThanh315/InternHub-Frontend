@@ -22,23 +22,28 @@
 .leftSection {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .menuBtn {
-  display: none;
-  background: transparent;
-  border: none;
+  display: flex;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-default);
   color: var(--text-main);
   cursor: pointer;
-  padding: 0.35rem;
-  border-radius: var(--radius-sm);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
   align-items: center;
   justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .menuBtn:hover {
-  background-color: var(--border-subtle);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 .titleBox {

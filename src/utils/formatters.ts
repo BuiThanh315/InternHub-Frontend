@@ -98,6 +98,10 @@ export function getInternStatusLabel(status?: string): string {
       return 'Đã hoàn thành';
     case 'REJECTED':
       return 'Từ chối tiếp nhận';
+    case 'ON_HOLD':
+      return 'Tạm hoãn';
+    case 'TERMINATED':
+      return 'Đã thôi việc';
     default:
       return status || '—';
   }
