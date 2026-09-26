@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import type { InternProfile, DocumentResponse, DocumentType } from '../../types';
 import { InternStepper } from './components/InternStepper';
 import { InternProfileCard } from './components/InternProfileCard';
+import { InternScheduleWidget } from './components/InternScheduleWidget';
 import { InternDocumentList } from './components/InternDocumentList';
 import { InternUploadForm } from './components/InternUploadForm';
 import { InternEmptyState } from './components/InternEmptyState';
@@ -117,6 +118,9 @@ export const InternDashboard: React.FC = () => {
 
               {/* Thông tin cá nhân & Mentor */}
               <InternProfileCard profile={profile} />
+
+              {/* TM-17: Kế hoạch & Lịch thực tập cá nhân */}
+              <InternScheduleWidget profile={profile} />
 
               {/* Danh sách tài liệu & Form nộp tài liệu */}
               <div className={styles.contentGrid}>
