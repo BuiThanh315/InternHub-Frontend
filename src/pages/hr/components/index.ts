@@ -11,3 +11,4 @@ export * from './ApproveConfirmModal';
 export * from './RejectInternModal';
 export * from './AssignMentorModal';
 export * from './RevokeMentorModal';
+export * from './CreateMentorModal';

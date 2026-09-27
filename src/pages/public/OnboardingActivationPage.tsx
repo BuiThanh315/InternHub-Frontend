@@ -11,7 +11,7 @@ export const OnboardingActivationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isValid, setIsValid] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [candidateInfo, setCandidateInfo] = useState<{ email?: string; fullName?: string } | null>(null);
+  const [candidateInfo, setCandidateInfo] = useState<{ email?: string; fullName?: string; role?: string } | null>(null);
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,6 +36,7 @@ export const OnboardingActivationPage: React.FC = () => {
           setCandidateInfo({
             email: res.data.data.email,
             fullName: res.data.data.fullName,
+            role: res.data.data.role,
           });
         } else {
           setIsValid(false);
@@ -58,8 +59,9 @@ export const OnboardingActivationPage: React.FC = () => {
     e.preventDefault();
     setPasswordError(null);
 
-    if (password.length < 6) {
-      setPasswordError('Mật khẩu phải có tối thiểu 6 ký tự.');
+    const passwordPolicyRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordPolicyRegex.test(password)) {
+      setPasswordError('Mật khẩu phải từ 8 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt (@$!%*?&#).');
       return;
     }
 
@@ -115,6 +117,8 @@ export const OnboardingActivationPage: React.FC = () => {
     );
   }
 
+  const isMentor = candidateInfo?.role === 'MENTOR';
+
   if (isSuccess) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '1rem' }}>
@@ -124,7 +128,10 @@ export const OnboardingActivationPage: React.FC = () => {
           </div>
           <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>Kích hoạt thành công! 🎉</h3>
           <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-            Mật khẩu cho tài khoản <strong>{candidateInfo?.email}</strong> đã được thiết lập. Chào mừng bạn gia nhập chương trình thực tập!
+            Mật khẩu cho tài khoản <strong>{candidateInfo?.email}</strong> đã được thiết lập.{' '}
+            {isMentor
+              ? 'Chào mừng bạn đến với đội ngũ Người Hướng Dẫn Kỹ Thuật (Mentor) tại InternHub!'
+              : 'Chào mừng bạn gia nhập chương trình thực tập!'}
           </p>
           <button
             onClick={() => navigate('/login')}
@@ -142,9 +149,12 @@ export const OnboardingActivationPage: React.FC = () => {
       <div style={{ maxWidth: '440px', width: '100%', background: '#fff', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#4f46e5', marginBottom: '0.25rem' }}>InternHub</div>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>Thiết lập tài khoản Onboarding</h3>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>
+            {isMentor ? 'Thiết Lập Tài Khoản Mentor' : 'Thiết Lập Tài Khoản Onboarding'}
+          </h3>
           <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>
-            Xin chào <strong>{candidateInfo?.fullName}</strong>! Vui lòng thiết lập mật khẩu để hoàn tất bước tiếp nhận.
+            Xin chào <strong>{candidateInfo?.fullName}</strong>! Vui lòng thiết lập mật khẩu để hoàn tất bước{' '}
+            {isMentor ? 'gia nhập đội ngũ Mentor.' : 'tiếp nhận.'}
           </p>
         </div>
 
@@ -163,7 +173,7 @@ export const OnboardingActivationPage: React.FC = () => {
 
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
-              Mật khẩu mới (tối thiểu 6 ký tự)
+              Mật khẩu mới (tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt)
             </label>
             <div style={{ position: 'relative' }}>
               <input

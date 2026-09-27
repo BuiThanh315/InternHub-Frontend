@@ -67,12 +67,21 @@ export interface MentorOption {
   departmentCode?: string;
   status: string;
   activeInternCount: number;
+  interningCount?: number;
+  assignedPendingStartCount?: number;
 }
 
 export interface AssignMentorRequest {
   mentorId: number;
   notes?: string;
   replaceReason?: string;
+}
+
+export interface CreateMentorRequest {
+  fullName: string;
+  email: string;
+  phone: string;
+  departmentId: number;
 }
 
 export interface RevokeMentorRequest {

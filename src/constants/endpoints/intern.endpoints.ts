@@ -13,4 +13,7 @@ export const INTERN_ENDPOINTS = {
   ASSIGN_MENTOR: (id: number | string) => `/api/interns/${id}/assign-mentor`,
   REVOKE_MENTOR: (id: number | string) => `/api/interns/${id}/mentor`,
   MENTOR_HISTORY: (id: number | string) => `/api/interns/${id}/mentor-history`,
+  MENTOR_INTERNS: (mentorId: number | string) => `/api/interns/mentors/${mentorId}/interns`,
+  RESEND_MENTOR_INVITATION: (mentorId: number | string) => `/api/interns/mentors/${mentorId}/resend-invitation`,
+  MY_PROFILE: '/api/interns/my-profile',
 } as const;

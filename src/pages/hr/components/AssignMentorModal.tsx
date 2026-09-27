@@ -219,11 +219,15 @@ export const AssignMentorModal: React.FC<AssignMentorModalProps> = ({
                 style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)' }}
               >
                 <option value="">-- Chọn Mentor từ danh sách --</option>
-                {mentors.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.fullName} - {m.email} ({m.departmentName || 'Chung'}) [{m.activeInternCount} TTS đang kèm]
-                  </option>
-                ))}
+                {mentors.map((m) => {
+                  const isPending = m.status === 'PENDING_ACTIVATION';
+                  return (
+                    <option key={m.id} value={m.id} disabled={isPending}>
+                      {m.fullName} - {m.email} ({m.departmentName || 'Chung'}) [{m.activeInternCount} TTS đang kèm]
+                      {isPending ? ' (Chờ kích hoạt - Chưa khả dụng)' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
