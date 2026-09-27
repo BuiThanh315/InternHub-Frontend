@@ -46,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return [
           { to: '/hr/dashboard', label: 'Bảng Điều Khiển HR', icon: LayoutDashboard },
           { to: '/hr/programs', label: 'Chương Trình Thực Tập', icon: FolderGit2 },
+          { to: '/hr/mentors', label: 'Quản Lý Mentor & Tải', icon: Users },
           { to: '/hr/interns', label: 'Hồ Sơ Thực Tập Sinh', icon: GraduationCap },
           { to: '/hr/review', label: 'Duyệt Tài Liệu & CV', icon: FileCheck2 },
         ];
