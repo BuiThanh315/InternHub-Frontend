@@ -17,7 +17,15 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
 }) => {
   const layout = useLayout();
-  const handleToggle = onToggleSidebar || layout.toggleSidebar;
+  const handleToggle = () => {
+    if (onToggleSidebar) {
+      onToggleSidebar();
+    } else if (window.innerWidth <= 1024) {
+      layout.toggleSidebar();
+    } else {
+      layout.toggleCollapse();
+    }
+  };
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [showApiConsole, setShowApiConsole] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {

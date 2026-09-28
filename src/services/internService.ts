@@ -87,7 +87,13 @@ export const internService = {
     return profile;
   },
 
-  // === CÁC HÀM HỖ TRỢ LƯU TRỮ VÀ TRUY VẤN HỒ SƠ CỦA INTERN MÀ KHÔNG CẦN GỌI GET /api/interns (BỊ 403 FORBIDDEN) ===
+  // === LẤY HỒ SƠ THỰC TẬP SINH ĐANG ĐĂNG NHẬP REALTIME TỪ BACKEND ===
+  async getMyProfile(signal?: AbortSignal): Promise<InternProfile> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MY_PROFILE, { signal });
+    return response.data?.data;
+  },
+
+  // === CÁC HÀM HỖ TRỢ LƯU TRỮ VÀ TRUY VẤN HỒ SƠ DỰ PHÒNG ===
   saveLocalProfile(userId: number | string | undefined, profile: InternProfile): void {
     try {
       const key = userId ? `intern_profile_${userId}` : 'intern_profile_guest';
@@ -192,6 +198,61 @@ export const internService = {
   async resendDecisionEmail(id: number, signal?: AbortSignal): Promise<InternProfile> {
     const response = await apiClient.post(API_ENDPOINTS.INTERN.RESEND_DECISION_EMAIL(id), {}, { signal });
     return response.data?.data;
+  },
+
+  async getAvailableMentors(signal?: AbortSignal): Promise<import('../types').MentorOption[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MENTORS, { signal });
+    return response.data?.data || [];
+  },
+
+  async assignMentor(
+    id: number,
+    payload: import('../types').AssignMentorRequest,
+    signal?: AbortSignal
+  ): Promise<InternProfile> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.ASSIGN_MENTOR(id), payload, { signal });
+    return response.data?.data;
+  },
+
+  async revokeMentor(
+    id: number,
+    payload: import('../types').RevokeMentorRequest,
+    signal?: AbortSignal
+  ): Promise<InternProfile> {
+    const response = await apiClient.delete(API_ENDPOINTS.INTERN.REVOKE_MENTOR(id), { data: payload, signal });
+    return response.data?.data;
+  },
+
+  async getMentorHistory(
+    id: number,
+    signal?: AbortSignal
+  ): Promise<import('../types').MentorAssignmentResponse[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MENTOR_HISTORY(id), { signal });
+    return response.data?.data || [];
+  },
+
+  async getInternsByMentorId(
+    mentorId: number,
+    signal?: AbortSignal
+  ): Promise<InternProfile[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MENTOR_INTERNS(mentorId), { signal });
+    return response.data?.data || [];
+  },
+
+  async createMentor(
+    payload: import('../types').CreateMentorRequest,
+    signal?: AbortSignal
+  ): Promise<import('../types').MentorOption> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.MENTORS, payload, { signal });
+    return response.data?.data;
+  },
+
+  async resendMentorInvitation(
+    mentorId: number,
+    signal?: AbortSignal
+  ): Promise<{ message: string; cooldownSeconds?: number }> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.RESEND_MENTOR_INVITATION(mentorId), {}, { signal });
+    return response.data;
   },
 };
 

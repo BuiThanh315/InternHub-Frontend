@@ -33,6 +33,47 @@ export const MentorDetailPanel: React.FC<MentorDetailPanelProps> = ({
 
   return (
     <div className={styles.container}>
+      {/* Assignment & Program Info Widget */}
+      <div className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
+        <h4 className={styles.widgetTitle}>
+          <Sparkles size={18} color="var(--primary)" />
+          <span>Thông Tin Phân Công & Tiếp Nhận</span>
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Chương trình thực tập:</span>
+            <p style={{ fontWeight: 600, color: 'var(--text-main)', margin: '2px 0 0 0' }}>
+              {intern.programName || 'Chưa xếp chương trình'}
+            </p>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Người hướng dẫn phụ trách:</span>
+            <p style={{ fontWeight: 600, color: 'var(--primary)', margin: '2px 0 0 0' }}>
+              {intern.mentorName || 'Chưa phân công'} {intern.mentorEmail ? `(${intern.mentorEmail})` : ''}
+            </p>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Vị trí / Chuyên môn:</span>
+            <p style={{ fontWeight: 600, color: 'var(--text-main)', margin: '2px 0 0 0' }}>
+              {intern.appliedPosition}
+            </p>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-muted)' }}>Giai đoạn dự kiến:</span>
+            <p style={{ fontWeight: 600, color: 'var(--text-main)', margin: '2px 0 0 0' }}>
+              {intern.startDate} {intern.endDate ? `→ ${intern.endDate}` : ''}
+            </p>
+          </div>
+        </div>
+
+        {intern.notes && (
+          <div style={{ marginTop: '0.75rem', padding: '0.6rem 0.8rem', background: 'var(--bg-subtle, #f8fafc)', borderRadius: '6px', fontSize: '0.8rem' }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Định hướng / Ghi chú từ HR: </span>
+            <span style={{ color: 'var(--text-main)' }}>{intern.notes}</span>
+          </div>
+        )}
+      </div>
+
       {/* Documents Widget */}
       <div className="card">
         <h4 className={styles.widgetTitle}>

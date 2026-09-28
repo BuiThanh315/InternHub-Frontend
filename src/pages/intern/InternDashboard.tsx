@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import type { InternProfile, DocumentResponse, DocumentType } from '../../types';
 import { InternStepper } from './components/InternStepper';
 import { InternProfileCard } from './components/InternProfileCard';
+import { InternScheduleWidget } from './components/InternScheduleWidget';
 import { InternDocumentList } from './components/InternDocumentList';
 import { InternUploadForm } from './components/InternUploadForm';
 import { InternEmptyState } from './components/InternEmptyState';
@@ -22,24 +23,40 @@ export const InternDashboard: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const loadInternData = useCallback(() => {
+  const loadInternData = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage(null);
 
-      // Lấy hồ sơ thực tập sinh tương ứng từ lưu trữ phiên người dùng (tránh gọi GET /api/interns gây 403)
-      const currentProfile = internService.getLocalProfile(user?.userId);
+      // 1. Gọi trực tiếp API getMyProfile từ Backend (xác thực qua JWT của user đang đăng nhập)
+      const currentProfile = await internService.getMyProfile();
       setProfile(currentProfile);
 
+      // 2. Lấy danh sách tài liệu realtime từ database
       if (currentProfile?.internCode) {
-        const localDocs = internService.getLocalDocuments(currentProfile.internCode);
-        setDocuments(localDocs);
+        try {
+          const remoteDocs = await documentService.getDocumentsByInternCode(currentProfile.internCode);
+          setDocuments(remoteDocs);
+        } catch (docErr) {
+          console.warn('Không thể tải tài liệu từ server, sử dụng tài liệu cục bộ:', docErr);
+          const localDocs = internService.getLocalDocuments(currentProfile.internCode);
+          setDocuments(localDocs);
+        }
       } else {
         setDocuments([]);
       }
     } catch (err: any) {
       console.error('Lỗi tải dữ liệu Intern Dashboard:', err);
-      setErrorMessage(err.message || 'Không thể tải dữ liệu hồ sơ');
+      // Fallback an toàn nếu chưa liên kết hoặc offline
+      const fallback = internService.getLocalProfile(user?.userId);
+      if (fallback) {
+        setProfile(fallback);
+        if (fallback.internCode) {
+          setDocuments(internService.getLocalDocuments(fallback.internCode));
+        }
+      } else {
+        setErrorMessage(err.response?.data?.message || err.message || 'Không thể tải dữ liệu hồ sơ thực tập sinh');
+      }
     } finally {
       setLoading(false);
     }
@@ -117,6 +134,9 @@ export const InternDashboard: React.FC = () => {
 
               {/* Thông tin cá nhân & Mentor */}
               <InternProfileCard profile={profile} />
+
+              {/* TM-17: Kế hoạch & Lịch thực tập cá nhân */}
+              <InternScheduleWidget profile={profile} />
 
               {/* Danh sách tài liệu & Form nộp tài liệu */}
               <div className={styles.contentGrid}>

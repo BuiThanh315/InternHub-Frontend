@@ -212,6 +212,12 @@ export const MentorDashboard: React.FC = () => {
                         <div>GPA: <strong>{intern.gpa || '-'}</strong></div>
                         <div>SĐT: <strong>{formatPhoneNumber(intern.phone)}</strong></div>
                       </div>
+
+                      {intern.programName && (
+                        <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: 'var(--primary)', backgroundColor: 'var(--primary-light, #eff6ff)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
+                          🎯 {intern.programName}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

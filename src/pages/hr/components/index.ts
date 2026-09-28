@@ -10,3 +10,6 @@ export * from './RejectDocModal';
 export * from './ApproveConfirmModal';
 export * from './RejectInternModal';
 export * from './UploadContractModal';
+export * from './AssignMentorModal';
+export * from './RevokeMentorModal';
+export * from './CreateMentorModal';
