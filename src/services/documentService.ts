@@ -96,9 +96,94 @@ export const documentService = {
     return `${baseUrl}/api/interns/documents/${documentId}/download?disposition=${disposition}`;
   },
 
-  previewDocumentFile(documentId: number) {
-    const url = this.getDocumentDownloadUrl(documentId, 'inline');
-    window.open(url, '_blank');
+  /**
+   * Tải file trực tiếp lên Object Storage (S3 / MinIO) qua Pre-signed URL (Không qua backend)
+   */
+  async uploadDocumentDirectToS3(
+    internCode: string,
+    file: File,
+    documentType: DocumentType,
+    onProgress?: (progress: number) => void,
+    signal?: AbortSignal
+  ): Promise<DocumentResponse> {
+    // 1. Xin Presigned Upload URL từ Backend
+    const requestUrlPayload = {
+      fileName: file.name,
+      contentType: file.type || 'application/pdf',
+      documentType: documentType,
+      fileSize: file.size,
+    };
+
+    const urlRes = await apiClient.post(
+      `/api/interns/${internCode}/documents/upload-url`,
+      requestUrlPayload,
+      { signal }
+    );
+    const { tempKey, presignedUrl } = urlRes.data.data;
+
+    // 2. Upload trực tiếp binary lên S3/MinIO bằng HTTP PUT
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', presignedUrl, true);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+      if (xhr.upload && onProgress) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded * 100) / e.total);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Tải lên S3 thất bại với mã trạng thái: ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Lỗi kết nối mạng khi tải tệp lên máy chủ lưu trữ'));
+      if (signal) {
+        signal.addEventListener('abort', () => xhr.abort());
+      }
+      xhr.send(file);
+    });
+
+    // 3. Xác nhận upload thành công về backend để ghi nhận bản ghi nghiệp vụ
+    const confirmPayload = {
+      tempKey,
+      originalFileName: file.name,
+      documentType,
+    };
+
+    const confirmRes = await apiClient.post(
+      `/api/interns/${internCode}/documents/confirm-upload`,
+      confirmPayload,
+      { signal }
+    );
+
+    return normalizeDoc(confirmRes.data.data);
+  },
+
+  /**
+   * Lấy URL xem/tải trực tiếp từ Object Storage qua Pre-signed URL
+   */
+  async getDocumentPresignedViewUrl(documentId: number): Promise<string> {
+    const res = await apiClient.get(`/api/interns/documents/${documentId}/view-url`);
+    return res.data.data.presignedUrl;
+  },
+
+  async previewDocumentFile(documentId: number) {
+    try {
+      const presignedUrl = await this.getDocumentPresignedViewUrl(documentId);
+      window.open(presignedUrl, '_blank');
+    } catch {
+      // Fallback về endpoint tải truyền thống nếu có lỗi
+      const url = this.getDocumentDownloadUrl(documentId, 'inline');
+      window.open(url, '_blank');
+    }
   },
 
   downloadDocumentFile(documentId: number, fileName?: string) {
@@ -113,3 +198,4 @@ export const documentService = {
 };
 
 export default documentService;
+
