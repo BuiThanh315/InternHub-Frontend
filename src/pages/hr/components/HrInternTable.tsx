@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Edit3, Upload, SearchX } from 'lucide-react';
+import { Eye, Edit3, Upload, SearchX, FileSignature } from 'lucide-react';
 import type { InternProfile, InternStatus } from '../../../types';
 import { Skeleton, Pagination } from '../../../components/common';
 import { getInternStatusLabel, formatPhoneNumber } from '../../../utils/formatters';
@@ -17,6 +17,7 @@ interface HrInternTableProps {
   onOpenUpload: (intern: InternProfile) => void;
   onOpenApprove: (intern: InternProfile) => void;
   onOpenReject: (intern: InternProfile) => void;
+  onOpenContract: (intern: InternProfile) => void;
   onStatusChange: (internId: number, nextStatus: InternStatus) => void;
 }
 
@@ -32,6 +33,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
   onOpenUpload,
   onOpenApprove,
   onOpenReject,
+  onOpenContract,
   onStatusChange,
 }) => {
   const getBadgeClass = (status: InternStatus) => {
@@ -156,6 +158,19 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                         title="Nộp tệp tin cho TTS này"
                       >
                         <Upload size={12} /> Tải Tệp
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onOpenContract(intern)}
+                        disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
+                        className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
+                        title={
+                          intern.status === 'APPROVED' || intern.status === 'INTERNING'
+                            ? 'Tải lên & quản lý hợp đồng thực tập'
+                            : 'Cần phê duyệt tiếp nhận hồ sơ trước khi tạo hợp đồng'
+                        }
+                      >
+                        <FileSignature size={12} /> Hợp Đồng
                       </button>
                     </div>
                   </td>
