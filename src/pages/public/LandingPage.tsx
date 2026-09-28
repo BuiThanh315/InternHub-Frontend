@@ -22,11 +22,12 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { documentService } from '../../services/documentService';
+import { programService } from '../../services/programService';
 import { LoginModal } from '../../components/auth/LoginModal';
 import { RegisterModal } from '../../components/auth/RegisterModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
-import type { DocumentType } from '../../types';
+import type { DocumentType, ProgramSummaryResponse } from '../../types';
 
 interface InternshipPosition {
   id: string;
@@ -119,6 +120,33 @@ export const LandingPage: React.FC = () => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
+  const [openPrograms, setOpenPrograms] = useState<ProgramSummaryResponse[]>([]);
+  const [programsLoading, setProgramsLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchOpenPrograms = async () => {
+      try {
+        setProgramsLoading(true);
+        const data = await programService.getOpenPrograms();
+        if (isMounted && data) {
+          setOpenPrograms(data);
+        }
+      } catch (err) {
+        console.error('Không thể nạp danh sách chương trình mở tuyển:', err);
+      } finally {
+        if (isMounted) {
+          setProgramsLoading(false);
+        }
+      }
+    };
+
+    fetchOpenPrograms();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (searchParams.get('login') === 'true' || searchParams.get('expired') === 'true') {
       setIsLoginModalOpen(true);
@@ -157,7 +185,11 @@ export const LandingPage: React.FC = () => {
     setIsLoginModalOpen(true);
   };
 
-  const handleApplyAction = () => {
+  const handleApplyAction = (programId?: number | React.MouseEvent) => {
+    const validProgramId = typeof programId === 'number' ? programId : undefined;
+    if (validProgramId) {
+      sessionStorage.setItem('intended_program_id', String(validProgramId));
+    }
     if (authUser) {
       navigate(ROUTES.INTERN.APPLY);
     } else {
@@ -325,54 +357,130 @@ export const LandingPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Positions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {POSITIONS.map((pos) => (
-            <div
-              key={pos.id}
-              className="bg-slate-900/70 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 backdrop-blur-md flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700">
-                    {pos.icon}
+        {/* Positions / Programs Grid */}
+        {(() => {
+          if (programsLoading) {
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 animate-pulse h-64 flex flex-col justify-between"
+                  >
+                    <div className="space-y-3">
+                      <div className="h-6 w-24 bg-slate-800 rounded-full" />
+                      <div className="h-6 w-3/4 bg-slate-800 rounded" />
+                      <div className="h-4 w-full bg-slate-800/60 rounded" />
+                    </div>
+                    <div className="h-10 w-full bg-slate-800/80 rounded-xl" />
                   </div>
-                  <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${pos.badgeColor}`}>
-                    {pos.slots} Chỉ tiêu
-                  </span>
-                </div>
-
-                <h3 className="text-base font-bold text-white mb-2 leading-snug">
-                  {pos.title}
-                </h3>
-                <p className="text-xs text-slate-400 mb-4 leading-relaxed line-clamp-3">
-                  {pos.description}
-                </p>
-
-                {/* Tech Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-6">
-                  {pos.tags.map((tag, tIdx) => (
-                    <span
-                      key={tIdx}
-                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                ))}
               </div>
+            );
+          }
 
-              <button
-                type="button"
-                onClick={handleApplyAction}
-                className="w-full py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
-              >
-                <span>Ứng Tuyển Vị Trí Này</span>
-                <ArrowRight size={14} />
-              </button>
+          if (openPrograms.length > 0) {
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {openPrograms.map((prog) => (
+                  <div
+                    key={prog.id}
+                    className="bg-slate-900/70 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 backdrop-blur-md flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                          <Building2 size={20} />
+                        </div>
+                        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-300">
+                          {prog.maxInterns ? `${prog.maxInterns} Chỉ tiêu` : 'Đang mở tuyển'}
+                        </span>
+                      </div>
+
+                      <div className="text-[11px] font-mono text-indigo-400 font-semibold mb-1">
+                        {prog.programCode}
+                      </div>
+                      <h3 className="text-base font-bold text-white mb-2 leading-snug">
+                        {prog.name}
+                      </h3>
+                      <p className="text-xs text-slate-400 mb-4 leading-relaxed line-clamp-3">
+                        {prog.description || 'Chương trình thực tập chuyên nghiệp với lộ trình đào tạo bài bản và người hướng dẫn tận tâm.'}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 text-xs text-slate-300 mb-6">
+                        <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700/60">
+                          Phòng: <strong className="text-white">{prog.departmentName || 'Chung'}</strong>
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700/60">
+                          Thời lượng: <strong className="text-white">{prog.durationWeeks ? `${prog.durationWeeks} tuần` : 'Linh hoạt'}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleApplyAction(prog.id)}
+                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-indigo-500/20"
+                    >
+                      <span>Ứng Tuyển Chương Trình Này</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {POSITIONS.map((pos) => (
+                <div
+                  key={pos.id}
+                  className="bg-slate-900/70 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 backdrop-blur-md flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700">
+                        {pos.icon}
+                      </div>
+                      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${pos.badgeColor}`}>
+                        {pos.slots} Chỉ tiêu
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-white mb-2 leading-snug">
+                      {pos.title}
+                    </h3>
+                    <p className="text-xs text-slate-400 mb-4 leading-relaxed line-clamp-3">
+                      {pos.description}
+                    </p>
+
+                    {/* Tech Tags */}
+                    <div className="flex flex-wrap gap-1.5 mb-6">
+                      {pos.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleApplyAction()}
+                    className="w-full py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                  >
+                    <span>Ứng Tuyển Vị Trí Này</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         {/* Quick Supplementary Document Upload Section (For applicants already holding internCode) */}
         <div className="mt-14 max-w-3xl mx-auto">

@@ -86,6 +86,7 @@ export interface UpdateInternRequest {
 
 export interface ApplyInternRequest {
   userId?: number;
+  programId: number;
   fullName: string;
   email: string;
   phone: string;
@@ -96,7 +97,7 @@ export interface ApplyInternRequest {
   major: string;
   academicYear?: string;
   appliedPosition: string;
-  startDate: string;
+  startDate?: string;
   endDate?: string;
   notes?: string;
 }
