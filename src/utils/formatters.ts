@@ -122,3 +122,21 @@ export function getDocumentStatusLabel(status?: string): string {
       return status || '—';
   }
 }
+
+/**
+ * Lấy nhãn tiếng Việt cho ContractStatus
+ */
+export function getContractStatusLabel(status?: string): string {
+  switch (status) {
+    case 'PENDING_SIGNATURE':
+      return 'Chờ ký xác nhận';
+    case 'SIGNED':
+      return 'Đã ký kết';
+    case 'EXPIRED':
+      return 'Đã hết hạn';
+    case 'TERMINATED':
+      return 'Đã chấm dứt';
+    default:
+      return status || '—';
+  }
+}

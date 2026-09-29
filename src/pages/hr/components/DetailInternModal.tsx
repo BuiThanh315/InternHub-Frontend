@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { User, X, FileText, Eye, Download, Edit3, Upload, CheckCircle, XCircle, History, Clock, UserCheck } from 'lucide-react';
 import type { InternProfile, DocumentResponse, MentorAssignmentResponse } from '../../../types';
+import { User, X, FileText, Eye, Download, Edit3, Upload, CheckCircle, XCircle, FileSignature, Plus } from 'lucide-react';
+import type { InternProfile, DocumentResponse, ContractResponse } from '../../../types';
 import { Modal, Button } from '../../../components/common';
 import { documentService } from '../../../services/documentService';
 import { internService } from '../../../services/internService';
-import { formatFileSize, formatDateTime, formatPhoneNumber } from '../../../utils/formatters';
+import { contractService } from '../../../services/contractService';
+import { formatFileSize, formatDateTime, formatPhoneNumber, formatDate, formatCurrency, getContractStatusLabel } from '../../../utils/formatters';
 
 interface DetailInternModalProps {
   intern: InternProfile | null;
@@ -15,7 +18,20 @@ interface DetailInternModalProps {
   onOpenUpload: (intern: InternProfile) => void;
   onOpenApprove?: (intern: InternProfile) => void;
   onOpenReject?: (intern: InternProfile) => void;
+  onOpenContract?: (intern: InternProfile) => void;
   onUpdateIntern?: (updated: InternProfile) => void;
+}
+
+interface EmailState {
+  status: 'PENDING' | 'SENT' | 'FAILED' | null | undefined;
+  sentAt: string | null | undefined;
+  isResending: boolean;
+  cooldown: number;
+}
+
+interface ContractState {
+  list: ContractResponse[];
+  loading: boolean;
 }
 
 export const DetailInternModal: React.FC<DetailInternModalProps> = ({
@@ -27,9 +43,16 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
   onOpenUpload,
   onOpenApprove,
   onOpenReject,
+  onOpenContract,
   onUpdateIntern,
 }) => {
-  if (!intern) return null;
+  // State 1: Email notification state gom nhóm
+  const [emailState, setEmailState] = useState<EmailState>({
+    status: intern?.emailStatus,
+    sentAt: intern?.emailSentAt,
+    isResending: false,
+    cooldown: 0,
+  });
 
   const [activeTab, setActiveTab] = useState<'profile' | 'history'>(initialTab);
   const [mentorHistory, setMentorHistory] = useState<MentorAssignmentResponse[]>([]);
@@ -80,31 +103,63 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
       isCancelled = true;
     };
   }, [activeTab, intern?.id]);
+  // State 2: Contract state gom nhóm
+  const [contractState, setContractState] = useState<ContractState>({
+    list: [],
+    loading: false,
+  });
 
   useEffect(() => {
-    if (cooldown <= 0) return;
+    if (intern) {
+      setEmailState({
+        status: intern.emailStatus,
+        sentAt: intern.emailSentAt,
+        isResending: false,
+        cooldown: 0,
+      });
+
+      if (intern.internCode) {
+        setContractState((prev) => ({ ...prev, loading: true }));
+        contractService
+          .getContractsByInternCode(intern.internCode)
+          .then((data) => setContractState({ list: data, loading: false }))
+          .catch(() => setContractState({ list: [], loading: false }));
+      }
+    }
+  }, [intern]);
+
+  useEffect(() => {
+    if (emailState.cooldown <= 0) return;
     const timer = setInterval(() => {
-      setCooldown((prev) => (prev > 1 ? prev - 1 : 0));
+      setEmailState((prev) => ({
+        ...prev,
+        cooldown: prev.cooldown > 1 ? prev.cooldown - 1 : 0,
+      }));
     }, 1000);
     return () => clearInterval(timer);
-  }, [cooldown]);
+  }, [emailState.cooldown]);
+
+  if (!intern) return null;
 
   const handleResendEmail = async () => {
-    if (isResending || cooldown > 0) return;
-    setIsResending(true);
+    if (emailState.isResending || emailState.cooldown > 0) return;
+    setEmailState((prev) => ({ ...prev, isResending: true }));
     try {
       const updated = await internService.resendDecisionEmail(intern.id);
-      setCurrentEmailStatus(updated.emailStatus || 'PENDING');
-      setCurrentSentAt(updated.emailSentAt);
-      setCooldown(45); // Cooldown đếm ngược 45 giây
+      setEmailState((prev) => ({
+        ...prev,
+        status: updated.emailStatus || 'PENDING',
+        sentAt: updated.emailSentAt,
+        cooldown: 45,
+      }));
       if (onUpdateIntern) onUpdateIntern(updated);
     } catch (err: any) {
       if (err?.response?.status === 429) {
         const retryAfter = err.response.data?.data?.retryAfter || 45;
-        setCooldown(retryAfter);
+        setEmailState((prev) => ({ ...prev, cooldown: retryAfter }));
       }
     } finally {
-      setIsResending(false);
+      setEmailState((prev) => ({ ...prev, isResending: false }));
     }
   };
 
@@ -161,6 +216,16 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
               leftIcon={<XCircle size={15} />}
             >
               Hủy Tiếp Nhận
+            </Button>
+          )}
+          {(intern.status === 'APPROVED' || intern.status === 'INTERNING') && onOpenContract && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => onOpenContract(intern)}
+              leftIcon={<FileSignature size={15} />}
+            >
+              Tạo Hợp Đồng
             </Button>
           )}
           <Button
@@ -242,47 +307,47 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
                   alignItems: 'center',
                   gap: '0.35rem',
                   color:
-                    currentEmailStatus === 'FAILED'
+                    emailState.status === 'FAILED'
                       ? 'var(--danger, #ef4444)'
                       : 'var(--text-muted, #64748b)',
                   fontWeight: 500,
                 }}
               >
-                {currentEmailStatus === 'SENT' && (
+                {emailState.status === 'SENT' && (
                   <span>
                     ✓ Đã gửi email thông báo
-                    {currentSentAt ? ` · ${formatDateTime(currentSentAt)}` : ''}
+                    {emailState.sentAt ? ` · ${formatDateTime(emailState.sentAt)}` : ''}
                   </span>
                 )}
 
-                {currentEmailStatus === 'PENDING' && (
+                {emailState.status === 'PENDING' && (
                   <span>⏳ Đang gửi email...</span>
                 )}
 
-                {currentEmailStatus === 'FAILED' && (
+                {emailState.status === 'FAILED' && (
                   <>
                     <span>✗ Gửi email thất bại</span>
-                    {cooldown > 0 ? (
+                    {emailState.cooldown > 0 ? (
                       <span style={{ color: 'var(--text-muted, #94a3b8)', fontStyle: 'italic' }}>
-                        (Gửi lại sau {cooldown}s)
+                        (Gửi lại sau {emailState.cooldown}s)
                       </span>
                     ) : (
                       <button
                         type="button"
                         onClick={handleResendEmail}
-                        disabled={isResending}
+                        disabled={emailState.isResending}
                         style={{
                           background: 'none',
                           border: 'none',
                           color: 'var(--primary, #3b82f6)',
                           textDecoration: 'underline',
-                          cursor: isResending ? 'not-allowed' : 'pointer',
+                          cursor: emailState.isResending ? 'not-allowed' : 'pointer',
                           padding: 0,
                           fontSize: '0.72rem',
                           fontWeight: 600,
                         }}
                       >
-                        {isResending ? 'Đang gửi...' : 'Gửi lại'}
+                        {emailState.isResending ? 'Đang gửi...' : 'Gửi lại'}
                       </button>
                     )}
                   </>
@@ -647,6 +712,158 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
           </div>
         )}
 
+        {/* Contract Section (TM-13) */}
+        <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-default)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h5
+              style={{
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <FileSignature size={16} color="var(--primary)" />
+              <span>Hợp Đồng Thực Tập & Văn Bản Pháp Lý ({contractState.list.length})</span>
+            </h5>
+            {(intern.status === 'APPROVED' || intern.status === 'INTERNING') && onOpenContract && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => onOpenContract(intern)}
+                leftIcon={<Plus size={13} />}
+                style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
+              >
+                Tải Lên Hợp Đồng Mới
+              </Button>
+            )}
+          </div>
+
+          {contractState.loading ? (
+            <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              Đang tải danh sách hợp đồng...
+            </div>
+          ) : contractState.list.length === 0 ? (
+            <div
+              style={{
+                padding: '1.5rem',
+                textAlign: 'center',
+                backgroundColor: 'var(--border-subtle)',
+                borderRadius: '8px',
+                color: 'var(--text-muted)',
+                fontSize: '0.85rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <div>Thực tập sinh này chưa có hợp đồng nào được lưu trữ trên hệ thống.</div>
+              {(intern.status === 'APPROVED' || intern.status === 'INTERNING') && onOpenContract && (
+                <button
+                  type="button"
+                  onClick={() => onOpenContract(intern)}
+                  className="btn btn-sm btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', marginTop: '0.25rem' }}
+                >
+                  <FileSignature size={13} />
+                  <span>Tải Lên Hợp Đồng Đầu Tiên</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              {contractState.list.map((c) => (
+                <div
+                  key={c.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.85rem',
+                    border: '1px solid var(--border-default)',
+                    borderRadius: '8px',
+                    backgroundColor: 'var(--bg-card)',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '220px' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--primary-soft)',
+                        color: 'var(--primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FileSignature size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-main)' }}>
+                        {c.contractTitle}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
+                        <span>Mã HĐ: <strong style={{ color: 'var(--primary)' }}>{c.contractNumber}</strong></span>
+                        <span>•</span>
+                        <span>Thời hạn: {formatDate(c.startDate)} - {formatDate(c.endDate)}</span>
+                        {c.allowanceAmount !== undefined && c.allowanceAmount !== null && (
+                          <>
+                            <span>•</span>
+                            <span>Phụ cấp: <strong>{formatCurrency(c.allowanceAmount)}</strong></span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span
+                      className={`badge ${
+                        c.status === 'SIGNED'
+                          ? 'badge-success'
+                          : c.status === 'PENDING_SIGNATURE'
+                          ? 'badge-warning'
+                          : c.status === 'TERMINATED'
+                          ? 'badge-danger'
+                          : 'badge-neutral'
+                      }`}
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      {getContractStatusLabel(c.status)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => contractService.previewContractFile(c.id)}
+                      className="btn btn-sm btn-secondary"
+                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                      title="Xem trước hợp đồng trong tab mới"
+                    >
+                      <Eye size={12} /> Xem
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => contractService.downloadContractFile(c.id, c.originalFileName)}
+                      className="btn btn-sm btn-secondary"
+                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                      title="Tải văn bản hợp đồng về máy"
+                    >
+                      <Download size={12} /> Tải
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </Modal>
   );

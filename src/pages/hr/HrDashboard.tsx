@@ -26,6 +26,7 @@ import {
   RejectInternModal,
   AssignMentorModal,
   RevokeMentorModal,
+  UploadContractModal,
 } from './components';
 
 export const HrDashboard: React.FC = () => {
@@ -63,6 +64,8 @@ export const HrDashboard: React.FC = () => {
   // TM-16 Mentor Assignment Modal States
   const [assignMentorIntern, setAssignMentorIntern] = useState<InternProfile | null>(null);
   const [revokeMentorIntern, setRevokeMentorIntern] = useState<InternProfile | null>(null);
+  // TM-13 Contract Upload Modal State
+  const [contractIntern, setContractIntern] = useState<InternProfile | null>(null);
 
   const loadData = React.useCallback(async () => {
     try {
@@ -391,6 +394,7 @@ export const HrDashboard: React.FC = () => {
               setDecisionError(null);
               setRejectIntern(intern);
             }}
+            onOpenContract={(intern) => setContractIntern(intern)}
             onStatusChange={handleStatusChange}
             onOpenAssignMentor={(intern) => setAssignMentorIntern(intern)}
             onOpenRevokeMentor={(intern) => setRevokeMentorIntern(intern)}
@@ -431,6 +435,7 @@ export const HrDashboard: React.FC = () => {
           setDecisionError(null);
           setRejectIntern(intern);
         }}
+        onOpenContract={(intern) => setContractIntern(intern)}
         onUpdateIntern={(updated) => {
           setDetailIntern(updated);
           setInterns((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
@@ -497,6 +502,13 @@ export const HrDashboard: React.FC = () => {
           setRevokeMentorIntern(null);
           loadData();
           toast.success('Đã thu hồi mentor thành công!');
+      {/* TM-13: Modal Tải Lên Hợp Đồng Thực Tập Sinh */}
+      <UploadContractModal
+        intern={contractIntern}
+        isOpen={Boolean(contractIntern)}
+        onClose={() => setContractIntern(null)}
+        onSuccess={() => {
+          loadData();
         }}
       />
     </div>
