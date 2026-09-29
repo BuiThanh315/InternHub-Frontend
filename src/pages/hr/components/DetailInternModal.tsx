@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { User, X, FileText, Eye, Download, Edit3, Upload, CheckCircle, XCircle, History, Clock, UserCheck } from 'lucide-react';
-import type { InternProfile, DocumentResponse, MentorAssignmentResponse } from '../../../types';
-import { User, X, FileText, Eye, Download, Edit3, Upload, CheckCircle, XCircle, FileSignature, Plus } from 'lucide-react';
-import type { InternProfile, DocumentResponse, ContractResponse } from '../../../types';
+import {
+  User,
+  X,
+  FileText,
+  Eye,
+  Download,
+  Edit3,
+  Upload,
+  CheckCircle,
+  XCircle,
+  FileSignature,
+  Plus,
+  History,
+  Clock,
+  UserCheck,
+} from 'lucide-react';
+import type { InternProfile, DocumentResponse, ContractResponse, MentorAssignmentResponse } from '../../../types';
 import { Modal, Button } from '../../../components/common';
 import { documentService } from '../../../services/documentService';
 import { internService } from '../../../services/internService';
@@ -54,24 +67,37 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
     cooldown: 0,
   });
 
+  // State 2: Contract state gom nhóm
+  const [contractState, setContractState] = useState<ContractState>({
+    list: [],
+    loading: false,
+  });
   const [activeTab, setActiveTab] = useState<'profile' | 'history'>(initialTab);
   const [mentorHistory, setMentorHistory] = useState<MentorAssignmentResponse[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
 
-  const [currentEmailStatus, setCurrentEmailStatus] = useState<'PENDING' | 'SENT' | 'FAILED' | null | undefined>(
-    intern.emailStatus
-  );
-  const [currentSentAt, setCurrentSentAt] = useState<string | null | undefined>(intern.emailSentAt);
-  const [isResending, setIsResending] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     setActiveTab(initialTab || 'profile');
     setMentorHistory([]);
     setHistoryError(null);
-    setCurrentEmailStatus(intern.emailStatus);
-    setCurrentSentAt(intern.emailSentAt);
+    if (intern) {
+      setEmailState({
+        status: intern.emailStatus,
+        sentAt: intern.emailSentAt,
+        isResending: false,
+        cooldown: 0,
+      });
+
+      if (intern.internCode) {
+        setContractState((prev) => ({ ...prev, loading: true }));
+        contractService
+          .getContractsByInternCode(intern.internCode)
+          .then((data) => setContractState({ list: data, loading: false }))
+          .catch(() => setContractState({ list: [], loading: false }));
+      }
+    }
   }, [intern, initialTab]);
 
   useEffect(() => {
@@ -103,30 +129,7 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
       isCancelled = true;
     };
   }, [activeTab, intern?.id]);
-  // State 2: Contract state gom nhóm
-  const [contractState, setContractState] = useState<ContractState>({
-    list: [],
-    loading: false,
-  });
 
-  useEffect(() => {
-    if (intern) {
-      setEmailState({
-        status: intern.emailStatus,
-        sentAt: intern.emailSentAt,
-        isResending: false,
-        cooldown: 0,
-      });
-
-      if (intern.internCode) {
-        setContractState((prev) => ({ ...prev, loading: true }));
-        contractService
-          .getContractsByInternCode(intern.internCode)
-          .then((data) => setContractState({ list: data, loading: false }))
-          .catch(() => setContractState({ list: [], loading: false }));
-      }
-    }
-  }, [intern]);
 
   useEffect(() => {
     if (emailState.cooldown <= 0) return;

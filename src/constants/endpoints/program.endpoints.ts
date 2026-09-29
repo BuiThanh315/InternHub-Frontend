@@ -7,5 +7,6 @@ export const PROGRAM_ENDPOINTS = {
   TOGGLE_RECRUITMENT: (id: string | number) => `/api/programs/${id}/recruitment-toggle`,
   DELETE: (id: string | number) => `/api/programs/${id}`,
   DEPARTMENTS: '/api/departments',
+  OPEN_LIST: '/api/programs/open',
 } as const;
 

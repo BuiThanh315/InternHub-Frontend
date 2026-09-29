@@ -21,6 +21,14 @@ export const programService = {
   },
 
   /**
+   * Lấy danh sách các chương trình thực tập đang mở tuyển (dành cho ứng viên & Card Frontend)
+   */
+  async getOpenPrograms(signal?: AbortSignal): Promise<ProgramSummaryResponse[]> {
+    const response = await apiClient.get(API_ENDPOINTS.PROGRAM.OPEN_LIST, { signal });
+    return response.data?.data || [];
+  },
+
+  /**
    * Tìm kiếm & lọc danh sách chương trình thực tập (phân trang)
    */
   async getPrograms(

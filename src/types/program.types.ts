@@ -44,6 +44,9 @@ export interface ProgramSummaryResponse {
   startDate: string;
   endDate: string;
   durationWeeks: number;
+  maxInterns?: number;
+  currentInterns?: number;
+  isRecruitmentOpen?: boolean;
   status: ProgramStatusType;
   statusDisplayName: string;
 }
