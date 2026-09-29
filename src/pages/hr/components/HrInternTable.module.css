@@ -23,8 +23,46 @@
 
 .positionText {
   font-weight: 600;
-  color: #3b82f6;
-  font-size: 0.85rem;
+  color: var(--primary);
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+}
+
+.programChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-default);
+  margin: 0.25rem 0 0.2rem 0;
+  max-width: 100%;
+}
+
+.programDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.programNameText {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noProgramBadge {
+  display: inline-block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0.2rem 0;
 }
 
 .startDateText {
@@ -69,4 +107,54 @@
 .paginationButtons {
   display: flex;
   gap: 0.5rem;
+}
+
+/* Định dạng cố định từng cột của bảng TTS tránh co kéo làm biến dạng badges và nút bấm */
+.colCode {
+  white-space: nowrap;
+  min-width: 105px;
+}
+
+.colInfo {
+  min-width: 160px;
+}
+
+.colEdu {
+  min-width: 140px;
+}
+
+.colPosition {
+  min-width: 200px;
+}
+
+.colStatus {
+  white-space: nowrap;
+  min-width: 115px;
+  text-align: left;
+}
+
+.colMentor {
+  white-space: nowrap;
+  min-width: 125px;
+}
+
+.colActions {
+  white-space: nowrap;
+  min-width: 130px;
+}
+
+.colCoordination {
+  white-space: nowrap;
+  min-width: 140px;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.725rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
 }

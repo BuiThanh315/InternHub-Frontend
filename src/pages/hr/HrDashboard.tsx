@@ -24,6 +24,8 @@ import {
   RejectDocModal,
   ApproveConfirmModal,
   RejectInternModal,
+  AssignMentorModal,
+  RevokeMentorModal,
   UploadContractModal,
 } from './components';
 
@@ -45,6 +47,7 @@ export const HrDashboard: React.FC = () => {
 
   // Modal States
   const [detailIntern, setDetailIntern] = useState<InternProfile | null>(null);
+  const [detailTab, setDetailTab] = useState<'profile' | 'history'>('profile');
   const [editIntern, setEditIntern] = useState<InternProfile | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [uploadDocIntern, setUploadDocIntern] = useState<InternProfile | null>(null);
@@ -58,6 +61,9 @@ export const HrDashboard: React.FC = () => {
   const [decisionError, setDecisionError] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
+  // TM-16 Mentor Assignment Modal States
+  const [assignMentorIntern, setAssignMentorIntern] = useState<InternProfile | null>(null);
+  const [revokeMentorIntern, setRevokeMentorIntern] = useState<InternProfile | null>(null);
   // TM-13 Contract Upload Modal State
   const [contractIntern, setContractIntern] = useState<InternProfile | null>(null);
 
@@ -374,7 +380,10 @@ export const HrDashboard: React.FC = () => {
             totalPages={totalPages}
             totalItems={totalItems}
             onPageChange={setPage}
-            onViewDetail={(intern) => setDetailIntern(intern)}
+            onViewDetail={(intern, tab) => {
+              setDetailTab(tab || 'profile');
+              setDetailIntern(intern);
+            }}
             onOpenEdit={(intern) => setEditIntern(intern)}
             onOpenUpload={(intern) => setUploadDocIntern(intern)}
             onOpenApprove={(intern) => {
@@ -387,6 +396,8 @@ export const HrDashboard: React.FC = () => {
             }}
             onOpenContract={(intern) => setContractIntern(intern)}
             onStatusChange={handleStatusChange}
+            onOpenAssignMentor={(intern) => setAssignMentorIntern(intern)}
+            onOpenRevokeMentor={(intern) => setRevokeMentorIntern(intern)}
           />
         </div>
       </div>
@@ -406,6 +417,7 @@ export const HrDashboard: React.FC = () => {
       <DetailInternModal
         intern={detailIntern}
         documents={documents}
+        initialTab={detailTab}
         onClose={() => setDetailIntern(null)}
         onOpenEdit={(intern) => {
           setDetailIntern(null);
@@ -468,6 +480,28 @@ export const HrDashboard: React.FC = () => {
         onConfirm={handleRejectDecision}
       />
 
+      {/* TM-16: Modals Phân công & Thu hồi Mentor */}
+      <AssignMentorModal
+        intern={assignMentorIntern}
+        onClose={() => setAssignMentorIntern(null)}
+        onSuccess={(updated) => {
+          setAssignMentorIntern(null);
+          setInterns((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+          if (detailIntern && detailIntern.id === updated.id) {
+            setDetailIntern(updated);
+          }
+          toast.success('Phân công mentor thành công!');
+        }}
+      />
+
+      <RevokeMentorModal
+        intern={revokeMentorIntern}
+        isOpen={Boolean(revokeMentorIntern)}
+        onClose={() => setRevokeMentorIntern(null)}
+        onSuccess={() => {
+          setRevokeMentorIntern(null);
+          loadData();
+          toast.success('Đã thu hồi mentor thành công!');
       {/* TM-13: Modal Tải Lên Hợp Đồng Thực Tập Sinh */}
       <UploadContractModal
         intern={contractIntern}

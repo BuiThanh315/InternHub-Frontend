@@ -208,16 +208,21 @@
   border-radius: var(--radius-lg);
 }
 
-/* Badge System */
 .badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
   padding: 0.25rem 0.65rem;
   font-size: 0.75rem;
   font-weight: 600;
+  line-height: 1.25;
   border-radius: var(--radius-full);
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  width: fit-content;
+  max-width: 100%;
+  flex-shrink: 0;
 }
 
 .badge-primary {
@@ -247,6 +252,18 @@
   background-color: var(--info-bg);
   color: var(--info);
   border: 1px solid var(--info-border);
+}
+
+.badge-sky {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+
+.badge-slate {
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
 }
 
 .badge-neutral {

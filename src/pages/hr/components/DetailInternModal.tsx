@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { User, X, FileText, Eye, Download, Edit3, Upload, CheckCircle, XCircle, History, Clock, UserCheck } from 'lucide-react';
+import type { InternProfile, DocumentResponse, MentorAssignmentResponse } from '../../../types';
 import { User, X, FileText, Eye, Download, Edit3, Upload, CheckCircle, XCircle, FileSignature, Plus } from 'lucide-react';
 import type { InternProfile, DocumentResponse, ContractResponse } from '../../../types';
 import { Modal, Button } from '../../../components/common';
@@ -10,6 +12,7 @@ import { formatFileSize, formatDateTime, formatPhoneNumber, formatDate, formatCu
 interface DetailInternModalProps {
   intern: InternProfile | null;
   documents: DocumentResponse[];
+  initialTab?: 'profile' | 'history';
   onClose: () => void;
   onOpenEdit: (intern: InternProfile) => void;
   onOpenUpload: (intern: InternProfile) => void;
@@ -34,6 +37,7 @@ interface ContractState {
 export const DetailInternModal: React.FC<DetailInternModalProps> = ({
   intern,
   documents,
+  initialTab = 'profile',
   onClose,
   onOpenEdit,
   onOpenUpload,
@@ -50,6 +54,55 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
     cooldown: 0,
   });
 
+  const [activeTab, setActiveTab] = useState<'profile' | 'history'>(initialTab);
+  const [mentorHistory, setMentorHistory] = useState<MentorAssignmentResponse[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  const [currentEmailStatus, setCurrentEmailStatus] = useState<'PENDING' | 'SENT' | 'FAILED' | null | undefined>(
+    intern.emailStatus
+  );
+  const [currentSentAt, setCurrentSentAt] = useState<string | null | undefined>(intern.emailSentAt);
+  const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    setActiveTab(initialTab || 'profile');
+    setMentorHistory([]);
+    setHistoryError(null);
+    setCurrentEmailStatus(intern.emailStatus);
+    setCurrentSentAt(intern.emailSentAt);
+  }, [intern, initialTab]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (activeTab === 'history' && intern?.id) {
+      setLoadingHistory(true);
+      setHistoryError(null);
+      internService
+        .getMentorHistory(intern.id)
+        .then((data) => {
+          if (!isCancelled) {
+            setMentorHistory(data);
+          }
+        })
+        .catch((err: any) => {
+          if (!isCancelled) {
+            setHistoryError(err?.response?.data?.message || 'Không thể tải lịch sử phân công người hướng dẫn');
+          }
+        })
+        .finally(() => {
+          if (!isCancelled) {
+            setLoadingHistory(false);
+          }
+        });
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeTab, intern?.id]);
   // State 2: Contract state gom nhóm
   const [contractState, setContractState] = useState<ContractState>({
     list: [],
@@ -304,162 +357,358 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
           </div>
         </div>
 
-        {/* Profile Info Grid */}
+        {/* Tab Navigation */}
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '0.75rem',
-            marginBottom: '1.5rem',
-            padding: '1rem',
-            backgroundColor: 'var(--border-subtle)',
-            borderRadius: '10px',
-            fontSize: '0.85rem',
-          }}
-        >
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Email:</span>{' '}
-            <strong>{intern.email}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Điện thoại:</span>{' '}
-            <strong>{formatPhoneNumber(intern.phone)}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Trường ĐH:</span>{' '}
-            <strong>{intern.university}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Chuyên ngành:</span>{' '}
-            <strong>{intern.major}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Vị trí ứng tuyển:</span>{' '}
-            <strong>{intern.appliedPosition || 'Chưa phân bổ'}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Niên khóa:</span>{' '}
-            <strong>{intern.academicYear || 'Chưa có'}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Giới tính:</span>{' '}
-            <strong>{intern.gender === 'MALE' ? 'Nam' : intern.gender === 'FEMALE' ? 'Nữ' : 'Khác'}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Địa chỉ:</span>{' '}
-            <strong>{intern.address || 'Chưa có'}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Ngày bắt đầu:</span>{' '}
-            <strong>{intern.startDate || 'Chưa thiết lập'}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Ngày kết thúc:</span>{' '}
-            <strong>{intern.endDate || 'Chưa thiết lập'}</strong>
-          </div>
-          {intern.reviewedBy && (
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Người xét duyệt:</span>{' '}
-              <strong style={{ color: 'var(--primary)' }}>{intern.reviewedBy}</strong>
-            </div>
-          )}
-          {intern.reviewedAt && (
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Thời điểm duyệt:</span>{' '}
-              <strong>{formatDateTime(intern.reviewedAt)}</strong>
-            </div>
-          )}
-          {intern.rejectionReason && (
-            <div style={{ gridColumn: '1 / -1', color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
-              <strong>Lý do từ chối:</strong> {intern.rejectionReason}
-            </div>
-          )}
-          <div style={{ gridColumn: '1 / -1' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Ghi chú:</span>{' '}
-            <em>{intern.notes || 'Không có'}</em>
-          </div>
-        </div>
-
-        {/* Document Section */}
-        <h5
-          style={{
-            fontSize: '0.95rem',
-            fontWeight: 700,
-            marginBottom: '0.75rem',
             display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
+            gap: '0.5rem',
+            borderBottom: '1px solid var(--border-default)',
+            marginBottom: '1.25rem',
           }}
         >
-          <FileText size={16} color="var(--primary)" />
-          <span>Danh Sách Hồ Sơ & Tài Liệu Đã Nộp ({internDocs.length})</span>
-        </h5>
-
-        {internDocs.length === 0 ? (
-          <div
+          <button
+            type="button"
+            onClick={() => setActiveTab('profile')}
             style={{
-              padding: '1.5rem',
-              textAlign: 'center',
-              backgroundColor: 'var(--border-subtle)',
-              borderRadius: '8px',
-              color: 'var(--text-muted)',
+              padding: '0.6rem 1rem',
               fontSize: '0.85rem',
+              fontWeight: 600,
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'profile' ? '2px solid var(--primary)' : '2px solid transparent',
+              color: activeTab === 'profile' ? 'var(--primary)' : 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
             }}
           >
-            Thực tập sinh này chưa nộp tài liệu nào lên hệ thống.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {internDocs.map((doc) => (
+            <User size={15} />
+            <span>Thông Tin Hồ Sơ & Tài Liệu ({internDocs.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('history')}
+            style={{
+              padding: '0.6rem 1rem',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'history' ? '2px solid var(--primary)' : '2px solid transparent',
+              color: activeTab === 'history' ? 'var(--primary)' : 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <History size={15} />
+            <span>Lịch Sử Phân Công Mentor</span>
+          </button>
+        </div>
+
+        {activeTab === 'profile' ? (
+          <>
+            {/* Profile Info Grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '0.75rem',
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                backgroundColor: 'var(--border-subtle)',
+                borderRadius: '10px',
+                fontSize: '0.85rem',
+              }}
+            >
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Email:</span>{' '}
+                <strong>{intern.email}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Điện thoại:</span>{' '}
+                <strong>{formatPhoneNumber(intern.phone)}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Trường ĐH:</span>{' '}
+                <strong>{intern.university}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Chuyên ngành:</span>{' '}
+                <strong>{intern.major}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Vị trí ứng tuyển:</span>{' '}
+                <strong>{intern.appliedPosition || 'Chưa phân bổ'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Niên khóa:</span>{' '}
+                <strong>{intern.academicYear || 'Chưa có'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Giới tính:</span>{' '}
+                <strong>{intern.gender === 'MALE' ? 'Nam' : intern.gender === 'FEMALE' ? 'Nữ' : 'Khác'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Địa chỉ:</span>{' '}
+                <strong>{intern.address || 'Chưa có'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Ngày bắt đầu:</span>{' '}
+                <strong>{intern.startDate || 'Chưa thiết lập'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Ngày kết thúc:</span>{' '}
+                <strong>{intern.endDate || 'Chưa thiết lập'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Chương trình:</span>{' '}
+                <strong>{intern.programName || 'Chưa tham gia'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Mentor hướng dẫn:</span>{' '}
+                <strong style={{ color: intern.mentorName ? 'var(--primary)' : 'var(--warning)' }}>
+                  {intern.mentorName ? `${intern.mentorName} (${intern.mentorEmail || 'N/A'})` : 'Chưa phân công'}
+                </strong>
+              </div>
+              {intern.needsMentorReassignment && (
+                <div style={{ gridColumn: '1 / -1', color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                  <strong>Yêu cầu đổi Mentor:</strong> {intern.mentorReassignmentReason || 'Cần gán mentor mới cho thực tập sinh này'}
+                </div>
+              )}
+              {intern.needsReassignment && (
+                <div style={{ gridColumn: '1 / -1', color: 'var(--warning)', backgroundColor: 'rgba(245, 158, 11, 0.08)', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                  <strong>Yêu cầu đổi Chương trình:</strong> {intern.reassignmentReason || 'Cần điều phối chương trình thực tập'}
+                </div>
+              )}
+              {intern.reviewedBy && (
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Người xét duyệt:</span>{' '}
+                  <strong style={{ color: 'var(--primary)' }}>{intern.reviewedBy}</strong>
+                </div>
+              )}
+              {intern.reviewedAt && (
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Thời điểm duyệt:</span>{' '}
+                  <strong>{formatDateTime(intern.reviewedAt)}</strong>
+                </div>
+              )}
+              {intern.rejectionReason && (
+                <div style={{ gridColumn: '1 / -1', color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                  <strong>Lý do từ chối:</strong> {intern.rejectionReason}
+                </div>
+              )}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Ghi chú:</span>{' '}
+                <em>{intern.notes || 'Không có'}</em>
+              </div>
+            </div>
+
+            {/* Document Section */}
+            <h5
+              style={{
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                marginBottom: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <FileText size={16} color="var(--primary)" />
+              <span>Danh Sách Hồ Sơ & Tài Liệu Đã Nộp ({internDocs.length})</span>
+            </h5>
+
+            {internDocs.length === 0 ? (
               <div
-                key={doc.id}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.75rem',
-                  border: '1px solid var(--border-default)',
+                  padding: '1.5rem',
+                  textAlign: 'center',
+                  backgroundColor: 'var(--border-subtle)',
                   borderRadius: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.85rem',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <FileText size={18} color="var(--primary)" />
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                      {doc.originalFileName || doc.fileName}
-                    </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {doc.documentType} • {formatFileSize(doc.fileSize)} • Trạng thái: {doc.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '0.35rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => documentService.previewDocumentFile(doc.id)}
-                    className="btn btn-sm btn-secondary"
-                    style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem' }}
-                  >
-                    <Eye size={12} /> Xem
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      documentService.downloadDocumentFile(
-                        doc.id,
-                        doc.originalFileName
-                      )
-                    }
-                    className="btn btn-sm btn-secondary"
-                    style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem' }}
-                  >
-                    <Download size={12} /> Tải
-                  </button>
-                </div>
+                Thực tập sinh này chưa nộp tài liệu nào lên hệ thống.
               </div>
-            ))}
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {internDocs.map((doc) => (
+                  <div
+                    key={doc.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.75rem',
+                      border: '1px solid var(--border-default)',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--bg-card)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <FileText size={18} color="var(--primary)" />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                          {doc.originalFileName || doc.fileName}
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {doc.documentType} • {formatFileSize(doc.fileSize)} • Trạng thái: {doc.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.35rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => documentService.previewDocumentFile(doc.id)}
+                        className="btn btn-sm btn-secondary"
+                        style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem' }}
+                      >
+                        <Eye size={12} /> Xem
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          documentService.downloadDocumentFile(
+                            doc.id,
+                            doc.originalFileName
+                          )
+                        }
+                        className="btn btn-sm btn-secondary"
+                        style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem' }}
+                      >
+                        <Download size={12} /> Tải
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          /* Tab: Lịch Sử Phân Công Mentor */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {loadingHistory ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                <Clock size={20} className="animate-spin" style={{ margin: '0 auto 0.5rem auto' }} />
+                <span>Đang tải lịch sử phân công...</span>
+              </div>
+            ) : historyError ? (
+              <div
+                style={{
+                  padding: '1rem',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  color: 'var(--danger)',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                }}
+              >
+                {historyError}
+              </div>
+            ) : mentorHistory.length === 0 ? (
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  backgroundColor: 'var(--border-subtle)',
+                  borderRadius: '8px',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.85rem',
+                }}
+              >
+                Chưa có lịch sử phân công người hướng dẫn cho thực tập sinh này.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {mentorHistory.map((item, index) => {
+                  const isActive = item.status === 'ACTIVE';
+                  const isReplaced = item.status === 'REPLACED';
+
+                  return (
+                    <div
+                      key={item.id || index}
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '10px',
+                        border: `1px solid ${isActive ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-default)'}`,
+                        backgroundColor: isActive ? 'rgba(16, 185, 129, 0.04)' : 'var(--bg-card)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <UserCheck size={18} color={isActive ? '#10b981' : '#64748b'} />
+                          <div>
+                            <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                              {item.mentorName}
+                            </strong>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+                              ({item.mentorEmail})
+                            </span>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`badge ${
+                            isActive
+                              ? 'badge-success'
+                              : isReplaced
+                              ? 'badge-info'
+                              : 'badge-danger'
+                          }`}
+                          style={{ fontSize: '0.72rem' }}
+                        >
+                          {isActive ? 'ĐANG PHỤ TRÁCH' : isReplaced ? 'ĐÃ THAY THẾ' : 'ĐÃ THU HỒI'}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        <div>
+                          <span style={{ color: 'var(--text-muted)' }}>Người điều phối:</span>{' '}
+                          <strong>{item.assignedBy || 'Hệ thống'}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: 'var(--text-muted)' }}>Thời điểm phân công:</span>{' '}
+                          <strong>{formatDateTime(item.assignedAt)}</strong>
+                        </div>
+                        {item.revokedAt && (
+                          <div>
+                            <span style={{ color: 'var(--text-muted)' }}>Thời điểm kết thúc:</span>{' '}
+                            <strong>{formatDateTime(item.revokedAt)}</strong>
+                          </div>
+                        )}
+                      </div>
+
+                      {item.revocationReason && (
+                        <div
+                          style={{
+                            marginTop: '0.5rem',
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: 'rgba(239, 68, 68, 0.06)',
+                            borderLeft: '3px solid #ef4444',
+                            borderRadius: '4px',
+                            fontSize: '0.78rem',
+                            color: '#b91c1c',
+                          }}
+                        >
+                          <strong>Lý do thay đổi/thu hồi:</strong> {item.revocationReason}
+                        </div>
+                      )}
+
+                      {item.notes && (
+                        <div style={{ marginTop: '0.4rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                          <em>Ghi chú: {item.notes}</em>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

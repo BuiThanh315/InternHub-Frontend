@@ -1,4 +1,5 @@
 import React from 'react';
+import { Eye, Edit3, Upload, SearchX, UserCheck, RefreshCw, UserX, History } from 'lucide-react';
 import { Eye, Edit3, Upload, SearchX, FileSignature } from 'lucide-react';
 import type { InternProfile, InternStatus } from '../../../types';
 import { Skeleton, Pagination } from '../../../components/common';
@@ -12,13 +13,15 @@ interface HrInternTableProps {
   totalPages: number;
   totalItems: number;
   onPageChange: (newPage: number) => void;
-  onViewDetail: (intern: InternProfile) => void;
+  onViewDetail: (intern: InternProfile, tab?: 'profile' | 'history') => void;
   onOpenEdit: (intern: InternProfile) => void;
   onOpenUpload: (intern: InternProfile) => void;
   onOpenApprove: (intern: InternProfile) => void;
   onOpenReject: (intern: InternProfile) => void;
   onOpenContract: (intern: InternProfile) => void;
   onStatusChange: (internId: number, nextStatus: InternStatus) => void;
+  onOpenAssignMentor?: (intern: InternProfile) => void;
+  onOpenRevokeMentor?: (intern: InternProfile) => void;
 }
 
 export const HrInternTable: React.FC<HrInternTableProps> = ({
@@ -35,16 +38,22 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
   onOpenReject,
   onOpenContract,
   onStatusChange,
+  onOpenAssignMentor,
+  onOpenRevokeMentor,
 }) => {
   const getBadgeClass = (status: InternStatus) => {
     switch (status) {
       case 'INTERNING':
         return 'badge-success';
       case 'APPROVED':
-        return 'badge-info';
+        return 'badge-sky';
+      case 'ON_HOLD':
+        return 'badge-neutral';
       case 'COMPLETED':
         return 'badge-neutral';
       case 'REJECTED':
+        return 'badge-slate';
+      case 'TERMINATED':
         return 'badge-danger';
       default:
         return 'badge-warning';
@@ -57,37 +66,39 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
         <table className="modern-table">
           <thead>
             <tr>
-              <th>Mã TTS</th>
-              <th>Họ và Tên / Liên Hệ</th>
-              <th>Trường & Chuyên Ngành</th>
-              <th>Vị Trí Ứng Tuyển</th>
-              <th>Trạng Thái</th>
-              <th>Thao Tác Hồ Sơ</th>
-              <th>Điều Phối Trạng Thái</th>
+              <th className={styles.colCode}>Mã TTS</th>
+              <th className={styles.colInfo}>Họ và Tên / Liên Hệ</th>
+              <th className={styles.colEdu}>Trường & Chuyên Ngành</th>
+              <th className={styles.colPosition}>Vị Trí & Chương Trình</th>
+              <th className={styles.colStatus}>Trạng Thái</th>
+              <th className={styles.colMentor}>Mentor Phụ Trách</th>
+              <th className={styles.colActions}>Thao Tác Hồ Sơ</th>
+              <th className={styles.colCoordination}>Điều Phối</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               Array.from({ length: 5 }).map((_, index) => (
                 <tr key={`skeleton-${index}`}>
-                  <td><Skeleton width="90px" height="18px" /></td>
-                  <td>
+                  <td className={styles.colCode}><Skeleton width="90px" height="18px" /></td>
+                  <td className={styles.colInfo}>
                     <Skeleton width="140px" height="18px" style={{ marginBottom: '4px' }} />
                     <Skeleton width="180px" height="14px" />
                   </td>
-                  <td>
+                  <td className={styles.colEdu}>
                     <Skeleton width="130px" height="18px" style={{ marginBottom: '4px' }} />
                     <Skeleton width="110px" height="14px" />
                   </td>
-                  <td><Skeleton width="120px" height="18px" /></td>
-                  <td><Skeleton width="80px" height="24px" style={{ borderRadius: '12px' }} /></td>
-                  <td><Skeleton width="150px" height="30px" /></td>
-                  <td><Skeleton width="130px" height="30px" /></td>
+                  <td className={styles.colPosition}><Skeleton width="120px" height="18px" /></td>
+                  <td className={styles.colStatus}><Skeleton width="80px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                  <td className={styles.colMentor}><Skeleton width="110px" height="24px" /></td>
+                  <td className={styles.colActions}><Skeleton width="150px" height="30px" /></td>
+                  <td className={styles.colCoordination}><Skeleton width="130px" height="30px" /></td>
                 </tr>
               ))
             ) : interns.length === 0 ? (
               <tr>
-                <td colSpan={7} className={styles.emptyCell}>
+                <td colSpan={8} className={styles.emptyCell}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '2rem' }}>
                     <SearchX size={36} color="var(--text-muted)" />
                     <h4 style={{ margin: 0, fontWeight: 700 }}>Không tìm thấy hồ sơ thực tập sinh</h4>
@@ -100,7 +111,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
             ) : (
               interns.map((intern) => (
                 <tr key={intern.id}>
-                  <td style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                  <td className={styles.colCode} style={{ fontWeight: 700, color: 'var(--primary)' }}>
                     <button
                       type="button"
                       onClick={() => onViewDetail(intern)}
@@ -110,30 +121,138 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                       {intern.internCode}
                     </button>
                   </td>
-                  <td>
+                  <td className={styles.colInfo}>
                     <div className={styles.nameText}>{intern.fullName}</div>
                     <span className={styles.subText}>
                       {intern.email} • {formatPhoneNumber(intern.phone)}
                     </span>
                   </td>
-                  <td>
+                  <td className={styles.colEdu}>
                     <div>{intern.university}</div>
                     <span className={styles.subText}>{intern.major}</span>
                   </td>
-                  <td>
-                    <span className={styles.positionText}>
+                  <td className={styles.colPosition}>
+                    <div className={styles.positionText}>
                       {intern.appliedPosition || 'Chưa xếp vị trí'}
-                    </span>
+                    </div>
+                    {intern.programName ? (
+                      <div className={styles.programChip} title={`Chương trình: ${intern.programName}`}>
+                        <span className={styles.programDot} />
+                        <span className={styles.programNameText}>{intern.programName}</span>
+                      </div>
+                    ) : (
+                      <span className={styles.noProgramBadge}>Chưa có chương trình</span>
+                    )}
                     <div className={styles.startDateText}>
-                      Bắt đầu: {intern.startDate || '-'}
+                      Bắt đầu: {intern.startDate || 'Chưa định ngày'}
                     </div>
                   </td>
-                  <td>
+                  <td className={styles.colStatus}>
                     <span className={`badge ${getBadgeClass(intern.status)}`}>
                       {getInternStatusLabel(intern.status)}
                     </span>
                   </td>
-                  <td>
+                  <td className={styles.colMentor}>
+                    {intern.mentorName ? (
+                      <div className="flex flex-col gap-1 items-start">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetail(intern, 'history')}
+                          className="text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-primary hover:underline text-left cursor-pointer flex items-center gap-1 p-0 bg-transparent border-none"
+                          title="Bấm để xem dòng thời gian và lịch sử phân công Mentor"
+                        >
+                          <span>{intern.mentorName}</span>
+                        </button>
+                        {intern.needsMentorReassignment ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="badge badge-danger text-[10px] py-0.5 px-1.5 font-medium">
+                              Cần đổi Mentor
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onViewDetail(intern, 'history')}
+                              className="text-[11px] text-slate-500 hover:text-primary hover:underline flex items-center gap-0.5 bg-transparent border-none p-0 cursor-pointer"
+                              title="Xem lịch sử điều chuyển"
+                            >
+                              <History size={11} /> Lịch sử
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => onViewDetail(intern, 'history')}
+                              className="text-[11px] text-slate-500 hover:text-primary hover:underline flex items-center gap-0.5 bg-transparent border-none p-0 cursor-pointer"
+                              title="Xem lịch sử phân công"
+                            >
+                              <History size={11} /> Lịch sử
+                            </button>
+                            <span style={{ color: 'var(--border-default)' }}>•</span>
+                            {onOpenAssignMentor && (
+                              <button
+                                type="button"
+                                onClick={() => onOpenAssignMentor(intern)}
+                                className="text-[11px] text-primary hover:underline flex items-center gap-0.5 bg-transparent border-none p-0 cursor-pointer"
+                                title="Đổi Mentor hướng dẫn"
+                              >
+                                <RefreshCw size={10} /> Đổi
+                              </button>
+                            )}
+                            {onOpenRevokeMentor && (
+                              <>
+                                <span style={{ color: 'var(--border-default)' }}>•</span>
+                                <button
+                                  type="button"
+                                  onClick={() => onOpenRevokeMentor(intern)}
+                                  className="text-[11px] text-rose-500 hover:underline flex items-center gap-0.5 bg-transparent border-none p-0 cursor-pointer"
+                                  title="Thu hồi Mentor"
+                                >
+                                  <UserX size={10} /> Thu hồi
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : !intern.programId || intern.needsReassignment ? (
+                      /* Khi chưa có chương trình hoặc đang chờ điều phối lại: Cấm hiện Gán Mentor! */
+                      <div className="flex flex-col gap-1 items-start">
+                        <span
+                          className="badge badge-slate text-[10px] py-0.5 px-1.5 font-medium"
+                          title="Thực tập sinh cần được tiếp nhận / xếp vào chương trình trước khi có thể phân công Mentor"
+                        >
+                          Chưa xếp chương trình
+                        </span>
+                        {intern.status === 'PENDING' && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenApprove(intern)}
+                            className="text-[11px] text-primary font-medium hover:underline flex items-center gap-0.5"
+                            title="Tiếp nhận và xếp vào chương trình thực tập"
+                          >
+                            Xếp Chương Trình
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      /* Đã có chương trình nhưng chưa có mentor: Mới cho phép Gán Mentor */
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="badge badge-warning text-[10px] py-0.5 px-1.5 font-medium">
+                          Chưa có Mentor
+                        </span>
+                        {onOpenAssignMentor && (intern.status === 'APPROVED' || intern.status === 'INTERNING') && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenAssignMentor(intern)}
+                            className="text-[11px] text-primary font-medium hover:underline flex items-center gap-0.5"
+                          >
+                            <UserCheck size={11} /> Gán Mentor
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td className={styles.colActions}>
                     <div className={styles.actionButtonsGroup}>
                       <button
                         type="button"
@@ -174,7 +293,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                       </button>
                     </div>
                   </td>
-                  <td>
+                  <td className={styles.colCoordination}>
                     <div className={styles.actionButtonsGroup}>
                       {intern.status === 'PENDING' && (
                         <>

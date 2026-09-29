@@ -43,12 +43,40 @@
   gap: 0.4rem;
 }
 
+.collapseToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-hover);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.headerRow:hover .collapseToggleBtn {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
 .fileName {
   font-weight: 500;
 }
 
 .actionsGroup {
   display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.viewButtonGroup {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.decisionButtonGroup {
+  display: inline-flex;
+  gap: 0.25rem;
 }

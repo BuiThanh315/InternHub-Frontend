@@ -1,12 +1,14 @@
 import type { GenderType } from './common.types';
 
-// Khớp 100% với backend InternStatus enum
+// Khớp 100% với backend InternStatus enum (7 trạng thái chuẩn hóa)
 export type InternStatus =
   | 'PENDING'
   | 'APPROVED'
   | 'INTERNING'
+  | 'ON_HOLD'
   | 'COMPLETED'
-  | 'REJECTED';
+  | 'REJECTED'
+  | 'TERMINATED';
 
 export interface InternProfile {
   id: number;
@@ -20,6 +22,7 @@ export interface InternProfile {
   address?: string;
   university: string;
   major: string;
+  gpa?: number | null;
   academicYear?: string;
   appliedPosition: string;
   startDate: string;
@@ -33,16 +36,70 @@ export interface InternProfile {
   emailRetryCount?: number | null;
   lastEmailSentAt?: string | null;
   notes?: string;
-  gpa?: number;
-  mentorId?: number;
-  mentorName?: string;
+  mentorId?: number | null;
+  mentorName?: string | null;
+  mentorEmail?: string | null;
   programId?: number | null;
   programCode?: string | null;
   programName?: string | null;
+  candidateType?: 'UNIVERSITY' | 'FREE_APPLICANT' | null;
+  desiredDepartmentId?: number | null;
+  desiredDepartmentName?: string | null;
   needsReassignment?: boolean;
   reassignmentReason?: string | null;
+  needsMentorReassignment?: boolean;
+  mentorReassignmentReason?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type InternResponse = InternProfile;
+
+export type MentorAssignmentStatus = 'ACTIVE' | 'REPLACED' | 'REVOKED';
+
+export interface MentorOption {
+  id: number;
+  fullName: string;
+  email: string;
+  phone?: string;
+  departmentId?: number;
+  departmentName?: string;
+  departmentCode?: string;
+  status: string;
+  activeInternCount: number;
+  interningCount?: number;
+  assignedPendingStartCount?: number;
+}
+
+export interface AssignMentorRequest {
+  mentorId: number;
+  notes?: string;
+  replaceReason?: string;
+}
+
+export interface CreateMentorRequest {
+  fullName: string;
+  email: string;
+  phone: string;
+  departmentId: number;
+}
+
+export interface RevokeMentorRequest {
+  reason: string;
+}
+
+export interface MentorAssignmentResponse {
+  id: number;
+  internId: number;
+  mentorId: number;
+  mentorName: string;
+  mentorEmail: string;
+  assignedBy: string;
+  assignedAt: string;
+  status: MentorAssignmentStatus;
+  notes?: string;
+  revokedAt?: string | null;
+  revocationReason?: string | null;
 }
 
 export interface InternDecisionRequest {
