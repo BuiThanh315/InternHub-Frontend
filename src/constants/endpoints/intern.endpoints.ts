@@ -8,4 +8,12 @@ export const INTERN_ENDPOINTS = {
   DECISION: (id: number | string) => `/api/interns/${id}/decision`,
   RESEND_DECISION_EMAIL: (id: number | string) => `/api/interns/${id}/resend-decision-email`,
   DOCUMENTS: (internCode: string) => `/api/interns/${internCode}/documents`,
+  APPLY: '/api/interns/apply',
+  MENTORS: '/api/interns/mentors',
+  ASSIGN_MENTOR: (id: number | string) => `/api/interns/${id}/assign-mentor`,
+  REVOKE_MENTOR: (id: number | string) => `/api/interns/${id}/mentor`,
+  MENTOR_HISTORY: (id: number | string) => `/api/interns/${id}/mentor-history`,
+  MENTOR_INTERNS: (mentorId: number | string) => `/api/interns/mentors/${mentorId}/interns`,
+  RESEND_MENTOR_INVITATION: (mentorId: number | string) => `/api/interns/mentors/${mentorId}/resend-invitation`,
+  MY_PROFILE: '/api/interns/my-profile',
 } as const;

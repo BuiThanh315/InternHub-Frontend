@@ -27,13 +27,15 @@ export const HrMetricsGrid: React.FC<HrMetricsGridProps> = ({
         </div>
       </div>
 
-      <div className={`card ${styles.metricCard}`}>
-        <div className={`${styles.iconWrapper} ${styles.iconPending}`}>
+      <div className={`card ${styles.metricCard} ${pendingInterns > 0 ? styles.metricCardActivePending : ''}`}>
+        <div className={`${styles.iconWrapper} ${styles.iconPending} ${pendingInterns === 0 ? styles.iconZero : ''}`}>
           <Clock size={24} />
         </div>
         <div>
           <p className={styles.label}>Chờ Tiếp Nhận</p>
-          <h3 className={styles.value}>{pendingInterns}</h3>
+          <h3 className={`${styles.value} ${pendingInterns === 0 ? styles.valueZero : styles.valuePending}`}>
+            {pendingInterns}
+          </h3>
         </div>
       </div>
 
@@ -47,13 +49,18 @@ export const HrMetricsGrid: React.FC<HrMetricsGridProps> = ({
         </div>
       </div>
 
-      <div className={`card ${styles.metricCard}`}>
-        <div className={`${styles.iconWrapper} ${styles.iconDocs}`}>
+      <div className={`card ${styles.metricCard} ${pendingDocuments > 0 ? styles.metricCardActiveDocs : ''}`}>
+        <div className={`${styles.iconWrapper} ${styles.iconDocs} ${pendingDocuments === 0 ? styles.iconZero : ''}`}>
           <FileCheck2 size={24} />
         </div>
         <div>
-          <p className={styles.label}>CV Chờ Thẩm Định</p>
-          <h3 className={styles.value}>{pendingDocuments}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <p className={styles.label}>CV Chờ Thẩm Định</p>
+            {pendingDocuments > 0 && <span className={styles.actionPulse} />}
+          </div>
+          <h3 className={`${styles.value} ${pendingDocuments === 0 ? styles.valueZero : styles.valueDocs}`}>
+            {pendingDocuments}
+          </h3>
         </div>
       </div>
     </div>

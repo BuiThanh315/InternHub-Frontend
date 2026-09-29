@@ -1,6 +1,7 @@
 import { apiClient } from './api';
 import { API_ENDPOINTS } from '../constants/endpoints';
 import type {
+  ApplyInternRequest,
   CreateInternRequest,
   InternDecisionRequest,
   InternProfile,
@@ -70,6 +71,90 @@ export const internService = {
     return response.data?.data;
   },
 
+  async applyOnline(request: ApplyInternRequest): Promise<InternProfile> {
+    const payload = {
+      ...request,
+      appliedPosition: request.appliedPosition || 'Thực tập sinh',
+      startDate: request.startDate || new Date().toISOString().split('T')[0],
+      academicYear: request.academicYear,
+    };
+
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.APPLY, payload);
+    const profile: InternProfile = response.data?.data;
+    if (profile) {
+      this.saveLocalProfile(request.userId, profile);
+    }
+    return profile;
+  },
+
+  // === LẤY HỒ SƠ THỰC TẬP SINH ĐANG ĐĂNG NHẬP REALTIME TỪ BACKEND ===
+  async getMyProfile(signal?: AbortSignal): Promise<InternProfile> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MY_PROFILE, { signal });
+    return response.data?.data;
+  },
+
+  // === CÁC HÀM HỖ TRỢ LƯU TRỮ VÀ TRUY VẤN HỒ SƠ DỰ PHÒNG ===
+  saveLocalProfile(userId: number | string | undefined, profile: InternProfile): void {
+    try {
+      const key = userId ? `intern_profile_${userId}` : 'intern_profile_guest';
+      localStorage.setItem(key, JSON.stringify(profile));
+      localStorage.setItem('intern_profile_latest', JSON.stringify(profile));
+    } catch (e) {
+      console.warn('Không thể lưu hồ sơ vào localStorage:', e);
+    }
+  },
+
+  getLocalProfile(userId?: number | string): InternProfile | null {
+    try {
+      if (userId) {
+        const stored = localStorage.getItem(`intern_profile_${userId}`);
+        if (stored) return JSON.parse(stored);
+      }
+      const latest = localStorage.getItem('intern_profile_latest');
+      if (latest) {
+        const parsed = JSON.parse(latest);
+        if (!userId || parsed.userId === userId) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Không thể đọc hồ sơ từ localStorage:', e);
+    }
+    return null;
+  },
+
+  clearLocalProfile(userId?: number | string): void {
+    try {
+      if (userId) localStorage.removeItem(`intern_profile_${userId}`);
+      localStorage.removeItem('intern_profile_latest');
+    } catch (e) {
+      console.warn('Lỗi xóa hồ sơ localStorage:', e);
+    }
+  },
+
+  saveLocalDocument(internCode: string, doc: any): void {
+    if (!internCode) return;
+    try {
+      const existing = this.getLocalDocuments(internCode);
+      const filtered = existing.filter((d: any) => d.id !== doc.id);
+      filtered.unshift(doc);
+      localStorage.setItem(`intern_docs_${internCode}`, JSON.stringify(filtered));
+    } catch (e) {
+      console.warn('Không thể lưu tài liệu vào localStorage:', e);
+    }
+  },
+
+  getLocalDocuments(internCode: string): any[] {
+    if (!internCode) return [];
+    try {
+      const stored = localStorage.getItem(`intern_docs_${internCode}`);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn('Không thể đọc tài liệu từ localStorage:', e);
+    }
+    return [];
+  },
+
   async updateIntern(id: number, request: UpdateInternRequest): Promise<InternProfile> {
     const payload = {
       ...request,
@@ -113,6 +198,61 @@ export const internService = {
   async resendDecisionEmail(id: number, signal?: AbortSignal): Promise<InternProfile> {
     const response = await apiClient.post(API_ENDPOINTS.INTERN.RESEND_DECISION_EMAIL(id), {}, { signal });
     return response.data?.data;
+  },
+
+  async getAvailableMentors(signal?: AbortSignal): Promise<import('../types').MentorOption[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MENTORS, { signal });
+    return response.data?.data || [];
+  },
+
+  async assignMentor(
+    id: number,
+    payload: import('../types').AssignMentorRequest,
+    signal?: AbortSignal
+  ): Promise<InternProfile> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.ASSIGN_MENTOR(id), payload, { signal });
+    return response.data?.data;
+  },
+
+  async revokeMentor(
+    id: number,
+    payload: import('../types').RevokeMentorRequest,
+    signal?: AbortSignal
+  ): Promise<InternProfile> {
+    const response = await apiClient.delete(API_ENDPOINTS.INTERN.REVOKE_MENTOR(id), { data: payload, signal });
+    return response.data?.data;
+  },
+
+  async getMentorHistory(
+    id: number,
+    signal?: AbortSignal
+  ): Promise<import('../types').MentorAssignmentResponse[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MENTOR_HISTORY(id), { signal });
+    return response.data?.data || [];
+  },
+
+  async getInternsByMentorId(
+    mentorId: number,
+    signal?: AbortSignal
+  ): Promise<InternProfile[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MENTOR_INTERNS(mentorId), { signal });
+    return response.data?.data || [];
+  },
+
+  async createMentor(
+    payload: import('../types').CreateMentorRequest,
+    signal?: AbortSignal
+  ): Promise<import('../types').MentorOption> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.MENTORS, payload, { signal });
+    return response.data?.data;
+  },
+
+  async resendMentorInvitation(
+    mentorId: number,
+    signal?: AbortSignal
+  ): Promise<{ message: string; cooldownSeconds?: number }> {
+    const response = await apiClient.post(API_ENDPOINTS.INTERN.RESEND_MENTOR_INVITATION(mentorId), {}, { signal });
+    return response.data;
   },
 };
 

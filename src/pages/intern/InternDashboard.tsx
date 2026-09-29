@@ -9,8 +9,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import type { InternProfile, DocumentResponse, DocumentType } from '../../types';
 import { InternStepper } from './components/InternStepper';
 import { InternProfileCard } from './components/InternProfileCard';
+import { InternScheduleWidget } from './components/InternScheduleWidget';
 import { InternDocumentList } from './components/InternDocumentList';
 import { InternUploadForm } from './components/InternUploadForm';
+import { InternEmptyState } from './components/InternEmptyState';
 import styles from './InternDashboard.module.css';
 
 export const InternDashboard: React.FC = () => {
@@ -26,28 +28,35 @@ export const InternDashboard: React.FC = () => {
       setLoading(true);
       setErrorMessage(null);
 
-      // Tìm hồ sơ TTS tương ứng trong hệ thống
-      const internRes = await internService.getInterns();
-      const internList = internRes.items || internRes.content || [];
+      // 1. Gọi trực tiếp API getMyProfile từ Backend (xác thực qua JWT của user đang đăng nhập)
+      const currentProfile = await internService.getMyProfile();
+      setProfile(currentProfile);
 
-      let currentProfile: InternProfile | null = null;
-      if (internList.length > 0) {
-        currentProfile =
-          internList.find(
-            (i) =>
-              i.email === user?.username ||
-              i.fullName.toLowerCase().includes(user?.username || '')
-          ) || internList[0];
-        setProfile(currentProfile);
-      }
-
-      if (currentProfile) {
-        const docRes = await documentService.getDocumentsByInternCode(currentProfile.internCode);
-        setDocuments(docRes);
+      // 2. Lấy danh sách tài liệu realtime từ database
+      if (currentProfile?.internCode) {
+        try {
+          const remoteDocs = await documentService.getDocumentsByInternCode(currentProfile.internCode);
+          setDocuments(remoteDocs);
+        } catch (docErr) {
+          console.warn('Không thể tải tài liệu từ server, sử dụng tài liệu cục bộ:', docErr);
+          const localDocs = internService.getLocalDocuments(currentProfile.internCode);
+          setDocuments(localDocs);
+        }
+      } else {
+        setDocuments([]);
       }
     } catch (err: any) {
       console.error('Lỗi tải dữ liệu Intern Dashboard:', err);
-      setErrorMessage(err.message || 'Không thể kết nối đến máy chủ backend');
+      // Fallback an toàn nếu chưa liên kết hoặc offline
+      const fallback = internService.getLocalProfile(user?.userId);
+      if (fallback) {
+        setProfile(fallback);
+        if (fallback.internCode) {
+          setDocuments(internService.getLocalDocuments(fallback.internCode));
+        }
+      } else {
+        setErrorMessage(err.response?.data?.message || err.message || 'Không thể tải dữ liệu hồ sơ thực tập sinh');
+      }
     } finally {
       setLoading(false);
     }
@@ -65,6 +74,7 @@ export const InternDashboard: React.FC = () => {
     setIsUploading(true);
     try {
       const newDoc = await documentService.uploadDocument(profile.internCode, file, type);
+      internService.saveLocalDocument(profile.internCode, newDoc);
       setDocuments((prev) => [newDoc, ...prev]);
       toast.success('Đã tải tài liệu lên thành công!');
     } catch (err: any) {
@@ -115,17 +125,26 @@ export const InternDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Lộ trình thực tập */}
-          <InternStepper status={profile?.status} />
+          {!profile ? (
+            <InternEmptyState userName={user?.fullName || user?.username} />
+          ) : (
+            <>
+              {/* Lộ trình thực tập */}
+              <InternStepper status={profile.status} />
 
-          {/* Thông tin cá nhân & Mentor */}
-          {profile && <InternProfileCard profile={profile} />}
+              {/* Thông tin cá nhân & Mentor */}
+              <InternProfileCard profile={profile} />
 
-          {/* Danh sách tài liệu & Form nộp tài liệu */}
-          <div className={styles.contentGrid}>
-            <InternDocumentList documents={documents} />
-            <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
-          </div>
+              {/* TM-17: Kế hoạch & Lịch thực tập cá nhân */}
+              <InternScheduleWidget profile={profile} />
+
+              {/* Danh sách tài liệu & Form nộp tài liệu */}
+              <div className={styles.contentGrid}>
+                <InternDocumentList documents={documents} />
+                <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

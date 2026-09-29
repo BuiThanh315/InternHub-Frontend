@@ -11,16 +11,27 @@ import {
   Building2,
   FileText,
   X,
+  ChevronLeft,
+  ChevronRight,
+  User as UserIcon,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { ROUTES } from '../../constants/routes';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isOpen = false,
+  onClose,
+  isCollapsed = false,
+  onToggleCollapse,
+}) => {
   const { user, role, logout } = useAuth();
 
   const getNavLinks = () => {
@@ -35,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         return [
           { to: '/hr/dashboard', label: 'Bảng Điều Khiển HR', icon: LayoutDashboard },
           { to: '/hr/programs', label: 'Chương Trình Thực Tập', icon: FolderGit2 },
+          { to: '/hr/mentors', label: 'Quản Lý Mentor & Tải', icon: Users },
           { to: '/hr/interns', label: 'Hồ Sơ Thực Tập Sinh', icon: GraduationCap },
           { to: '/hr/review', label: 'Duyệt Tài Liệu & CV', icon: FileCheck2 },
         ];
@@ -45,10 +57,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           { to: '/mentor/documents', label: 'Tài Liệu Hướng Dẫn', icon: FolderGit2 },
         ];
       case 'INTERN':
+      case 'USER':
       default:
         return [
-          { to: '/intern/dashboard', label: 'Tiến Độ Thực Tập', icon: LayoutDashboard },
-          { to: '/intern/documents', label: 'Hồ Sơ & Tài Liệu', icon: FileText },
+          { to: ROUTES.INTERN.DASHBOARD, label: 'Tiến Độ Thực Tập', icon: LayoutDashboard },
+          { to: ROUTES.INTERN.APPLY, label: 'Nộp Hồ Sơ Ứng Tuyển', icon: GraduationCap },
+          { to: ROUTES.INTERN.DOCUMENTS, label: 'Quản Lý Tài Liệu', icon: FileText },
+          { to: ROUTES.INTERN.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },
         ];
     }
   };
@@ -58,6 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
     HR: { title: 'Chuyên Viên HR', color: '#3b82f6' },
     MENTOR: { title: 'Người Hướng Dẫn', color: '#10b981' },
     INTERN: { title: 'Thực Tập Sinh', color: '#8b5cf6' },
+    USER: { title: 'Thực Tập Sinh', color: '#8b5cf6' },
   };
 
   const currentRoleInfo = role ? roleLabels[role] || { title: role, color: '#6b7280' } : null;
@@ -65,30 +81,45 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
   return (
     <>
       {isOpen && <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />}
-      <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
+      <aside
+        className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''} ${
+          isCollapsed ? styles.sidebarCollapsed : ''
+        }`}
+      >
         {/* Brand Header */}
         <div className={styles.brandHeader}>
-          <div className={styles.brandLogo}>
+          <div className={styles.brandLogo} title="InternHub Enterprise Portal">
             <Building2 size={22} />
           </div>
-          <div style={{ flex: 1 }}>
-            <h1 className={styles.brandName}>
-              Intern<span className={styles.brandHighlight}>Hub</span>
-            </h1>
-            <p className={styles.brandSub}>Enterprise Portal</p>
-          </div>
+
+          {!isCollapsed && (
+            <div className={styles.brandInfo}>
+              <h1 className={styles.brandName}>
+                Intern<span className={styles.brandHighlight}>Hub</span>
+              </h1>
+              <p className={styles.brandSub}>Enterprise Portal</p>
+            </div>
+          )}
+
+          {/* Nút thu gọn / mở rộng Sidebar trên Desktop */}
+          {onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className={styles.desktopCollapseBtn}
+              title={isCollapsed ? 'Mở rộng thanh điều hướng (Ctrl+B)' : 'Thu gọn thanh điều hướng (Ctrl+B)'}
+              aria-label={isCollapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
+            >
+              {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            </button>
+          )}
+
+          {/* Nút đóng trên Mobile */}
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
+              className={styles.mobileCloseBtn}
               aria-label="Đóng thanh điều hướng"
             >
               <X size={20} />
@@ -96,57 +127,70 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           )}
         </div>
 
-        {/* User Role Card */}
-        {user && (
-          <div className={styles.userCard}>
-            <div
-              className={styles.userAvatar}
-              style={{ backgroundColor: currentRoleInfo?.color || 'var(--primary)' }}
+        <div className={styles.navContainer}>
+          {/* User Card */}
+          {user && (
+            <div className={`${styles.userCard} ${isCollapsed ? styles.userCardCollapsed : ''}`}>
+              <div
+                className={styles.userAvatar}
+                style={{ backgroundColor: currentRoleInfo?.color || 'var(--primary)' }}
+                title={`${user.fullName || user.username} (${currentRoleInfo?.title})`}
+              >
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+              {!isCollapsed && (
+                <div className={styles.userInfo}>
+                  <p className={styles.userName} title={user.fullName || user.username}>
+                    {user.fullName || user.username}
+                  </p>
+                  <span
+                    className={styles.userRole}
+                    style={{ color: currentRoleInfo?.color }}
+                  >
+                    {currentRoleInfo?.title}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Navigation List */}
+          <nav className={styles.nav}>
+            {!isCollapsed && <p className={styles.navHeading}>Chức Năng Chính</p>}
+
+            {getNavLinks().map((link) => {
+              const Icon = link.icon;
+              return (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  onClick={onClose}
+                  title={isCollapsed ? link.label : undefined}
+                  className={({ isActive }) =>
+                    `${styles.navLink} ${isActive ? styles.navLinkActive : ''} ${
+                      isCollapsed ? styles.navLinkCollapsed : ''
+                    }`
+                  }
+                >
+                  <Icon size={19} className={styles.navIcon} />
+                  {!isCollapsed && <span className={styles.navLabel}>{link.label}</span>}
+                </NavLink>
+              );
+            })}
+          </nav>
+
+          {/* Logout Footer */}
+          <div className={styles.logoutContainer}>
+            <button
+              type="button"
+              onClick={logout}
+              className={`${styles.logoutBtn} ${isCollapsed ? styles.logoutBtnCollapsed : ''}`}
+              title={isCollapsed ? 'Đăng Xuất tài khoản' : undefined}
             >
-              {user.username.charAt(0).toUpperCase()}
-            </div>
-            <div className={styles.userInfo}>
-              <p className={styles.userName}>
-                {user.fullName || user.username}
-              </p>
-              <span
-                className={styles.userRole}
-                style={{ color: currentRoleInfo?.color }}
-              >
-                {currentRoleInfo?.title}
-              </span>
-            </div>
+              <LogOut size={16} />
+              {!isCollapsed && <span>Đăng Xuất</span>}
+            </button>
           </div>
-        )}
-
-        {/* Navigation List */}
-        <nav className={styles.nav}>
-          <p className={styles.navHeading}>Chức Năng Chính</p>
-
-          {getNavLinks().map((link) => {
-            const Icon = link.icon;
-            return (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
-                }
-              >
-                <Icon size={18} />
-                <span>{link.label}</span>
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        {/* Logout Footer */}
-        <div className={styles.logoutContainer}>
-          <button type="button" onClick={logout} className={styles.logoutBtn}>
-            <LogOut size={16} />
-            <span>Đăng Xuất</span>
-          </button>
         </div>
       </aside>
     </>

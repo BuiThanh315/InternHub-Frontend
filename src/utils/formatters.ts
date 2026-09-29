@@ -98,6 +98,10 @@ export function getInternStatusLabel(status?: string): string {
       return 'Đã hoàn thành';
     case 'REJECTED':
       return 'Từ chối tiếp nhận';
+    case 'ON_HOLD':
+      return 'Tạm hoãn';
+    case 'TERMINATED':
+      return 'Đã thôi việc';
     default:
       return status || '—';
   }
@@ -114,6 +118,24 @@ export function getDocumentStatusLabel(status?: string): string {
       return 'Đã duyệt';
     case 'REJECTED':
       return 'Yêu cầu nộp lại';
+    default:
+      return status || '—';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho ContractStatus
+ */
+export function getContractStatusLabel(status?: string): string {
+  switch (status) {
+    case 'PENDING_SIGNATURE':
+      return 'Chờ ký xác nhận';
+    case 'SIGNED':
+      return 'Đã ký kết';
+    case 'EXPIRED':
+      return 'Đã hết hạn';
+    case 'TERMINATED':
+      return 'Đã chấm dứt';
     default:
       return status || '—';
   }

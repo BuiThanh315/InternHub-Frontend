@@ -1,9 +1,15 @@
-import type { RoleType } from './common.types';
+import type { GenderType, RoleType } from './common.types';
 
 export interface AuthUser {
   userId: number;
   username: string;
   fullName?: string;
+  email?: string;
+  phoneNumber?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: GenderType;
+  address?: string;
   role: RoleType;
   accessToken: string;
   tokenType: string;
@@ -20,6 +26,18 @@ export interface RegisterRequest {
   password: string;
   fullName: string;
   email: string;
-  phone?: string;
-  role?: RoleType;
+  phoneNumber: string;
+  dateOfBirth?: string;
+  gender?: GenderType;
+  address?: string;
+  avatarUrl?: string;
+}
+
+export interface RegisterResponse {
+  userId: number;
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
+  status: string;
 }

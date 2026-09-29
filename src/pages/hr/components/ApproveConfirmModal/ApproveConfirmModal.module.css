@@ -188,3 +188,111 @@
   justify-content: flex-end;
   gap: 0.75rem;
 }
+
+/* Modern Card Selection for Internship Programs (Thay thế native select thô kệch) */
+.programList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.programCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-default);
+  background-color: var(--bg-surface);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.programCard:hover:not(.programCardDisabled) {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  transform: translateY(-1px);
+}
+
+.programCardSelected {
+  border-color: var(--primary) !important;
+  background-color: rgba(79, 70, 229, 0.04) !important;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.programCardDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background-color: var(--bg-body);
+}
+
+.programCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.programCodeTag {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  background-color: rgba(79, 70, 229, 0.08);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+}
+
+.recommendBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #047857;
+  background-color: #d1fae5;
+  border: 1px solid #a7f3d0;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.programTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.35;
+}
+
+.programMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.capacityBarWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.capacityProgressBar {
+  width: 50px;
+  height: 5px;
+  border-radius: 9999px;
+  background-color: var(--border-default);
+  overflow: hidden;
+}
+
+.capacityProgressFill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}

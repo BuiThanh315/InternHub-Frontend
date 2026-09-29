@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   UploadCloud,
   FileText,
@@ -12,22 +12,119 @@ import {
   ShieldCheck,
   Search,
   LogIn,
+  UserPlus,
+  ArrowRight,
+  Code2,
+  Database,
+  Layers,
+  Cpu,
+  CheckSquare,
 } from 'lucide-react';
-import { internService } from '../../services/internService';
+import { toast } from 'sonner';
 import { documentService } from '../../services/documentService';
 import { LoginModal } from '../../components/auth/LoginModal';
+import { RegisterModal } from '../../components/auth/RegisterModal';
+import { useAuth } from '../../contexts/AuthContext';
+import { ROUTES } from '../../constants/routes';
 import type { DocumentType } from '../../types';
+
+interface InternshipPosition {
+  id: string;
+  title: string;
+  department: string;
+  badgeColor: string;
+  icon: React.ReactNode;
+  tags: string[];
+  description: string;
+  slots: number;
+}
+
+const POSITIONS: InternshipPosition[] = [
+  {
+    id: 'backend',
+    title: 'Thực Tập Sinh Backend (Java / Spring)',
+    department: 'Software Engineering',
+    badgeColor: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-300',
+    icon: <Database size={20} className="text-indigo-400" />,
+    tags: ['Java 17', 'Spring Boot 3', 'PostgreSQL', 'Microservices', 'Redis'],
+    description:
+      'Thiết kế RESTful API chuẩn doanh nghiệp, tối ưu hóa truy vấn CSDL và tham gia phát triển nghiệp vụ Backend trên nền Spring Boot.',
+    slots: 5,
+  },
+  {
+    id: 'frontend',
+    title: 'Thực Tập Sinh Frontend (React / TypeScript)',
+    department: 'UI/UX Engineering',
+    badgeColor: 'border-sky-500/40 bg-sky-500/10 text-sky-300',
+    icon: <Code2 size={20} className="text-sky-400" />,
+    tags: ['React 18', 'TypeScript', 'TailwindCSS', 'CSS Modules', 'Vite'],
+    description:
+      'Xây dựng các giao diện web hiện đại, chuẩn thẩm mỹ, tương tác mượt mà và tuân thủ các nguyên lý UI/UX chuyên sâu.',
+    slots: 4,
+  },
+  {
+    id: 'fullstack',
+    title: 'Thực Tập Sinh Fullstack',
+    department: 'Fullstack Product',
+    badgeColor: 'border-violet-500/40 bg-violet-500/10 text-violet-300',
+    icon: <Layers size={20} className="text-violet-400" />,
+    tags: ['Spring Boot', 'React', 'Docker', 'REST API', 'CI/CD'],
+    description:
+      'Nắm bắt chu trình phát triển sản phẩm toàn diện từ kiến trúc cơ sở dữ liệu đến giao diện người dùng và triển khai container hóa.',
+    slots: 3,
+  },
+  {
+    id: 'ai-data',
+    title: 'Thực Tập Sinh AI & Data Science',
+    department: 'AI Research & Innovation',
+    badgeColor: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
+    icon: <Cpu size={20} className="text-emerald-400" />,
+    tags: ['Python', 'PyTorch', 'LangChain', 'NLP', 'Data Pipeline'],
+    description:
+      'Khám phá ứng dụng AI thế hệ mới, xử lý dữ liệu quy mô lớn và thử nghiệm tích hợp các mô hình ngôn ngữ lớn (LLMs).',
+    slots: 3,
+  },
+  {
+    id: 'qa-qc',
+    title: 'Thực Tập Sinh QA / QC',
+    department: 'Quality Assurance',
+    badgeColor: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
+    icon: <CheckSquare size={20} className="text-amber-400" />,
+    tags: ['Manual Testing', 'Selenium', 'Postman', 'Test Plan', 'Bug Tracking'],
+    description:
+      'Thiết kế kịch bản kiểm thử, vận hành kiểm thử tự động, phân tích tài liệu đặc tả và đảm bảo chất lượng hệ thống trước khi release.',
+    slots: 2,
+  },
+];
 
 export const LandingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user: authUser } = useAuth();
+
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(
     () => searchParams.get('login') === 'true' || searchParams.get('expired') === 'true'
   );
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(
+    () => searchParams.get('register') === 'true'
+  );
   const isExpired = searchParams.get('expired') === 'true';
+
+  // State for public document supplement
+  const [showSupplementCard, setShowSupplementCard] = useState(false);
+  const [existingCode, setExistingCode] = useState('');
+  const [existingDocType, setExistingDocType] = useState<DocumentType>('CV');
+  const [existingFile, setExistingFile] = useState<File | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (searchParams.get('login') === 'true' || searchParams.get('expired') === 'true') {
       setIsLoginModalOpen(true);
+    }
+    if (searchParams.get('register') === 'true') {
+      setIsRegisterModalOpen(true);
     }
   }, [searchParams]);
 
@@ -41,93 +138,53 @@ export const LandingPage: React.FC = () => {
     }
   };
 
-  // Tab state: 'new' = nộp hồ sơ ứng tuyển mới, 'existing' = bổ sung tài liệu theo mã TTS
-  const [activeTab, setActiveTab] = useState<'new' | 'existing'>('new');
-
-  // Form state: Ứng tuyển mới
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [university, setUniversity] = useState('');
-  const [major, setMajor] = useState('');
-  const [appliedPosition, setAppliedPosition] = useState('Thực Tập Sinh Backend');
-  const [newFile, setNewFile] = useState<File | null>(null);
-
-  // Form state: Bổ sung tài liệu vào mã TTS đã có (Public Upload)
-  const [existingCode, setExistingCode] = useState('');
-  const [existingDocType, setExistingDocType] = useState<DocumentType>('CV');
-  const [existingFile, setExistingFile] = useState<File | null>(null);
-
-  // Status state
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successInfo, setSuccessInfo] = useState<{
-    title: string;
-    description: string;
-    internCode: string;
-  } | null>(null);
-
-  // Xử lý nộp hồ sơ ứng tuyển mới
-  const handleApplyNew = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName.trim() || !email.trim() || !phone.trim()) {
-      setErrorMsg('Vui lòng điền đầy đủ Họ tên, Email và Số điện thoại');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setErrorMsg(null);
-
-      // 1. Tạo hồ sơ thực tập sinh qua API
-      const profile = await internService.createIntern({
-        fullName: fullName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        university: university.trim(),
-        major: major.trim(),
-        appliedPosition,
-        startDate: new Date().toISOString().split('T')[0],
-      });
-
-      // 2. Nếu có đính kèm file CV / Đơn, gọi API upload tài liệu
-      if (newFile && profile.internCode) {
-        await documentService.uploadDocument(profile.internCode, newFile, 'CV');
-      }
-
-      setSuccessInfo({
-        title: 'Nộp Hồ Sơ Ứng Tuyển Thành Công!',
-        description: `Hồ sơ của bạn đã được ghi nhận vào hệ thống InternHub. Vui lòng lưu lại Mã TTS này để tra cứu lộ trình và nộp bổ sung tài liệu khi cần.`,
-        internCode: profile.internCode,
-      });
-
-      // Reset form
-      setFullName('');
-      setEmail('');
-      setPhone('');
-      setNewFile(null);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Có lỗi xảy ra khi nộp hồ sơ. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
+  const handleCloseRegisterModal = () => {
+    setIsRegisterModalOpen(false);
+    if (searchParams.get('register')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('register');
+      setSearchParams(nextParams, { replace: true });
     }
   };
 
-  // Xử lý upload bổ sung tài liệu không cần đăng nhập (Public Document Upload)
+  const handleSwitchToRegister = () => {
+    handleCloseLoginModal();
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    handleCloseRegisterModal();
+    setIsLoginModalOpen(true);
+  };
+
+  const handleApplyAction = () => {
+    if (authUser) {
+      navigate(ROUTES.INTERN.APPLY);
+    } else {
+      setIsRegisterModalOpen(true);
+    }
+  };
+
+  const handleRegisterSuccess = () => {
+    toast.success('Đăng ký tài khoản thành công! Vui lòng đăng nhập để hoàn tất hồ sơ ứng tuyển.');
+    handleCloseRegisterModal();
+    setIsLoginModalOpen(true);
+  };
+
   const handleUploadExisting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!existingCode.trim()) {
-      setErrorMsg('Vui lòng nhập Mã Thực Tập Sinh (VD: INT-2026-001)');
+      setUploadError('Vui lòng nhập Mã Thực Tập Sinh đã cấp (VD: INT-2026-001)');
       return;
     }
     if (!existingFile) {
-      setErrorMsg('Vui lòng chọn tệp tin cần tải lên');
+      setUploadError('Vui lòng chọn tệp tin cần tải lên');
       return;
     }
 
     try {
-      setLoading(true);
-      setErrorMsg(null);
+      setUploadLoading(true);
+      setUploadError(null);
 
       const res = await documentService.uploadDocument(
         existingCode.trim(),
@@ -135,29 +192,26 @@ export const LandingPage: React.FC = () => {
         existingDocType
       );
 
-      setSuccessInfo({
-        title: 'Tải Lên Tài Liệu Thành Công!',
-        description: `Tài liệu "${res.fileName || existingFile.name}" đã được tải lên thành công cho hồ sơ ${existingCode.trim()}. Bộ phận HR sẽ xem xét thẩm định trong thời gian sớm nhất.`,
-        internCode: existingCode.trim(),
-      });
-
+      setUploadSuccess(
+        `Tài liệu "${res.fileName || existingFile.name}" đã được tải lên thành công cho hồ sơ ${existingCode.trim()}.`
+      );
       setExistingFile(null);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Không thể tải lên tài liệu. Vui lòng kiểm tra lại Mã TTS.');
+      setUploadError(err.message || 'Không thể tải lên tài liệu. Vui lòng kiểm tra lại Mã TTS.');
     } finally {
-      setLoading(false);
+      setUploadLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0b1120] text-white selection:bg-indigo-500 selection:text-white relative overflow-hidden font-sans">
       {/* Dynamic Background Glows */}
-      <div className="absolute top-[-150px] left-[-100px] w-[550px] h-[550px] bg-[radial-gradient(circle,rgba(99,102,241,0.25)_0%,transparent_70%)] pointer-events-none" />
-      <div className="absolute top-[30%] right-[-150px] w-[650px] h-[650px] bg-[radial-gradient(circle,rgba(14,165,233,0.18)_0%,transparent_70%)] pointer-events-none" />
-      <div className="absolute bottom-[-100px] left-[20%] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(168,85,247,0.15)_0%,transparent_70%)] pointer-events-none" />
+      <div className="absolute -top-36 -left-24 w-128 h-128 bg-[radial-gradient(circle,rgba(99,102,241,0.22)_0%,transparent_70%)] pointer-events-none" />
+      <div className="absolute top-[30%] -right-36 w-144 h-144 bg-[radial-gradient(circle,rgba(14,165,233,0.15)_0%,transparent_70%)] pointer-events-none" />
+      <div className="absolute -bottom-24 left-[20%] w-128 h-128 bg-[radial-gradient(circle,rgba(168,85,247,0.12)_0%,transparent_70%)] pointer-events-none" />
 
       {/* Navigation Header */}
-      <header className="relative z-20 border-b border-white/10 backdrop-blur-md bg-[#0b1120]/70 sticky top-0">
+      <header className="relative z-20 border-b border-white/10 backdrop-blur-md bg-[#0b1120]/75 sticky top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 border border-indigo-400/30">
@@ -174,12 +228,22 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <a
-              href="#apply-form"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-white/10 hover:bg-white/15 transition-all border border-white/10"
+            <button
+              type="button"
+              onClick={handleApplyAction}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-indigo-600/30 hover:bg-indigo-600/50 transition-all border border-indigo-500/40 cursor-pointer"
             >
-              Nộp Hồ Sơ Trực Tuyến
-            </a>
+              <span>Nộp Hồ Sơ Trực Tuyến</span>
+              <ArrowRight size={13} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsRegisterModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-white/10 hover:bg-white/15 transition-all border border-white/10 cursor-pointer"
+            >
+              <UserPlus size={14} />
+              <span>Đăng Ký Tài Khoản</span>
+            </button>
             <button
               type="button"
               onClick={() => setIsLoginModalOpen(true)}
@@ -193,10 +257,10 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 pt-16 pb-12 lg:pt-24 lg:pb-16 max-w-6xl mx-auto px-4 sm:px-6 text-center">
+      <section className="relative z-10 pt-16 pb-14 lg:pt-24 lg:pb-20 max-w-6xl mx-auto px-4 sm:px-6 text-center">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-semibold mb-6 animate-pulse">
           <Sparkles size={14} />
-          <span>Cổng Nộp Hồ Sơ Thực Tập Trực Tuyến 2026 · Hoàn Toàn Miễn Phí</span>
+          <span>Chương Trình Đào Tạo Thực Tập Sinh Công Nghệ 2026</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight max-w-4xl mx-auto">
@@ -207,16 +271,36 @@ export const LandingPage: React.FC = () => {
         </h1>
 
         <p className="mt-5 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          Ứng viên và sinh viên có thể <strong>nộp CV, Đơn xin thực tập và bảng điểm trực tuyến ngay lập tức</strong> mà không cần tạo tài khoản hay đăng nhập.
+          Môi trường đào tạo thực chiến hàng đầu cho sinh viên công nghệ. Đăng ký tài khoản, nộp hồ sơ
+          trực tuyến và nhận lộ trình kèm cặp 1-1 từ các Kỹ sư cấp cao.
         </p>
 
+        {/* Hero CTAs */}
+        <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
+          <button
+            type="button"
+            onClick={handleApplyAction}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/30 transition-all cursor-pointer"
+          >
+            <span>Nộp Hồ Sơ Ứng Tuyển Ngay</span>
+            <ArrowRight size={16} />
+          </button>
+          <a
+            href="#positions"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white font-semibold text-sm border border-white/10 transition-all"
+          >
+            <Briefcase size={16} />
+            <span>Xem Các Vị Trí Mở Tuyển</span>
+          </a>
+        </div>
+
         {/* Feature Badges */}
-        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
+        <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
           {[
-            { icon: <UploadCloud size={16} className="text-sky-400" />, label: 'Không Cần Đăng Nhập' },
-            { icon: <ShieldCheck size={16} className="text-emerald-400" />, label: 'Bảo Mật Chuẩn Doanh Nghiệp' },
-            { icon: <GraduationCap size={16} className="text-indigo-400" />, label: 'Cấp Mã TTS Ngay' },
-            { icon: <Briefcase size={16} className="text-amber-400" />, label: 'HR Phê Duyệt Nhanh' },
+            { icon: <GraduationCap size={16} className="text-indigo-400" />, label: 'Đào Tạo Thực Chiến 1-1' },
+            { icon: <ShieldCheck size={16} className="text-emerald-400" />, label: 'Hồ Sơ Chuẩn Doanh Nghiệp' },
+            { icon: <UploadCloud size={16} className="text-sky-400" />, label: 'Cấp Mã Tra Cứu Ngay' },
+            { icon: <Briefcase size={16} className="text-amber-400" />, label: 'Cơ Hội Nhân Viên Chính Thức' },
           ].map((item, idx) => (
             <div
               key={idx}
@@ -229,294 +313,176 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Main Form Section */}
-      <section id="apply-form" className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pb-20">
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-xl p-6 sm:p-8">
-          {/* Tab Selector */}
-          <div className="flex border-b border-slate-800 mb-6">
-            <button
-              onClick={() => {
-                setActiveTab('new');
-                setErrorMsg(null);
-                setSuccessInfo(null);
-              }}
-              className={`flex-1 pb-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-all cursor-pointer ${
-                activeTab === 'new'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
+      {/* Positions Showcase Section (Replaced the old inline apply form) */}
+      <section id="positions" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-20">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Vị Trí Mở Tuyển Thực Tập Sinh 2026
+          </h2>
+          <p className="mt-3 text-sm text-slate-400 max-w-2xl mx-auto">
+            Lựa chọn chuyên ngành phù hợp với định hướng nghề nghiệp của bạn. Nhấp &ldquo;Ứng Tuyển Ngay&rdquo;
+            để chuyển đến biểu mẫu nộp hồ sơ trực tuyến.
+          </p>
+        </div>
+
+        {/* Positions Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {POSITIONS.map((pos) => (
+            <div
+              key={pos.id}
+              className="bg-slate-900/70 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 backdrop-blur-md flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10"
             >
-              <Briefcase size={16} />
-              <span>1. Ứng Tuyển Mới & Nộp CV</span>
-            </button>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700">
+                    {pos.icon}
+                  </div>
+                  <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${pos.badgeColor}`}>
+                    {pos.slots} Chỉ tiêu
+                  </span>
+                </div>
+
+                <h3 className="text-base font-bold text-white mb-2 leading-snug">
+                  {pos.title}
+                </h3>
+                <p className="text-xs text-slate-400 mb-4 leading-relaxed line-clamp-3">
+                  {pos.description}
+                </p>
+
+                {/* Tech Tags */}
+                <div className="flex flex-wrap gap-1.5 mb-6">
+                  {pos.tags.map((tag, tIdx) => (
+                    <span
+                      key={tIdx}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleApplyAction}
+                className="w-full py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              >
+                <span>Ứng Tuyển Vị Trí Này</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick Supplementary Document Upload Section (For applicants already holding internCode) */}
+        <div className="mt-14 max-w-3xl mx-auto">
+          <div className="text-center mb-4">
             <button
-              onClick={() => {
-                setActiveTab('existing');
-                setErrorMsg(null);
-                setSuccessInfo(null);
-              }}
-              className={`flex-1 pb-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-all cursor-pointer ${
-                activeTab === 'existing'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
+              type="button"
+              onClick={() => setShowSupplementCard(!showSupplementCard)}
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-indigo-300 transition-colors cursor-pointer"
             >
-              <UploadCloud size={16} />
-              <span>2. Bổ Sung Tài Liệu (Có sẵn mã TTS)</span>
+              <UploadCloud size={15} />
+              <span>
+                {showSupplementCard
+                  ? 'Thu gọn khu vực bổ sung tài liệu'
+                  : 'Bạn đã có Mã Thực Tập Sinh? Bấm vào đây để bổ sung tài liệu/bảng điểm'}
+              </span>
             </button>
           </div>
 
-          {/* Success Banner */}
-          {successInfo && (
-            <div className="mb-6 p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 size={24} className="text-emerald-400 shrink-0 mt-0.5" />
-                <div className="space-y-2">
-                  <h4 className="font-bold text-sm text-white">{successInfo.title}</h4>
-                  <p className="text-xs text-emerald-200 leading-relaxed">
-                    {successInfo.description}
-                  </p>
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 font-mono text-xs font-bold text-emerald-300">
-                    <span>Mã TTS của bạn:</span>
-                    <strong className="text-white text-sm">{successInfo.internCode}</strong>
+          {showSupplementCard && (
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-xl animate-fade-in">
+              <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                <UploadCloud size={16} className="text-indigo-400" />
+                Bổ Sung Tài Liệu Theo Mã Thực Tập Sinh (Không Cần Đăng Nhập)
+              </h3>
+              <p className="text-xs text-slate-400 mb-4">
+                Dành cho ứng viên đã nộp hồ sơ trước đó và được HR yêu cầu bổ sung bảng điểm, đơn xin thực tập hoặc CV cập nhật.
+              </p>
+
+              {uploadSuccess && (
+                <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                  <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
+                  <span>{uploadSuccess}</span>
+                </div>
+              )}
+
+              {uploadError && (
+                <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0 text-rose-400" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleUploadExisting} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Mã Thực Tập Sinh (VD: INT-2026-001) <span className="text-rose-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="VD: INT-2026-001"
+                      value={existingCode}
+                      onChange={(e) => setExistingCode(e.target.value.toUpperCase())}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                    />
+                    <Search size={15} className="absolute right-3 top-2.5 text-slate-400" />
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* Error Banner */}
-          {errorMsg && (
-            <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3">
-              <AlertCircle size={18} className="shrink-0 text-rose-400" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Loại tài liệu bổ sung
+                    </label>
+                    <select
+                      value={existingDocType}
+                      onChange={(e) => setExistingDocType(e.target.value as DocumentType)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="CV">CV / Sơ Yếu Lý Lịch</option>
+                      <option value="INTERNSHIP_APPLICATION">Đơn Xin Thực Tập</option>
+                      <option value="TRANSCRIPT">Bảng Điểm Tích Lũy</option>
+                      <option value="RECOMMENDATION_LETTER">Giấy Giới Thiệu Từ Trường</option>
+                      <option value="OTHER">Tài Liệu Khác</option>
+                    </select>
+                  </div>
 
-          {/* TAB 1: ỨNG TUYỂN MỚI */}
-          {activeTab === 'new' && (
-            <form onSubmit={handleApplyNew} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Họ và tên ứng viên <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="VD: Nguyễn Văn A"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Email liên hệ <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="VD: nguyenvana@gmail.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Số điện thoại <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="VD: 0912345678"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Vị trí ứng tuyển
-                  </label>
-                  <select
-                    value={appliedPosition}
-                    onChange={(e) => setAppliedPosition(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="Thực Tập Sinh Backend">Thực Tập Sinh Backend (Java / Spring)</option>
-                    <option value="Thực Tập Sinh Frontend">Thực Tập Sinh Frontend (React / TypeScript)</option>
-                    <option value="Thực Tập Sinh Fullstack">Thực Tập Sinh Fullstack</option>
-                    <option value="Thực Tập Sinh AI & Data">Thực Tập Sinh AI & Data Science</option>
-                    <option value="Thực Tập Sinh QA/QC">Thực Tập Sinh QA / QC</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Trường Đại Học / Cao Đẳng
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: Đại Học Bách Khoa, ĐHQG..."
-                    value={university}
-                    onChange={(e) => setUniversity(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Chuyên ngành
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: Kỹ Thuật Phần Mềm, CNTT..."
-                    value={major}
-                    onChange={(e) => setMajor(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Upload Dropzone */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Đính kèm CV / Sơ yếu lý lịch (PDF, DOCX tối đa 5MB)
-                </label>
-                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl bg-slate-950/40 hover:bg-slate-950/60 cursor-pointer transition-colors text-center">
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.doc"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setNewFile(e.target.files[0]);
-                      }
-                    }}
-                  />
-                  {newFile ? (
-                    <div>
-                      <FileText size={28} className="text-indigo-400 mx-auto mb-2" />
-                      <p className="text-xs font-semibold text-white">{newFile.name}</p>
-                      <span className="text-[11px] text-slate-400">
-                        {(newFile.size / (1024 * 1024)).toFixed(2)} MB · Bấm để đổi tệp khác
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Chọn tệp tin (PDF, DOCX tối đa 5MB)
+                    </label>
+                    <label className="flex items-center justify-between px-3 py-2 border border-slate-700 hover:border-indigo-500 rounded-lg bg-slate-950/40 hover:bg-slate-950/60 cursor-pointer transition-colors text-xs text-slate-300">
+                      <span className="truncate max-w-[180px]">
+                        {existingFile ? existingFile.name : 'Bấm để chọn tệp...'}
                       </span>
-                    </div>
-                  ) : (
-                    <>
-                      <UploadCloud size={28} className="text-indigo-400 mb-2" />
-                      <p className="text-xs font-semibold text-white">
-                        Kéo thả tệp hoặc bấm để chọn CV của bạn
-                      </p>
-                      <span className="text-[11px] text-slate-400 mt-0.5">
-                        Hỗ trợ PDF, Word (.docx) tối đa 5MB
-                      </span>
-                    </>
-                  )}
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50 cursor-pointer"
-              >
-                {loading ? 'Đang Xử Lý Nộp Hồ Sơ...' : 'Nộp Hồ Sơ Ứng Tuyển & CV Ngay'}
-              </button>
-            </form>
-          )}
-
-          {/* TAB 2: BỔ SUNG TÀI LIỆU VÀO MÃ TTS ĐÃ CÓ (PUBLIC UPLOAD) */}
-          {activeTab === 'existing' && (
-            <form onSubmit={handleUploadExisting} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Mã Thực Tập Sinh Đã Cấp <span className="text-rose-400">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    placeholder="VD: INT-2026-001 hoặc INT-202609-0001"
-                    value={existingCode}
-                    onChange={(e) => setExistingCode(e.target.value.toUpperCase())}
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
-                  />
-                  <Search size={16} className="absolute right-3 top-3 text-slate-400" />
+                      <input
+                        type="file"
+                        accept=".pdf,.docx,.doc"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setExistingFile(e.target.files[0]);
+                          }
+                        }}
+                      />
+                      <FileText size={15} className="text-indigo-400 shrink-0" />
+                    </label>
+                  </div>
                 </div>
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  Mã được cung cấp khi bạn nộp hồ sơ hoặc nhận từ email của HR.
-                </span>
-              </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Loại tài liệu cần bổ sung
-                </label>
-                <select
-                  value={existingDocType}
-                  onChange={(e) => setExistingDocType(e.target.value as DocumentType)}
-                  className="w-full px-3 py-2.5 rounded-lg bg-slate-950/60 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500 font-medium"
+                <button
+                  type="submit"
+                  disabled={uploadLoading || !existingFile}
+                  className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all disabled:opacity-50 cursor-pointer shadow-md"
                 >
-                  <option value="CV">CV / Sơ Yếu Lý Lịch Cập Nhật</option>
-                  <option value="INTERNSHIP_APPLICATION">Đơn Xin Thực Tập (Có dấu nhà trường)</option>
-                  <option value="TRANSCRIPT">Bảng Điểm Tích Lũy</option>
-                  <option value="RECOMMENDATION_LETTER">Giấy Giới Thiệu Từ Trường</option>
-                  <option value="OTHER">Tài Liệu Khác</option>
-                </select>
-              </div>
-
-              {/* Upload Dropzone */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Chọn tệp tin (PDF, DOCX tối đa 5MB)
-                </label>
-                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl bg-slate-950/40 hover:bg-slate-950/60 cursor-pointer transition-colors text-center">
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.doc"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setExistingFile(e.target.files[0]);
-                      }
-                    }}
-                  />
-                  {existingFile ? (
-                    <div>
-                      <FileText size={28} className="text-indigo-400 mx-auto mb-2" />
-                      <p className="text-xs font-semibold text-white">{existingFile.name}</p>
-                      <span className="text-[11px] text-slate-400">
-                        {(existingFile.size / (1024 * 1024)).toFixed(2)} MB · Bấm để đổi tệp khác
-                      </span>
-                    </div>
-                  ) : (
-                    <>
-                      <UploadCloud size={28} className="text-indigo-400 mb-2" />
-                      <p className="text-xs font-semibold text-white">
-                        Bấm để chọn tệp tài liệu cần nộp
-                      </p>
-                      <span className="text-[11px] text-slate-400 mt-0.5">
-                        Hỗ trợ định dạng PDF, DOCX dung lượng tối đa 5MB
-                      </span>
-                    </>
-                  )}
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !existingFile}
-                className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-violet-600 hover:from-sky-500 hover:to-violet-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-sky-500/25 transition-all disabled:opacity-50 cursor-pointer"
-              >
-                {loading ? 'Đang Tải Lên Hệ Thống...' : 'Tải Lên Tài Liệu Ngay (Không Cần Đăng Nhập)'}
-              </button>
-            </form>
+                  {uploadLoading ? 'Đang Tải Lên...' : 'Tải Lên Bổ Sung Ngay'}
+                </button>
+              </form>
+            </div>
           )}
         </div>
       </section>
@@ -533,9 +499,13 @@ export const LandingPage: React.FC = () => {
             >
               Cổng Quản Trị
             </button>
-            <a href="#apply-form" className="hover:text-white transition-colors">
-              Nộp CV & Hồ Sơ
-            </a>
+            <button
+              type="button"
+              onClick={handleApplyAction}
+              className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-xs text-slate-400"
+            >
+              Nộp Hồ Sơ Ứng Tuyển
+            </button>
           </div>
         </div>
       </footer>
@@ -545,7 +515,18 @@ export const LandingPage: React.FC = () => {
         isOpen={isLoginModalOpen}
         onClose={handleCloseLoginModal}
         isExpired={isExpired}
+        onSwitchToRegister={handleSwitchToRegister}
+      />
+
+      {/* Popup Đăng Ký Tài Khoản Thực Tập Sinh */}
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={handleCloseRegisterModal}
+        onSwitchToLogin={handleSwitchToLogin}
+        onRegisterSuccess={handleRegisterSuccess}
       />
     </div>
   );
 };
+
+export default LandingPage;
