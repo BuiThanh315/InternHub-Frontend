@@ -3,7 +3,8 @@ export type ContractStatus =
   | 'PENDING_SIGNATURE'
   | 'SIGNED'
   | 'EXPIRED'
-  | 'TERMINATED';
+  | 'TERMINATED'
+  | 'REJECTED_BY_INTERN';
 
 export interface ContractResponse {
   id: number;
@@ -20,6 +21,10 @@ export interface ContractResponse {
   contentType?: string;
   uploadedBy: string;
   signedAt?: string | null;
+  signerFullName?: string | null;
+  internConfirmationNote?: string | null;
+  rejectionReason?: string | null;
+  internProfileStatus?: string | null;
   notes?: string | null;
   createdAt: string;
   updatedAt?: string;
@@ -32,4 +37,14 @@ export interface UploadContractRequest {
   contractNumber?: string;
   allowanceAmount?: number;
   notes?: string;
+}
+
+export interface ConfirmContractRequest {
+  agreeTerms: boolean;
+  signerFullName: string;
+  confirmationNote?: string;
+}
+
+export interface RejectContractRequest {
+  rejectionReason: string;
 }
