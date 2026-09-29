@@ -136,6 +136,8 @@ export function getContractStatusLabel(status?: string): string {
       return 'Đã hết hạn';
     case 'TERMINATED':
       return 'Đã chấm dứt';
+    case 'REJECTED_BY_INTERN':
+      return 'Từ chối tiếp nhận';
     default:
       return status || '—';
   }

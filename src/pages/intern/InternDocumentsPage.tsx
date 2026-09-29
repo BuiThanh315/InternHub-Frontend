@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, ArrowRight, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+
 import { Header } from '../../components/layout/Header';
 import { Skeleton } from '../../components/common';
 import { internService } from '../../services/internService';
@@ -9,8 +10,10 @@ import { documentService } from '../../services/documentService';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
 import type { InternProfile, DocumentResponse, DocumentType } from '../../types';
+import { InternContractSection } from './components/InternContractSection';
 import { InternDocumentList } from './components/InternDocumentList';
 import { InternUploadForm } from './components/InternUploadForm';
+
 import styles from './InternDashboard.module.css';
 
 export const InternDocumentsPage: React.FC = () => {
@@ -21,18 +24,29 @@ export const InternDocumentsPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage(null);
 
-      // Lấy hồ sơ thực tập sinh tương ứng từ lưu trữ phiên người dùng (tránh gọi GET /api/interns gây 403)
-      const currentProfile = internService.getLocalProfile(user?.userId);
+      // 1. Tải hồ sơ thực tập sinh mới nhất từ Backend (có fallback an toàn)
+      let currentProfile: InternProfile | null = null;
+      try {
+        currentProfile = await internService.getMyProfile();
+      } catch {
+        currentProfile = internService.getLocalProfile(user?.userId);
+      }
       setProfile(currentProfile);
 
+      // 2. Tải danh sách tài liệu
       if (currentProfile?.internCode) {
-        const localDocs = internService.getLocalDocuments(currentProfile.internCode);
-        setDocuments(localDocs);
+        try {
+          const remoteDocs = await documentService.getDocumentsByInternCode(currentProfile.internCode);
+          setDocuments(remoteDocs);
+        } catch {
+          const localDocs = internService.getLocalDocuments(currentProfile.internCode);
+          setDocuments(localDocs);
+        }
       } else {
         setDocuments([]);
       }
@@ -69,8 +83,8 @@ export const InternDocumentsPage: React.FC = () => {
   return (
     <div className="animate-fade-in">
       <Header
-        title="Quản Lý Hồ Sơ & Tài Liệu Trực Tuyến"
-        subtitle="Theo dõi kết quả phê duyệt CV, bảng điểm và bổ sung giấy tờ thực tập theo yêu cầu của HR"
+        title="Quản Lý Hợp Đồng & Tài Liệu Trực Tuyến"
+        subtitle="Xem trước và ký kết hợp đồng thực tập trực tuyến, theo dõi kết quả thẩm định và bổ sung hồ sơ theo yêu cầu"
       />
 
       {loading ? (
@@ -150,7 +164,7 @@ export const InternDocumentsPage: React.FC = () => {
                 }}
               >
                 Bạn chưa nộp đơn ứng tuyển trực tuyến. Hãy nộp hồ sơ để được cấp Mã Thực Tập Sinh và mở
-                khóa chức năng quản lý tài liệu.
+                khóa chức năng tiếp nhận hợp đồng và quản lý tài liệu.
               </p>
               <Link
                 to={ROUTES.INTERN.APPLY}
@@ -173,10 +187,20 @@ export const InternDocumentsPage: React.FC = () => {
               </Link>
             </div>
           ) : (
-            <div className={styles.contentGrid}>
-              <InternDocumentList documents={documents} />
-              <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
-            </div>
+            <>
+              {/* TM-14: Khối Quản lý Hợp Đồng & Ký Kết Trực Tuyến */}
+              <InternContractSection
+                internName={profile.fullName || user?.fullName}
+                internCode={profile.internCode}
+                onContractUpdated={loadData}
+              />
+
+              {/* Danh sách tài liệu bổ sung & Form nộp */}
+              <div className={styles.contentGrid}>
+                <InternDocumentList documents={documents} />
+                <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
+              </div>
+            </>
           )}
         </div>
       )}

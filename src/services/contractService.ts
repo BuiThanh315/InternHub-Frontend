@@ -1,6 +1,11 @@
 import { apiClient } from './api';
 import { API_ENDPOINTS } from '../constants/endpoints';
-import type { ContractResponse, UploadContractRequest } from '../types';
+import type {
+  ContractResponse,
+  UploadContractRequest,
+  ConfirmContractRequest,
+  RejectContractRequest,
+} from '../types';
 
 export const contractService = {
   async uploadContract(
@@ -50,6 +55,60 @@ export const contractService = {
       signal,
     });
     return response.data?.data || [];
+  },
+
+  async getMyContracts(signal?: AbortSignal): Promise<ContractResponse[]> {
+    const response = await apiClient.get(API_ENDPOINTS.CONTRACT.MY_CONTRACTS, {
+      signal,
+    });
+    return response.data?.data || [];
+  },
+
+  async getMyActiveContract(signal?: AbortSignal): Promise<ContractResponse | null> {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.CONTRACT.MY_ACTIVE, {
+        signal,
+      });
+      return response.data?.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async getContractById(
+    contractId: number | string,
+    signal?: AbortSignal
+  ): Promise<ContractResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.CONTRACT.BY_ID(contractId), {
+      signal,
+    });
+    return response.data?.data;
+  },
+
+  async confirmContract(
+    contractId: number | string,
+    data: ConfirmContractRequest,
+    signal?: AbortSignal
+  ): Promise<ContractResponse> {
+    const response = await apiClient.post(
+      API_ENDPOINTS.CONTRACT.CONFIRM(contractId),
+      data,
+      { signal }
+    );
+    return response.data?.data;
+  },
+
+  async rejectContract(
+    contractId: number | string,
+    data: RejectContractRequest,
+    signal?: AbortSignal
+  ): Promise<ContractResponse> {
+    const response = await apiClient.post(
+      API_ENDPOINTS.CONTRACT.REJECT(contractId),
+      data,
+      { signal }
+    );
+    return response.data?.data;
   },
 
   getContractDownloadUrl(contractId: number | string, disposition: 'inline' | 'attachment' = 'inline'): string {
