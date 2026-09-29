@@ -72,17 +72,16 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
     list: [],
     loading: false,
   });
-
   const [activeTab, setActiveTab] = useState<'profile' | 'history'>(initialTab);
   const [mentorHistory, setMentorHistory] = useState<MentorAssignmentResponse[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
 
+
   useEffect(() => {
     setActiveTab(initialTab || 'profile');
     setMentorHistory([]);
     setHistoryError(null);
-
     if (intern) {
       setEmailState({
         status: intern.emailStatus,
@@ -130,6 +129,7 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
       isCancelled = true;
     };
   }, [activeTab, intern?.id]);
+
 
   useEffect(() => {
     if (emailState.cooldown <= 0) return;
