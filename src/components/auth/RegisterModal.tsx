@@ -75,6 +75,7 @@ export interface RegisterModalProps {
     gender?: GenderType;
     address?: string;
   }) => void;
+  onRequireActivation?: (data: { identifier: string; maskedEmail?: string }) => void;
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
@@ -82,6 +83,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   onClose,
   onSwitchToLogin,
   onRegisterSuccess,
+  onRequireActivation,
 }) => {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -154,7 +156,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       };
 
       const res = await authService.register(payload);
-      toast.success('Đăng ký tài khoản thực tập sinh thành công!');
+      toast.success('Đăng ký tài khoản thành công! Vui lòng nhập mã OTP để kích hoạt tài khoản.');
 
       onRegisterSuccess?.({
         userId: res.userId,
@@ -166,6 +168,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         gender: data.gender,
         address: data.address?.trim(),
       });
+
+      if (onRequireActivation) {
+        onRequireActivation({
+          identifier: res.username,
+          maskedEmail: res.maskedEmail || res.email,
+        });
+      }
 
       onClose();
     } catch (err: any) {

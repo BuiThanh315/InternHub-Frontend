@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   Building2,
   Eye,
   EyeOff,
@@ -23,6 +24,7 @@ export interface LoginModalProps {
   onClose: () => void;
   isExpired?: boolean;
   onSwitchToRegister?: () => void;
+  onOpenActivation?: (identifier: string) => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({
@@ -30,11 +32,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   isExpired = false,
   onSwitchToRegister,
+  onOpenActivation,
 }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsActivation, setNeedsActivation] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
@@ -44,6 +48,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setError(null);
+      setNeedsActivation(false);
     }
   }, [isOpen]);
 
@@ -69,12 +74,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
       setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
+      setNeedsActivation(false);
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
+      setNeedsActivation(false);
       const authUser = await login(username.trim(), password);
       toast.success(`Chào mừng ${authUser.fullName || authUser.username}!`);
       onClose();
@@ -85,6 +92,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           ? err.message
           : "Đăng nhập không thành công. Vui lòng kiểm tra lại tài khoản.";
       setError(msg);
+      if (
+        msg.toLowerCase().includes("kích hoạt") ||
+        msg.toLowerCase().includes("activation") ||
+        msg.toLowerCase().includes("pending_activation")
+      ) {
+        setNeedsActivation(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -111,7 +125,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         />
       )}
 
-      {error && (
+      {needsActivation && (
+        <div className={styles.activationAlertBox}>
+          <div className={styles.activationAlertHeader}>
+            <AlertCircle size={20} className="shrink-0" />
+            <span>
+              {error || 'Tài khoản của bạn chưa được kích hoạt qua mã OTP email.'}
+            </span>
+          </div>
+          <div className={styles.activationAlertActions}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onClose();
+                onOpenActivation?.(username.trim());
+              }}
+            >
+              Nhập mã OTP kích hoạt ngay
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {!needsActivation && error && (
         <Alert
           type="error"
           message={error}
@@ -122,12 +160,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Tên đăng nhập / Email</label>
+          <label htmlFor="login-username" className={styles.label}>Tên đăng nhập / Email</label>
           <div className={styles.inputWrapper}>
             <span className={styles.inputIcon}>
               <UserIcon size={18} />
             </span>
             <input
+              id="login-username"
               type="text"
               required
               disabled={loading}
@@ -135,18 +174,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               placeholder="admin, hr_manager, ..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              autoFocus
             />
           </div>
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>Mật khẩu</label>
+          <label htmlFor="login-password" className={styles.label}>Mật khẩu</label>
           <div className={styles.inputWrapper}>
             <span className={styles.inputIcon}>
               <Lock size={18} />
             </span>
             <input
+              id="login-password"
               type={showPassword ? "text" : "password"}
               required
               disabled={loading}
@@ -181,12 +220,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         </Button>
 
         {onSwitchToRegister && (
-          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mt-2">
+          <div className={styles.switchPrompt}>
             <span>Chưa có tài khoản thực tập sinh?</span>
             <button
               type="button"
               onClick={onSwitchToRegister}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2 transition-colors cursor-pointer bg-transparent border-none p-0"
+              className={styles.switchLink}
             >
               Đăng ký ngay
             </button>

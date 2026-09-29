@@ -25,6 +25,7 @@ import { documentService } from '../../services/documentService';
 import { programService } from '../../services/programService';
 import { LoginModal } from '../../components/auth/LoginModal';
 import { RegisterModal } from '../../components/auth/RegisterModal';
+import { AccountActivationModal } from '../../components/auth/AccountActivationModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
 import type { DocumentType, ProgramSummaryResponse } from '../../types';
@@ -109,6 +110,13 @@ export const LandingPage: React.FC = () => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(
     () => searchParams.get('register') === 'true'
   );
+  const [isActivationModalOpen, setIsActivationModalOpen] = useState(
+    () => searchParams.get('activate') === 'true'
+  );
+  const [activationIdentifier, setActivationIdentifier] = useState(
+    () => searchParams.get('username') || searchParams.get('email') || ''
+  );
+  const [activationMaskedEmail, setActivationMaskedEmail] = useState('');
   const isExpired = searchParams.get('expired') === 'true';
 
   // State for public document supplement
@@ -154,6 +162,13 @@ export const LandingPage: React.FC = () => {
     if (searchParams.get('register') === 'true') {
       setIsRegisterModalOpen(true);
     }
+    if (searchParams.get('activate') === 'true') {
+      setIsActivationModalOpen(true);
+      const userParam = searchParams.get('username') || searchParams.get('email');
+      if (userParam) {
+        setActivationIdentifier(userParam);
+      }
+    }
   }, [searchParams]);
 
   const handleCloseLoginModal = () => {
@@ -175,13 +190,36 @@ export const LandingPage: React.FC = () => {
     }
   };
 
+  const handleCloseActivationModal = () => {
+    setIsActivationModalOpen(false);
+    if (searchParams.get('activate') || searchParams.get('username') || searchParams.get('email')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('activate');
+      nextParams.delete('username');
+      nextParams.delete('email');
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
+
+  const handleOpenActivation = (identifier: string, maskedEmail?: string) => {
+    setActivationIdentifier(identifier);
+    if (maskedEmail) {
+      setActivationMaskedEmail(maskedEmail);
+    }
+    handleCloseRegisterModal();
+    handleCloseLoginModal();
+    setIsActivationModalOpen(true);
+  };
+
   const handleSwitchToRegister = () => {
     handleCloseLoginModal();
+    handleCloseActivationModal();
     setIsRegisterModalOpen(true);
   };
 
   const handleSwitchToLogin = () => {
     handleCloseRegisterModal();
+    handleCloseActivationModal();
     setIsLoginModalOpen(true);
   };
 
@@ -624,6 +662,7 @@ export const LandingPage: React.FC = () => {
         onClose={handleCloseLoginModal}
         isExpired={isExpired}
         onSwitchToRegister={handleSwitchToRegister}
+        onOpenActivation={(identifier) => handleOpenActivation(identifier)}
       />
 
       {/* Popup Đăng Ký Tài Khoản Thực Tập Sinh */}
@@ -632,6 +671,25 @@ export const LandingPage: React.FC = () => {
         onClose={handleCloseRegisterModal}
         onSwitchToLogin={handleSwitchToLogin}
         onRegisterSuccess={handleRegisterSuccess}
+        onRequireActivation={({ identifier, maskedEmail }) => {
+          handleOpenActivation(identifier, maskedEmail);
+        }}
+      />
+
+      {/* Popup Kích Hoạt Tài Khoản Email OTP */}
+      <AccountActivationModal
+        isOpen={isActivationModalOpen}
+        onClose={handleCloseActivationModal}
+        identifier={activationIdentifier}
+        maskedEmail={activationMaskedEmail}
+        onActivationSuccess={() => {
+          handleCloseActivationModal();
+          setIsLoginModalOpen(true);
+        }}
+        onBackToRegister={() => {
+          handleCloseActivationModal();
+          setIsRegisterModalOpen(true);
+        }}
       />
     </div>
   );
