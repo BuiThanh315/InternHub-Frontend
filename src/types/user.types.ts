@@ -9,6 +9,7 @@ export interface User {
   dateOfBirth?: string;
   gender?: GenderType;
   address?: string;
+  bio?: string;
   avatarUrl?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
   role?: RoleType;

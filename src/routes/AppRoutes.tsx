@@ -11,6 +11,7 @@ import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternApplyPage } from '../pages/intern/InternApplyPage';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
 import { InternProfilePage } from '../pages/intern/InternProfilePage';
+import { ProfilePage } from '../pages/profile';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -82,12 +83,18 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
         </Route>
 
+        {/* Universal Profile Route (Dành cho tất cả các Role) */}
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MENTOR', 'INTERN', 'USER']} />}>
+          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+        </Route>
+
         {/* Intern Dedicated Area (Khu vực độc lập cho Thực Tập Sinh) */}
         <Route element={<ProtectedRoute allowedRoles={['INTERN', 'USER', 'ADMIN']} />}>
           <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
           <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
           <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
-          <Route path={ROUTES.INTERN.PROFILE} element={<InternProfilePage />} />
+          {/* Chuyển tiếp route xem profile cũ sang Universal Profile mới */}
+          <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
         </Route>
       </Route>
 

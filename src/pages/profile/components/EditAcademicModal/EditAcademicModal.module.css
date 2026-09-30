@@ -1,0 +1,54 @@
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.tagInputGroup {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 38px;
+  padding: 0.5rem;
+  border-radius: var(--radius-md, 8px);
+  background-color: var(--surface-2, #f8fafc);
+  border: 1px solid var(--border-soft, #e2e8f0);
+}
+
+.tagItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--primary-soft, #eef0ff);
+  color: var(--primary, #4338ca);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.removeTagBtn {
+  background: none;
+  border: none;
+  color: var(--primary, #4338ca);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.removeTagBtn:hover {
+  color: #ef4444;
+}

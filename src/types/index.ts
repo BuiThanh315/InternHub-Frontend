@@ -5,3 +5,4 @@ export * from './intern.types';
 export * from './document.types';
 export * from './system.types';
 export * from './program.types';
+export * from './profile.types';

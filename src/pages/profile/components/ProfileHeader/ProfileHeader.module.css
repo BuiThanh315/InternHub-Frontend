@@ -1,0 +1,162 @@
+.headerCard {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.75rem 2rem;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.05));
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.bannerDecor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--primary-gradient, linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%));
+}
+
+.profileInfoWrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.avatarContainer {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 9999px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 3px solid var(--bg-card, #ffffff);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: var(--surface-2, #f8fafc);
+  transition: transform 0.2s ease;
+}
+
+.avatarOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: rgba(15, 23, 42, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(2px);
+}
+
+.avatarContainer:hover .avatarOverlay,
+.avatarContainer:focus-visible .avatarOverlay {
+  opacity: 1;
+}
+
+.avatarContainer:hover .avatarImage {
+  transform: scale(1.02);
+}
+
+.cameraIcon {
+  margin-bottom: 2px;
+}
+
+.overlayText {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.mainInfo {
+  flex: 1;
+  min-width: 240px;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.displayName {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  background: var(--success-soft, #ecfdf5);
+  color: var(--success, #059669);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: currentColor;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.84rem;
+  color: var(--text-secondary, #475569);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.metaIcon {
+  color: var(--text-muted, #94a3b8);
+}
+
+.bioText {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-main, #334155);
+  max-width: 52rem;
+  font-style: italic;
+}
