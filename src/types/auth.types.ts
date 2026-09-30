@@ -57,3 +57,7 @@ export interface ResendActivationResponse {
   expiresInMinutes?: number;
   cooldownSeconds?: number;
 }
+
+export interface GoogleLoginRequest {
+  idToken: string;
+}

@@ -7,6 +7,7 @@ export interface AuthContextType {
   role: RoleType | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<AuthUser>;
+  loginWithGoogle: (idToken: string) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -19,6 +20,7 @@ const getDefaultContextValue = (): AuthContextType => {
     role: currentUser?.role || null,
     isAuthenticated: !!currentUser,
     login: (username, password) => authService.login(username, password),
+    loginWithGoogle: (idToken) => authService.loginWithGoogle(idToken),
     logout: () => authService.logout(),
   };
 };
@@ -34,6 +36,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return authUser;
   };
 
+  const loginWithGoogle = async (idToken: string): Promise<AuthUser> => {
+    const authUser = await authService.loginWithGoogle(idToken);
+    setUser(authUser);
+    return authUser;
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -45,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       role: user ? user.role : null,
       isAuthenticated: !!user,
       login,
+      loginWithGoogle,
       logout,
     }),
     [user]
