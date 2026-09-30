@@ -38,6 +38,22 @@ export interface RegisterResponse {
   username: string;
   fullName: string;
   email: string;
+  maskedEmail?: string;
   role: string;
   status: string;
+}
+
+export interface ActivateAccountRequest {
+  identifier: string;
+  activationKey: string;
+}
+
+export interface ResendActivationRequest {
+  identifier: string;
+}
+
+export interface ResendActivationResponse {
+  maskedEmail: string;
+  expiresInMinutes?: number;
+  cooldownSeconds?: number;
 }

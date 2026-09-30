@@ -105,3 +105,55 @@
 .submitBtn {
   margin-top: 0.25rem;
 }
+
+.switchPrompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 0.5rem;
+}
+
+.switchLink {
+  color: var(--primary, #6366f1);
+  font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transition-fast, 0.15s ease);
+}
+
+.switchLink:hover {
+  color: var(--primary-hover, #4f46e5);
+}
+
+.activationAlertBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.875rem 1rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-md, 8px);
+}
+
+.activationAlertHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #d97706;
+  line-height: 1.4;
+}
+
+.activationAlertActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}

@@ -1,6 +1,14 @@
 import { apiClient } from './api';
 import { API_ENDPOINTS } from '../constants/endpoints';
-import type { AuthUser, RegisterRequest, RegisterResponse, RoleType } from '../types';
+import type {
+  AuthUser,
+  RegisterRequest,
+  RegisterResponse,
+  ActivateAccountRequest,
+  ResendActivationRequest,
+  ResendActivationResponse,
+  RoleType,
+} from '../types';
 
 export const authService = {
   async login(username: string, password: string): Promise<AuthUser> {
@@ -35,6 +43,18 @@ export const authService = {
 
   async register(data: RegisterRequest): Promise<RegisterResponse> {
     const response = await apiClient.post(API_ENDPOINTS.AUTH.REGISTER, data);
+    return response.data?.data;
+  },
+
+  async activateAccount(data: ActivateAccountRequest, signal?: AbortSignal): Promise<void> {
+    await apiClient.post(API_ENDPOINTS.AUTH.ACTIVATE, data, { signal });
+  },
+
+  async resendActivation(
+    data: ResendActivationRequest,
+    signal?: AbortSignal
+  ): Promise<ResendActivationResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.RESEND_ACTIVATION, data, { signal });
     return response.data?.data;
   },
 
