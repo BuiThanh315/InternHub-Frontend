@@ -130,8 +130,14 @@ export function getContractStatusLabel(status?: string): string {
   switch (status) {
     case 'PENDING_SIGNATURE':
       return 'Chờ ký xác nhận';
+    case 'PENDING_INTERN_FEEDBACK':
+      return 'Thực tập sinh thắc mắc';
     case 'SIGNED':
       return 'Đã ký kết';
+    case 'ACTIVE':
+      return 'Đang hiệu lực';
+    case 'SUPERSEDED':
+      return 'Đã được gia hạn';
     case 'EXPIRED':
       return 'Đã hết hạn';
     case 'TERMINATED':

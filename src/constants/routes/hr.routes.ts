@@ -3,5 +3,6 @@ export const HR_ROUTES = {
   PROGRAMS: '/hr/programs',
   MENTORS: '/hr/mentors',
   INTERNS: '/hr/interns',
+  CONTRACTS: '/hr/contracts',
   REVIEW: '/hr/review',
 } as const;
