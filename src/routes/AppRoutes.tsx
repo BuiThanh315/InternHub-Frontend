@@ -10,7 +10,6 @@ import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternApplyPage } from '../pages/intern/InternApplyPage';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
-import { InternProfilePage } from '../pages/intern/InternProfilePage';
 import { ProfilePage } from '../pages/profile';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
@@ -65,6 +64,7 @@ export const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
           <Route path={ROUTES.ADMIN.DASHBOARD} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.USERS} element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN.ROLES} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.SYSTEM} element={<AdminDashboard />} />
         </Route>
 

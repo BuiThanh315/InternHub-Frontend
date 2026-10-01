@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit3, ExternalLink, GraduationCap, Globe } from 'lucide-react';
+import { Edit3, ExternalLink, Globe } from 'lucide-react';
 import { Button } from '../../../../components/common';
 import type { InternAcademicTabProps } from './InternAcademicTab.types';
 import styles from './InternAcademicTab.module.css';

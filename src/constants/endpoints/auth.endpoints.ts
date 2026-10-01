@@ -7,4 +7,5 @@ export const AUTH_ENDPOINTS = {
   ME: '/api/auth/me',
   REFRESH: '/api/auth/refresh',
   LOGOUT: '/api/auth/logout',
+  ME_PERMISSIONS: '/api/auth/me/permissions',
 } as const;
