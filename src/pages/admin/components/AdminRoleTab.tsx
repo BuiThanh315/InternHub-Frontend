@@ -154,6 +154,134 @@ export const AdminRoleTab: React.FC = () => {
     ? `Không có kết quả nào khớp với từ khóa "${searchQuery}". Hãy thử tìm kiếm với từ khóa khác.`
     : 'Hiện chưa có vai trò nào trong danh mục này.';
 
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className={styles.rolesGrid}>
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div key={idx} className={styles.skeletonCard}>
+              <Skeleton width="40%" height={24} />
+              <Skeleton width="80%" height={16} />
+              <Skeleton width="100%" height={36} />
+              <Skeleton width="100%" height={32} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (filteredRoles.length === 0) {
+      return (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>
+            <HelpCircle size={24} />
+          </div>
+          <h3 className={styles.emptyTitle}>Không tìm thấy vai trò phù hợp</h3>
+          <p className={styles.emptyDesc}>{emptyDescription}</p>
+          {searchQuery && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setSearchQuery('')}
+            >
+              Xóa tìm kiếm
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className={styles.rolesGrid}>
+        {filteredRoles.map((role) => {
+          const isDeleteDisabled = role.isSystem || role.userCount > 0;
+          const deleteTooltip = getDeleteTooltip(role);
+
+          return (
+            <div key={role.id} className={styles.roleCard}>
+              <div className={styles.cardTop}>
+                <div className={styles.cardHeaderRow}>
+                  <div className={styles.roleIdentity}>
+                    <div className={styles.roleIconBadge}>
+                      {getRoleIcon(role.name)}
+                    </div>
+                    <h3 className={styles.roleName}>{role.name}</h3>
+                  </div>
+
+                  {role.isSystem ? (
+                    <span className={styles.systemBadge} title="Vai trò mặc định của hệ thống">
+                      <Lock size={11} /> Hệ Thống
+                    </span>
+                  ) : (
+                    <span className={styles.customBadge} title="Vai trò tùy chỉnh được tạo bởi quản trị viên">
+                      Tùy Chỉnh
+                    </span>
+                  )}
+                </div>
+
+                <p className={styles.roleDescription}>
+                  {role.description || 'Chưa thiết lập mô tả cho vai trò này.'}
+                </p>
+              </div>
+
+              <div>
+                <div className={styles.statsRow}>
+                  <div className={styles.statItem} title={`Được cấp ${role.permissionCount} đặc quyền`}>
+                    <Sparkles size={14} className={styles.statItemIcon} />
+                    <span>{role.permissionCount}/17 đặc quyền</span>
+                  </div>
+                  <div className={styles.statDivider} />
+                  <div className={styles.statItem} title={`${role.userCount} tài khoản đang sử dụng vai trò này`}>
+                    <Users size={14} className={styles.statItemIcon} />
+                    <span>{role.userCount} tài khoản</span>
+                  </div>
+                </div>
+
+                <div className={styles.cardProgressWrapper}>
+                  <div className={styles.cardProgressBarBg}>
+                    <div
+                      className={styles.cardProgressBarFill}
+                      style={{ width: `${Math.min(100, Math.round((role.permissionCount / 17) * 100))}%` }}
+                    />
+                  </div>
+                  <div className={styles.cardProgressTextRow}>
+                    <span>Tỷ lệ cấp quyền</span>
+                    <strong>{Math.min(100, Math.round((role.permissionCount / 17) * 100))}%</strong>
+                  </div>
+                </div>
+
+                <div className={styles.cardFooter}>
+                  <div className={styles.actionBtnGroup}>
+                    <button
+                      type="button"
+                      className={styles.configBtn}
+                      onClick={() => handleOpenEdit(role)}
+                      title="Xem và chỉnh sửa cấu hình đặc quyền"
+                    >
+                      <Settings size={15} />
+                      Xem & Cấu Hình Quyền
+                    </button>
+
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      disabled={isDeleteDisabled}
+                      title={deleteTooltip}
+                      onClick={() => setDeletingRole(role)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className={styles.container}>
       {/* 1. TOOLBAR & CONTROLS */}
@@ -220,110 +348,7 @@ export const AdminRoleTab: React.FC = () => {
       </div>
 
       {/* 2. ROLES CARDS GRID */}
-      {isLoading ? (
-        <div className={styles.rolesGrid}>
-          {Array.from({ length: 4 }).map((_, idx) => (
-            <div key={idx} className={styles.skeletonCard}>
-              <Skeleton width="40%" height={24} />
-              <Skeleton width="80%" height={16} />
-              <Skeleton width="100%" height={36} />
-              <Skeleton width="100%" height={32} />
-            </div>
-          ))}
-        </div>
-      ) : filteredRoles.length === 0 ? (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>
-            <HelpCircle size={24} />
-          </div>
-          <h3 className={styles.emptyTitle}>Không tìm thấy vai trò phù hợp</h3>
-          <p className={styles.emptyDesc}>{emptyDescription}</p>
-          {searchQuery && (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setSearchQuery('')}
-            >
-              Xóa tìm kiếm
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className={styles.rolesGrid}>
-          {filteredRoles.map((role) => {
-            const isDeleteDisabled = role.isSystem || role.userCount > 0;
-            const deleteTooltip = getDeleteTooltip(role);
-
-            return (
-              <div key={role.id} className={styles.roleCard}>
-                <div className={styles.cardTop}>
-                  <div className={styles.cardHeaderRow}>
-                    <div className={styles.roleIdentity}>
-                      <div className={styles.roleIconBadge}>
-                        {getRoleIcon(role.name)}
-                      </div>
-                      <h3 className={styles.roleName}>{role.name}</h3>
-                    </div>
-
-                    {role.isSystem ? (
-                      <span className={styles.systemBadge} title="Vai trò mặc định của hệ thống">
-                        <Lock size={11} /> Hệ Thống
-                      </span>
-                    ) : (
-                      <span className={styles.customBadge} title="Vai trò tùy chỉnh được tạo bởi quản trị viên">
-                        Tùy Chỉnh
-                      </span>
-                    )}
-                  </div>
-
-                  <p className={styles.roleDescription}>
-                    {role.description || 'Chưa thiết lập mô tả cho vai trò này.'}
-                  </p>
-                </div>
-
-                <div>
-                  <div className={styles.statsRow}>
-                    <div className={styles.statItem} title={`Được cấp ${role.permissionCount} đặc quyền`}>
-                      <Sparkles size={14} className={styles.statItemIcon} />
-                      <span>{role.permissionCount} đặc quyền</span>
-                    </div>
-                    <div className={styles.statDivider} />
-                    <div className={styles.statItem} title={`${role.userCount} tài khoản đang sử dụng vai trò này`}>
-                      <Users size={14} className={styles.statItemIcon} />
-                      <span>{role.userCount} tài khoản</span>
-                    </div>
-                  </div>
-
-                  <div className={styles.cardFooter}>
-                    <div className={styles.actionBtnGroup}>
-                      <button
-                        type="button"
-                        className={styles.configBtn}
-                        onClick={() => handleOpenEdit(role)}
-                        title="Xem và chỉnh sửa cấu hình đặc quyền"
-                      >
-                        <Settings size={15} />
-                        Xem & Cấu Hình Quyền
-                      </button>
-
-                      <button
-                        type="button"
-                        className={styles.deleteBtn}
-                        disabled={isDeleteDisabled}
-                        title={deleteTooltip}
-                        onClick={() => setDeletingRole(role)}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {renderContent()}
 
       {/* 3. ROLE MODAL (CREATE / EDIT) */}
       <RoleModal

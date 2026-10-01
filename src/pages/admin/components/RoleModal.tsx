@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Shield,
   Lock,
-  Layers,
   CheckSquare,
   Square,
   Sparkles,
@@ -12,6 +11,8 @@ import {
   FileText,
   Users,
   ShieldAlert,
+  Layers,
+  Filter,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Modal } from '../../../components/common/Modal/Modal';
@@ -21,6 +22,7 @@ import type {
   RoleItem,
   RoleDetail,
   PermissionGroup,
+  PermissionItem,
 } from '../../../types';
 import styles from './RoleModal.module.css';
 
@@ -30,6 +32,54 @@ interface RoleModalProps {
   permissionGroups: PermissionGroup[];
   onClose: () => void;
   onSuccess: () => void;
+}
+
+type CapabilityCategory = 'VIEW' | 'CREATE' | 'EDIT' | 'ACTION' | 'ADMIN';
+
+interface CategoryCol {
+  id: CapabilityCategory;
+  label: string;
+  subLabel: string;
+}
+
+const MATRIX_COLUMNS: CategoryCol[] = [
+  { id: 'VIEW', label: 'Xem & Tra Cứu', subLabel: 'Quyền đọc (Read-only)' },
+  { id: 'CREATE', label: 'Tạo Mới', subLabel: 'Thêm hồ sơ mới' },
+  { id: 'EDIT', label: 'Chỉnh Sửa', subLabel: 'Cập nhật thông tin' },
+  { id: 'ACTION', label: 'Duyệt & Nghiệp Vụ', subLabel: 'Phê duyệt, phân công' },
+  { id: 'ADMIN', label: 'Quản Trị Cao Cấp', subLabel: 'Quản lý toàn quyền' },
+];
+
+function getPermissionCategory(code: string): CapabilityCategory {
+  if (code.endsWith('_VIEW')) return 'VIEW';
+  if (code.endsWith('_CREATE')) return 'CREATE';
+  if (code.endsWith('_EDIT')) return 'EDIT';
+  if (
+    code.includes('APPROVE') ||
+    code.includes('ASSIGN') ||
+    code.includes('REVIEW')
+  ) {
+    return 'ACTION';
+  }
+  return 'ADMIN';
+}
+
+function getPillStatusClass(isFull: boolean, isPartial: boolean): string {
+  if (isFull) return styles.pillFull;
+  if (isPartial) return styles.pillPartial;
+  return styles.pillNone;
+}
+
+function getPillStatusLabel(isFull: boolean, isPartial: boolean): string {
+  if (isFull) return 'Toàn quyền';
+  if (isPartial) return 'Một phần';
+  return 'Chưa cấp';
+}
+
+function getCountBadgeClass(isAll: boolean, isPartial: boolean): string {
+  if (isAll) return styles.countFull;
+  if (isPartial) return styles.countPartial;
+  return styles.countNone;
 }
 
 export const RoleModal: React.FC<RoleModalProps> = ({
@@ -49,12 +99,17 @@ export const RoleModal: React.FC<RoleModalProps> = ({
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
 
-  // Tính tổng số lượng quyền hiện có trong toàn hệ thống
+  // Bộ lọc hiển thị ma trận
+  const [filterMode, setFilterMode] = useState<'ALL' | 'GRANTED' | 'UNGRANTED'>('ALL');
+
+  // Toàn bộ danh sách quyền phẳng
   const allSystemPermissions = useMemo(() => {
     return permissionGroups.flatMap((group) => group.permissions);
   }, [permissionGroups]);
 
   const totalPermissionsCount = allSystemPermissions.length;
+  const grantedCount = selectedCodes.length;
+  const percentGranted = totalPermissionsCount > 0 ? Math.round((grantedCount / totalPermissionsCount) * 100) : 0;
 
   const loadRoleDetail = useCallback(async (roleId: number) => {
     try {
@@ -79,11 +134,9 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       setDescription(role.description || '');
       setNameError(null);
 
-      // Nếu đối tượng đã có danh sách permissionCodes đầy đủ
       if ('permissionCodes' in role && Array.isArray((role as RoleDetail).permissionCodes)) {
         setSelectedCodes((role as RoleDetail).permissionCodes);
       } else {
-        // Gọi API lấy thông tin chi tiết vai trò
         void loadRoleDetail(role.id);
       }
     } else {
@@ -92,42 +145,55 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       setSelectedCodes([]);
       setNameError(null);
     }
+    setFilterMode('ALL');
   }, [isOpen, role, loadRoleDetail]);
 
   if (!isOpen) return null;
 
-  // Xử lý bật/tắt 1 quyền đơn lẻ
+  // Bật/tắt 1 quyền đơn lẻ
   const handleToggleCode = (code: string) => {
     setSelectedCodes((prev) =>
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
   };
 
-  // Xử lý chọn/bỏ chọn tất cả quyền của 1 Module
+  // Bật/tắt toàn bộ quyền của 1 Module (Hàng)
   const handleToggleModule = (group: PermissionGroup) => {
     const groupCodes = group.permissions.map((p) => p.code);
     const isAllSelected = groupCodes.every((code) => selectedCodes.includes(code));
 
     if (isAllSelected) {
-      // Bỏ chọn tất cả quyền của module này
       setSelectedCodes((prev) => prev.filter((c) => !groupCodes.includes(c)));
     } else {
-      // Chọn tất cả quyền của module này
       setSelectedCodes((prev) => Array.from(new Set([...prev, ...groupCodes])));
     }
   };
 
-  // Chọn toàn bộ quyền hệ thống
+  // Bật/tắt toàn bộ quyền của 1 Cột (Category)
+  const handleToggleColumn = (catId: CapabilityCategory) => {
+    const colPermissions = allSystemPermissions.filter(
+      (p) => getPermissionCategory(p.code) === catId
+    );
+    const colCodes = colPermissions.map((p) => p.code);
+    const isAllColSelected = colCodes.length > 0 && colCodes.every((c) => selectedCodes.includes(c));
+
+    if (isAllColSelected) {
+      setSelectedCodes((prev) => prev.filter((c) => !colCodes.includes(c)));
+    } else {
+      setSelectedCodes((prev) => Array.from(new Set([...prev, ...colCodes])));
+    }
+  };
+
+  // Chọn toàn bộ quyền
   const handleSelectAll = () => {
     setSelectedCodes(allSystemPermissions.map((p) => p.code));
   };
 
-  // Bỏ chọn toàn bộ quyền
+  // Bỏ chọn toàn bộ
   const handleClearAll = () => {
     setSelectedCodes([]);
   };
 
-  // Lấy icon trực quan cho từng module
   const getModuleIcon = (moduleCode: string) => {
     switch (moduleCode.toUpperCase()) {
       case 'USER':
@@ -180,7 +246,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi lưu vai trò';
       toast.error(msg);
-      // Giữ nguyên modal và dữ liệu người dùng đang nhập theo UX Rules
     } finally {
       setIsSubmitting(false);
     }
@@ -190,41 +255,53 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     <div className={styles.titleArea}>
       <div className={styles.headerLeft}>
         <div className={styles.headerIcon}>
-          <Shield size={18} />
+          <Shield size={20} />
         </div>
-        <h2 className={styles.headerTitle}>
-          {isEditMode ? `Cấu Hình Vai Trò: ${role.name}` : 'Tạo Mới Vai Trò & Phân Quyền'}
-          {isSystem && (
-            <span className={styles.systemBadge} title="Vai trò mặc định của hệ thống">
-              <Lock size={11} /> Hệ Thống
-            </span>
-          )}
-        </h2>
+        <div>
+          <h2 className={styles.headerTitle}>
+            {isEditMode ? `Cấu Hình Vai Trò: ${role.name}` : 'Tạo Mới Vai Trò & Phân Quyền'}
+            {isSystem ? (
+              <span className={styles.systemBadge} title="Vai trò mặc định của hệ sinh thái">
+                <Lock size={11} /> Hệ Thống
+              </span>
+            ) : (
+              <span className={styles.customBadge}>Tùy Chỉnh</span>
+            )}
+          </h2>
+        </div>
       </div>
       <span className={styles.counterBadge}>
-        Đã cấp: {selectedCodes.length}/{totalPermissionsCount} đặc quyền
+        Đã cấp: {grantedCount}/{totalPermissionsCount} đặc quyền ({percentGranted}%)
       </span>
     </div>
   );
 
   const modalFooter = (
     <div className={styles.modalFooter}>
-      <Button
-        type="button"
-        variant="secondary"
-        onClick={onClose}
-        disabled={isSubmitting}
-      >
-        Hủy Bỏ
-      </Button>
-      <Button
-        type="submit"
-        form="roleForm"
-        variant="primary"
-        isLoading={isSubmitting}
-      >
-        {isEditMode ? 'Lưu Phân Quyền' : 'Tạo Vai Trò'}
-      </Button>
+      <div className={styles.footerInfo}>
+        <Sparkles size={15} color="var(--primary)" />
+        <span>
+          Đang cấp <strong>{grantedCount}</strong> trên tổng số <strong>{totalPermissionsCount}</strong> đặc quyền cho vai trò này
+        </span>
+      </div>
+      <div className={styles.footerButtons}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
+          Hủy Bỏ
+        </Button>
+        <Button
+          type="submit"
+          form="roleForm"
+          variant="primary"
+          isLoading={isSubmitting}
+        >
+          {isEditMode ? 'Lưu Phân Quyền' : 'Tạo Vai Trò'}
+        </Button>
+      </div>
     </div>
   );
 
@@ -234,10 +311,10 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       onClose={onClose}
       title={modalTitle}
       footer={modalFooter}
-      size="lg"
+      size="xl"
     >
       <form id="roleForm" onSubmit={handleSubmit} className={styles.modalBody}>
-        {/* Thông tin cơ bản */}
+        {/* 1. THÔNG TIN CƠ BẢN */}
         <div className={styles.sectionBox}>
           <div className={styles.formGrid}>
             <div className={styles.formGroup}>
@@ -284,113 +361,281 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                 placeholder="Mô tả phạm vi quyền hạn và trách nhiệm của vai trò này"
                 maxLength={255}
               />
-              <p className={styles.helpText}>Hiển thị để người quản trị dễ dàng phân biệt</p>
+              <p className={styles.helpText}>Hiển thị để người quản trị dễ dàng nhận biết</p>
             </div>
           </div>
         </div>
 
-        {/* Ma trận phân quyền */}
-        <div className={styles.sectionBox}>
-          <div className={styles.matrixHeader}>
-            <div className={styles.matrixTitle}>
-              <Sparkles size={16} color="var(--primary)" /> Ma Trận Đặc Quyền Hệ Thống (RBAC Matrix)
+        {/* 2. TỔNG QUAN NĂNG LỰC CỦA VAI TRÒ (CAPABILITY OVERVIEW BANNER) */}
+        <div className={styles.summaryBanner}>
+          <div className={styles.summaryHeader}>
+            <div className={styles.summaryTitle}>
+              <Sparkles size={16} color="var(--primary)" /> Tóm Tắt Năng Lực & Chức Năng Cấp Quyền
             </div>
-            <div className={styles.matrixActions}>
-              <button
-                type="button"
-                className={styles.quickActionBtn}
-                onClick={handleSelectAll}
-                disabled={isSubmitting || isLoadingDetail}
-              >
-                <CheckSquare size={13} style={{ display: 'inline', marginRight: 4 }} />
-                Chọn tất cả ({totalPermissionsCount})
-              </button>
-              <button
-                type="button"
-                className={styles.quickActionBtn}
-                onClick={handleClearAll}
-                disabled={isSubmitting || isLoadingDetail}
-              >
-                <Square size={13} style={{ display: 'inline', marginRight: 4 }} />
-                Bỏ chọn tất cả
-              </button>
+
+            <div className={styles.progressWrapper}>
+              <div className={styles.progressBarBg}>
+                <div
+                  className={styles.progressBarFill}
+                  style={{ width: `${percentGranted}%` }}
+                />
+              </div>
+              <span className={styles.progressText}>
+                {grantedCount}/{totalPermissionsCount} ({percentGranted}%)
+              </span>
             </div>
           </div>
 
-          {isLoadingDetail ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)' }}>
-              Đang tải dữ liệu cấu hình đặc quyền...
-            </div>
-          ) : (
-            <div className={styles.moduleList}>
-              {permissionGroups.map((group) => {
-                const groupCodes = group.permissions.map((p) => p.code);
-                const selectedInGroupCount = groupCodes.filter((c) =>
-                  selectedCodes.includes(c)
-                ).length;
-                const isAllSelected =
-                  groupCodes.length > 0 && selectedInGroupCount === groupCodes.length;
+          {/* Module Status Chips */}
+          <div className={styles.moduleStatusGrid}>
+            {permissionGroups.map((group) => {
+              const groupCodes = group.permissions.map((p) => p.code);
+              const selectedCount = groupCodes.filter((c) => selectedCodes.includes(c)).length;
+              const isFull = groupCodes.length > 0 && selectedCount === groupCodes.length;
+              const isPartial = selectedCount > 0 && selectedCount < groupCodes.length;
 
-                return (
-                  <div
-                    key={group.module}
-                    className={`${styles.moduleCard} ${
-                      selectedInGroupCount > 0 ? styles.moduleCardActive : ''
-                    }`}
-                  >
-                    <div className={styles.moduleCardHeader}>
-                      <div className={styles.moduleTitleArea}>
-                        {getModuleIcon(group.module)}
-                        <span className={styles.moduleName}>{group.moduleName}</span>
-                        <span className={styles.moduleCode}>{group.module}</span>
-                      </div>
-                      <button
-                        type="button"
-                        className={styles.moduleToggleBtn}
-                        onClick={() => handleToggleModule(group)}
-                        disabled={isSubmitting}
-                      >
-                        {isAllSelected
-                          ? 'Bỏ chọn module'
-                          : `Chọn tất cả (${selectedInGroupCount}/${group.permissions.length})`}
-                      </button>
-                    </div>
+              const statusClass = getPillStatusClass(isFull, isPartial);
+              const statusLabel = getPillStatusLabel(isFull, isPartial);
 
-                    <div className={styles.permissionGrid}>
-                      {group.permissions.map((perm) => {
-                        const isChecked = selectedCodes.includes(perm.code);
-                        return (
-                          <label
-                            key={perm.code}
-                            className={`${styles.permissionItem} ${
-                              isChecked ? styles.permissionItemSelected : ''
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              className={styles.checkboxInput}
-                              checked={isChecked}
-                              onChange={() => handleToggleCode(perm.code)}
-                              disabled={isSubmitting}
-                            />
-                            <div className={styles.permissionContent}>
-                              <div className={styles.permissionTitleRow}>
-                                <span className={styles.permissionLabel}>{perm.name}</span>
-                                <span className={styles.permissionCodeTag}>{perm.code}</span>
-                              </div>
-                              {perm.description && (
-                                <span className={styles.permissionDesc}>{perm.description}</span>
-                              )}
+              return (
+                <div
+                  key={group.module}
+                  className={`${styles.moduleStatusPill} ${statusClass}`}
+                  title={`${group.moduleName}: ${statusLabel} (${selectedCount}/${group.permissions.length} đặc quyền)`}
+                >
+                  {getModuleIcon(group.module)}
+                  <span>{group.moduleName}</span>
+                  <span className={styles.pillBadge}>
+                    {statusLabel} ({selectedCount}/{group.permissions.length})
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3. TOOLBAR BẢNG MA TRẬN & BỘ LỌC */}
+        <div className={styles.matrixToolbar}>
+          <div className={styles.quickFilters}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Filter size={13} /> Lọc hiển thị:
+            </span>
+            <button
+              type="button"
+              className={`${styles.filterBtn} ${filterMode === 'ALL' ? styles.filterBtnActive : ''}`}
+              onClick={() => setFilterMode('ALL')}
+            >
+              Tất cả ({totalPermissionsCount})
+            </button>
+            <button
+              type="button"
+              className={`${styles.filterBtn} ${filterMode === 'GRANTED' ? styles.filterBtnActive : ''}`}
+              onClick={() => setFilterMode('GRANTED')}
+            >
+              Đã cấp ({grantedCount})
+            </button>
+            <button
+              type="button"
+              className={`${styles.filterBtn} ${filterMode === 'UNGRANTED' ? styles.filterBtnActive : ''}`}
+              onClick={() => setFilterMode('UNGRANTED')}
+            >
+              Chưa cấp ({totalPermissionsCount - grantedCount})
+            </button>
+          </div>
+
+          <div className={styles.batchActions}>
+            <button
+              type="button"
+              className={styles.batchBtn}
+              onClick={handleSelectAll}
+              disabled={isSubmitting || isLoadingDetail}
+            >
+              <CheckSquare size={13} /> Chọn tất cả (17)
+            </button>
+            <button
+              type="button"
+              className={styles.batchBtn}
+              onClick={handleClearAll}
+              disabled={isSubmitting || isLoadingDetail}
+            >
+              <Square size={13} /> Bỏ chọn tất cả
+            </button>
+          </div>
+        </div>
+
+        {/* 4. BẢNG MA TRẬN PHÂN QUYỀN TRỰC QUAN (MATRIX TABLE) */}
+        <div className={styles.tableContainer}>
+          <div className={styles.matrixTableWrapper}>
+            <table className={styles.matrixTable}>
+              <thead>
+                <tr>
+                  <th style={{ width: '250px' }}>
+                    Phân Hệ / Module Nghiệp Vụ
+                  </th>
+                  {MATRIX_COLUMNS.map((col) => {
+                    const colPerms = allSystemPermissions.filter(
+                      (p) => getPermissionCategory(p.code) === col.id
+                    );
+                    const selectedInCol = colPerms.filter((p) =>
+                      selectedCodes.includes(p.code)
+                    ).length;
+                    const isAllCol = colPerms.length > 0 && selectedInCol === colPerms.length;
+
+                    return (
+                      <th key={col.id}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                            <span>{col.label}</span>
+                            {colPerms.length > 0 && (
+                              <button
+                                type="button"
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  color: isAllCol ? 'var(--primary)' : 'var(--text-muted)',
+                                  cursor: 'pointer',
+                                  padding: '1px 4px',
+                                  borderRadius: 4,
+                                }}
+                                onClick={() => handleToggleColumn(col.id)}
+                                title={`Bật/tắt toàn bộ cột ${col.label}`}
+                              >
+                                ({selectedInCol}/{colPerms.length})
+                              </button>
+                            )}
+                          </div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 500, color: 'var(--text-muted)', textTransform: 'none' }}>
+                            {col.subLabel}
+                          </span>
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {isLoadingDetail ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
+                      Đang tải dữ liệu cấu hình ma trận đặc quyền...
+                    </td>
+                  </tr>
+                ) : (
+                  permissionGroups.map((group) => {
+                    const groupCodes = group.permissions.map((p) => p.code);
+                    const selectedInGroup = groupCodes.filter((c) => selectedCodes.includes(c)).length;
+                    const isAllGroup = groupCodes.length > 0 && selectedInGroup === groupCodes.length;
+                    const isPartialGroup = selectedInGroup > 0 && selectedInGroup < groupCodes.length;
+
+                    const countBadgeClass = getCountBadgeClass(isAllGroup, isPartialGroup);
+                    const groupStatusLabel = getPillStatusLabel(isAllGroup, isPartialGroup);
+
+                    return (
+                      <tr key={group.module} className={styles.matrixRow}>
+                        {/* Cột 1: Thông tin Module & Nút chọn cả hàng */}
+                        <td className={styles.moduleCell}>
+                          <div className={styles.moduleCellHeader}>
+                            <div className={styles.moduleCheckboxWrapper}>
+                              <input
+                                type="checkbox"
+                                className={styles.permCheckbox}
+                                checked={isAllGroup}
+                                onChange={() => handleToggleModule(group)}
+                                disabled={isSubmitting}
+                                title={isAllGroup ? 'Bỏ chọn toàn bộ module này' : 'Chọn toàn bộ đặc quyền của module này'}
+                              />
                             </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                            <div className={styles.moduleMeta}>
+                              <div className={styles.moduleNameRow}>
+                                {getModuleIcon(group.module)}
+                                <span className={styles.moduleNameText}>{group.moduleName}</span>
+                              </div>
+                              <div className={styles.moduleStatusRow}>
+                                <span className={styles.moduleTag}>{group.module}</span>
+                                <span className={`${styles.moduleCountBadge} ${countBadgeClass}`}>
+                                  {groupStatusLabel} ({selectedInGroup}/{group.permissions.length})
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Cột 2-6: Các ô đặc quyền tương ứng với từng Category */}
+                        {MATRIX_COLUMNS.map((col) => {
+                          const permsInCell = group.permissions.filter(
+                            (p) => getPermissionCategory(p.code) === col.id
+                          );
+
+                          // Áp dụng filter hiển thị nếu có
+                          const visiblePerms = permsInCell.filter((p) => {
+                            if (filterMode === 'GRANTED') return selectedCodes.includes(p.code);
+                            if (filterMode === 'UNGRANTED') return !selectedCodes.includes(p.code);
+                            return true;
+                          });
+
+                          if (permsInCell.length === 0) {
+                            return (
+                              <td key={col.id} className={styles.emptyCellDash}>
+                                —
+                              </td>
+                            );
+                          }
+
+                          return (
+                            <td key={col.id}>
+                              <div className={styles.permissionCellContent}>
+                                {visiblePerms.length === 0 && filterMode !== 'ALL' ? (
+                                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                    (Không khớp bộ lọc)
+                                  </span>
+                                ) : (
+                                  visiblePerms.map((perm: PermissionItem) => {
+                                    const isChecked = selectedCodes.includes(perm.code);
+                                    return (
+                                      <label
+                                        key={perm.code}
+                                        className={`${styles.permPill} ${
+                                          isChecked ? styles.permPillChecked : ''
+                                        }`}
+                                        title={`${perm.code}: ${perm.description || perm.name}`}
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          className={styles.permCheckbox}
+                                          checked={isChecked}
+                                          onChange={() => handleToggleCode(perm.code)}
+                                          disabled={isSubmitting}
+                                        />
+                                        <div className={styles.permInfo}>
+                                          <span className={styles.permName}>
+                                            {perm.name}
+                                          </span>
+                                          <span className={styles.permCode}>
+                                            {perm.code}
+                                          </span>
+                                          {perm.description && (
+                                            <span className={styles.permDesc}>
+                                              {perm.description}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </label>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </form>
     </Modal>
