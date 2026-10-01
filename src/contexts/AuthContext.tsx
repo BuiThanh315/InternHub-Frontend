@@ -9,6 +9,8 @@ export interface AuthContextType {
   login: (username: string, password: string) => Promise<AuthUser>;
   loginWithGoogle: (idToken: string) => Promise<AuthUser>;
   logout: () => void;
+  updateUser: (updatedData: Partial<AuthUser>) => void;
+  updateUserAvatar: (avatarUrl: string) => void;
 }
 
 // Fallback mặc định an toàn: đọc trực tiếp session hiện có từ localStorage
@@ -22,6 +24,8 @@ const getDefaultContextValue = (): AuthContextType => {
     login: (username, password) => authService.login(username, password),
     loginWithGoogle: (idToken) => authService.loginWithGoogle(idToken),
     logout: () => authService.logout(),
+    updateUser: () => {},
+    updateUserAvatar: () => {},
   };
 };
 
@@ -47,6 +51,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  const updateUser = (updatedData: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const next = { ...prev, ...updatedData };
+      try {
+        localStorage.setItem('auth_user', JSON.stringify(next));
+      } catch (e) {
+        console.warn('Lỗi lưu cập nhật auth_user vào localStorage:', e);
+      }
+      return next;
+    });
+  };
+
+  const updateUserAvatar = (avatarUrl: string) => {
+    updateUser({ avatarUrl });
+  };
+
   const contextValue = useMemo<AuthContextType>(
     () => ({
       user,
@@ -55,6 +76,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       loginWithGoogle,
       logout,
+      updateUser,
+      updateUserAvatar,
     }),
     [user]
   );
@@ -73,3 +96,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

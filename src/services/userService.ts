@@ -11,6 +11,7 @@ interface RawUserPayload {
   dateOfBirth?: string;
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
   address?: string;
+  bio?: string;
   avatarUrl?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
   role?: 'ADMIN' | 'HR' | 'MENTOR' | 'INTERN' | 'USER';
@@ -29,6 +30,7 @@ const normalizeUser = (u: RawUserPayload): User => ({
   dateOfBirth: u.dateOfBirth,
   gender: u.gender,
   address: u.address,
+  bio: u.bio,
   avatarUrl: u.avatarUrl,
   status: u.status || 'ACTIVE',
   role: u.role || 'USER',

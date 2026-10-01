@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
+import { getAvatarUrl } from '../../utils/avatar';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
@@ -41,6 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { to: '/admin/dashboard', label: 'Bảng Điều Khiển', icon: LayoutDashboard },
           { to: '/admin/users', label: 'Quản Lý Người Dùng', icon: Users },
           { to: '/admin/system', label: 'Giám Sát Hệ Thống', icon: ShieldCheck },
+          { to: ROUTES.PROFILE, label: 'Hồ Sơ Quản Trị', icon: UserIcon },
         ];
       case 'HR':
         return [
@@ -49,12 +51,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { to: '/hr/mentors', label: 'Quản Lý Mentor & Tải', icon: Users },
           { to: '/hr/interns', label: 'Hồ Sơ Thực Tập Sinh', icon: GraduationCap },
           { to: '/hr/review', label: 'Duyệt Tài Liệu & CV', icon: FileCheck2 },
+          { to: ROUTES.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },
         ];
       case 'MENTOR':
         return [
           { to: '/mentor/dashboard', label: 'Bảng Điều Khiển Mentor', icon: LayoutDashboard },
           { to: '/mentor/interns', label: 'TTS Phụ Trách', icon: Users },
           { to: '/mentor/documents', label: 'Tài Liệu Hướng Dẫn', icon: FolderGit2 },
+          { to: ROUTES.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },
         ];
       case 'INTERN':
       case 'USER':
@@ -63,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { to: ROUTES.INTERN.DASHBOARD, label: 'Tiến Độ Thực Tập', icon: LayoutDashboard },
           { to: ROUTES.INTERN.APPLY, label: 'Nộp Hồ Sơ Ứng Tuyển', icon: GraduationCap },
           { to: ROUTES.INTERN.DOCUMENTS, label: 'Quản Lý Tài Liệu', icon: FileText },
-          { to: ROUTES.INTERN.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },
+          { to: ROUTES.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },
         ];
     }
   };
@@ -130,14 +134,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className={styles.navContainer}>
           {/* User Card */}
           {user && (
-            <div className={`${styles.userCard} ${isCollapsed ? styles.userCardCollapsed : ''}`}>
-              <div
+            <NavLink
+              to={ROUTES.PROFILE}
+              onClick={onClose}
+              className={`${styles.userCard} ${isCollapsed ? styles.userCardCollapsed : ''}`}
+              title={`Hồ sơ cá nhân: ${user.fullName || user.username} (${currentRoleInfo?.title})`}
+              style={{ textDecoration: 'none' }}
+            >
+              <img
+                src={getAvatarUrl(user)}
+                alt={user.fullName || user.username}
                 className={styles.userAvatar}
-                style={{ backgroundColor: currentRoleInfo?.color || 'var(--primary)' }}
-                title={`${user.fullName || user.username} (${currentRoleInfo?.title})`}
-              >
-                {user.username.charAt(0).toUpperCase()}
-              </div>
+                style={{ objectFit: 'cover' }}
+              />
               {!isCollapsed && (
                 <div className={styles.userInfo}>
                   <p className={styles.userName} title={user.fullName || user.username}>
@@ -151,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </span>
                 </div>
               )}
-            </div>
+            </NavLink>
           )}
 
           {/* Navigation List */}

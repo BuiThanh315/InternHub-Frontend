@@ -1,0 +1,51 @@
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.disabledHint {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 0.25rem;
+}
+
+.textareaInput {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-default, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-main, #0f172a);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textareaInput:focus {
+  outline: none;
+  border-color: var(--primary, #4f46e5);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.textareaError {
+  border-color: #ef4444;
+}
+
+.textareaError:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.fieldErrorText {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 0.35rem;
+}

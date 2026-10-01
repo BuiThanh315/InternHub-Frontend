@@ -96,20 +96,143 @@ export const documentService = {
     return `${baseUrl}/api/interns/documents/${documentId}/download?disposition=${disposition}`;
   },
 
-  previewDocumentFile(documentId: number) {
-    const url = this.getDocumentDownloadUrl(documentId, 'inline');
-    window.open(url, '_blank');
+  /**
+   * Tải file trực tiếp lên Object Storage (S3 / MinIO) qua Pre-signed URL (Không qua backend)
+   */
+  async uploadDocumentDirectToS3(
+    internCode: string,
+    file: File,
+    documentType: DocumentType,
+    onProgress?: (progress: number) => void,
+    signal?: AbortSignal
+  ): Promise<DocumentResponse> {
+    // 1. Xin Presigned Upload URL từ Backend
+    const requestUrlPayload = {
+      fileName: file.name,
+      contentType: file.type || 'application/pdf',
+      documentType: documentType,
+      fileSize: file.size,
+    };
+
+    const urlRes = await apiClient.post(
+      `/api/interns/${internCode}/documents/upload-url`,
+      requestUrlPayload,
+      { signal }
+    );
+    const { tempKey, presignedUrl } = urlRes.data.data;
+
+    // 2. Upload trực tiếp binary lên S3/MinIO bằng HTTP PUT
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', presignedUrl, true);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+      if (xhr.upload && onProgress) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded * 100) / e.total);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Tải lên S3 thất bại với mã trạng thái: ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Lỗi kết nối mạng khi tải tệp lên máy chủ lưu trữ'));
+      if (signal) {
+        signal.addEventListener('abort', () => xhr.abort());
+      }
+      xhr.send(file);
+    });
+
+    // 3. Xác nhận upload thành công về backend để ghi nhận bản ghi nghiệp vụ
+    const confirmPayload = {
+      tempKey,
+      originalFileName: file.name,
+      documentType,
+    };
+
+    const confirmRes = await apiClient.post(
+      `/api/interns/${internCode}/documents/confirm-upload`,
+      confirmPayload,
+      { signal }
+    );
+
+    return normalizeDoc(confirmRes.data.data);
   },
 
-  downloadDocumentFile(documentId: number, fileName?: string) {
-    const url = this.getDocumentDownloadUrl(documentId, 'attachment');
-    const a = document.createElement('a');
-    a.href = url;
-    if (fileName) a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  /**
+   * Lấy URL xem/tải trực tiếp từ Object Storage qua Pre-signed URL
+   */
+  async getDocumentPresignedViewUrl(documentId: number): Promise<string> {
+    const res = await apiClient.get(`/api/interns/documents/${documentId}/view-url`);
+    return res.data.data.presignedUrl;
   },
+
+  async previewDocumentFile(documentId: number) {
+    try {
+      // 1. Thử lấy Presigned URL trực tiếp từ S3 Object Storage
+      const presignedUrl = await this.getDocumentPresignedViewUrl(documentId);
+      if (presignedUrl) {
+        window.open(presignedUrl, '_blank');
+        return;
+      }
+    } catch (e) {
+      console.warn('Không thể tạo Presigned S3 URL, chuyển sang tải Blob qua Backend API:', e);
+    }
+
+    try {
+      // 2. Fallback: Tải file qua apiClient (có Bearer Token) và tạo Blob URL để mở tab mới
+      const response = await apiClient.get(`/api/interns/documents/${documentId}/download?disposition=inline`, {
+        responseType: 'blob',
+      });
+      const contentType = (response.headers && response.headers['content-type'])
+        ? String(response.headers['content-type'])
+        : 'application/pdf';
+
+      const fileBlob = new Blob([response.data], { type: contentType });
+      const blobUrl = window.URL.createObjectURL(fileBlob);
+      window.open(blobUrl, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err: any) {
+      console.error('Lỗi khi xem tài liệu:', err);
+      alert(err.response?.data?.message || err.message || 'Không thể xem tài liệu này.');
+    }
+  },
+
+  async downloadDocumentFile(documentId: number, fileName?: string) {
+    try {
+      // Tải file qua apiClient có kèm Bearer token để tránh bị 403
+      const response = await apiClient.get(`/api/interns/documents/${documentId}/download?disposition=attachment`, {
+        responseType: 'blob',
+      });
+      const contentType = (response.headers && response.headers['content-type'])
+        ? String(response.headers['content-type'])
+        : 'application/octet-stream';
+
+      const fileBlob = new Blob([response.data], { type: contentType });
+      const blobUrl = window.URL.createObjectURL(fileBlob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      if (fileName) a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err: any) {
+      console.error('Lỗi khi tải tài liệu:', err);
+      alert(err.response?.data?.message || err.message || 'Không thể tải tài liệu này.');
+    }
+  },
+
 };
 
 export default documentService;
+
+

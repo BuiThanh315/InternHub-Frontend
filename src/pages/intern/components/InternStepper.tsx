@@ -9,7 +9,7 @@ interface InternStepperProps {
 
 const STEPS = [
   { num: 1, label: 'Nộp Hồ Sơ (PENDING)', desc: 'Chờ HR tiếp nhận' },
-  { num: 2, label: 'Đã Duyệt (APPROVED)', desc: 'Hồ sơ đã được phê duyệt' },
+  { num: 2, label: 'Đã Duyệt (APPROVED)', desc: 'Chờ ký hợp đồng' },
   { num: 3, label: 'Đang Thực Tập (INTERNING)', desc: 'Làm việc cùng Mentor' },
   { num: 4, label: 'Hoàn Thành (COMPLETED)', desc: 'Đánh giá & Cấp chứng nhận' },
 ];
@@ -52,6 +52,42 @@ export const InternStepper: React.FC<InternStepperProps> = ({ status }) => {
           );
         })}
       </div>
+
+      {status === 'APPROVED' && (
+        <div
+          style={{
+            marginTop: '1rem',
+            backgroundColor: 'rgba(99, 102, 241, 0.08)',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+            borderRadius: '8px',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            fontSize: '0.85rem',
+            color: 'var(--text-main)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CheckCircle2 size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+            <span>
+              Hồ sơ của bạn đã được phê duyệt! Vui lòng vào mục <strong>Hợp Đồng & Tài Liệu</strong> để kiểm tra và ký xác nhận tiếp nhận.
+            </span>
+          </div>
+          <a
+            href="/intern/documents"
+            style={{
+              color: 'var(--primary)',
+              fontWeight: 700,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Đến Ký Hợp Đồng &rarr;
+          </a>
+        </div>
+      )}
 
       {isRejected && (
         <div className={styles.rejectedAlert}>
