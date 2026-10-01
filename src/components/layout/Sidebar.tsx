@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Building2,
   FileText,
+  FileSignature,
   X,
   ChevronLeft,
   ChevronRight,
@@ -50,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { to: '/hr/programs', label: 'Chương Trình Thực Tập', icon: FolderGit2 },
           { to: '/hr/mentors', label: 'Quản Lý Mentor & Tải', icon: Users },
           { to: '/hr/interns', label: 'Hồ Sơ Thực Tập Sinh', icon: GraduationCap },
+          { to: '/hr/contracts', label: 'Quản Lý Hợp Đồng', icon: FileSignature },
           { to: '/hr/review', label: 'Duyệt Tài Liệu & CV', icon: FileCheck2 },
           { to: ROUTES.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },
         ];

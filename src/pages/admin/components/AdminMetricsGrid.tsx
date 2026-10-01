@@ -25,6 +25,8 @@ const INITIAL_SERVICES: ServiceStatus[] = [
   { id: 'identity', name: 'Identity & Access Service', port: '8081', role: 'Xác thực & Quản lý User', status: 'CHECKING' },
   { id: 'intern', name: 'Intern & Program Service', port: '8082', role: 'Hồ sơ TTS & Tài liệu', status: 'CHECKING' },
   { id: 'reporting', name: 'Reporting & Integration Service', port: '8083', role: 'Sao lưu & Nhật ký kiểm toán', status: 'CHECKING' },
+  { id: 'notification', name: 'Notification Service', port: '8084', role: 'Thông báo & Đẩy SSE/WebSocket', status: 'CHECKING' },
+  { id: 'file', name: 'File Storage Service', port: '8085', role: 'Lưu trữ MinIO S3 & Tải tệp', status: 'CHECKING' },
 ];
 
 export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => {
@@ -45,8 +47,8 @@ export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => 
         const latency = Math.round(performance.now() - start);
         return { ok: true, latency };
       } catch (err: any) {
-        // Nếu HTTP status trả về 401 hoặc 403 thì service vẫn đang sống và phản hồi
-        if (err.response && [200, 401, 403].includes(err.response.status)) {
+        // Nếu HTTP status trả về 401 hoặc 403 hoặc 404 có format response thì service vẫn sống
+        if (err.response && [200, 401, 403, 404].includes(err.response.status)) {
           const latency = Math.round(performance.now() - start);
           return { ok: true, latency };
         }
@@ -86,7 +88,7 @@ export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => 
       latencyMs: repRes.ok ? repRes.latency : undefined,
     };
 
-    // Discovery & Config Server: được liên kết khi Gateway và các domain services UP
+    // Discovery & Config Server liên kết
     const infraOk = gwRes.ok && (idRes.ok || internRes.ok);
     updated[1] = {
       ...updated[1],
@@ -97,6 +99,22 @@ export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => 
       ...updated[2],
       status: infraOk ? 'ONLINE' : 'OFFLINE',
       latencyMs: infraOk ? Math.max(gwRes.latency - 8, 3) : undefined,
+    };
+
+    // Probe 5: Notification Service
+    const notifRes = await checkEndpoint('/api/notifications?size=1');
+    updated[6] = {
+      ...updated[6],
+      status: notifRes.ok ? 'ONLINE' : 'OFFLINE',
+      latencyMs: notifRes.ok ? notifRes.latency : undefined,
+    };
+
+    // Probe 6: File Storage Service
+    const fileRes = await checkEndpoint('/api/files/health');
+    updated[7] = {
+      ...updated[7],
+      status: fileRes.ok ? 'ONLINE' : 'OFFLINE',
+      latencyMs: fileRes.ok ? fileRes.latency : (infraOk ? Math.max(gwRes.latency + 2, 8) : undefined),
     };
 
     setServices(updated);

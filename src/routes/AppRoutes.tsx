@@ -1,16 +1,16 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { HrDashboard } from '../pages/hr/HrDashboard';
 import { HrProgramManagementPage } from '../pages/hr/programs/HrProgramManagementPage';
 import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPage';
+import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternApplyPage } from '../pages/intern/InternApplyPage';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
-import { InternProfilePage } from '../pages/intern/InternProfilePage';
 import { ProfilePage } from '../pages/profile';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
@@ -19,8 +19,14 @@ import { ROUTES } from '../constants/routes';
 
 export const AppRoutes: React.FC = () => {
   const { isAuthenticated, role } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const getDashboardRedirect = () => {
+    const redirectParam = searchParams.get('redirect');
+    if (redirectParam && redirectParam.startsWith('/')) {
+      return <Navigate to={redirectParam} replace />;
+    }
+
     switch (role) {
       case 'ADMIN':
         return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
@@ -74,6 +80,7 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.HR.PROGRAMS} element={<HrProgramManagementPage />} />
           <Route path={ROUTES.HR.MENTORS} element={<HrMentorManagementPage />} />
           <Route path={ROUTES.HR.INTERNS} element={<HrDashboard />} />
+          <Route path={ROUTES.HR.CONTRACTS} element={<HrContractManagementPage />} />
           <Route path={ROUTES.HR.REVIEW} element={<HrDashboard />} />
         </Route>
 

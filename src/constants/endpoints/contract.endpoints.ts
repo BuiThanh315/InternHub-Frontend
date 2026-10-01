@@ -1,11 +1,18 @@
 export const CONTRACT_ENDPOINTS = {
   BASE: '/api/interns',
+  ALL: '/api/interns/contracts/all',
   UPLOAD: (internCode: string) => `/api/interns/${internCode}/contracts`,
+  UPLOAD_URL: (internCode: string) => `/api/interns/${internCode}/contracts/upload-url`,
+  CONFIRM_UPLOAD: (internCode: string) => `/api/interns/${internCode}/contracts/confirm-upload`,
+  VIEW_URL: (contractId: number | string) => `/api/interns/contracts/${contractId}/view-url`,
   BY_INTERN: (internCode: string) => `/api/interns/${internCode}/contracts`,
   DOWNLOAD: (contractId: number | string) => `/api/interns/contracts/${contractId}/download`,
   MY_CONTRACTS: '/api/interns/contracts/my-contracts',
   MY_ACTIVE: '/api/interns/contracts/my-contracts/active',
   BY_ID: (contractId: number | string) => `/api/interns/contracts/${contractId}`,
   CONFIRM: (contractId: number | string) => `/api/interns/contracts/${contractId}/confirm`,
+  FEEDBACK: (contractId: number | string) => `/api/interns/contracts/${contractId}/feedback`,
+  TERMINATE: (contractId: number | string) => `/api/interns/contracts/${contractId}/terminate`,
+  REMIND: (contractId: number | string) => `/api/interns/contracts/${contractId}/remind`,
   REJECT: (contractId: number | string) => `/api/interns/contracts/${contractId}/reject`,
 } as const;
