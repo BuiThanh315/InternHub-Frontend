@@ -17,6 +17,7 @@ import type { RoleType } from "../../types";
 import { Alert } from "../common/Alert/Alert";
 import { Button } from "../common/Button/Button";
 import { Modal } from "../common/Modal/Modal";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 import styles from "./LoginModal.module.css";
 
 export interface LoginModalProps {
@@ -41,7 +42,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [needsActivation, setNeedsActivation] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   // Reset form khi modal mở/đóng
@@ -67,6 +68,39 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       default:
         navigate(ROUTES.INTERN.DASHBOARD, { replace: true });
         break;
+    }
+  };
+
+  const handleGoogleSuccess = async (idToken: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setNeedsActivation(false);
+      const authUser = await loginWithGoogle(idToken);
+      toast.success(`Chào mừng ${authUser.fullName || authUser.username}!`);
+      onClose();
+      handleRedirect(authUser.role);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Đăng nhập bằng tài khoản Google không thành công. Vui lòng thử lại.";
+      setError(msg);
+      if (
+        msg.toLowerCase().includes("kích hoạt") ||
+        msg.toLowerCase().includes("activation") ||
+        msg.toLowerCase().includes("pending_activation")
+      ) {
+        setNeedsActivation(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = (errorMessage?: string) => {
+    if (errorMessage) {
+      setError(errorMessage);
     }
   };
 
@@ -157,6 +191,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           className="mb-4"
         />
       )}
+
+      <div className={styles.oauthSection}>
+        <GoogleSignInButton
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          disabled={loading}
+          isLoading={loading}
+        />
+        <div className={styles.divider}>
+          <span className={styles.dividerLine} />
+          <span className={styles.dividerText}>hoặc đăng nhập với mật khẩu</span>
+          <span className={styles.dividerLine} />
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.fieldGroup}>

@@ -77,10 +77,12 @@ apiClient.interceptors.response.use(
         errorMessage = data?.message || 'Dữ liệu bị trùng lặp trong hệ thống';
       }
 
-      // Xử lý tự động dọn session và điều hướng khi 401 (không redirect khi đang ở các trang công khai)
+      // Xử lý tự động dọn session và điều hướng khi 401 (không redirect khi đang ở các trang công khai hoặc đang gọi API auth)
       if (status === 401) {
+        const isAuthRequest = error.config?.url?.includes('/auth/');
         const currentPath = window.location.pathname;
         if (
+          !isAuthRequest &&
           currentPath !== '/apply' &&
           currentPath !== '/'
         ) {
