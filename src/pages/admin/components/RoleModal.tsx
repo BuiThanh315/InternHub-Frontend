@@ -13,6 +13,9 @@ import {
   ShieldAlert,
   Layers,
   Filter,
+  RotateCcw,
+  Eye,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Modal } from '../../../components/common/Modal/Modal';
@@ -82,6 +85,31 @@ function getCountBadgeClass(isAll: boolean, isPartial: boolean): string {
   return styles.countNone;
 }
 
+/**
+ * Trích xuất danh sách mã đặc quyền an toàn từ RoleItem hoặc RoleDetail
+ * Hỗ trợ cả string[] lẫn object[] { code: string }
+ */
+function extractPermissionCodes(data: unknown): string[] {
+  if (!data || typeof data !== 'object') return [];
+  const obj = data as Record<string, unknown>;
+
+  // Trường hợp 1: Mảng permissionCodes
+  if (Array.isArray(obj.permissionCodes)) {
+    return obj.permissionCodes
+      .map((item) => (typeof item === 'string' ? item : (item as { code?: string })?.code))
+      .filter((code): code is string => typeof code === 'string' && code.length > 0);
+  }
+
+  // Trường hợp 2: Mảng permissions (Backend trả về List<String> hoặc List<Permission>)
+  if (Array.isArray(obj.permissions)) {
+    return obj.permissions
+      .map((item) => (typeof item === 'string' ? item : (item as { code?: string })?.code))
+      .filter((code): code is string => typeof code === 'string' && code.length > 0);
+  }
+
+  return [];
+}
+
 export const RoleModal: React.FC<RoleModalProps> = ({
   isOpen,
   role,
@@ -95,6 +123,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+  const [initialCodes, setInitialCodes] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -117,7 +146,9 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       const detail = await rbacService.getRoleById(roleId);
       setName(detail.name);
       setDescription(detail.description || '');
-      setSelectedCodes(detail.permissionCodes || detail.permissions.map((p) => p.code));
+      const codes = extractPermissionCodes(detail);
+      setSelectedCodes(codes);
+      setInitialCodes(codes);
     } catch {
       toast.error('Không thể tải chi tiết đặc quyền của vai trò');
     } finally {
@@ -134,15 +165,18 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       setDescription(role.description || '');
       setNameError(null);
 
-      if ('permissionCodes' in role && Array.isArray((role as RoleDetail).permissionCodes)) {
-        setSelectedCodes((role as RoleDetail).permissionCodes);
-      } else {
-        void loadRoleDetail(role.id);
-      }
+      // Trích xuất ngay lập tức các đặc quyền hiện có từ prop
+      const existingCodes = extractPermissionCodes(role);
+      setSelectedCodes(existingCodes);
+      setInitialCodes(existingCodes);
+
+      // Luôn tải lại chi tiết mới nhất từ server để đồng bộ chính xác
+      void loadRoleDetail(role.id);
     } else {
       setName('');
       setDescription('');
       setSelectedCodes([]);
+      setInitialCodes([]);
       setNameError(null);
     }
     setFilterMode('ALL');
@@ -192,6 +226,20 @@ export const RoleModal: React.FC<RoleModalProps> = ({
   // Bỏ chọn toàn bộ
   const handleClearAll = () => {
     setSelectedCodes([]);
+  };
+
+  // Khôi phục danh mục quyền ban đầu của vai trò
+  const handleResetToInitial = () => {
+    setSelectedCodes(initialCodes);
+    toast.info(`Đã khôi phục về ${initialCodes.length} đặc quyền ban đầu của vai trò`);
+  };
+
+  // Chọn nhanh các quyền xem & tra cứu (Read-only)
+  const handleSelectReadOnly = () => {
+    const viewCodes = allSystemPermissions
+      .filter((p) => getPermissionCategory(p.code) === 'VIEW')
+      .map((p) => p.code);
+    setSelectedCodes((prev) => Array.from(new Set([...prev, ...viewCodes])));
   };
 
   const getModuleIcon = (moduleCode: string) => {
@@ -270,9 +318,16 @@ export const RoleModal: React.FC<RoleModalProps> = ({
           </h2>
         </div>
       </div>
-      <span className={styles.counterBadge}>
-        Đã cấp: {grantedCount}/{totalPermissionsCount} đặc quyền ({percentGranted}%)
-      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {isLoadingDetail && (
+          <span className={styles.loadingSyncBadge} title="Đang đồng bộ đặc quyền từ hệ thống...">
+            <Loader2 size={13} className={styles.spinIcon} /> Đang đồng bộ...
+          </span>
+        )}
+        <span className={styles.counterBadge}>
+          Đã cấp: {grantedCount}/{totalPermissionsCount} đặc quyền ({percentGranted}%)
+        </span>
+      </div>
     </div>
   );
 
@@ -444,6 +499,26 @@ export const RoleModal: React.FC<RoleModalProps> = ({
           </div>
 
           <div className={styles.batchActions}>
+            {isEditMode && initialCodes.length > 0 && (
+              <button
+                type="button"
+                className={styles.batchBtn}
+                onClick={handleResetToInitial}
+                disabled={isSubmitting || isLoadingDetail}
+                title="Khôi phục lại danh sách đặc quyền ban đầu của vai trò này"
+              >
+                <RotateCcw size={13} /> Khôi phục ban đầu ({initialCodes.length})
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.batchBtn}
+              onClick={handleSelectReadOnly}
+              disabled={isSubmitting || isLoadingDetail}
+              title="Chỉ chọn các đặc quyền xem & tra cứu (Read-only)"
+            >
+              <Eye size={13} /> Chỉ quyền xem
+            </button>
             <button
               type="button"
               className={styles.batchBtn}
@@ -516,7 +591,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {isLoadingDetail ? (
+                {isLoadingDetail && permissionGroups.length === 0 ? (
                   <tr>
                     <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                       Đang tải dữ liệu cấu hình ma trận đặc quyền...
