@@ -74,78 +74,38 @@ export const MentorDashboard: React.FC = () => {
         subtitle="Theo dõi tiến độ học việc, đánh giá hồ sơ và phê duyệt tài liệu thực tập"
       />
 
-      <div style={{ marginTop: '1.5rem' }}>
+      <div>
         {/* Metric Overview Cards */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '1.25rem',
-            marginBottom: '2rem',
-          }}
-        >
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                backgroundColor: 'var(--primary-light)',
-                color: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+        <div className={styles.metricsGrid}>
+          <div className={styles.kpiCard}>
+            <div className={`${styles.iconWrapper} ${styles.iconPrimary}`}>
               <Users size={24} />
             </div>
             <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>TTS Phụ Trách</p>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>{myInterns.length}</h3>
+              <p className={styles.kpiLabel}>TTS Phụ Trách</p>
+              <h3 className={styles.kpiValue}>{myInterns.length}</h3>
             </div>
           </div>
 
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                backgroundColor: 'var(--success-bg)',
-                color: 'var(--success)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+          <div className={styles.kpiCard}>
+            <div className={`${styles.iconWrapper} ${styles.iconSuccess}`}>
               <CheckCircle2 size={24} />
             </div>
             <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Đang Thực Tập</p>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>
+              <p className={styles.kpiLabel}>Đang Thực Tập</p>
+              <h3 className={styles.kpiValue}>
                 {myInterns.filter((i) => i.status === 'INTERNING' || i.status === 'APPROVED').length}
               </h3>
             </div>
           </div>
 
-          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                backgroundColor: 'var(--info-bg)',
-                color: 'var(--info)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+          <div className={styles.kpiCard}>
+            <div className={`${styles.iconWrapper} ${styles.iconInfo}`}>
               <FolderGit2 size={24} />
             </div>
             <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Tài Liệu Đã Nộp</p>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>{documents.length}</h3>
+              <p className={styles.kpiLabel}>Tài Liệu Đã Nộp</p>
+              <h3 className={styles.kpiValue}>{documents.length}</h3>
             </div>
           </div>
         </div>
@@ -153,8 +113,8 @@ export const MentorDashboard: React.FC = () => {
         {/* 2-Column Responsive Layout */}
         <div className={styles.twoColLayout}>
           {/* Left Column: Assigned Interns List */}
-          <div className="card">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>
+          <div className={styles.internListCard}>
+            <h3 className={styles.internListHeader}>
               Danh Sách Thực Tập Sinh ({myInterns.length})
             </h3>
 
@@ -165,30 +125,23 @@ export const MentorDashboard: React.FC = () => {
                 <Skeleton variant="card" height="110px" />
               </div>
             ) : myInterns.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+              <p className={styles.emptyInternText}>
                 Bạn chưa được phân công thực tập sinh nào.
               </p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {myInterns.map((intern) => {
                   const isSelected = selectedInternCode === intern.internCode;
                   return (
                     <div
                       key={intern.internCode}
                       onClick={() => handleSelectIntern(intern.internCode)}
-                      style={{
-                        padding: '1rem',
-                        borderRadius: '10px',
-                        cursor: 'pointer',
-                        border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border-default)',
-                        backgroundColor: isSelected ? 'var(--primary-light)' : 'var(--bg-surface)',
-                        transition: 'all 0.15s ease',
-                      }}
+                      className={`${styles.internItem} ${isSelected ? styles.internItemSelected : ''}`}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className={styles.internItemHeader}>
                         <div>
-                          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>{intern.fullName}</h4>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                          <h4 className={styles.internName}>{intern.fullName}</h4>
+                          <span className={styles.internCodeSub}>
                             {intern.internCode} • {intern.appliedPosition}
                           </span>
                         </div>
@@ -197,16 +150,7 @@ export const MentorDashboard: React.FC = () => {
                         </span>
                       </div>
 
-                      <div
-                        style={{
-                          fontSize: '0.8rem',
-                          color: 'var(--text-secondary)',
-                          display: 'grid',
-                          gridTemplateColumns: '1fr 1fr',
-                          gap: '0.4rem',
-                          marginTop: '0.5rem',
-                        }}
-                      >
+                      <div className={styles.internDetailsGrid}>
                         <div>Trường: <strong>{intern.university}</strong></div>
                         <div>Ngành: <strong>{intern.major}</strong></div>
                         <div>GPA: <strong>{intern.gpa || '-'}</strong></div>
@@ -214,7 +158,7 @@ export const MentorDashboard: React.FC = () => {
                       </div>
 
                       {intern.programName && (
-                        <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: 'var(--primary)', backgroundColor: 'var(--primary-light, #eff6ff)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
+                        <div className={styles.programBadge}>
                           🎯 {intern.programName}
                         </div>
                       )}

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Eye, Edit3, Upload, SearchX, FileSignature, UserCheck, RefreshCw, UserX, History } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, Edit3, Upload, SearchX, FileSignature, UserCheck, RefreshCw, UserX, History, MoreVertical, Play, CheckCircle2, Ban, RotateCcw } from 'lucide-react';
 import type { InternProfile, InternStatus } from '../../../types';
 import { Skeleton, Pagination } from '../../../components/common';
 import { getInternStatusLabel, formatPhoneNumber } from '../../../utils/formatters';
@@ -40,6 +40,19 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
   onOpenAssignMentor,
   onOpenRevokeMentor,
 }) => {
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const getBadgeClass = (status: InternStatus) => {
     switch (status) {
       case 'INTERNING':
@@ -252,44 +265,64 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                     )}
                   </td>
                   <td className={styles.colActions}>
-                    <div className={styles.actionButtonsGroup}>
+                    <div className={styles.actionCellWrapper}>
                       <button
                         type="button"
                         onClick={() => onViewDetail(intern)}
                         className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
                         title="Xem chi tiết & tài liệu"
                       >
-                        <Eye size={12} /> Chi Tiết
+                        <Eye size={13} /> Chi Tiết
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => onOpenEdit(intern)}
-                        className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
-                        title="Chỉnh sửa thông tin hồ sơ"
-                      >
-                        <Edit3 size={12} /> Sửa
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onOpenUpload(intern)}
-                        className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
-                        title="Nộp tệp tin cho TTS này"
-                      >
-                        <Upload size={12} /> Tải Tệp
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onOpenContract(intern)}
-                        disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
-                        className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
-                        title={
-                          intern.status === 'APPROVED' || intern.status === 'INTERNING'
-                            ? 'Tải lên & quản lý hợp đồng thực tập'
-                            : 'Cần phê duyệt tiếp nhận hồ sơ trước khi tạo hợp đồng'
-                        }
-                      >
-                        <FileSignature size={12} /> Hợp Đồng
-                      </button>
+
+                      {/* Dropdown Menu gom các tác vụ phụ */}
+                      <div className={styles.actionMenuContainer} ref={openMenuId === intern.id ? menuRef : null}>
+                        <button
+                          type="button"
+                          className={styles.moreBtn}
+                          onClick={() => setOpenMenuId(openMenuId === intern.id ? null : intern.id)}
+                          title="Tác vụ khác (Sửa, Nộp tệp, Hợp đồng)"
+                          aria-label="Tác vụ khác"
+                        >
+                          <MoreVertical size={14} />
+                        </button>
+
+                        {openMenuId === intern.id && (
+                          <div className={styles.actionDropdownMenu}>
+                            <button
+                              type="button"
+                              className={styles.actionMenuItem}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                onOpenEdit(intern);
+                              }}
+                            >
+                              <Edit3 size={13} /> Sửa thông tin
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.actionMenuItem}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                onOpenUpload(intern);
+                              }}
+                            >
+                              <Upload size={13} /> Nộp tệp tin
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.actionMenuItem}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                onOpenContract(intern);
+                              }}
+                              disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
+                            >
+                              <FileSignature size={13} /> Hợp đồng thực tập
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className={styles.colCoordination}>
@@ -322,7 +355,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-success"
                             title="Chuyển sang trạng thái đang thực tập"
                           >
-                            Bắt Đầu TT
+                            <Play size={11} /> Bắt Đầu TT
                           </button>
                           <button
                             type="button"
@@ -330,7 +363,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-secondary"
                             title="Hủy tiếp nhận / Từ chối hồ sơ"
                           >
-                            Hủy Tiếp Nhận
+                            Hủy
                           </button>
                         </>
                       )}
@@ -342,7 +375,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-primary"
                             title="Hoàn thành kỳ thực tập"
                           >
-                            Hoàn Thành
+                            <CheckCircle2 size={11} /> Hoàn Thành
                           </button>
                           <button
                             type="button"
@@ -350,7 +383,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-danger"
                             title="Đình chỉ thực tập"
                           >
-                            Đình Chỉ
+                            <Ban size={11} /> Đình Chỉ
                           </button>
                         </>
                       )}
@@ -361,7 +394,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                           className="btn btn-sm btn-secondary"
                           title="Mở lại xem xét hồ sơ"
                         >
-                          Mở Lại
+                          <RotateCcw size={11} /> Mở Lại
                         </button>
                       )}
                       {intern.status === 'COMPLETED' && (
