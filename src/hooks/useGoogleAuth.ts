@@ -105,6 +105,9 @@ export const useGoogleAuth = ({ onSuccess, onError }: UseGoogleAuthOptions) => {
   // Khởi tạo Google Accounts ID khi script đã sẵn sàng
   useEffect(() => {
     if (!isScriptLoaded || !window.google?.accounts?.id) return;
+    if (!clientId || clientId === 'mock-google-client-id') {
+      return;
+    }
 
     try {
       window.google.accounts.id.initialize({
@@ -113,7 +116,7 @@ export const useGoogleAuth = ({ onSuccess, onError }: UseGoogleAuthOptions) => {
         auto_select: false,
         cancel_on_tap_outside: true,
       });
-    } catch (e: unknown) {
+    } catch {
       // Bắt lỗi an toàn nếu Client ID không hợp lệ hoặc CSP chặn
       const errText = 'Lỗi cấu hình Google Sign-In SDK.';
       setError(errText);
@@ -125,7 +128,16 @@ export const useGoogleAuth = ({ onSuccess, onError }: UseGoogleAuthOptions) => {
   const renderGoogleButton = useCallback(
     (element: HTMLElement | null, customWidth?: string | number) => {
       if (!element || !window.google?.accounts?.id) return;
+      if (!clientId || clientId === 'mock-google-client-id') return;
       try {
+        // Google GIS bắt buộc width phải là số pixel từ 200 đến 400 (không hỗ trợ %)
+        let validWidth = 380;
+        if (typeof customWidth === 'number') {
+          validWidth = Math.min(Math.max(customWidth, 200), 400);
+        } else if (element.parentElement?.clientWidth) {
+          validWidth = Math.min(Math.max(element.parentElement.clientWidth, 200), 400);
+        }
+
         window.google.accounts.id.renderButton(element, {
           theme: 'outline',
           size: 'large',
@@ -133,18 +145,26 @@ export const useGoogleAuth = ({ onSuccess, onError }: UseGoogleAuthOptions) => {
           text: 'continue_with',
           shape: 'rectangular',
           logo_alignment: 'left',
-          width: customWidth || '100%',
+          width: validWidth,
           locale: 'vi',
         });
-      } catch (err) {
+      } catch {
         // Fallback im lặng nếu không render được iframe
       }
     },
-    []
+    [clientId]
   );
 
   // Hàm chủ động mở Google One-tap / Account prompt
   const promptGoogleSignIn = useCallback(() => {
+    if (!clientId || clientId === 'mock-google-client-id') {
+      const errText =
+        'Chưa cấu hình VITE_GOOGLE_CLIENT_ID trong file .env của Frontend. Vui lòng thêm Google Client ID hợp lệ từ Google Cloud Console.';
+      setError(errText);
+      onErrorRef.current?.(errText);
+      return;
+    }
+
     if (!window.google?.accounts?.id) {
       const errText = 'Đang tải dịch vụ xác thực Google, vui lòng thử lại sau giây lát.';
       setError(errText);
@@ -162,7 +182,7 @@ export const useGoogleAuth = ({ onSuccess, onError }: UseGoogleAuthOptions) => {
     } catch {
       setIsAuthenticating(false);
     }
-  }, []);
+  }, [clientId]);
 
   return {
     isScriptLoaded,
