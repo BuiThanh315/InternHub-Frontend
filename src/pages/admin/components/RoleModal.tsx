@@ -289,6 +289,16 @@ export const RoleModal: React.FC<RoleModalProps> = ({
         });
         toast.success(`Tạo vai trò mới "${normalizedName}" thành công!`);
       }
+      
+      // Phát tín hiệu thời gian thực để toàn bộ các tab trình duyệt đồng bộ ngay lập tức
+      try {
+        const channel = new BroadcastChannel('internhub_rbac_sync');
+        channel.postMessage({ type: 'PERMISSIONS_UPDATED', roleName: role?.name || normalizedName });
+        channel.close();
+      } catch {
+        // Fallback an toàn nếu browser không hỗ trợ
+      }
+
       onSuccess();
       onClose();
     } catch (err: unknown) {

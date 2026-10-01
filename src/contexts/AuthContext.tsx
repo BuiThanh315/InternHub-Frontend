@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import type { AuthUser, RoleType } from '../types';
 import { authService } from '../services/authService';
 
@@ -111,6 +111,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('Lỗi làm mới permissions:', e);
     }
   };
+
+  // Tự động làm mới quyền khi phiên khởi động, khi chuyển tab, và khi nhận tín hiệu từ BroadcastChannel
+  useEffect(() => {
+    if (!user) return;
+
+    // 1. Làm mới quyền ngay khi tải session
+    void refreshPermissions();
+
+    // 2. Lắng nghe window focus / visibility change
+    const handleSync = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshPermissions();
+      }
+    };
+
+    window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleSync);
+
+    // 3. Lắng nghe BroadcastChannel để nhận tín hiệu cập nhật thời gian thực từ tab Admin
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel('internhub_rbac_sync');
+      channel.onmessage = (event) => {
+        if (event.data?.type === 'PERMISSIONS_UPDATED') {
+          void refreshPermissions();
+        }
+      };
+    } catch {
+      // Môi trường không hỗ trợ BroadcastChannel
+    }
+
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleSync);
+      if (channel) {
+        channel.close();
+      }
+    };
+  }, [user?.username]);
 
   const contextValue = useMemo<AuthContextType>(
     () => ({
