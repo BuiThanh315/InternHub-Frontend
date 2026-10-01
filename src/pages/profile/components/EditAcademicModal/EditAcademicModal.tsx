@@ -26,7 +26,7 @@ export const EditAcademicModal: React.FC<EditAcademicModalProps> = ({
     setValue,
     formState: { errors },
   } = useForm<InternAcademicFormData>({
-    resolver: zodResolver(InternAcademicSchema),
+    resolver: zodResolver(InternAcademicSchema) as any,
     defaultValues: {
       university: '',
       major: '',

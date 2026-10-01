@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 // 1. Niên khóa: YYYY - YYYY, năm sau > năm trước, khoảng cách 1 đến 8 năm
 export const AcademicYearSchema = z
@@ -46,12 +46,12 @@ export const InternAcademicSchema = z.object({
   major: z.string().trim().min(2, 'Vui lòng nhập chuyên ngành đào tạo').max(100, 'Tối đa 100 ký tự'),
   academicYear: AcademicYearSchema,
   gpa: z
-    .number({ invalid_type_error: 'GPA phải là số' })
+    .number({ message: 'GPA phải là số' })
     .min(0, 'GPA tối thiểu là 0.0')
     .max(4.0, 'GPA hệ 4 tối đa là 4.0')
     .optional()
     .nullable(),
-  skills: z.array(z.string().trim()).optional().default([]), // Optional, không ép buộc TTS mới
+  skills: z.array(z.string().trim()).default([]),
   linkedinUrl: SafeUrlSchema,
   githubUrl: SafeUrlSchema,
 });

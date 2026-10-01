@@ -10,6 +10,7 @@ export interface AuthUser {
   dateOfBirth?: string;
   gender?: GenderType;
   address?: string;
+  avatarUrl?: string;
   role: RoleType;
   accessToken: string;
   tokenType: string;
