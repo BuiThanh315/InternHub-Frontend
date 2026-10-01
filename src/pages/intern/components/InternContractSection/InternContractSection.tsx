@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertOctagon,
   Eye,
+  HelpCircle,
 } from 'lucide-react';
 
 import { Skeleton } from '../../../../components/common';
@@ -25,11 +26,12 @@ import {
   formatDateTime,
   getContractStatusLabel,
 } from '../../../../utils/formatters';
+import { ContractInquiryModal } from '../ContractInquiryModal/ContractInquiryModal';
 
 import styles from './InternContractSection.module.css';
 
 interface ModalState {
-  type: 'SIGN' | 'REJECT' | 'DETAIL' | null;
+  type: 'SIGN' | 'REJECT' | 'DETAIL' | 'INQUIRY' | null;
   contract: ContractResponse | null;
 }
 
@@ -73,6 +75,10 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
 
   const handleOpenDetail = (contract: ContractResponse) => {
     setModalState({ type: 'DETAIL', contract });
+  };
+
+  const handleOpenInquiry = (contract: ContractResponse) => {
+    setModalState({ type: 'INQUIRY', contract });
   };
 
   const handleCloseModal = () => {
@@ -148,14 +154,38 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            className={styles.heroCtaBtn}
-            onClick={() => handleOpenSign(pendingContract)}
-          >
-            <FileSignature size={18} />
-            <span>Xem & Ký Hợp Đồng Ngay</span>
-          </button>
+          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={() => handleOpenInquiry(pendingContract)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.6rem 0.9rem',
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                color: '#475569',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                cursor: 'pointer'
+              }}
+              title="Có thắc mắc về điều khoản hoặc bản scan mờ? Liên hệ HR ngay"
+            >
+              <HelpCircle size={16} />
+              <span>Có thắc mắc, liên hệ HR</span>
+            </button>
+            <button
+              type="button"
+              className={styles.heroCtaBtn}
+              onClick={() => handleOpenSign(pendingContract)}
+            >
+              <FileSignature size={18} />
+              <span>Xem & Ký Hợp Đồng Ngay</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -284,15 +314,26 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
                             <Eye size={15} />
                           </button>
                           {contract.status === 'PENDING_SIGNATURE' && (
-                            <button
-                              type="button"
-                              className={styles.signActionBtn}
-                              onClick={() => handleOpenSign(contract)}
-                              title="Ký xác nhận hợp đồng này ngay"
-                            >
-                              <FileSignature size={14} />
-                              <span>Ký Ngay</span>
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                className={styles.iconBtn}
+                                onClick={() => handleOpenInquiry(contract)}
+                                title="Có thắc mắc hoặc bản scan mờ? Gửi phản hồi tới HR"
+                                style={{ color: '#d97706' }}
+                              >
+                                <HelpCircle size={15} />
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.signActionBtn}
+                                onClick={() => handleOpenSign(contract)}
+                                title="Ký xác nhận hợp đồng này ngay"
+                              >
+                                <FileSignature size={14} />
+                                <span>Ký Ngay</span>
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -361,15 +402,27 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
                       <span style={{ fontSize: '0.8rem', marginLeft: '4px' }}>Chi tiết</span>
                     </button>
                     {contract.status === 'PENDING_SIGNATURE' && (
-                      <button
-                        type="button"
-                        className={styles.signActionBtn}
-                        onClick={() => handleOpenSign(contract)}
-                        style={{ marginLeft: 'auto' }}
-                      >
-                        <FileSignature size={14} />
-                        <span>Ký Ngay</span>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          className={styles.iconBtn}
+                          onClick={() => handleOpenInquiry(contract)}
+                          title="Gửi thắc mắc tới HR"
+                          style={{ color: '#d97706' }}
+                        >
+                          <HelpCircle size={15} />
+                          <span style={{ fontSize: '0.8rem', marginLeft: '4px' }}>Thắc mắc</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.signActionBtn}
+                          onClick={() => handleOpenSign(contract)}
+                          style={{ marginLeft: 'auto' }}
+                        >
+                          <FileSignature size={14} />
+                          <span>Ký Ngay</span>
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -404,6 +457,16 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
         onClose={handleCloseModal}
         onSignContract={handleOpenSign}
       />
+
+      {/* Modal 4: Gửi thắc mắc phản hồi tới HR */}
+      {modalState.contract && (
+        <ContractInquiryModal
+          contract={modalState.contract}
+          isOpen={modalState.type === 'INQUIRY'}
+          onClose={handleCloseModal}
+          onSuccess={handleContractSuccess}
+        />
+      )}
     </div>
   );
 };

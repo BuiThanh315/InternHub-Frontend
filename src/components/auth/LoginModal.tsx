@@ -8,7 +8,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { ROUTES } from "../../constants/routes";
@@ -43,6 +43,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Reset form khi modal mở/đóng
   useEffect(() => {
@@ -53,6 +54,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   }, [isOpen]);
 
   const handleRedirect = (role: RoleType | string) => {
+    const redirectParam = searchParams.get("redirect");
+    if (redirectParam && redirectParam.startsWith("/")) {
+      navigate(redirectParam, { replace: true });
+      return;
+    }
+
     switch (role) {
       case "ADMIN":
         navigate(ROUTES.ADMIN.DASHBOARD, { replace: true });
