@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { formatDate } from '../../../../utils/formatters';
 import type { StaffProfessionalTabProps } from './StaffProfessionalTab.types';
 import styles from './StaffProfessionalTab.module.css';

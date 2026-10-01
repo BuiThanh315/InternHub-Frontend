@@ -71,6 +71,7 @@ export const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
           <Route path={ROUTES.ADMIN.DASHBOARD} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.USERS} element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN.ROLES} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.SYSTEM} element={<AdminDashboard />} />
         </Route>
 

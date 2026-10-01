@@ -4,9 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Modal, Button, Input, Select } from '../../../../components/common';
 import { profileService } from '../../../../services/profileService';
-import { internService } from '../../../../services/internService';
 import { useAuth } from '../../../../contexts/AuthContext';
-import { PersonalInfoSchema, type PersonalInfoFormData, type User } from '../../../../types';
+import { PersonalInfoSchema, type PersonalInfoFormData } from '../../../../types';
 import type { EditProfileModalProps } from './EditProfileModal.types';
 import styles from './EditProfileModal.module.css';
 
@@ -14,10 +13,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   isOpen,
   onClose,
   user,
-  internProfile,
   onSuccess,
 }) => {
-  const { role, updateUser } = useAuth();
+  const { updateUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const {

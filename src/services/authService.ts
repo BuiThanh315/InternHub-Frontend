@@ -10,6 +10,25 @@ import type {
   RoleType,
 } from '../types';
 
+function extractPermissionsFromToken(token: string): string[] {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return [];
+    const base64Url = parts[1];
+    const base64 = base64Url.replaceAll('-', '+').replaceAll('_', '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + (c.codePointAt(0) ?? 0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    return Array.isArray(parsed.permissions) ? parsed.permissions : [];
+  } catch {
+    return [];
+  }
+}
+
 export const authService = {
   async login(username: string, password: string): Promise<AuthUser> {
     try {
@@ -27,6 +46,7 @@ export const authService = {
         gender: data.gender,
         address: data.address,
         role: (roleRaw === 'USER' || roleRaw === 'INTERN') ? 'INTERN' : ((roleRaw as RoleType) || 'INTERN'),
+        permissions: extractPermissionsFromToken(data.accessToken),
         accessToken: data.accessToken,
         tokenType: data.tokenType || 'Bearer',
         expiresIn: data.expiresIn,
@@ -60,6 +80,7 @@ export const authService = {
         gender: data.gender,
         address: data.address,
         role: (roleRaw === 'USER' || roleRaw === 'INTERN') ? 'INTERN' : ((roleRaw as RoleType) || 'INTERN'),
+        permissions: extractPermissionsFromToken(data.accessToken),
         accessToken: data.accessToken,
         tokenType: data.tokenType || 'Bearer',
         expiresIn: data.expiresIn,
@@ -98,6 +119,17 @@ export const authService = {
     try {
       const response = await apiClient.get(API_ENDPOINTS.AUTH.ME);
       return response.data.data;
+    } catch {
+      return null;
+    }
+  },
+
+  async getMyPermissions(
+    signal?: AbortSignal
+  ): Promise<{ username: string; role: string; permissions: string[] } | null> {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.AUTH.ME_PERMISSIONS, { signal });
+      return response.data?.data || null;
     } catch {
       return null;
     }

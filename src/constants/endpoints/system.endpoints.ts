@@ -6,4 +6,7 @@ export const SYSTEM_ENDPOINTS = {
   AUDIT_LOG_DETAIL: (id: number) => `/api/system/audit-logs/${id}`,
   AUDIT_LOG_STATS: '/api/system/audit-logs/statistics',
   AUDIT_LOG_EXPORT: '/api/system/audit-logs/export',
+  ROLES: '/api/system/roles',
+  ROLE_DETAIL: (id: number) => `/api/system/roles/${id}`,
+  PERMISSIONS: '/api/system/permissions',
 } as const;
