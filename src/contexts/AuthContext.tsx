@@ -7,9 +7,10 @@ export interface AuthContextType {
   role: RoleType | null;
   permissions: string[];
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<AuthUser>;
+  isInitializing: boolean;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
   loginWithGoogle: (idToken: string) => Promise<AuthUser>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (updatedData: Partial<AuthUser>) => void;
   updateUserAvatar: (avatarUrl: string) => void;
   hasPermission: (permissionCode: string) => boolean;
@@ -18,8 +19,7 @@ export interface AuthContextType {
   refreshPermissions: () => Promise<void>;
 }
 
-// Fallback mặc định an toàn: đọc trực tiếp session hiện có từ localStorage
-// Tránh crash cây component nếu HMR hoặc component render trước khi Provider bind
+// Fallback mặc định an toàn
 const getDefaultContextValue = (): AuthContextType => {
   const currentUser = authService.getCurrentUser();
   return {
@@ -27,7 +27,8 @@ const getDefaultContextValue = (): AuthContextType => {
     role: currentUser?.role || null,
     permissions: currentUser?.permissions || [],
     isAuthenticated: !!currentUser,
-    login: (username, password) => authService.login(username, password),
+    isInitializing: false,
+    login: (username, password, rememberMe) => authService.login(username, password, rememberMe),
     loginWithGoogle: (idToken) => authService.loginWithGoogle(idToken),
     logout: () => authService.logout(),
     updateUser: () => {},
@@ -43,11 +44,48 @@ export const AuthContext = createContext<AuthContextType>(getDefaultContextValue
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
 
   const permissions = useMemo(() => user?.permissions || [], [user?.permissions]);
 
-  const login = async (username: string, password: string): Promise<AuthUser> => {
-    const authUser = await authService.login(username, password);
+  // Khôi phục phiên ngầm (Silent Restoration) lúc khởi chạy ứng dụng qua HttpOnly Cookie
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const token = await authService.refreshToken();
+        if (token) {
+          const profile = await authService.getMe();
+          const permissionsData = await authService.getMyPermissions();
+          const stored = authService.getCurrentUser();
+          if (stored && profile) {
+            const updatedUser: AuthUser = {
+              ...stored,
+              username: profile.username,
+              permissions: permissionsData?.permissions || stored.permissions || [],
+            };
+            setUser(updatedUser);
+            localStorage.setItem('internhub_user', JSON.stringify({ ...updatedUser, accessToken: '' }));
+          }
+        } else {
+          // Phiên không tồn tại hoặc đã hết hạn
+          setUser(null);
+          localStorage.removeItem('internhub_user');
+          localStorage.removeItem('internhub_token');
+        }
+      } catch {
+        setUser(null);
+        localStorage.removeItem('internhub_user');
+        localStorage.removeItem('internhub_token');
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    void restoreSession();
+  }, []);
+
+  const login = async (username: string, password: string, rememberMe = false): Promise<AuthUser> => {
+    const authUser = await authService.login(username, password, rememberMe);
     setUser(authUser);
     return authUser;
   };
@@ -58,8 +96,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return authUser;
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async (): Promise<void> => {
+    await authService.logout();
     setUser(null);
   };
 
@@ -68,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!prev) return null;
       const next = { ...prev, ...updatedData };
       try {
-        localStorage.setItem('internhub_user', JSON.stringify(next));
+        localStorage.setItem('internhub_user', JSON.stringify({ ...next, accessToken: '' }));
       } catch (e) {
         console.warn('Lỗi lưu cập nhật auth_user vào localStorage:', e);
       }
@@ -114,12 +152,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Tự động làm mới quyền khi phiên khởi động, khi chuyển tab, và khi nhận tín hiệu từ BroadcastChannel
   useEffect(() => {
-    if (!user) return;
+    if (!user || isInitializing) return;
 
-    // 1. Làm mới quyền ngay khi tải session
     void refreshPermissions();
 
-    // 2. Lắng nghe window focus / visibility change
     const handleSync = () => {
       if (document.visibilityState === 'visible') {
         void refreshPermissions();
@@ -129,7 +165,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.addEventListener('focus', handleSync);
     document.addEventListener('visibilitychange', handleSync);
 
-    // 3. Lắng nghe BroadcastChannel để nhận tín hiệu cập nhật thời gian thực từ tab Admin
     let channel: BroadcastChannel | null = null;
     try {
       channel = new BroadcastChannel('internhub_rbac_sync');
@@ -149,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         channel.close();
       }
     };
-  }, [user?.username]);
+  }, [user?.username, isInitializing]);
 
   const contextValue = useMemo<AuthContextType>(
     () => ({
@@ -157,6 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       role: user ? user.role : null,
       permissions,
       isAuthenticated: !!user,
+      isInitializing,
       login,
       loginWithGoogle,
       logout,
@@ -167,7 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       hasAllPermissions,
       refreshPermissions,
     }),
-    [user, permissions]
+    [user, permissions, isInitializing]
   );
 
   return (
@@ -184,4 +220,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-

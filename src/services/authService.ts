@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { apiClient, setInMemoryAccessToken } from './api';
 import { API_ENDPOINTS } from '../constants/endpoints';
 import type {
   AuthUser,
@@ -30,9 +30,13 @@ function extractPermissionsFromToken(token: string): string[] {
 }
 
 export const authService = {
-  async login(username: string, password: string): Promise<AuthUser> {
+  async login(username: string, password: string, rememberMe = false): Promise<AuthUser> {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, { username, password });
+      const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, {
+        username,
+        password,
+        rememberMe,
+      });
       const data = response.data.data;
       const roleRaw = data.role ? data.role.toUpperCase().replace('ROLE_', '') : 'INTERN';
       const authUser: AuthUser = {
@@ -98,6 +102,20 @@ export const authService = {
     }
   },
 
+  async refreshToken(): Promise<string | null> {
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.AUTH.REFRESH_TOKEN || '/api/auth/refresh-token', {});
+      const newAccessToken = response.data?.data?.accessToken;
+      if (newAccessToken) {
+        setInMemoryAccessToken(newAccessToken);
+        return newAccessToken;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
   async register(data: RegisterRequest): Promise<RegisterResponse> {
     const response = await apiClient.post(API_ENDPOINTS.AUTH.REGISTER, data);
     return response.data?.data;
@@ -136,8 +154,12 @@ export const authService = {
   },
 
   saveSession(authUser: AuthUser) {
-    localStorage.setItem('internhub_token', authUser.accessToken);
-    localStorage.setItem('internhub_user', JSON.stringify(authUser));
+    // Lưu Access Token an toàn vào RAM (In-Memory), tuyệt đối không lưu vào localStorage
+    setInMemoryAccessToken(authUser.accessToken);
+    // Chỉ lưu thông tin profile để render UI cơ bản, xóa token nhạy cảm
+    const safeUser = { ...authUser, accessToken: '' };
+    localStorage.setItem('internhub_user', JSON.stringify(safeUser));
+    localStorage.removeItem('internhub_token'); // Dọn dẹp token cũ nếu có
   },
 
   getCurrentUser(): AuthUser | null {
@@ -150,9 +172,18 @@ export const authService = {
     }
   },
 
-  logout() {
-    localStorage.removeItem('internhub_token');
-    localStorage.removeItem('internhub_user');
+  async logout(): Promise<void> {
+    try {
+      // Gửi request hủy Refresh Token tại DB và xóa HttpOnly Cookie khỏi trình duyệt
+      await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, {});
+    } catch (err) {
+      console.warn('Lỗi khi gọi API đăng xuất phía máy chủ:', err);
+    } finally {
+      // Xóa Access Token trong RAM và profile trong LocalStorage
+      setInMemoryAccessToken(null);
+      localStorage.removeItem('internhub_token');
+      localStorage.removeItem('internhub_user');
+    }
   },
 };
 
