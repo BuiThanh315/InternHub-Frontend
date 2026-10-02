@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { RoleType } from '../types';
 
@@ -20,9 +20,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
       </div>
     );
   }
+  const { isAuthenticated, role } = useAuth();
+  const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/?login=true" replace />;
+    const redirectTarget = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/?login=true&redirect=${redirectTarget}`} replace />;
   }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
