@@ -20,7 +20,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
       </div>
     );
   }
-  const { isAuthenticated, role } = useAuth();
+
   const location = useLocation();
 
   if (!isAuthenticated) {

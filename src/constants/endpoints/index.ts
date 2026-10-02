@@ -6,6 +6,7 @@ import { DOCUMENT_ENDPOINTS } from './document.endpoints';
 import { SYSTEM_ENDPOINTS } from './system.endpoints';
 import { CONTRACT_ENDPOINTS } from './contract.endpoints';
 import { PROGRAM_ENDPOINTS } from './program.endpoints';
+import { MISSION_ENDPOINTS } from './mission.endpoints';
 
 export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
@@ -16,6 +17,7 @@ export const API_ENDPOINTS = {
   SYSTEM: SYSTEM_ENDPOINTS,
   CONTRACT: CONTRACT_ENDPOINTS,
   PROGRAM: PROGRAM_ENDPOINTS,
+  MISSION: MISSION_ENDPOINTS,
 } as const;
 
 export * from './auth.endpoints';
@@ -26,5 +28,6 @@ export * from './document.endpoints';
 export * from './system.endpoints';
 export * from './contract.endpoints';
 export * from './program.endpoints';
+export * from './mission.endpoints';
 
 
