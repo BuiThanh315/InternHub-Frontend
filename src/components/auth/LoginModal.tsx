@@ -17,6 +17,7 @@ import type { RoleType } from "../../types";
 import { Alert } from "../common/Alert/Alert";
 import { Button } from "../common/Button/Button";
 import { Modal } from "../common/Modal/Modal";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 import styles from "./LoginModal.module.css";
 
 export interface LoginModalProps {
@@ -37,11 +38,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsActivation, setNeedsActivation] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -50,6 +52,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     if (isOpen) {
       setError(null);
       setNeedsActivation(false);
+      setRememberMe(false);
     }
   }, [isOpen]);
 
@@ -77,6 +80,39 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   };
 
+  const handleGoogleSuccess = async (idToken: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setNeedsActivation(false);
+      const authUser = await loginWithGoogle(idToken);
+      toast.success(`Chào mừng ${authUser.fullName || authUser.username}!`);
+      onClose();
+      handleRedirect(authUser.role);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Đăng nhập bằng tài khoản Google không thành công. Vui lòng thử lại.";
+      setError(msg);
+      if (
+        msg.toLowerCase().includes("kích hoạt") ||
+        msg.toLowerCase().includes("activation") ||
+        msg.toLowerCase().includes("pending_activation")
+      ) {
+        setNeedsActivation(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = (errorMessage?: string) => {
+    if (errorMessage) {
+      setError(errorMessage);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
@@ -89,7 +125,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setLoading(true);
       setError(null);
       setNeedsActivation(false);
-      const authUser = await login(username.trim(), password);
+      const authUser = await login(username.trim(), password, rememberMe);
       toast.success(`Chào mừng ${authUser.fullName || authUser.username}!`);
       onClose();
       handleRedirect(authUser.role);
@@ -165,6 +201,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         />
       )}
 
+      <div className={styles.oauthSection}>
+        <GoogleSignInButton
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          disabled={loading}
+          isLoading={loading}
+        />
+        <div className={styles.divider}>
+          <span className={styles.dividerLine} />
+          <span className={styles.dividerText}>hoặc đăng nhập với mật khẩu</span>
+          <span className={styles.dividerLine} />
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.fieldGroup}>
           <label htmlFor="login-username" className={styles.label}>Tên đăng nhập / Email</label>
@@ -211,6 +261,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+        </div>
+
+        <div className={styles.rememberMeRow}>
+          <label className={styles.rememberMeLabel}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              disabled={loading}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className={styles.rememberMeCheckbox}
+            />
+            <span>Ghi nhớ đăng nhập trên thiết bị này</span>
+          </label>
         </div>
 
         <Button

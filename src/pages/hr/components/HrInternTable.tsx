@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Eye, Edit3, Upload, SearchX, FileSignature, UserCheck, RefreshCw, UserX, History, MoreVertical, Play, CheckCircle2, Ban, RotateCcw } from 'lucide-react';
 import type { InternProfile, InternStatus } from '../../../types';
 import { Skeleton, Pagination } from '../../../components/common';
+import { useAuth } from '../../../contexts/AuthContext';
 import { getInternStatusLabel, formatPhoneNumber } from '../../../utils/formatters';
 import styles from './HrInternTable.module.css';
 
@@ -52,6 +53,12 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission('INTERN_EDIT');
+  const canApprove = hasPermission('INTERN_APPROVE');
+  const canAssignMentor = hasPermission('INTERN_ASSIGN_MENTOR');
+  const canContract = hasPermission('CONTRACT_VIEW') || hasPermission('CONTRACT_MANAGE');
 
   const getBadgeClass = (status: InternStatus) => {
     switch (status) {
@@ -200,7 +207,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                               <History size={11} /> Lịch sử
                             </button>
                             <span style={{ color: 'var(--border-default)' }}>•</span>
-                            {onOpenAssignMentor && (
+                            {canAssignMentor && onOpenAssignMentor && (
                               <button
                                 type="button"
                                 onClick={() => onOpenAssignMentor(intern)}
@@ -210,7 +217,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                                 <RefreshCw size={10} /> Đổi
                               </button>
                             )}
-                            {onOpenRevokeMentor && (
+                            {canAssignMentor && onOpenRevokeMentor && (
                               <>
                                 <span style={{ color: 'var(--border-default)' }}>•</span>
                                 <button
@@ -235,7 +242,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                         >
                           Chưa xếp chương trình
                         </span>
-                        {intern.status === 'PENDING' && (
+                        {canApprove && intern.status === 'PENDING' && (
                           <button
                             type="button"
                             onClick={() => onOpenApprove(intern)}
@@ -252,7 +259,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                         <span className="badge badge-warning text-[10px] py-0.5 px-1.5 font-medium">
                           Chưa có Mentor
                         </span>
-                        {onOpenAssignMentor && (intern.status === 'APPROVED' || intern.status === 'INTERNING') && (
+                        {canAssignMentor && onOpenAssignMentor && (intern.status === 'APPROVED' || intern.status === 'INTERNING') && (
                           <button
                             type="button"
                             onClick={() => onOpenAssignMentor(intern)}
@@ -289,16 +296,19 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
 
                         {openMenuId === intern.id && (
                           <div className={styles.actionDropdownMenu}>
-                            <button
-                              type="button"
-                              className={styles.actionMenuItem}
-                              onClick={() => {
-                                setOpenMenuId(null);
-                                onOpenEdit(intern);
-                              }}
-                            >
-                              <Edit3 size={13} /> Sửa thông tin
-                            </button>
+                            {canEdit && (
+                              <button
+                                type="button"
+                                className={styles.actionMenuItem}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onOpenEdit(intern);
+                                }}
+                                title="Chỉnh sửa thông tin hồ sơ (Đặc quyền: INTERN_EDIT)"
+                              >
+                                <Edit3 size={13} /> Sửa thông tin
+                              </button>
+                            )}
                             <button
                               type="button"
                               className={styles.actionMenuItem}
@@ -309,17 +319,24 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             >
                               <Upload size={13} /> Nộp tệp tin
                             </button>
-                            <button
-                              type="button"
-                              className={styles.actionMenuItem}
-                              onClick={() => {
-                                setOpenMenuId(null);
-                                onOpenContract(intern);
-                              }}
-                              disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
-                            >
-                              <FileSignature size={13} /> Hợp đồng thực tập
-                            </button>
+                            {canContract && (
+                              <button
+                                type="button"
+                                className={styles.actionMenuItem}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onOpenContract(intern);
+                                }}
+                                disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
+                                title={
+                                  intern.status === 'APPROVED' || intern.status === 'INTERNING'
+                                    ? 'Tải lên & quản lý hợp đồng thực tập'
+                                    : 'Cần phê duyệt tiếp nhận hồ sơ trước khi tạo hợp đồng'
+                                }
+                              >
+                                <FileSignature size={13} /> Hợp đồng thực tập
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -327,13 +344,13 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                   </td>
                   <td className={styles.colCoordination}>
                     <div className={styles.actionButtonsGroup}>
-                      {intern.status === 'PENDING' && (
+                      {canApprove && intern.status === 'PENDING' && (
                         <>
                           <button
                             type="button"
                             onClick={() => onOpenApprove(intern)}
                             className="btn btn-sm btn-primary"
-                            title="Phê duyệt tiếp nhận hồ sơ"
+                            title="Phê duyệt tiếp nhận hồ sơ (Đặc quyền: INTERN_APPROVE)"
                           >
                             Tiếp Nhận
                           </button>
@@ -341,7 +358,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             type="button"
                             onClick={() => onOpenReject(intern)}
                             className="btn btn-sm btn-danger"
-                            title="Từ chối hồ sơ ứng viên"
+                            title="Từ chối hồ sơ ứng viên (Đặc quyền: INTERN_APPROVE)"
                           >
                             Từ Chối
                           </button>

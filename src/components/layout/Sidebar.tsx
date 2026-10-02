@@ -8,6 +8,7 @@ import {
   FolderGit2,
   LogOut,
   ShieldCheck,
+  Shield,
   Building2,
   FileText,
   FileSignature,
@@ -42,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return [
           { to: '/admin/dashboard', label: 'Bảng Điều Khiển', icon: LayoutDashboard },
           { to: '/admin/users', label: 'Quản Lý Người Dùng', icon: Users },
+          { to: '/admin/roles', label: 'Phân Quyền & Vai Trò', icon: Shield },
           { to: '/admin/system', label: 'Giám Sát Hệ Thống', icon: ShieldCheck },
           { to: ROUTES.PROFILE, label: 'Hồ Sơ Quản Trị', icon: UserIcon },
         ];
