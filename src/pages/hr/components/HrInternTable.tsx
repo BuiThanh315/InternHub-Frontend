@@ -1,5 +1,5 @@
-import React from 'react';
-import { Eye, Edit3, Upload, SearchX, FileSignature, UserCheck, RefreshCw, UserX, History } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, Edit3, Upload, SearchX, FileSignature, UserCheck, RefreshCw, UserX, History, MoreVertical, Play, CheckCircle2, Ban, RotateCcw } from 'lucide-react';
 import type { InternProfile, InternStatus } from '../../../types';
 import { Skeleton, Pagination } from '../../../components/common';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -41,6 +41,18 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
   onOpenAssignMentor,
   onOpenRevokeMentor,
 }) => {
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('INTERN_EDIT');
   const canApprove = hasPermission('INTERN_APPROVE');
@@ -259,13 +271,64 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                     )}
                   </td>
                   <td className={styles.colActions}>
-                    <div className={styles.actionButtonsGroup}>
+                    <div className={styles.actionCellWrapper}>
                       <button
                         type="button"
                         onClick={() => onViewDetail(intern)}
                         className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
                         title="Xem chi tiết & tài liệu"
                       >
+                        <Eye size={13} /> Chi Tiết
+                      </button>
+
+                      {/* Dropdown Menu gom các tác vụ phụ */}
+                      <div className={styles.actionMenuContainer} ref={openMenuId === intern.id ? menuRef : null}>
+                        <button
+                          type="button"
+                          className={styles.moreBtn}
+                          onClick={() => setOpenMenuId(openMenuId === intern.id ? null : intern.id)}
+                          title="Tác vụ khác (Sửa, Nộp tệp, Hợp đồng)"
+                          aria-label="Tác vụ khác"
+                        >
+                          <MoreVertical size={14} />
+                        </button>
+
+                        {openMenuId === intern.id && (
+                          <div className={styles.actionDropdownMenu}>
+                            <button
+                              type="button"
+                              className={styles.actionMenuItem}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                onOpenEdit(intern);
+                              }}
+                            >
+                              <Edit3 size={13} /> Sửa thông tin
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.actionMenuItem}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                onOpenUpload(intern);
+                              }}
+                            >
+                              <Upload size={13} /> Nộp tệp tin
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.actionMenuItem}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                onOpenContract(intern);
+                              }}
+                              disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
+                            >
+                              <FileSignature size={13} /> Hợp đồng thực tập
+                            </button>
+                          </div>
+                        )}
+                      </div>
                         <Eye size={12} /> Chi Tiết
                       </button>
                       {canEdit && (
@@ -333,7 +396,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-success"
                             title="Chuyển sang trạng thái đang thực tập"
                           >
-                            Bắt Đầu TT
+                            <Play size={11} /> Bắt Đầu TT
                           </button>
                           <button
                             type="button"
@@ -341,7 +404,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-secondary"
                             title="Hủy tiếp nhận / Từ chối hồ sơ"
                           >
-                            Hủy Tiếp Nhận
+                            Hủy
                           </button>
                         </>
                       )}
@@ -353,7 +416,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-primary"
                             title="Hoàn thành kỳ thực tập"
                           >
-                            Hoàn Thành
+                            <CheckCircle2 size={11} /> Hoàn Thành
                           </button>
                           <button
                             type="button"
@@ -361,7 +424,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-danger"
                             title="Đình chỉ thực tập"
                           >
-                            Đình Chỉ
+                            <Ban size={11} /> Đình Chỉ
                           </button>
                         </>
                       )}
@@ -372,7 +435,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                           className="btn btn-sm btn-secondary"
                           title="Mở lại xem xét hồ sơ"
                         >
-                          Mở Lại
+                          <RotateCcw size={11} /> Mở Lại
                         </button>
                       )}
                       {intern.status === 'COMPLETED' && (

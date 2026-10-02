@@ -46,11 +46,13 @@ export const InternAcademicSchema = z.object({
   major: z.string().trim().min(2, 'Vui lòng nhập chuyên ngành đào tạo').max(100, 'Tối đa 100 ký tự'),
   academicYear: AcademicYearSchema,
   gpa: z
+    .number({ message: 'GPA phải là số' })
     .number()
     .min(0, 'GPA tối thiểu là 0.0')
     .max(4.0, 'GPA hệ 4 tối đa là 4.0')
     .optional()
     .nullable(),
+  skills: z.array(z.string().trim()).default([]),
   skills: z.array(z.string().trim()),
   linkedinUrl: SafeUrlSchema,
   githubUrl: SafeUrlSchema,
