@@ -26,3 +26,4 @@ export * from './Skeleton';
 export * from './Modal/ConfirmModal';
 
 export * from './ApiConsole/ApiConsoleModal';
+export * from './HasPermission/HasPermission';

@@ -5,3 +5,5 @@ export * from './AdminAuditTab';
 export * from './AdminAuditFilterBar';
 export * from './AdminAuditTable';
 export * from './AdminAuditDetailModal';
+export * from './AdminRoleTab';
+export * from './RoleModal';

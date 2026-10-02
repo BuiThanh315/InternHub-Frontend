@@ -12,6 +12,7 @@ export interface AuthUser {
   address?: string;
   avatarUrl?: string;
   role: RoleType;
+  permissions?: string[];
   accessToken: string;
   tokenType: string;
   expiresIn?: number;
@@ -20,6 +21,7 @@ export interface AuthUser {
 export interface LoginRequest {
   username: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterRequest {
@@ -57,4 +59,8 @@ export interface ResendActivationResponse {
   maskedEmail: string;
   expiresInMinutes?: number;
   cooldownSeconds?: number;
+}
+
+export interface GoogleLoginRequest {
+  idToken: string;
 }
