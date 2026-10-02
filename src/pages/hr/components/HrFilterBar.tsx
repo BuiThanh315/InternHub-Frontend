@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Plus } from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
 import styles from './HrFilterBar.module.css';
 
 interface HrFilterBarProps {
@@ -21,6 +22,9 @@ export const HrFilterBar: React.FC<HrFilterBarProps> = ({
   onStatusChange,
   onOpenCreateModal,
 }) => {
+  const { hasPermission } = useAuth();
+  const canCreate = hasPermission('INTERN_CREATE');
+
   return (
     <>
       <div className={styles.filterHeader}>
@@ -31,13 +35,16 @@ export const HrFilterBar: React.FC<HrFilterBarProps> = ({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenCreateModal}
-          className="btn btn-primary"
-        >
-          <Plus size={16} /> Thêm Hồ Sơ Mới
-        </button>
+        {canCreate && (
+          <button
+            type="button"
+            onClick={onOpenCreateModal}
+            className="btn btn-primary"
+            title="Thêm hồ sơ thực tập sinh mới (Đặc quyền: INTERN_CREATE)"
+          >
+            <Plus size={16} /> Thêm Hồ Sơ Mới
+          </button>
+        )}
       </div>
 
       <div className={styles.filterControls}>

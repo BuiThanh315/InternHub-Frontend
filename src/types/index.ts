@@ -7,3 +7,4 @@ export * from './system.types';
 export * from './contract.types';
 export * from './program.types';
 export * from './profile.types';
+export * from './rbac.types';
