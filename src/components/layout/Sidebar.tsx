@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   User as UserIcon,
+  Kanban,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
@@ -60,6 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       case 'MENTOR':
         return [
           { to: '/mentor/dashboard', label: 'Bảng Điều Khiển Mentor', icon: LayoutDashboard },
+          { to: ROUTES.MENTOR.MISSIONS, label: 'Bảng Nhiệm Vụ & Giao Việc', icon: Kanban },
           { to: '/mentor/interns', label: 'TTS Phụ Trách', icon: Users },
           { to: '/mentor/documents', label: 'Tài Liệu Hướng Dẫn', icon: FolderGit2 },
           { to: ROUTES.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },

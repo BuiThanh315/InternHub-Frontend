@@ -1,0 +1,128 @@
+.column {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  max-height: calc(100vh - 280px);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* Header cột */
+.columnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-card);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.columnIconTodo {
+  color: var(--text-secondary);
+}
+
+.columnIconInProgress {
+  color: var(--info);
+}
+
+.columnIconCompleted {
+  color: var(--success);
+}
+
+.columnTitle {
+  font-family: var(--font-heading);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 0.4rem;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  background-color: var(--border-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+
+.addQuickButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background-color: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.addQuickButton:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Danh sách card trong cột */
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Empty State của cột */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1rem;
+  border: 1.5px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  margin: 0.5rem;
+  text-align: center;
+  background-color: var(--border-subtle);
+}
+
+.emptyText {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.emptyAddButton {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.emptyAddButton:hover {
+  color: var(--primary-hover);
+}

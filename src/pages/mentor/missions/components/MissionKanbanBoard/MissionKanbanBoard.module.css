@@ -1,0 +1,14 @@
+.boardContainer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(300px, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .boardContainer {
+    grid-template-columns: repeat(3, 320px);
+  }
+}
