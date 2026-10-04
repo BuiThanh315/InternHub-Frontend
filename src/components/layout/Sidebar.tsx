@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   User as UserIcon,
+  CalendarCheck,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
@@ -65,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       default:
         return [
           { to: ROUTES.INTERN.DASHBOARD, label: 'Tiến Độ Thực Tập', icon: LayoutDashboard },
+          { to: ROUTES.INTERN.ATTENDANCE, label: 'Chấm Công & Chuyên Cần', icon: CalendarCheck },
           { to: ROUTES.INTERN.APPLY, label: 'Nộp Hồ Sơ Ứng Tuyển', icon: GraduationCap },
           { to: ROUTES.INTERN.DOCUMENTS, label: 'Quản Lý Tài Liệu', icon: FileText },
           { to: ROUTES.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },

@@ -10,8 +10,9 @@ import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternApplyPage } from '../pages/intern/InternApplyPage';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
-import { InternProfilePage } from '../pages/intern/InternProfilePage';
 import { ProfilePage } from '../pages/profile';
+import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
+import { InternAttendanceConfirmPage } from '../pages/intern/InternAttendanceConfirmPage';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -96,8 +97,15 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
           {/* Chuyển tiếp route xem profile cũ sang Universal Profile mới */}
           <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
+          <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
         </Route>
       </Route>
+
+      {/* Route Xác Nhận Điểm Danh QR Độc Lập - Toàn màn hình, không bị bao bọc bởi Sidebar/Header quản lý của MainLayout */}
+      <Route
+        path={ROUTES.INTERN.ATTENDANCE_CONFIRM}
+        element={<InternAttendanceConfirmPage />}
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to={ROUTES.ROOT} replace />} />

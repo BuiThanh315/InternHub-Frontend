@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
@@ -6,6 +7,7 @@ import { Skeleton } from '../../components/common';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
 import { useAuth } from '../../contexts/AuthContext';
+import { ROUTES } from '../../constants/routes';
 import type { InternProfile, DocumentResponse, DocumentType } from '../../types';
 import { InternStepper } from './components/InternStepper';
 import { InternProfileCard } from './components/InternProfileCard';
@@ -13,15 +15,30 @@ import { InternScheduleWidget } from './components/InternScheduleWidget';
 import { InternDocumentList } from './components/InternDocumentList';
 import { InternUploadForm } from './components/InternUploadForm';
 import { InternEmptyState } from './components/InternEmptyState';
+import {
+  InternAttendanceWidget,
+  AttendanceActionModal,
+} from './components/Attendance';
+import type { AttendanceActionType } from './components/Attendance';
+import { useAttendanceToday } from './hooks/useAttendanceToday';
 import styles from './InternDashboard.module.css';
 
 export const InternDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [profile, setProfile] = useState<InternProfile | null>(null);
   const [documents, setDocuments] = useState<DocumentResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [modalAction, setModalAction] = useState<AttendanceActionType | null>(null);
+
+  const {
+    todayData,
+    loading: attendanceLoading,
+    currentTime,
+    refetch: refetchAttendance,
+  } = useAttendanceToday();
 
   const loadInternData = useCallback(async () => {
     try {
@@ -129,6 +146,16 @@ export const InternDashboard: React.FC = () => {
             <InternEmptyState userName={user?.fullName || user?.username} />
           ) : (
             <>
+              {/* TM-25: Điểm danh & Chấm công GPS hàng ngày */}
+              <InternAttendanceWidget
+                todayData={todayData}
+                loading={attendanceLoading}
+                currentTime={currentTime}
+                onCheckInClick={() => setModalAction('CHECK_IN')}
+                onCheckOutClick={() => setModalAction('CHECK_OUT')}
+                onViewHistoryClick={() => navigate(ROUTES.INTERN.ATTENDANCE)}
+              />
+
               {/* Lộ trình thực tập */}
               <InternStepper status={profile.status} />
 
@@ -143,6 +170,20 @@ export const InternDashboard: React.FC = () => {
                 <InternDocumentList documents={documents} />
                 <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
               </div>
+
+              {/* Modal Check-in / Check-out 3 khối */}
+              {modalAction && (
+                <AttendanceActionModal
+                  actionType={modalAction}
+                  isOpen={Boolean(modalAction)}
+                  onClose={() => setModalAction(null)}
+                  onSuccess={refetchAttendance}
+                  officeName={todayData?.officeName}
+                  allowedRadiusMeters={todayData?.allowedRadiusMeters}
+                  officeLatitude={todayData?.officeLatitude}
+                  officeLongitude={todayData?.officeLongitude}
+                />
+              )}
             </>
           )}
         </div>
