@@ -13,6 +13,10 @@ import type {
   CreateMissionItemRequest,
   UpdateMissionItemRequest,
   UpdateItemStatusRequest,
+  InternKanbanBoardResponse,
+  UpdateKanbanStatusRequest,
+  InternMissionFilterParams,
+  PageResponse,
   BoardStatus,
 } from '../types';
 
@@ -202,6 +206,72 @@ export const missionService = {
       await apiClient.delete(MISSION_ENDPOINTS.ITEMS(itemId));
     } catch (error: any) {
       return handleServiceError(error, 'Lỗi khi xóa công việc chi tiết');
+    }
+  },
+
+  /**
+   * TM-20: Lấy bảng Kanban nhiệm vụ cá nhân của Thực tập sinh đang đăng nhập (3 cột: Chưa làm, Đang làm, Hoàn thiện)
+   */
+  async getMyMissionKanban(signal?: AbortSignal): Promise<InternKanbanBoardResponse> {
+    try {
+      const response = await apiClient.get<ApiResponse<InternKanbanBoardResponse>>(
+        MISSION_ENDPOINTS.MY_KANBAN,
+        { signal }
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return handleServiceError(error, 'Lỗi khi tải bảng nhiệm vụ cá nhân');
+    }
+  },
+
+  /**
+   * TM-20: Lấy danh sách nhiệm vụ cá nhân phân trang của Thực tập sinh
+   */
+  async getMyMissionItems(
+    params?: InternMissionFilterParams & { page?: number; size?: number },
+    signal?: AbortSignal
+  ): Promise<PageResponse<MissionItemResponse>> {
+    try {
+      const response = await apiClient.get<ApiResponse<PageResponse<MissionItemResponse>>>(
+        MISSION_ENDPOINTS.MY_MISSIONS,
+        { params, signal }
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return handleServiceError(error, 'Lỗi khi tải danh sách nhiệm vụ cá nhân');
+    }
+  },
+
+  /**
+   * TM-20: Xem chi tiết một mục nhiệm vụ (kèm thông tin nộp bài và phân công)
+   */
+  async getMissionItemDetail(itemId: number, signal?: AbortSignal): Promise<MissionItemResponse> {
+    try {
+      const response = await apiClient.get<ApiResponse<MissionItemResponse>>(
+        MISSION_ENDPOINTS.ITEMS(itemId),
+        { signal }
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return handleServiceError(error, 'Lỗi khi tải chi tiết nhiệm vụ');
+    }
+  },
+
+  /**
+   * TM-20: Thực tập sinh cập nhật trạng thái nhiệm vụ trên bảng Kanban (TODO <-> IN_PROGRESS <-> COMPLETED)
+   */
+  async updateMyMissionStatus(
+    itemId: number,
+    payload: UpdateKanbanStatusRequest
+  ): Promise<MissionItemResponse> {
+    try {
+      const response = await apiClient.patch<ApiResponse<MissionItemResponse>>(
+        MISSION_ENDPOINTS.ITEM_STATUS(itemId),
+        payload
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return handleServiceError(error, 'Lỗi khi cập nhật trạng thái nhiệm vụ');
     }
   },
 };

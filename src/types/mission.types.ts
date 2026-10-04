@@ -17,12 +17,16 @@ export interface AssigneeResponse {
 export interface MissionItemResponse {
   id: number;
   boardId: number;
+  boardTitle?: string;
   title: string;
   description?: string | null;
   status: MissionItemStatus;
   priority: MissionPriority;
   dueDate?: string | null;
   assignees: AssigneeResponse[];
+  submissionUrl?: string | null;
+  completionNote?: string | null;
+  submittedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -100,3 +104,28 @@ export interface UpdateMissionItemRequest {
 export interface UpdateItemStatusRequest {
   status: MissionItemStatus;
 }
+
+export interface InternKanbanBoardResponse {
+  todoItems: MissionItemResponse[];
+  inProgressItems: MissionItemResponse[];
+  completedItems: MissionItemResponse[];
+  totalCount: number;
+  todoCount: number;
+  inProgressCount: number;
+  completedCount: number;
+}
+
+export interface UpdateKanbanStatusRequest {
+  status: MissionItemStatus;
+  submissionUrl?: string | null;
+  completionNote?: string | null;
+}
+
+export interface InternMissionFilterParams {
+  keyword?: string;
+  status?: MissionItemStatus;
+  priority?: MissionPriority;
+  boardId?: number;
+  isOverdue?: boolean;
+}
+

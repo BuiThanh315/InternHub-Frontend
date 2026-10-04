@@ -71,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       default:
         return [
           { to: ROUTES.INTERN.DASHBOARD, label: 'Tiến Độ Thực Tập', icon: LayoutDashboard },
+          { to: ROUTES.INTERN.MISSIONS, label: 'Nhiệm Vụ Của Tôi', icon: Kanban },
           { to: ROUTES.INTERN.APPLY, label: 'Nộp Hồ Sơ Ứng Tuyển', icon: GraduationCap },
           { to: ROUTES.INTERN.DOCUMENTS, label: 'Quản Lý Tài Liệu', icon: FileText },
           { to: ROUTES.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },

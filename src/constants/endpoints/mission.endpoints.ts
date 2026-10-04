@@ -8,4 +8,6 @@ export const MISSION_ENDPOINTS = {
   BOARD_ITEMS: (boardId: number | string) => `/api/mission-boards/${boardId}/items`,
   ITEMS: (itemId: number | string) => `/api/mission-items/${itemId}`,
   ITEM_STATUS: (itemId: number | string) => `/api/mission-items/${itemId}/status`,
+  MY_MISSIONS: '/api/mission-items/my-missions',
+  MY_KANBAN: '/api/mission-items/my-missions/kanban',
 } as const;

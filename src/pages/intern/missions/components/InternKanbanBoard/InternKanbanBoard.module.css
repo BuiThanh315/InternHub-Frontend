@@ -1,0 +1,32 @@
+.boardContainer {
+  display: flex;
+  gap: 1.25rem;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+/* Custom Sleek Scrollbar (Rule 34) */
+.boardContainer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.boardContainer::-webkit-scrollbar-track {
+  background: var(--bg-body);
+  border-radius: 9999px;
+}
+
+.boardContainer::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 9999px;
+}
+
+.boardContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+@media (max-width: 1024px) {
+  .boardContainer {
+    padding-bottom: 1.25rem;
+  }
+}
