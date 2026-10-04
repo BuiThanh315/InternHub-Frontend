@@ -10,7 +10,9 @@ export interface AuthUser {
   dateOfBirth?: string;
   gender?: GenderType;
   address?: string;
+  avatarUrl?: string;
   role: RoleType;
+  permissions?: string[];
   accessToken: string;
   tokenType: string;
   expiresIn?: number;
@@ -19,6 +21,7 @@ export interface AuthUser {
 export interface LoginRequest {
   username: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterRequest {

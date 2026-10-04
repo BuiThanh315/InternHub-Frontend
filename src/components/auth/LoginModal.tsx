@@ -8,7 +8,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { ROUTES } from "../../constants/routes";
@@ -38,22 +38,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsActivation, setNeedsActivation] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Reset form khi modal mở/đóng
   useEffect(() => {
     if (isOpen) {
       setError(null);
       setNeedsActivation(false);
+      setRememberMe(false);
     }
   }, [isOpen]);
 
   const handleRedirect = (role: RoleType | string) => {
+    const redirectParam = searchParams.get("redirect");
+    if (redirectParam && redirectParam.startsWith("/")) {
+      navigate(redirectParam, { replace: true });
+      return;
+    }
+
     switch (role) {
       case "ADMIN":
         navigate(ROUTES.ADMIN.DASHBOARD, { replace: true });
@@ -116,7 +125,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setLoading(true);
       setError(null);
       setNeedsActivation(false);
-      const authUser = await login(username.trim(), password);
+      const authUser = await login(username.trim(), password, rememberMe);
       toast.success(`Chào mừng ${authUser.fullName || authUser.username}!`);
       onClose();
       handleRedirect(authUser.role);
@@ -252,6 +261,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+        </div>
+
+        <div className={styles.rememberMeRow}>
+          <label className={styles.rememberMeLabel}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              disabled={loading}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className={styles.rememberMeCheckbox}
+            />
+            <span>Ghi nhớ đăng nhập trên thiết bị này</span>
+          </label>
         </div>
 
         <Button

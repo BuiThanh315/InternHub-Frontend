@@ -267,21 +267,41 @@ export const UploadContractModal: React.FC<UploadContractModalProps> = ({
         ? Number(formData.allowanceAmount.replace(/\./g, ''))
         : undefined;
 
-      const result = await contractService.uploadContract(
-        intern.internCode,
-        {
-          contractTitle: formData.contractTitle.trim(),
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          contractNumber: formData.contractNumber.trim() || undefined,
-          allowanceAmount: parsedAllowance,
-          notes: formData.notes.trim() || undefined,
-        },
-        selectedFile!,
-        (progress) => {
-          setMetaState((prev) => ({ ...prev, uploadProgress: progress }));
-        }
-      );
+      let result: any;
+      try {
+        result = await contractService.uploadContractDirectToS3(
+          intern.internCode,
+          {
+            contractTitle: formData.contractTitle.trim(),
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            contractNumber: formData.contractNumber.trim() || undefined,
+            allowanceAmount: parsedAllowance,
+            notes: formData.notes.trim() || undefined,
+          },
+          selectedFile!,
+          (progress) => {
+            setMetaState((prev) => ({ ...prev, uploadProgress: progress }));
+          }
+        );
+      } catch (s3Err) {
+        console.warn('Direct S3 upload failed, falling back to multipart form upload:', s3Err);
+        result = await contractService.uploadContract(
+          intern.internCode,
+          {
+            contractTitle: formData.contractTitle.trim(),
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            contractNumber: formData.contractNumber.trim() || undefined,
+            allowanceAmount: parsedAllowance,
+            notes: formData.notes.trim() || undefined,
+          },
+          selectedFile!,
+          (progress) => {
+            setMetaState((prev) => ({ ...prev, uploadProgress: progress }));
+          }
+        );
+      }
 
       toast.success(
         `Tải lên hợp đồng thành công! (Mã HĐ: ${result.contractNumber})`

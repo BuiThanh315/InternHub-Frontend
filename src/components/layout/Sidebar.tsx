@@ -8,8 +8,10 @@ import {
   FolderGit2,
   LogOut,
   ShieldCheck,
+  Shield,
   Building2,
   FileText,
+  FileSignature,
   X,
   ChevronLeft,
   ChevronRight,
@@ -42,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return [
           { to: '/admin/dashboard', label: 'Bảng Điều Khiển', icon: LayoutDashboard },
           { to: '/admin/users', label: 'Quản Lý Người Dùng', icon: Users },
+          { to: '/admin/roles', label: 'Phân Quyền & Vai Trò', icon: Shield },
           { to: '/admin/system', label: 'Giám Sát Hệ Thống', icon: ShieldCheck },
           { to: ROUTES.PROFILE, label: 'Hồ Sơ Quản Trị', icon: UserIcon },
         ];
@@ -51,6 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { to: '/hr/programs', label: 'Chương Trình Thực Tập', icon: FolderGit2 },
           { to: '/hr/mentors', label: 'Quản Lý Mentor & Tải', icon: Users },
           { to: '/hr/interns', label: 'Hồ Sơ Thực Tập Sinh', icon: GraduationCap },
+          { to: '/hr/contracts', label: 'Quản Lý Hợp Đồng', icon: FileSignature },
           { to: '/hr/review', label: 'Duyệt Tài Liệu & CV', icon: FileCheck2 },
           { to: ROUTES.PROFILE, label: 'Hồ Sơ Cá Nhân', icon: UserIcon },
         ];

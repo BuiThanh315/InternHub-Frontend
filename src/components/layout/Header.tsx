@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Activity, CheckCircle, WifiOff, Terminal, Menu, Sun, Moon } from 'lucide-react';
 import { checkBackendHealth } from '../../services/api';
 import { ApiConsoleModal } from '../common';
+import { NotificationDropdown } from '../common/NotificationDropdown';
 import { useLayout } from '../../layouts/MainLayout';
 import styles from './Header.module.css';
 
@@ -86,6 +87,9 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right controls: Theme Switcher, System Status & API Console */}
       <div className={styles.rightControls}>
+        {/* Notification Bell Dropdown */}
+        <NotificationDropdown />
+
         {/* Dark/Light Mode Switcher */}
         <button
           type="button"

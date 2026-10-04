@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Users, Database, FileText } from 'lucide-react';
+import { Users, Database, FileText, Shield } from 'lucide-react';
 
 import { Header } from '../../components/layout/Header';
 import {
   AdminMetricsGrid,
   AdminUserTab,
+  AdminRoleTab,
   AdminBackupTab,
   AdminAuditTab,
 } from './components';
 import type { User } from '../../types';
 import styles from './AdminDashboard.module.css';
 
-type AdminTab = 'users' | 'backups' | 'audit-logs';
+type AdminTab = 'users' | 'roles' | 'backups' | 'audit-logs';
 
 export const AdminDashboard: React.FC = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+    if (location.pathname.includes('/roles')) return 'roles';
     if (location.pathname.includes('/system')) return 'backups';
     return 'users';
   });
@@ -24,7 +26,9 @@ export const AdminDashboard: React.FC = () => {
 
   // Đồng bộ tab khi URL route thay đổi từ Sidebar
   useEffect(() => {
-    if (location.pathname.includes('/system')) {
+    if (location.pathname.includes('/roles')) {
+      setActiveTab('roles');
+    } else if (location.pathname.includes('/system')) {
       setActiveTab('backups');
     } else if (location.pathname.includes('/users')) {
       setActiveTab('users');
@@ -55,6 +59,16 @@ export const AdminDashboard: React.FC = () => {
 
         <button
           type="button"
+          onClick={() => setActiveTab('roles')}
+          className={`${styles.tabBtn} ${
+            activeTab === 'roles' ? styles.tabActive : styles.tabInactive
+          }`}
+        >
+          <Shield size={16} /> Phân Quyền & Vai Trò
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('backups')}
           className={`${styles.tabBtn} ${
             activeTab === 'backups' ? styles.tabActive : styles.tabInactive
@@ -76,6 +90,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Tab Panels */}
       {activeTab === 'users' && <AdminUserTab onUsersChange={setUsers} />}
+      {activeTab === 'roles' && <AdminRoleTab />}
       {activeTab === 'backups' && <AdminBackupTab />}
       {activeTab === 'audit-logs' && <AdminAuditTab />}
     </div>

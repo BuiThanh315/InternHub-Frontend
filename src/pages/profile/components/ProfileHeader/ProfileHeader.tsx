@@ -13,7 +13,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const displayEmail = user?.email || '';
   const displayPhone = user?.phone || user?.phoneNumber || '';
   const displayAddress = user?.address || '';
-  const avatarSrc = getAvatarUrl(user);
+  const avatarSrc = getAvatarUrl(user || undefined);
 
   const getRoleConfig = () => {
     switch (role) {
