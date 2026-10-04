@@ -295,16 +295,18 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
 
                         {openMenuId === intern.id && (
                           <div className={styles.actionDropdownMenu}>
-                            <button
-                              type="button"
-                              className={styles.actionMenuItem}
-                              onClick={() => {
-                                setOpenMenuId(null);
-                                onOpenEdit(intern);
-                              }}
-                            >
-                              <Edit3 size={13} /> Sửa thông tin
-                            </button>
+                            {canEdit && (
+                              <button
+                                type="button"
+                                className={styles.actionMenuItem}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onOpenEdit(intern);
+                                }}
+                              >
+                                <Edit3 size={13} /> Sửa thông tin
+                              </button>
+                            )}
                             <button
                               type="button"
                               className={styles.actionMenuItem}
@@ -315,55 +317,22 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             >
                               <Upload size={13} /> Nộp tệp tin
                             </button>
-                            <button
-                              type="button"
-                              className={styles.actionMenuItem}
-                              onClick={() => {
-                                setOpenMenuId(null);
-                                onOpenContract(intern);
-                              }}
-                              disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
-                            >
-                              <FileSignature size={13} /> Hợp đồng thực tập
-                            </button>
+                            {canContract && (
+                              <button
+                                type="button"
+                                className={styles.actionMenuItem}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onOpenContract(intern);
+                                }}
+                                disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
+                              >
+                                <FileSignature size={13} /> Hợp đồng thực tập
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
-                        <Eye size={12} /> Chi Tiết
-                      </button>
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => onOpenEdit(intern)}
-                          className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
-                          title="Chỉnh sửa thông tin hồ sơ (Đặc quyền: INTERN_EDIT)"
-                        >
-                          <Edit3 size={12} /> Sửa
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => onOpenUpload(intern)}
-                        className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
-                        title="Nộp tệp tin cho TTS này"
-                      >
-                        <Upload size={12} /> Tải Tệp
-                      </button>
-                      {canContract && (
-                        <button
-                          type="button"
-                          onClick={() => onOpenContract(intern)}
-                          disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
-                          className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
-                          title={
-                            intern.status === 'APPROVED' || intern.status === 'INTERNING'
-                              ? 'Tải lên & quản lý hợp đồng thực tập'
-                              : 'Cần phê duyệt tiếp nhận hồ sơ trước khi tạo hợp đồng'
-                          }
-                        >
-                          <FileSignature size={12} /> Hợp Đồng
-                        </button>
-                      )}
                     </div>
                   </td>
                   <td className={styles.colCoordination}>
