@@ -21,6 +21,7 @@ import { ROUTES } from '../constants/routes';
 
 export const AppRoutes: React.FC = () => {
   const { isAuthenticated, role, isInitializing } = useAuth();
+  const [searchParams] = useSearchParams();
 
   if (isInitializing) {
     return (
@@ -32,8 +33,6 @@ export const AppRoutes: React.FC = () => {
       </div>
     );
   }
-  const { isAuthenticated, role } = useAuth();
-  const [searchParams] = useSearchParams();
 
   const getDashboardRedirect = () => {
     const redirectParam = searchParams.get('redirect');
