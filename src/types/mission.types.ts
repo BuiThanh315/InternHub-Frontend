@@ -84,6 +84,7 @@ export interface CreateMissionItemRequest {
   description?: string;
   priority?: MissionPriority;
   dueDate?: string;
+  internIds?: number[];
   assigneeInternIds?: number[];
 }
 
@@ -92,6 +93,7 @@ export interface UpdateMissionItemRequest {
   description?: string;
   priority?: MissionPriority;
   dueDate?: string;
+  internIds?: number[];
   assigneeInternIds?: number[];
 }
 

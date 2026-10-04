@@ -32,7 +32,16 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
 
   const [searchInternQuery, setSearchInternQuery] = useState('');
   const [errorTitle, setErrorTitle] = useState<string | null>(null);
+  const [errorDueDate, setErrorDueDate] = useState<string | null>(null);
   const [errorAssignee, setErrorAssignee] = useState<string | null>(null);
+
+  const todayString = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
 
   useEffect(() => {
     if (editingItem) {
@@ -54,6 +63,7 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
     }
     setSearchInternQuery('');
     setErrorTitle(null);
+    setErrorDueDate(null);
     setErrorAssignee(null);
   }, [editingItem, isOpen]);
 
@@ -92,7 +102,16 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
     if (!formData.title.trim()) {
       setErrorTitle('Vui lòng nhập tiêu đề công việc');
       hasError = true;
+    } else if (formData.title.trim().length < 3) {
+      setErrorTitle('Tiêu đề công việc phải có từ 3 đến 200 ký tự');
+      hasError = true;
     }
+
+    if (formData.dueDate && formData.dueDate < todayString) {
+      setErrorDueDate('Hạn hoàn thành không được ở trong quá khứ');
+      hasError = true;
+    }
+
     if (formData.assigneeInternIds.length === 0) {
       setErrorAssignee('Vui lòng chọn ít nhất 1 thực tập sinh tham gia công việc');
       hasError = true;
@@ -104,6 +123,7 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
       description: formData.description.trim() || undefined,
       priority: formData.priority,
       dueDate: formData.dueDate || undefined,
+      internIds: formData.assigneeInternIds,
       assigneeInternIds: formData.assigneeInternIds,
     };
 
@@ -132,7 +152,7 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
         isLoading={isLoading}
         disabled={isLoading}
       >
-        {isEditing ? 'Lưu Thay Đổi' : 'Giao Việc Mới'}
+        {isEditing ? 'Lưu Thay Đổi' : 'Giao Việc Cho TTS'}
       </Button>
     </div>
   );
@@ -193,20 +213,27 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
             <input
               id="mission-item-duedate"
               type="date"
-              className={styles.dateInput}
+              min={todayString}
+              className={`${styles.dateInput} ${errorDueDate ? styles.inputError : ''}`}
               value={formData.dueDate}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, dueDate: e.target.value }))
-              }
+              onChange={(e) => {
+                setFormData((prev) => ({ ...prev, dueDate: e.target.value }));
+                if (errorDueDate) setErrorDueDate(null);
+              }}
             />
+            {errorDueDate && (
+              <p className={styles.fieldError} role="alert">
+                {errorDueDate}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Đề xuất 3: Multi-select Thực tập sinh dạng Checklist trực quan */}
+        {/* Checklist Thực tập sinh nhận việc */}
         <div className={styles.assigneeSection}>
           <div className={styles.sectionHeader}>
             <label className={styles.label}>
-              Gán thực tập sinh ({formData.assigneeInternIds.length} đã chọn)
+              Thực tập sinh phụ trách ({formData.assigneeInternIds.length} đã chọn) *
             </label>
           </div>
 
@@ -281,6 +308,9 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
               {errorAssignee}
             </p>
           )}
+          <p className={styles.internHelpText}>
+            Chỉ các thực tập sinh đang trong giai đoạn đào tạo (INTERNING/APPROVED) mới có thể nhận nhiệm vụ.
+          </p>
         </div>
       </form>
     </Modal>

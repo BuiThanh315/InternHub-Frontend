@@ -252,8 +252,8 @@ export const MentorMissionPage: React.FC = () => {
   return (
     <div className={styles.pageContainer}>
       <Header
-        title="Quản Lý Nhiệm Vụ & Giao Việc (Mentor)"
-        subtitle="Thiết lập Bảng nhiệm vụ, phân công công việc chi tiết và theo dõi tiến độ thực tập sinh theo 3 trạng thái"
+        title="Phân Công & Giám Sát Nhiệm Vụ"
+        subtitle="Giao việc cho thực tập sinh, giám sát tiến độ thực hiện và nghiệm thu kết quả trên bảng Kanban"
       />
 
       {error && (

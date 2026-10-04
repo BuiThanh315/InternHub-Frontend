@@ -49,6 +49,13 @@ export const MissionCard: React.FC<MissionCardProps> = ({
     LOW: { label: 'Thấp', class: styles.priorityLow },
   }[item.priority];
 
+  const getDueDateVariantClass = () => {
+    if (!dueInfo) return '';
+    if (dueInfo.isOverdue) return styles.dueDateOverdue;
+    if (dueInfo.isUrgent) return styles.dueDateUrgent;
+    return '';
+  };
+
   // Class viền thẻ theo trạng thái
   const cardStatusClass = {
     TODO: styles.cardTodo,
@@ -102,15 +109,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       {/* Footer: Due date & Assignees */}
       <div className={styles.cardFooter}>
         {dueInfo ? (
-          <span
-            className={`${styles.dueDateBadge} ${
-              dueInfo.isOverdue
-                ? styles.dueDateOverdue
-                : dueInfo.isUrgent
-                ? styles.dueDateUrgent
-                : ''
-            }`}
-          >
+          <span className={`${styles.dueDateBadge} ${getDueDateVariantClass()}`}>
             {dueInfo.isOverdue ? <AlertCircle size={13} /> : <Clock size={13} />}
             {dueInfo.label}
           </span>
@@ -129,6 +128,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
             type="button"
             className={styles.transitionButton}
             onClick={() => onStatusChange(item.id, 'IN_PROGRESS')}
+            title="Chuyển sang trạng thái Đang làm"
           >
             Bắt đầu làm <ArrowRight size={13} />
           </button>
@@ -140,17 +140,17 @@ export const MissionCard: React.FC<MissionCardProps> = ({
               type="button"
               className={styles.transitionButton}
               onClick={() => onStatusChange(item.id, 'TODO')}
-              title="Lùi về Chưa làm"
+              title="Yêu cầu thực tập sinh làm lại"
             >
-              <ArrowLeft size={13} /> Lùi lại
+              <ArrowLeft size={13} /> Yêu cầu làm lại
             </button>
             <button
               type="button"
               className={`${styles.transitionButton} ${styles.transitionButtonSuccess}`}
               onClick={() => onStatusChange(item.id, 'COMPLETED')}
-              title="Hoàn thành công việc"
+              title="Nghiệm thu hoàn thành công việc"
             >
-              Hoàn thành <CheckCircle2 size={13} />
+              Nghiệm thu <CheckCircle2 size={13} />
             </button>
           </>
         )}
@@ -160,9 +160,9 @@ export const MissionCard: React.FC<MissionCardProps> = ({
             type="button"
             className={styles.transitionButton}
             onClick={() => onStatusChange(item.id, 'IN_PROGRESS')}
-            title="Mở lại công việc để tiếp tục làm"
+            title="Mở lại công việc để tiếp tục kiểm tra"
           >
-            <RotateCcw size={13} /> Mở lại
+            <RotateCcw size={13} /> Mở lại kiểm tra
           </button>
         )}
       </div>

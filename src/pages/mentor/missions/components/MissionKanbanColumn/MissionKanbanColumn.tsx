@@ -41,8 +41,8 @@ export const MissionKanbanColumn: React.FC<MissionKanbanColumnProps> = ({
             type="button"
             className={styles.addQuickButton}
             onClick={onAddNewItem}
-            title={`Thêm công việc vào cột ${title}`}
-            aria-label={`Thêm công việc vào cột ${title}`}
+            title={`Giao việc vào cột ${title}`}
+            aria-label={`Giao việc vào cột ${title}`}
           >
             <Plus size={15} />
           </button>
@@ -60,7 +60,7 @@ export const MissionKanbanColumn: React.FC<MissionKanbanColumnProps> = ({
                 className={styles.emptyAddButton}
                 onClick={onAddNewItem}
               >
-                + Thêm công việc
+                + Giao việc vào cột này
               </button>
             )}
           </div>

@@ -1,8 +1,20 @@
 # Đặc Tả Kỹ Thuật Giao Diện (Frontend Spec): TM-19 Mentor Giao Nhiệm Vụ Cho Thực Tập Sinh
 
+## 0. Nhật Ký Thay Đổi & Giải Trình Kỹ Thuật (Revision History & Change Rationale)
+
+| Phiên bản | Ngày | Người thực hiện | Task / Jira | Loại thay đổi | Lý do & Giải trình kỹ thuật (Rationale) |
+| :---: | :---: | :---: | :---: | :---: | :--- |
+| **v1.0.0** | 2026-10-02 | AI Senior Pair-Programmer | `TM-19` | Tạo mới | Thiết kế đặc tả ban đầu theo mô hình Kanban MissionBoard. |
+| **v1.1.0** | 2026-10-04 | AI Senior Pair-Programmer & User | `TM-19` | Đồng bộ định nghĩa cốt lõi | **Xác định rõ ràng: "Công việc của Mentor là giao việc cho thực tập sinh"** (Mentor Task Delegation & Mission Assignment). Làm rõ vai trò phân nhiệm trên giao diện: Mentor là người lập kế hoạch, tạo đầu việc và **giao việc cho thực tập sinh** (Assigner/Delegator), theo dõi tiến độ, hướng dẫn và nghiệm thu; Thực tập sinh là người nhận việc (Assignee) thực thi nhiệm vụ. Bắt buộc mỗi công việc chi tiết phải được giao cho tối thiểu 1 TTS trong Program (`internIds.size() >= 1`). |
+
+---
+
 ## 1. Tổng Quan & Mục Tiêu Nghiệp Vụ
 - **Mã tính năng:** TM-19 (Mentor Task Assignment & Mission Board).
 - **Phân hệ:** Dành riêng cho `ROLE_MENTOR` (và `ADMIN`).
+- **Tuyên ngôn nghiệp vụ cốt lõi:**
+  > **"CÔNG VIỆC CỦA MENTOR LÀ GIAO VIỆC CHO THỰC TẬP SINH"**  
+  > Mentor đóng vai trò Quản lý chuyên môn / Người giao việc (Assigner): Thiết lập Bảng nhiệm vụ (MissionBoard), tạo các đầu việc chi tiết và **trực tiếp giao việc (phân công) cho 1 hoặc nhiều Thực tập sinh** trong Chương trình, theo dõi tiến độ qua 3 cột Kanban và nghiệm thu kết quả khi TTS hoàn thành.
 - **Mục tiêu cốt lõi:**
   1. Cung cấp không gian làm việc (Engineering Project Workspace) trực quan, hiện đại cho Mentor để quản lý và giao việc cho các thực tập sinh trong các chương trình thực tập (`Internship Program`) mà mình phụ trách.
   2. Tổ chức công việc thông qua mô hình **Bảng Nhiệm Vụ (Mission Board)** với các mục công việc chi tiết (**Mission Items**).

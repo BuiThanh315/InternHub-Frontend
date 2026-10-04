@@ -3,6 +3,7 @@
 > [!CAUTION]
 > ### CHỈ THỊ BẮT BUỘC CHO MỌI AI AGENT TRONG MỌI PHIÊN LÀM VIỆC (MANDATORY DIRECTIVE)
 > 
+> - **QUÉT DỰ ÁN & TÁI SỬ DỤNG TỐI ĐA (PROJECT SCAN & REUSE FIRST)**: **ĐẢM BẢO SẼ QUÉT DỰ ÁN, TRÁNH VIỆC TẠO THÊM CODE MỚI KHÔNG CẦN THIẾT, SỬ DỤNG TỐI ĐA NHỮNG GÌ ĐÃ CÓ ĐỂ PHÁT TRIỂN**. Trước khi tạo mới bất kỳ Component, Modal, Hook, Service, Route, Types hay Helper nào, bắt buộc phải quét toàn diện mã nguồn hiện có để tái sử dụng, kế thừa hoặc mở rộng.
 > - **BẮT BUỘC ĐỌC QUY TẮC TRƯỚC KHI THAO TÁC (MANDATORY CONTEXT PRE-READING)**: Bất kỳ khi nào thực hiện cập nhật hoặc viết code cho Frontend, AI Agent **BẮT BUỘC PHẢI ĐỌC VÀ TUÂN THỦ TOÀN BỘ QUY TẮC** trong thư mục [`.agents/`](file:///d:/Certificate_CodeGym/Module%206/InternHub-Frontend/.agents/). Ngược lại, nếu làm việc với Backend (`InternHub/`), cũng **BẮT BUỘC PHẢI ĐỌC KỸ QUY TẮC CỦA BACKEND** ([AGENTS.md](file:///d:/Certificate_CodeGym/Module%206/InternHub/AGENTS.md) và [.antigravity/rules.md](file:///d:/Certificate_CodeGym/Module%206/InternHub/.antigravity/rules.md)) trước khi code. Tuyệt đối không tự ý suy diễn hoặc code tắt khi chưa nạp ngữ cảnh.
 
 
@@ -37,7 +38,11 @@ Nhiệm vụ của bạn là hỗ trợ người dùng xây dựng, bảo trì, 
 12. **CHUẨN HÓA COMPONENT-DRIVEN & COMMON UI**: Tất cả nút bấm, modal, alert, ô search, dropdown, input... bắt buộc phải nằm riêng trong `src/components/common/`, nhận dữ liệu qua `props`. Cấm viết giao diện thô inline trong các Page.
 13. **TÁCH PROPS INTERFACE RA FILE RIÊNG**: Mỗi component đi kèm file props riêng (`[ComponentName].types.ts`), không viết chung vào file component.
 14. **GIỚI HẠN STATE TRONG COMPONENT (TỐI ĐA 3 - 4 STATE)**: Một component không được có quá 3-4 `useState`. Vượt quá phải: Tách sub-components, gom State Object, hoặc tách Custom Hook.
-15. **CẤM SINH TRÙNG LẶP GIAO DIỆN VÀ CHỨC NĂNG CÓ SẴN (REUSE FIRST)**: Trước khi code, bắt buộc khảo sát kỹ các component, modal, services hiện có để tái sử dụng tối đa, không sinh ra các component tương tự gây rác mã nguồn.
+15. **QUÉT DỰ ÁN & TỐI ĐA TÁI SỬ DỤNG GIAO DIỆN, CHỨC NĂNG (REUSE FIRST, ZERO UNNECESSARY REDUNDANCY)**:
+    - **Chỉ thị cốt lõi**: **"ĐẢM BẢO SẼ QUÉT DỰ ÁN, TRÁNH VIỆC TẠO THÊM CODE MỚI KHÔNG CẦN THIẾT, SỬ DỤNG TỐI ĐA NHỮNG GÌ ĐÃ CÓ ĐỂ PHÁT TRIỂN"**.
+    - **Quét toàn diện trước khi code**: Trước khi viết mới bất kỳ component, trang, modal, custom hook, service hay hàm utility nào, Agent bắt buộc phải khảo sát kỹ mã nguồn hiện có trong `src/components/common/`, `src/hooks/`, `src/services/`, `src/utils/formatters.ts`.
+    - **Chống tạo code mới thừa**: Nghiêm cấm tạo mới giao diện hoặc chức năng mà hệ thống đã có sẵn. Bắt buộc ưu tiên tái sử dụng, mở rộng props hoặc kế thừa thay vì sinh ra các component tương tự gây rác mã nguồn và phân mảnh style.
+    - **Nghĩa vụ giải trình trong Plan**: Trong mọi Kế hoạch (`Plan`), bắt buộc phải có mục *"Khảo Sát Hiện Trạng & Đánh Giá Tái Sử Dụng"* chỉ rõ những gì được tái sử dụng và giải trình lý do nếu cần tạo mới.
 16. **CHUẨN HÓA PHÂN TRANG & FORM VALIDATION**:
     - Phân trang tự động chuyển đổi: `0-indexed` (Backend Spring Boot) ↔ `1-indexed` (Frontend UI) tại tầng Hook/Service.
     - Các ô nhập liệu (`Input`, `Select`) bắt buộc hỗ trợ prop `error?: string` để hiển thị lỗi validation `fieldErrors` từ Spring Boot.
