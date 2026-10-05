@@ -4,48 +4,326 @@
   gap: 20px;
 }
 
-/* TOOLBAR & CONTROLS */
-.toolbarCard {
+/* 1. TOP HEADER & INTRO */
+.headerCard {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg, 14px);
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.toolbarTop {
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .titleArea {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .heading {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-main);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .subHeading {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.disabledAddBtnWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* 2. 4 TABS LỚN NỔI BẬT */
+.tabsContainer {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .tabsContainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .tabsContainer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tabButton {
+  background: var(--bg-card);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg, 14px);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  outline: none;
+}
+
+.tabButton:hover {
+  border-color: var(--border-hover, rgba(99, 102, 241, 0.4));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.tabButtonActive {
+  border-color: var(--primary) !important;
+  background: var(--bg-card);
+  box-shadow: 0 0 0 1px var(--primary), 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+}
+
+.tabLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.tabIconWrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tabInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.tabRoleName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.3px;
+}
+
+.tabRoleDesc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.tabRightBadge {
+  flex-shrink: 0;
+}
+
+.tabBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 3. KHUNG MATRIX CONTAINER */
+.matrixCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 16px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.roleHeaderBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.roleHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.roleHeaderIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.roleHeaderTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
   margin: 0;
 }
 
-.controlsRow {
+.systemBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.roleHeaderDesc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.saveActionsGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.resetBtn {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 8px);
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.resetBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+/* Native Save Button chuẩn xác */
+.nativeSaveBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--primary, #3b82f6);
+  color: #ffffff;
+  border: 1px solid var(--primary, #3b82f6);
+  border-radius: var(--radius-md, 8px);
+  padding: 8px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+}
+
+.nativeSaveBtn:hover:not(:disabled) {
+  background-color: var(--primary-hover, #2563eb);
+  border-color: var(--primary-hover, #2563eb);
+  transform: translateY(-1px);
+}
+
+.saveBtnDisabled {
+  opacity: 0.55;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.saveButtonDirty {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+  border-color: #6366f1 !important;
+  animation: pulseButton 2s infinite ease-in-out;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+@keyframes pulseButton {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Security Lockout Guard Badges & Rows */
+.permissionRowLocked {
+  background: rgba(245, 158, 11, 0.03) !important;
+  border-color: rgba(245, 158, 11, 0.2) !important;
+  cursor: default !important;
+}
+
+.lockedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  letter-spacing: 0.2px;
+}
+
+.switchLocked {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+  background: #f59e0b !important;
+}
+
+.switchLocked .switchSlider {
+  background-color: #ffffff !important;
+}
+
+/* TIẾN ĐỘ CẤP QUYỀN */
+.summaryBanner {
+  background: rgba(99, 102, 241, 0.04);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.summaryHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -53,122 +331,195 @@
   gap: 12px;
 }
 
-.filtersLeft {
+.summaryTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  flex: 1;
+  gap: 8px;
 }
 
-.searchInputWrapper {
+.progressWrapper {
+  width: 220px;
+}
+
+.progressBarBg {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #10b981);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+/* TOOLBAR ĐIỀU KHIỂN & TÌM KIẾM */
+.controlToolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.searchBox {
   position: relative;
-  min-width: 240px;
-  max-width: 320px;
-  flex: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .searchIcon {
   position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 14px;
   color: var(--text-muted);
   pointer-events: none;
 }
 
 .searchInput {
   width: 100%;
-  padding: 8px 12px 8px 36px;
-  background: var(--bg-surface);
+  padding: 10px 38px 10px 40px;
+  background: var(--bg-main, #f8fafc);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-md, 8px);
+  border-radius: 10px;
+  font-size: 0.88rem;
   color: var(--text-main);
-  font-size: 0.85rem;
-  transition: all 0.15s ease;
+  outline: none;
+  transition: all 0.2s;
 }
 
 .searchInput:focus {
-  outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow, rgba(99, 102, 241, 0.25));
-}
-
-.filterSelect {
-  padding: 8px 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md, 8px);
-  color: var(--text-main);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.filterSelect:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.statsCount {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-/* ROLE CARDS GRID */
-.rolesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 16px;
-}
-
-.roleCard {
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg, 14px);
-  padding: 20px;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.quickFilters {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  position: relative;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.2s ease;
-}
-
-.roleCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.35);
-  border-color: rgba(99, 102, 241, 0.4);
-}
-
-.cardTop {
-  display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
-.cardHeaderRow {
+.filterButtonGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-main, #f1f5f9);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.filterBtn {
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+
+.filterBtnActive {
+  background: var(--bg-card);
+  color: var(--primary) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.batchActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.batchBtn {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.batchBtn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+/* LƯỚI CÁC CARD MODULE */
+.modulesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 1100px) {
+  .modulesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.moduleCard {
+  background: var(--bg-main, #f8fafc);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.moduleCard:hover {
+  border-color: var(--border-hover, rgba(99, 102, 241, 0.3));
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.03);
+}
+
+/* HEADER CỦA CARD MODULE */
+.moduleCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-default);
 }
 
-.roleIdentity {
+.moduleHeaderInfo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.roleIconBadge {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md, 10px);
-  background: rgba(99, 102, 241, 0.12);
+.moduleIconBadge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.1);
   color: var(--primary);
   display: flex;
   align-items: center;
@@ -176,225 +527,219 @@
   flex-shrink: 0;
 }
 
-.roleName {
-  font-size: 1.05rem;
+.moduleTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.moduleName {
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-main);
   margin: 0;
-  letter-spacing: 0.02em;
 }
 
-.systemBadge {
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 9999px;
-  background: rgba(99, 102, 241, 0.15);
-  color: var(--primary);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
+.moduleTag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 
-.customBadge {
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 9999px;
-  background: rgba(6, 182, 212, 0.12);
-  color: #0369a1;
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
+.moduleDesc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 2px 0 0 0;
 }
 
-.roleDescription {
-  font-size: 0.83rem;
-  color: var(--text-secondary);
-  line-height: 1.45;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 38px;
-}
-
-.statsRow {
+/* MASTER MODULE TOGGLE */
+.moduleMasterToggle {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-md, 8px);
-  border: 1px solid var(--border-default);
+  gap: 10px;
 }
 
-.statItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.masterToggleLabel {
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--text-secondary);
-  flex: 1;
+  color: var(--text-muted);
 }
 
-.statItemIcon {
-  color: var(--primary);
-}
-
-.cardProgressWrapper {
+/* DANH SÁCH TỪNG QUYỀN TRONG MODULE */
+.permissionList {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-top: 8px;
+  gap: 8px;
 }
 
-.cardProgressBarBg {
-  width: 100%;
-  height: 5px;
-  background: var(--bg-surface);
-  border-radius: 9999px;
+.permissionRow {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.permissionRow:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateX(2px);
+}
+
+.permissionRowActive {
+  background: var(--bg-card);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06);
+}
+
+.permTextGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   overflow: hidden;
-  border: 1px solid var(--border-default);
 }
 
-.cardProgressBarFill {
-  height: 100%;
-  background: linear-gradient(90deg, #4f46e5, #06b6d4);
-  border-radius: 9999px;
-  transition: width 0.3s ease;
-}
-
-.cardProgressTextRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.statDivider {
-  width: 1px;
-  height: 16px;
-  background: var(--border-default);
-}
-
-.cardFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border-default);
-}
-
-.actionBtnGroup {
+.permNameRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  flex-wrap: wrap;
 }
 
-.configBtn {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md, 8px);
-  color: var(--text-main);
-  font-size: 0.83rem;
+.permName {
+  font-size: 0.88rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  color: var(--text-main);
 }
 
-.configBtn:hover {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #ffffff;
+.permCode {
+  font-size: 0.7rem;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-.deleteBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 10px;
-  background: transparent;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md, 8px);
-  color: var(--danger, #ef4444);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.deleteBtn:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: var(--danger, #ef4444);
-}
-
-.deleteBtn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
+.permDescription {
+  font-size: 0.76rem;
   color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
 }
 
-/* SKELETON & EMPTY STATE */
-.skeletonCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg, 14px);
-  padding: 20px;
+.permToggleWrapper {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  height: 210px;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.emptyState {
-  background: var(--bg-card);
-  border: 1px dashed var(--border-default);
-  border-radius: var(--radius-lg, 14px);
-  padding: 48px 24px;
-  text-align: center;
+.toggleStatusLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.labelActive {
+  color: #10b981;
+}
+
+.labelInactive {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* MODERN SWITCH BUTTON (TOGGLE SLIDER DẠNG GẠT) */
+.switchBtn {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: rgba(148, 163, 184, 0.35);
+  border: none;
+  border-radius: 99px;
+  padding: 2px;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.25s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+
+.switchBtn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+}
+
+.switchSlider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* ACTIVE STATE */
+.switchActive {
+  background: #6366f1 !important;
+}
+
+.switchActive .switchSlider {
+  transform: translateX(20px);
+}
+
+/* PARTIAL STATE */
+.switchPartial {
+  background: #f59e0b !important;
+}
+
+.switchPartial .switchSlider {
+  transform: translateX(10px);
+}
+
+/* LOADING & EMPTY STATES */
+.loadingState, .emptyState {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
   gap: 12px;
 }
 
-.emptyIcon {
-  width: 48px;
-  height: 48px;
-  border-radius: 9999px;
-  background: rgba(99, 102, 241, 0.1);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.loadingState p, .emptyState p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin: 0;
 }
 
-.emptyTitle {
+.emptyState h4 {
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-main);
   margin: 0;
 }
 
-.emptyDesc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  max-width: 360px;
-  margin: 0;
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

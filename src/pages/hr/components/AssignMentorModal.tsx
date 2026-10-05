@@ -3,6 +3,7 @@ import { User, AlertTriangle, Info } from 'lucide-react';
 import type { InternProfile, MentorOption } from '../../../types';
 import { Modal, Button } from '../../../components/common';
 import { internService } from '../../../services/internService';
+import { checkMentorDepartmentMatch } from '../../../utils/departmentMatcher';
 
 interface AssignMentorModalProps {
   intern: InternProfile | null;
@@ -17,6 +18,7 @@ export const AssignMentorModal: React.FC<AssignMentorModalProps> = ({
 }) => {
   const [mentors, setMentors] = useState<MentorOption[]>([]);
   const [selectedMentorId, setSelectedMentorId] = useState<number | ''>('');
+  const [activeTab, setActiveTab] = useState<'DEPARTMENT' | 'ALL'>('DEPARTMENT');
   const [notes, setNotes] = useState('');
   const [replaceReason, setReplaceReason] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,51 +53,15 @@ export const AssignMentorModal: React.FC<AssignMentorModalProps> = ({
   const isBlockedByProgram = Boolean(intern.needsReassignment) || !intern.programId;
   const selectedMentor = mentors.find((m) => m.id === Number(selectedMentorId));
   const isHighWorkload = selectedMentor ? selectedMentor.activeInternCount >= 5 : false;
-  const isDifferentDept = (() => {
-    if (!selectedMentor || !selectedMentor.departmentName || !intern.programName) return false;
-    
-    // Hàm chuẩn hóa chuỗi tiếng Việt: loại bỏ dấu, chuyển chữ thường và loại bỏ tiền tố phòng ban
-    const normalize = (str: string) => {
-      return str
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/^(bo phan|trung tam|phong ban|phong)\s+/i, '')
-        .trim();
-    };
+  const filteredDeptMentors = mentors
+    .filter((m) => checkMentorDepartmentMatch(m, intern.programName))
+    .sort((a, b) => a.activeInternCount - b.activeInternCount);
 
-    const progNorm = normalize(intern.programName);
-    const deptNorm = normalize(selectedMentor.departmentName);
-    const code = (selectedMentor.departmentCode || '').toLowerCase();
+  const displayedMentors = (activeTab === 'DEPARTMENT' && filteredDeptMentors.length > 0)
+    ? filteredDeptMentors
+    : [...mentors].sort((a, b) => a.activeInternCount - b.activeInternCount);
 
-    // 1. Kiểm tra khớp tên cốt lõi (sau khi đã gọt bỏ tiền tố "Bộ phận", "Trung tâm", "Phòng")
-    if (deptNorm && progNorm.includes(deptNorm)) return false;
-    if (code && progNorm.includes(code)) return false;
-
-    // 2. Kiểm tra theo nhóm từ khóa chuyên môn cốt lõi
-    if ((code === 'qa' || deptNorm.includes('kiem thu') || deptNorm.includes('chat luong')) &&
-        (progNorm.includes('kiem thu') || progNorm.includes('qa') || progNorm.includes('qc') || progNorm.includes('chat luong'))) {
-      return false;
-    }
-
-    if ((code === 'it-dev' || deptNorm.includes('phan mem') || deptNorm.includes('ky thuat')) &&
-        (progNorm.includes('phan mem') || progNorm.includes('phat trien') || progNorm.includes('backend') || 
-         progNorm.includes('frontend') || progNorm.includes('fullstack') || progNorm.includes('cong nghe') || progNorm.includes('cntt') || progNorm.includes('it'))) {
-      return false;
-    }
-
-    if ((code === 'sec' || deptNorm.includes('an toan') || deptNorm.includes('bao mat')) &&
-        (progNorm.includes('bao mat') || progNorm.includes('an toan') || progNorm.includes('security') || progNorm.includes('an ninh'))) {
-      return false;
-    }
-
-    if ((code === 'hr-td' || deptNorm.includes('nhan su') || deptNorm.includes('tuyen dung')) &&
-        (progNorm.includes('nhan su') || progNorm.includes('tuyen dung') || progNorm.includes('hr') || progNorm.includes('dao tao'))) {
-      return false;
-    }
-
-    return true;
-  })();
+  const isDifferentDept = selectedMentor ? !checkMentorDepartmentMatch(selectedMentor, intern.programName) : false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,6 +174,44 @@ export const AssignMentorModal: React.FC<AssignMentorModalProps> = ({
         {!isBlockedByProgram && (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
+              {/* Tab Selector */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-default)', paddingBottom: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('DEPARTMENT')}
+                  style={{
+                    background: activeTab === 'DEPARTMENT' ? 'var(--primary)' : 'transparent',
+                    color: activeTab === 'DEPARTMENT' ? '#fff' : 'var(--text-secondary)',
+                    border: 'none',
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  🎯 Cùng Phòng Ban ({filteredDeptMentors.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ALL')}
+                  style={{
+                    background: activeTab === 'ALL' ? 'var(--primary)' : 'transparent',
+                    color: activeTab === 'ALL' ? '#fff' : 'var(--text-secondary)',
+                    border: 'none',
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  🌐 Toàn Bộ Mentor ({mentors.length})
+                </button>
+              </div>
+
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem', color: 'var(--text-main)' }}>
                 Chọn Người Hướng Dẫn (Mentor) <span style={{ color: 'var(--danger)' }}>*</span>
               </label>
@@ -219,12 +223,13 @@ export const AssignMentorModal: React.FC<AssignMentorModalProps> = ({
                 style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)' }}
               >
                 <option value="">-- Chọn Mentor từ danh sách --</option>
-                {mentors.map((m) => {
+                {displayedMentors.map((m) => {
                   const isPending = m.status === 'PENDING_ACTIVATION';
+                  const loadIndicator = m.activeInternCount >= 5 ? '🔴 Quá tải' : m.activeInternCount >= 3 ? '🟡 Trung bình' : '🟢 Sẵn sàng';
                   return (
                     <option key={m.id} value={m.id} disabled={isPending}>
-                      {m.fullName} - {m.email} ({m.departmentName || 'Chung'}) [{m.activeInternCount} TTS đang kèm]
-                      {isPending ? ' (Chờ kích hoạt - Chưa khả dụng)' : ''}
+                      {m.fullName} - {m.departmentName || 'Chung'} [{loadIndicator}: {m.activeInternCount} TTS]
+                      {isPending ? ' (Chờ kích hoạt)' : ''}
                     </option>
                   );
                 })}

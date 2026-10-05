@@ -15,8 +15,10 @@ export interface NotificationItem {
 }
 
 export interface SecurityCommand {
-  action: 'FORCE_LOGOUT' | 'ACCOUNT_LOCKED' | 'TOKEN_EXPIRED';
-  userId: number;
+  action: 'FORCE_LOGOUT' | 'ACCOUNT_LOCKED' | 'TOKEN_EXPIRED' | 'PERMISSION_UPDATED';
+  userId?: number;
+  role?: string;
+  roleId?: number;
   reason?: string;
   message?: string;
 }

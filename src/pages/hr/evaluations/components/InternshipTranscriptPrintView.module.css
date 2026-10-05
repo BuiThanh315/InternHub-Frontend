@@ -1,0 +1,306 @@
+.printRoot {
+  display: none;
+}
+
+@media print {
+  /* Hide all app elements except printable area */
+  :global(body) {
+    background: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  :global(body > *),
+  :global(#root > *:not(.printableHost)) {
+    display: none !important;
+  }
+
+  .printRoot {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .transcriptPage {
+    page-break-after: always;
+    break-after: page;
+    box-sizing: border-box;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 16mm 18mm;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  .transcriptPage:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}
+
+/* Screen Preview Modal / Container */
+.screenPreviewContainer {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #1e3a8a;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.companyInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.companyName {
+  font-size: 14pt;
+  font-weight: 700;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.companySub {
+  font-size: 9pt;
+  color: #4b5563;
+  margin-top: 2px;
+}
+
+.metaInfo {
+  text-align: right;
+  font-size: 9pt;
+  color: #6b7280;
+}
+
+.docTitleSection {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.docTitle {
+  font-size: 16pt;
+  font-weight: 800;
+  color: #111827;
+  text-transform: uppercase;
+  margin: 0 0 6px 0;
+}
+
+.docSub {
+  font-size: 10pt;
+  color: #4b5563;
+  font-style: italic;
+  margin: 0;
+}
+
+.sectionBox {
+  margin-bottom: 18px;
+}
+
+.sectionHeader {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  border-left: 4px solid #2563eb;
+  padding-left: 8px;
+  margin-bottom: 10px;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 16px;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 10pt;
+}
+
+.infoItem {
+  display: flex;
+}
+
+.infoLabel {
+  font-weight: 600;
+  color: #4b5563;
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  color: #111827;
+  font-weight: 500;
+}
+
+/* Score Table */
+.scoreTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 10pt;
+}
+
+.scoreTable th,
+.scoreTable td {
+  border: 1px solid #cbd5e1;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.scoreTable th {
+  background-color: #f1f5f9;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+}
+
+.scoreValueCol {
+  text-align: center !important;
+  font-weight: 600;
+  width: 90px;
+}
+
+.weightCol {
+  text-align: center !important;
+  color: #64748b;
+  width: 70px;
+}
+
+.totalRow {
+  background-color: #f8fafc;
+  font-weight: 700;
+}
+
+.totalScore {
+  font-size: 12pt;
+  color: #1e3a8a;
+  text-align: center !important;
+}
+
+/* Text comments */
+.commentCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  font-size: 9.5pt;
+}
+
+.commentLabel {
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.commentText {
+  color: #1f2937;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.badgeResult {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 9.5pt;
+  text-transform: uppercase;
+}
+
+.badgePassed {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.badgeExcellent {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.badgeFailed {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+/* Signatures */
+.signatureSection {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-top: 30px;
+  text-align: center;
+}
+
+.signatureBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.signRole {
+  font-size: 10pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #1e293b;
+}
+
+.signSub {
+  font-size: 8.5pt;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.stampSpace {
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sealMark {
+  border: 2px dashed #94a3b8;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 8pt;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.signerName {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #0f172a;
+  border-top: 1px solid #cbd5e1;
+  padding-top: 4px;
+  min-width: 140px;
+}

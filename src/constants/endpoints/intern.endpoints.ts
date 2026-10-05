@@ -16,4 +16,7 @@ export const INTERN_ENDPOINTS = {
   MENTOR_INTERNS: (mentorId: number | string) => `/api/interns/mentors/${mentorId}/interns`,
   RESEND_MENTOR_INVITATION: (mentorId: number | string) => `/api/interns/mentors/${mentorId}/resend-invitation`,
   MY_PROFILE: '/api/interns/my-profile',
+  WEEKLY_ASSESSMENTS: (internCode: string) => `/api/interns/${internCode}/weekly-assessments`,
+  EVALUATIONS: (internCode: string) => `/api/interns/${internCode}/evaluations`,
+  MENTOR_OVERVIEW: '/api/mentors/my-interns/overview',
 } as const;

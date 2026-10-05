@@ -5,8 +5,46 @@ export interface DepartmentResponse {
   code: string;
   description?: string;
   status: string;
+  plannedCapacityQuota?: number;
+  leadMentorName?: string;
 }
 export type Department = DepartmentResponse;
+
+export interface MentorRosterItem {
+  mentorId: number;
+  mentorName: string;
+  email: string;
+  avatarUrl?: string | null;
+  activeInternCount: number;
+  workloadStatus: 'AVAILABLE' | 'STANDARD' | 'OVERLOAD';
+}
+
+export interface DepartmentCapacityItem {
+  departmentId: number;
+  departmentCode: string;
+  departmentName: string;
+  description?: string;
+  leadMentorName?: string;
+  plannedCapacityQuota: number;
+  activeInternCount: number;
+  activeMentorCount: number;
+  utilizationRate: number;
+  qualityScoreAvg: number;
+  activeProgramsCount: number;
+  mentors: MentorRosterItem[];
+}
+
+export interface DepartmentCapacityOverview {
+  companySummary: {
+    totalDepartments: number;
+    totalActiveInterns: number;
+    totalPlannedQuota: number;
+    totalActiveMentors: number;
+    overallUtilizationRate: number;
+  };
+  departments: DepartmentCapacityItem[];
+}
+
 
 export type ProgramStatusType = 'PLANNING' | 'OPEN' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
 
