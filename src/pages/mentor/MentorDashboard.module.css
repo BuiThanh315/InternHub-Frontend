@@ -1,156 +1,19 @@
-.twoColLayout {
-  display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(340px, 1.2fr);
-  gap: 1.5rem;
-  align-items: start;
+.mainContainer {
+  padding: 1rem 0;
 }
 
-@media (max-width: 900px) {
-  .twoColLayout {
-    grid-template-columns: 1fr;
-  }
-}
-
-.metricsGrid {
+.bentoGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.25rem;
-  margin-bottom: 2rem;
-  margin-top: 1.5rem;
 }
 
-.kpiCard {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.kpiCard:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.iconWrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.iconPrimary {
-  background-color: var(--primary-light);
-  color: var(--primary);
-}
-
-.iconSuccess {
-  background-color: var(--success-bg);
-  color: var(--success);
-}
-
-.iconInfo {
-  background-color: var(--info-bg);
-  color: var(--info);
-}
-
-.kpiLabel {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin: 0;
-  font-weight: 500;
-}
-
-.kpiValue {
-  font-size: 1.6rem;
-  font-weight: 800;
-  margin: 0;
-  color: var(--text-main);
-  line-height: 1.2;
-}
-
-.internListHeader {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: var(--text-main);
-}
-
-.internListCard {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-}
-
-.internItem {
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  border: 1px solid var(--border-default);
-  background-color: var(--bg-surface);
-  transition: all var(--transition-fast);
-  margin-bottom: 0.75rem;
-}
-
-.internItem:hover {
-  border-color: var(--border-focus);
-  background-color: var(--bg-hover);
-}
-
-.internItemSelected {
-  border: 2px solid var(--primary);
-  background-color: var(--primary-light);
-}
-
-.internItemHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.internName {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-main);
-}
-
-.internCodeSub {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-family: monospace;
-}
-
-.internDetailsGrid {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
-}
-
-.programBadge {
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--primary);
-  background-color: var(--primary-light);
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  display: inline-block;
-}
-
-.emptyInternText {
-  color: var(--text-muted);
+.emptyState {
+  background: var(--bg-card, #161b26);
+  border: 1px dashed var(--border-default, #232d3f);
+  border-radius: 12px;
+  padding: 3rem 1.5rem;
   text-align: center;
-  padding: 2.5rem 1rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.9rem;
 }

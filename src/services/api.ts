@@ -146,6 +146,11 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Bỏ qua không đóng gói AppError nếu request bị Abort/Cancel có chủ đích
+    if (axios.isCancel(error) || error?.name === 'CanceledError' || error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
+      return Promise.reject(error);
+    }
+
     // Trích xuất thông điệp lỗi chuẩn từ Spring Boot ApiResponse
     let errorMessage = 'Đã có lỗi xảy ra trong quá trình kết nối máy chủ';
     let fieldErrors: Record<string, string> | undefined;

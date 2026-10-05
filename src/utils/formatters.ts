@@ -148,3 +148,41 @@ export function getContractStatusLabel(status?: string): string {
       return status || '—';
   }
 }
+
+/**
+ * Định dạng giờ phút giây (HH:mm:ss hoặc HH:mm)
+ */
+export function formatTime(dateInput?: string | Date | null, includeSeconds: boolean = true): string {
+  if (!dateInput) return '—';
+  try {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (isNaN(date.getTime())) return '—';
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    if (!includeSeconds) return `${hours}:${minutes}`;
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  } catch {
+    return '—';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho AttendanceStatus
+ */
+export function getAttendanceStatusLabel(status?: string | null): string {
+  switch (status) {
+    case 'ON_TIME':
+      return 'Đúng giờ';
+    case 'LATE':
+      return 'Đi muộn';
+    case 'EARLY_LEAVE':
+      return 'Về sớm';
+    case 'LATE_AND_EARLY_LEAVE':
+      return 'Muộn & Về sớm';
+    case 'ABSENT':
+      return 'Vắng mặt';
+    default:
+      return status || 'Chưa vào ca';
+  }
+}

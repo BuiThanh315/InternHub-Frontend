@@ -10,7 +10,7 @@ import type {
   RoleType,
 } from '../types';
 
-function extractPermissionsFromToken(token: string): string[] {
+export function extractPermissionsFromToken(token: string): string[] {
   try {
     const parts = token.split('.');
     if (parts.length < 2) return [];
