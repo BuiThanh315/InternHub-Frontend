@@ -70,10 +70,93 @@
   color: var(--text-muted);
 }
 
+.actionCellWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .actionButtonsGroup {
   display: flex;
   gap: 0.35rem;
-  flex-wrap: wrap;
+  align-items: center;
+}
+
+.actionMenuContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.moreBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.moreBtn:hover {
+  background: var(--border-subtle);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.actionDropdownMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 50;
+  min-width: 170px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.actionMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.785rem;
+  font-weight: 500;
+  color: var(--text-main);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background var(--transition-fast);
+}
+
+.actionMenuItem:hover {
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.actionMenuItem:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionMenuItemDanger {
+  color: var(--danger);
+}
+
+.actionMenuItemDanger:hover {
+  background-color: var(--danger-bg);
+  color: var(--danger);
 }
 
 .actionBtn {

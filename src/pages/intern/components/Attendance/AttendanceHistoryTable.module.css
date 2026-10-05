@@ -1,0 +1,254 @@
+.tableCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+/* Custom Sleek Scrollbar (Nguyên tắc 34) */
+.tableWrapper::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 9999px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.table th {
+  background: var(--border-subtle);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-main);
+  vertical-align: middle;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background: var(--bg-hover);
+}
+
+/* Sticky Column Ngày làm việc (Nguyên tắc 34) */
+.stickyColumn {
+  position: sticky;
+  left: 0;
+  background: var(--bg-card);
+  z-index: 2;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.03);
+}
+
+.table th.stickyColumn {
+  background: var(--border-subtle);
+}
+
+.table tr:hover td.stickyColumn {
+  background: var(--bg-hover);
+}
+
+/* Badges */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badgeOnTime {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+.badgeLate {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid var(--warning-border);
+}
+
+.badgeEarlyLeave {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
+.badgeAbsent {
+  background: var(--border-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+}
+
+/* 5 TRẠNG THÁI GIAO DIỆN BẮT BUỘC (Nguyên tắc 32) */
+.stateContainer {
+  padding: 3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.emptyIconWrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--border-subtle);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+.emptyTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.emptyDesc {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  max-width: 360px;
+  margin: 0;
+}
+
+.emptyActionBtn {
+  margin-top: 0.5rem;
+  background: var(--primary);
+  color: var(--text-inverse);
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.emptyActionBtn:hover {
+  background: var(--primary-hover);
+}
+
+/* Error State */
+.errorIconWrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.retryBtn {
+  margin-top: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-main);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.retryBtn:hover {
+  background: var(--border-subtle);
+}
+
+/* PHÂN TRANG (Tự động ẩn khi <= 10 bản ghi theo Nguyên tắc 31) */
+.paginationBar {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.pageButtonGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pageBtn {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: var(--border-subtle);
+  color: var(--text-main);
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}

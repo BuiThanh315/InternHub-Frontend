@@ -25,3 +25,9 @@ dist-ssr
 
 # Local environment & references
 docs/environment-reference.md
+
+# Agent and AI local configs
+.agents/
+SKILLS_GUIDE.md
+skills-lock.json
+

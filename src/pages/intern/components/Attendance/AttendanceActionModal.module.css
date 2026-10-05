@@ -1,0 +1,549 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modalCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* KHỐI 1: FIXED HEADER */
+.modalHeader {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.headerTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.headerIconBadge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.headerTitle {
+  font-family: var(--font-heading), sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.headerSubtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.closeButton:hover {
+  background: var(--border-subtle);
+  color: var(--text-main);
+}
+
+/* KHỐI 2: SCROLLABLE BODY */
+.modalBody {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.coordinatesCard {
+  background: var(--border-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.coordinatesRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.coordinatesValue {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Alert Boxes */
+.alertBox {
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  line-height: 1.45;
+}
+
+.alertValid {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success);
+}
+
+.alertWarning {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning);
+}
+
+.alertDanger {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+}
+
+.alertInfo {
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  color: var(--info);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.formLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.formTextarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 64px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.formTextarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* KHỐI 3: STICKY FOOTER */
+.modalFooter {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  flex-shrink: 0;
+  gap: 0.75rem;
+}
+
+.footerLeft {
+  display: flex;
+  align-items: center;
+}
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.refreshButton {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: var(--border-subtle);
+  color: var(--text-main);
+}
+
+.cancelButton {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: var(--border-subtle);
+  color: var(--text-main);
+}
+
+.submitButton {
+  background: var(--primary-gradient);
+  border: none;
+  color: var(--text-inverse);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.6rem 1.35rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  box-shadow: 0 4px 10px var(--primary-glow);
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px var(--primary-glow);
+}
+
+.submitButton:disabled {
+  background: var(--border-default);
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.cancelButton:disabled,
+.refreshButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* XÁC THỰC 2 BƯỚC CHECK-IN: QR CODE & COUNTDOWN */
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 1.15rem;
+  text-align: center;
+}
+
+.qrBadgeHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+}
+
+.qrCard {
+  position: relative;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-default);
+  border-radius: 14px;
+  padding: 0.75rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.qrImage {
+  width: 170px;
+  height: 170px;
+  display: block;
+  image-rendering: pixelated;
+  border-radius: 8px;
+}
+
+.qrExpiredOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: var(--text-inverse);
+  animation: fadeIn 0.2s ease;
+}
+
+.qrExpiredText {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--danger-border);
+}
+
+.qrTimerWrapper {
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.qrTimerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.qrTimerSeconds {
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.qrTimerTrack {
+  width: 100%;
+  height: 6px;
+  background: var(--border-default);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.qrTimerProgress {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 1s linear, background-color 0.3s ease;
+}
+
+.laserBeam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary);
+  box-shadow: 0 0 10px 2px var(--primary-glow);
+  animation: scanLaser 1.2s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes scanLaser {
+  0% {
+    top: 5%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 92%;
+    opacity: 1;
+  }
+  100% {
+    top: 5%;
+    opacity: 0.8;
+  }
+}
+
+.scanQrButton {
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 1.15rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scanQrButton:hover:not(:disabled) {
+  background: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: 0 3px 10px var(--primary-glow);
+}
+
+.scanQrButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.scannedSuccessBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.refreshLinkBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.refreshLinkBtn:hover {
+  color: var(--primary);
+}
+
+.qrInstruction {
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.4;
+  max-width: 320px;
+  margin: 0;
+}
+
+.qrActionRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.qrSecondaryBtn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.qrSecondaryBtn:hover:not(:disabled) {
+  background: var(--border-subtle);
+  color: var(--text-main);
+  border-color: var(--border-hover, var(--border-default));
+}
+
+.charCount {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: -0.25rem;
+}
+
