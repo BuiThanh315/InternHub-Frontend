@@ -9,9 +9,14 @@ import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPa
 import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
 import { HrEvaluationManagementPage } from '../pages/hr/evaluations/HrEvaluationManagementPage';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
+import { MentorMissionPage } from '../pages/mentor/missions/MentorMissionPage';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
+import { InternMissionPage } from '../pages/intern/missions/InternMissionPage';
 import { ProfilePage } from '../pages/profile';
+import { InternApplyPage } from '../pages/intern/InternApplyPage';
+import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
+import { InternAttendanceConfirmPage } from '../pages/intern/InternAttendanceConfirmPage';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,7 +40,7 @@ export const AppRoutes: React.FC = () => {
   // Smart Redirection thuần túy dựa trên Permission (Single Source of Truth)
   const getDashboardRedirect = () => {
     const redirectParam = searchParams.get('redirect');
-    if (redirectParam && redirectParam.startsWith('/')) {
+    if (redirectParam?.startsWith('/')) {
       return <Navigate to={redirectParam} replace />;
     }
 
@@ -94,6 +99,7 @@ export const AppRoutes: React.FC = () => {
         {/* Mentor Area (Bảo vệ bởi quyền xem TTS do mình phụ trách) */}
         <Route element={<ProtectedRoute requiredPermissions={['INTERN_VIEW_OWN', 'MENTOR_VIEW_OWN_DOCS']} />}>
           <Route path={ROUTES.MENTOR.DASHBOARD} element={<MentorDashboard />} />
+          <Route path={ROUTES.MENTOR.MISSIONS} element={<MentorMissionPage />} />
           <Route path={ROUTES.MENTOR.INTERNS} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
         </Route>
@@ -101,8 +107,11 @@ export const AppRoutes: React.FC = () => {
         {/* Intern Dedicated Area (Bảo vệ bởi quyền cá nhân của TTS) */}
         <Route element={<ProtectedRoute requiredPermissions={['INTERN_VIEW_OWN_PROFILE', 'INTERN_VIEW_OWN_DOCUMENTS']} />}>
           <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
+          <Route path={ROUTES.INTERN.MISSIONS} element={<InternMissionPage />} />
+          <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
           <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
           <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
+          <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
         </Route>
 
         {/* Universal Profile Route (Bảo vệ bởi PROFILE_VIEW_OWN) */}
@@ -110,6 +119,12 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>
+
+      {/* Route Xác Nhận Điểm Danh QR Độc Lập - Toàn màn hình, không bị bao bọc bởi Sidebar/Header quản lý của MainLayout */}
+      <Route
+        path={ROUTES.INTERN.ATTENDANCE_CONFIRM}
+        element={<InternAttendanceConfirmPage />}
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to={ROUTES.ROOT} replace />} />

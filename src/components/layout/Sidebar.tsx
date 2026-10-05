@@ -12,6 +12,8 @@ import {
   FolderGit2,
   FileText,
   Award,
+  Kanban,
+  CalendarCheck,
   X,
   ChevronLeft,
   ChevronRight,
@@ -82,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['ADMIN'],
     },
 
-    // 2. Phân hệ Quản Trị Nhân Sự (DÀNH RIÊNG CHO HR - ADMIN KHÔNG BỊ NHỒI NHÉT)
+    // 2. Phân hệ Quản Trị Nhân Sự (DÀNH CHO HR)
     {
       to: ROUTES.HR.DASHBOARD,
       label: 'Bảng Điều Khiển HR',
@@ -150,6 +152,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['MENTOR'],
     },
     {
+      to: ROUTES.MENTOR.MISSIONS,
+      label: 'Nhiệm Vụ & Giao Việc',
+      icon: Kanban,
+      requiredPermission: 'INTERN_VIEW_OWN',
+      section: 'Người Hướng Dẫn',
+      allowedRoles: ['MENTOR'],
+    },
+    {
       to: ROUTES.MENTOR.INTERNS,
       label: 'TTS Phụ Trách',
       icon: Users,
@@ -166,11 +176,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['MENTOR'],
     },
 
-    // 4. Phân hệ Thực Tập Sinh (CHỈ INTERN)
+    // 4. Phân hệ Thực Tập Sinh (CHỈ INTERN & USER)
     {
       to: ROUTES.INTERN.DASHBOARD,
       label: 'Tiến Độ Thực Tập',
       icon: LayoutDashboard,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.ATTENDANCE,
+      label: 'Chấm Công & Chuyên Cần',
+      icon: CalendarCheck,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.MISSIONS,
+      label: 'Nhiệm Vụ Của Tôi',
+      icon: Kanban,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.APPLY,
+      label: 'Nộp Hồ Sơ Ứng Tuyển',
+      icon: GraduationCap,
       requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',
       allowedRoles: ['INTERN', 'USER'],
@@ -209,11 +243,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     USER: { title: 'Thực Tập Sinh', color: '#8b5cf6' },
   };
 
-  const currentRoleInfo = role ? roleLabels[role] || { title: role, color: '#6b7280' } : null;
+  const currentRoleInfo = role
+    ? roleLabels[role] || { title: role, color: '#6b7280' }
+    : null;
 
   return (
     <>
-      {isOpen && <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />}
+      {isOpen && (
+        <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
+      )}
       <aside
         className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''} ${
           isCollapsed ? styles.sidebarCollapsed : ''
@@ -240,10 +278,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={onToggleCollapse}
               className={styles.desktopCollapseBtn}
-              title={isCollapsed ? 'Mở rộng thanh điều hướng (Ctrl+B)' : 'Thu gọn thanh điều hướng (Ctrl+B)'}
+              title={
+                isCollapsed
+                  ? 'Mở rộng thanh điều hướng (Ctrl+B)'
+                  : 'Thu gọn thanh điều hướng (Ctrl+B)'
+              }
               aria-label={isCollapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
             >
-              {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             </button>
           )}
 
@@ -279,6 +321,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <NavLink
                           key={item.to}
                           to={item.to}
+                          onClick={onClose}
                           end={item.to === ROUTES.ROOT}
                           className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
@@ -306,6 +349,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className={`${styles.userRow} ${isCollapsed ? styles.userRowCollapsed : ''}`}>
             <NavLink
               to={ROUTES.PROFILE}
+              onClick={onClose}
               className={styles.userProfileLink}
               title={isCollapsed ? (user?.fullName || user?.username || 'Hồ sơ cá nhân') : 'Xem hồ sơ cá nhân'}
             >

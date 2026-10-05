@@ -9,3 +9,5 @@ export * from './program.types';
 export * from './profile.types';
 export * from './rbac.types';
 export * from './assessment.types';
+export * from './attendance.types';
+export * from './mission.types';
