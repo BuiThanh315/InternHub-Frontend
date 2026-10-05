@@ -1,6 +1,8 @@
 import {
   Building2,
   CalendarCheck,
+  CalendarCheck2,
+  CalendarOff,
   ChevronLeft,
   ChevronRight,
   FileCheck2,
@@ -81,6 +83,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             icon: FileSignature,
           },
           { to: "/hr/review", label: "Duyệt Tài Liệu & CV", icon: FileCheck2 },
+          {
+            to: ROUTES.MENTOR.LEAVE_REQUESTS,
+            label: "Duyệt Nghỉ Phép",
+            icon: CalendarCheck2,
+          },
           { to: ROUTES.PROFILE, label: "Hồ Sơ Cá Nhân", icon: UserIcon },
         ];
       case "MENTOR":
@@ -101,6 +108,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             label: "Tài Liệu Hướng Dẫn",
             icon: FolderGit2,
           },
+          {
+            to: ROUTES.MENTOR.LEAVE_REQUESTS,
+            label: "Duyệt Nghỉ Phép",
+            icon: CalendarCheck2,
+          },
           { to: ROUTES.PROFILE, label: "Hồ Sơ Cá Nhân", icon: UserIcon },
         ];
       case "INTERN":
@@ -116,6 +128,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             to: ROUTES.INTERN.ATTENDANCE,
             label: "Chấm Công & Chuyên Cần",
             icon: CalendarCheck,
+          },
+          {
+            to: ROUTES.INTERN.LEAVE_REQUESTS,
+            label: "Đơn Xin Nghỉ Phép",
+            icon: CalendarOff,
           },
           {
             to: ROUTES.INTERN.MISSIONS,

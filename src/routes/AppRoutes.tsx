@@ -16,6 +16,8 @@ import { InternMissionPage } from '../pages/intern/missions/InternMissionPage';
 import { ProfilePage } from '../pages/profile';
 import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
 import { InternAttendanceConfirmPage } from '../pages/intern/InternAttendanceConfirmPage';
+import { InternLeavePage } from '../pages/intern/leave';
+import { MentorLeaveApprovalPage } from '../pages/mentor/leave';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -106,6 +108,7 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.MENTOR.MISSIONS} element={<MentorMissionPage />} />
           <Route path={ROUTES.MENTOR.INTERNS} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
+          <Route path={ROUTES.MENTOR.LEAVE_REQUESTS} element={<MentorLeaveApprovalPage />} />
         </Route>
 
         {/* Universal Profile Route (Dành cho tất cả các Role) */}
@@ -122,6 +125,7 @@ export const AppRoutes: React.FC = () => {
           {/* Chuyển tiếp route xem profile cũ sang Universal Profile mới */}
           <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
           <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
+          <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />
         </Route>
       </Route>
 

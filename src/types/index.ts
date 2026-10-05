@@ -10,3 +10,4 @@ export * from './profile.types';
 export * from './rbac.types';
 export * from './attendance.types';
 export * from './mission.types';
+export * from './leave.types';
