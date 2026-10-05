@@ -8,6 +8,7 @@ import { HrProgramManagementPage } from '../pages/hr/programs/HrProgramManagemen
 import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPage';
 import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
+import { MentorMissionPage } from '../pages/mentor/missions/MentorMissionPage';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternApplyPage } from '../pages/intern/InternApplyPage';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
@@ -36,7 +37,7 @@ export const AppRoutes: React.FC = () => {
 
   const getDashboardRedirect = () => {
     const redirectParam = searchParams.get('redirect');
-    if (redirectParam && redirectParam.startsWith('/')) {
+    if (redirectParam?.startsWith('/')) {
       return <Navigate to={redirectParam} replace />;
     }
 
@@ -101,6 +102,7 @@ export const AppRoutes: React.FC = () => {
         {/* Mentor Area */}
         <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']} />}>
           <Route path={ROUTES.MENTOR.DASHBOARD} element={<MentorDashboard />} />
+          <Route path={ROUTES.MENTOR.MISSIONS} element={<MentorMissionPage />} />
           <Route path={ROUTES.MENTOR.INTERNS} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
         </Route>

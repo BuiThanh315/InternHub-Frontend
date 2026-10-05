@@ -1,0 +1,65 @@
+.stackContainer {
+  display: inline-flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.avatarWrapper {
+  position: relative;
+  margin-left: -8px;
+  transition: transform var(--transition-fast), z-index var(--transition-fast);
+}
+
+.avatarWrapper:last-child {
+  margin-left: 0;
+}
+
+.avatarWrapper:hover {
+  transform: translateY(-2px);
+  z-index: 10;
+}
+
+.avatar {
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-card);
+  object-fit: cover;
+  background-color: var(--primary-light);
+  display: block;
+}
+
+.avatarSm {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+}
+
+.avatarMd {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.fallbackAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  border: 2px solid var(--bg-card);
+  border-radius: var(--radius-full);
+}
+
+.moreBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-card);
+  background-color: var(--border-default);
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-left: -8px;
+  user-select: none;
+}

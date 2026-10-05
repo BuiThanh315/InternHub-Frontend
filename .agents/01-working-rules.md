@@ -37,9 +37,11 @@ Tài liệu này định nghĩa nguyên tắc tối cao và quy trình làm vi�
    - Mọi hoạt động phát triển hoặc kiểm thử API phải sử dụng dữ liệu thực tế đang có trong Database.
    - Khi cần tài khoản test theo từng phân quyền (Admin, HR, Mentor, Intern) hoặc dữ liệu mẫu, Agent **bắt buộc phải hỏi và yêu cầu người dùng cung cấp**, tuyệt đối không tự bịa data ảo hay nhét dữ liệu rác vào Database.
    - **Chỉ thị đặc biệt**: Nếu trong quá trình phát triển hoặc kiểm thử mà Database/Backend gặp sự cố (mất kết nối, lỗi migration, thiếu dữ liệu, container chết) khiến công việc không thể tiếp tục, Agent **TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ Ý BẬT MOCK HAY TỰ SỬA DB**, mà **BẮT BUỘC PHẢI DỪNG LẠI NGAY LẬP TỨC VÀ BÁO CÁO CHO NGƯỜI DÙNG** kèm đầy đủ log và thông tin lỗi để cùng kiểm tra và nhận chỉ thị.
-10. **KHÔNG SINH RA CÁC GIAO DIỆN HOẶC CHỨC NĂNG ĐÃ CÓ SẴN (REUSE FIRST)**:
-    - Trước khi viết mới bất kỳ component, trang, modal hay hàm xử lý nào, Agent phải khảo sát kỹ mã nguồn hiện có.
-    - Nghiêm cấm tạo mới giao diện hoặc chức năng mà hệ thống đã có sẵn. Phải ưu tiên tái sử dụng tối đa.
+10. **QUÉT DỰ ÁN & TỐI ĐA TÁI SỬ DỤNG GIAO DIỆN, CHỨC NĂNG (REUSE FIRST, ZERO UNNECESSARY REDUNDANCY)**:
+    - **Chỉ thị cốt lõi bắt buộc**: **"ĐẢM BẢO SẼ QUÉT DỰ ÁN, TRÁNH VIỆC TẠO THÊM CODE MỚI KHÔNG CẦN THIẾT, SỬ DỤNG TỐI ĐA NHỮNG GÌ ĐÃ CÓ ĐỂ PHÁT TRIỂN"**.
+    - Trước khi viết mới bất kỳ component, trang, modal, custom hook, service hay hàm utility nào, Agent **bắt buộc phải khảo sát kỹ mã nguồn hiện có** trong `src/components/common/`, `src/hooks/`, `src/services/`, `src/utils/formatters.ts`.
+    - Nghiêm cấm tạo mới giao diện hoặc chức năng mà hệ thống đã có sẵn. Bắt buộc ưu tiên tái sử dụng tối đa, mở rộng props hoặc kế thừa thay vì sinh ra các component tương tự gây rác mã nguồn và phân mảnh style.
+    - Trong mọi Kế hoạch (`Plan`), bắt buộc phải có mục *"Khảo Sát Hiện Trạng & Đánh Giá Tái Sử Dụng"* chỉ rõ những gì được tái sử dụng và giải trình cụ thể nếu cần tạo mới.
 11. **MỌI ĐƯỜNG DẪN ROUTE VÀ API ĐỀU CẦN CÓ SỰ CHO PHÉP KHI KHAI BÁO**:
     - Mọi đường dẫn API mới trong `src/constants/endpoints/` và Route mới trong `src/constants/routes/` đều phải được trình bày trong Kế hoạch (`Plan`) và nhận được sự phê duyệt của người dùng trước khi tiến hành khai báo vào mã nguồn.
 12. **NGHIÊM CẤM TỰ Ý CHẠY `git commit` HOẶC `git push` & TIÊU CHUẨN COMMIT MESSAGE**:
