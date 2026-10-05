@@ -5,15 +5,31 @@ import { AuthProvider } from './contexts/AuthContext';
 import { AppRoutes } from './routes/AppRoutes';
 import { ErrorBoundary } from './components/common';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NotificationProvider } from './contexts/NotificationContext';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
 export const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-          <Toaster position="top-right" richColors closeButton />
-        </AuthProvider>
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <NotificationProvider>
+              <AppRoutes />
+              <Toaster position="top-right" richColors closeButton />
+            </NotificationProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 };
