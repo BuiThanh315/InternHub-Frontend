@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { notificationService, type NotificationItem, type SecurityCommand } from '../services/notificationService';
 import { useQueryClient } from '@tanstack/react-query';
+import { ROUTES } from '../constants/routes';
+import { getRequiredPermissionsForPath } from '../constants/routePermissions';
 
 interface NotificationContextType {
   notifications: NotificationItem[];
@@ -19,7 +22,8 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, syncPermissionsWithRefreshToken } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -138,8 +142,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
         });
 
-        // 2. Kênh cá nhân nhận lệnh bảo mật (FORCE_LOGOUT, ACCOUNT_LOCKED, TOKEN_EXPIRED)
-        client.subscribe('/user/queue/security', (msg) => {
+        // 2. Kênh cá nhân nhận lệnh bảo mật (FORCE_LOGOUT, ACCOUNT_LOCKED, TOKEN_EXPIRED, PERMISSION_UPDATED)
+        client.subscribe('/user/queue/security', async (msg) => {
           try {
             const command: SecurityCommand = JSON.parse(msg.body);
             if (command.action === 'FORCE_LOGOUT' || command.action === 'ACCOUNT_LOCKED') {
@@ -153,6 +157,42 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               client.deactivate();
               logout();
               window.location.href = '/login';
+            } else if (command.action === 'PERMISSION_UPDATED') {
+              // Đồng bộ ngầm Access Token mới nhất từ server theo nguyên tắc Single Source of Truth
+              const currentPath = window.location.pathname;
+              const newPermissions = await syncPermissionsWithRefreshToken();
+
+              // Tra cứu quyền yêu cầu cho route từ Centralized Registry
+              const matchedRequiredPerms = getRequiredPermissionsForPath(currentPath);
+
+              // Kiểm tra xem user hiện tại (nếu không phải ADMIN) có còn đủ ít nhất 1 quyền truy cập route không
+              const isAdmin = user.role === 'ADMIN';
+              const isAllowed = isAdmin || !matchedRequiredPerms || matchedRequiredPerms.some((p) => newPermissions.includes(p));
+
+              if (!isAllowed) {
+                // Phương án A.2: Chuyển hướng dứt khoát về Dashboard và hiển thị Toast cảnh báo rõ ràng
+                toast.error('Quyền truy cập trang này vừa bị thu hồi bởi Quản trị viên!', {
+                  description: 'Các thay đổi chưa lưu trên trang đã bị hủy. Hệ thống đã tự động chuyển bạn về Bảng điều khiển an toàn.',
+                  duration: 6000,
+                });
+
+                // Chọn fallback Dashboard phù hợp dựa trên permission còn lại
+                let fallback: string = ROUTES.PROFILE;
+                if (newPermissions.includes('INTERN_VIEW_ALL') || newPermissions.includes('PROGRAM_VIEW')) {
+                  fallback = ROUTES.HR.DASHBOARD;
+                } else if (newPermissions.includes('INTERN_VIEW_OWN')) {
+                  fallback = ROUTES.MENTOR.DASHBOARD;
+                } else if (newPermissions.includes('INTERN_VIEW_OWN_PROFILE')) {
+                  fallback = ROUTES.INTERN.DASHBOARD;
+                }
+
+                navigate(fallback, { replace: true });
+              } else {
+                // Phương án B: Người dùng đang ở màn hình khác, refresh ngầm êm đềm không gián đoạn
+                toast.info('Phân quyền tài khoản của bạn đã được cập nhật bởi Quản trị viên.', {
+                  duration: 3500,
+                });
+              }
             }
           } catch (e) {
             console.error('Lỗi parse security command STOMP frame:', e);

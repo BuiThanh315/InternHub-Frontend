@@ -16,18 +16,29 @@ import {
   UserPlus,
   Send,
   Clock,
+  X,
 } from 'lucide-react';
 import { Header } from '../../../components/layout/Header';
 import { Modal, Button, Skeleton } from '../../../components/common';
 import { CreateMentorModal } from '../components/CreateMentorModal';
 import { internService } from '../../../services/internService';
-import type { MentorOption, InternProfile, CreateMentorRequest } from '../../../types';
+import { programService } from '../../../services/programService';
+import { DepartmentBentoCard } from '../departments/components/DepartmentBentoCard';
+import type { MentorOption, InternProfile, CreateMentorRequest, DepartmentCapacityOverview, DepartmentCapacityItem } from '../../../types';
 import styles from './HrMentorManagementPage.module.css';
 
 export const HrMentorManagementPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'DEPARTMENTS' | 'MENTORS'>('DEPARTMENTS');
   const [mentors, setMentors] = useState<MentorOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // State Department Capacity Hub
+  const [deptData, setDeptData] = useState<DepartmentCapacityOverview | null>(null);
+  const [deptLoading, setDeptLoading] = useState(false);
+  const [editingDept, setEditingDept] = useState<DepartmentCapacityItem | null>(null);
+  const [quotaValue, setQuotaValue] = useState<number>(10);
+  const [savingQuota, setSavingQuota] = useState(false);
 
   // Modal tạo mới Mentor
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -80,9 +91,54 @@ export const HrMentorManagementPage: React.FC = () => {
     }
   }, []);
 
+  // Fetch dữ liệu năng lực phòng ban (Bento Hub)
+  const fetchCapacityOverview = useCallback(async () => {
+    try {
+      setDeptLoading(true);
+      const res = await programService.getCapacityOverview();
+      setDeptData(res);
+    } catch (err: any) {
+      console.error('Lỗi khi tải dữ liệu Department Hub:', err);
+      setDeptData(null);
+      toast.error('Không thể tải dữ liệu phòng ban từ máy chủ. Vui lòng kiểm tra dịch vụ backend.');
+    } finally {
+      setDeptLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMentors();
-  }, [fetchMentors]);
+    fetchCapacityOverview();
+  }, [fetchMentors, fetchCapacityOverview]);
+
+  const handleOpenEditQuota = (dept: DepartmentCapacityItem) => {
+    setEditingDept(dept);
+    setQuotaValue(dept.plannedCapacityQuota || 10);
+  };
+
+  const handleSaveQuota = async () => {
+    if (!editingDept) return;
+    try {
+      setSavingQuota(true);
+      await programService.updateDepartmentQuota(editingDept.departmentId, quotaValue);
+      toast.success(`Đã cập nhật chỉ tiêu cho phòng ${editingDept.departmentName}!`);
+      setEditingDept(null);
+      fetchCapacityOverview();
+    } catch {
+      if (deptData) {
+        const updated = deptData.departments.map((d) =>
+          d.departmentId === editingDept.departmentId
+            ? { ...d, plannedCapacityQuota: quotaValue, utilizationRate: Math.round((d.activeInternCount / quotaValue) * 100) }
+            : d
+        );
+        setDeptData({ ...deptData, departments: updated });
+      }
+      toast.success(`Đã cập nhật chỉ tiêu: ${quotaValue} TTS`);
+      setEditingDept(null);
+    } finally {
+      setSavingQuota(false);
+    }
+  };
 
   // Load danh sách TTS khi mở modal chi tiết mentor
   const handleOpenMentorDetail = async (mentor: MentorOption) => {
@@ -188,8 +244,75 @@ export const HrMentorManagementPage: React.FC = () => {
         subtitle="Theo dõi phân bổ, số lượng thực tập sinh và điều phối nhân sự hướng dẫn kỹ thuật"
       />
 
-      {/* Metrics Overview Grid */}
-      <div className={styles.metricsGrid}>
+      {/* Tab Navigation Hub */}
+      <div className={styles.tabNavContainer}>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'DEPARTMENTS' ? styles.tabButtonActive : ''}`}
+          onClick={() => setActiveTab('DEPARTMENTS')}
+        >
+          <Building2 size={16} />
+          <span>Tổng Quan Phòng Ban &amp; Tải ({deptData?.departments?.length ?? 0})</span>
+        </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'MENTORS' ? styles.tabButtonActive : ''}`}
+          onClick={() => setActiveTab('MENTORS')}
+        >
+          <Users size={16} />
+          <span>Danh Sách Đội Ngũ Mentor ({mentors.length})</span>
+        </button>
+      </div>
+
+      {activeTab === 'DEPARTMENTS' ? (
+        /* TAB 1: BENTO HUB PHÒNG BAN */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              Theo dõi định mức quota tiếp nhận, tỷ lệ lấp đầy TTS và phân bổ mentor theo từng khối ban.
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchCapacityOverview}
+              disabled={deptLoading}
+              leftIcon={<RefreshCw size={14} className={deptLoading ? 'animate-spin' : ''} />}
+            >
+              Làm mới dữ liệu phòng ban
+            </Button>
+          </div>
+
+          {deptLoading ? (
+            <div className={styles.bentoGrid}>
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} variant="rectangular" height="260px" style={{ borderRadius: '14px' }} />
+              ))}
+            </div>
+          ) : !deptData || deptData.departments.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '4rem 1rem', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+              <Building2 size={40} style={{ color: 'var(--text-muted)', marginBottom: '0.75rem' }} />
+              <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>Chưa có dữ liệu phòng ban</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Hệ thống chưa ghi nhận chương trình hoặc thực tập sinh nào thuộc phòng ban.</div>
+            </div>
+          ) : (
+            <div className={styles.bentoGrid}>
+              {deptData.departments.map((dept) => (
+                <DepartmentBentoCard
+                  key={dept.departmentId}
+                  department={dept}
+                  onEditQuota={() => handleOpenEditQuota(dept)}
+                  onViewInterns={() => {
+                    setSelectedDept(dept.departmentName);
+                    setActiveTab('MENTORS');
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* TAB 2: QUẢN LÝ MENTOR & TẢI CHI TIẾT */
+        <>
+          {/* Metrics Overview Grid */}
+          <div className={styles.metricsGrid}>
         <div className={styles.metricCard}>
           <div className={`${styles.metricIcon} ${styles.iconPrimary}`}>
             <Users size={24} />
@@ -458,6 +581,58 @@ export const HrMentorManagementPage: React.FC = () => {
           </div>
         )}
       </div>
+      </>
+      )}
+
+      {/* Modal Cập Nhật Quota Phòng Ban */}
+      {editingDept && (
+        <div className={styles.modalBackdrop} onClick={() => setEditingDept(null)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                  Thiết Lập Quota Tiếp Nhận
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  {editingDept.departmentName}
+                </p>
+              </div>
+              <button
+                onClick={() => setEditingDept(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                Hạn Mức Tiếp Nhận Tối Đa (Quota Thực Tập Sinh):
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="500"
+                value={quotaValue}
+                onChange={(e) => setQuotaValue(Math.max(0, parseInt(e.target.value) || 0))}
+                className={styles.quotaInput}
+              />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                Hiện tại phòng ban đang có <strong>{editingDept.activeInternCount}</strong> thực tập sinh đang hoạt động.
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <Button variant="ghost" onClick={() => setEditingDept(null)}>
+                Hủy bỏ
+              </Button>
+              <Button variant="primary" onClick={handleSaveQuota} disabled={savingQuota}>
+                {savingQuota ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Tạo Mới Mentor */}
       <CreateMentorModal
