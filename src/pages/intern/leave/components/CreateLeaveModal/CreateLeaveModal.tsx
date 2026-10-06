@@ -163,7 +163,7 @@ export const CreateLeaveModal: React.FC<CreateLeaveModalProps> = ({
         </div>
       }
       footer={
-        <div className={styles.modalFooter}>
+        <>
           <Button
             type="button"
             variant="outline"
@@ -177,17 +177,12 @@ export const CreateLeaveModal: React.FC<CreateLeaveModalProps> = ({
             variant="primary"
             onClick={handleSubmit}
             disabled={isSubmitting || workingDays === 0}
+            isLoading={isSubmitting}
+            leftIcon={<Send size={16} />}
           >
-            {isSubmitting ? (
-              'Đang gửi đơn...'
-            ) : (
-              <>
-                <Send size={15} style={{ marginRight: 6 }} />
-                Gửi Đơn Xin Nghỉ
-              </>
-            )}
+            {isSubmitting ? 'Đang gửi đơn...' : 'Gửi Đơn Xin Nghỉ'}
           </Button>
-        </div>
+        </>
       }
     >
       <form onSubmit={handleSubmit} className={styles.modalBody}>

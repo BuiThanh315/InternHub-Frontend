@@ -12,6 +12,13 @@
   text-decoration: none;
   line-height: 1.5;
   user-select: none;
+  white-space: nowrap;
+}
+
+.button > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: inherit;
 }
 
 .button:disabled,

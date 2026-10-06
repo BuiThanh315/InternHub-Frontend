@@ -71,8 +71,8 @@ export const LeaveDetailModal: React.FC<LeaveDetailModalProps> = ({
                 borderColor: 'rgba(239, 68, 68, 0.4)',
               }}
               onClick={() => onCancelRequest(detail)}
+              leftIcon={<Trash2 size={15} />}
             >
-              <Trash2 size={14} style={{ marginRight: 6 }} />
               Hủy Đơn Này
             </Button>
           ) : (

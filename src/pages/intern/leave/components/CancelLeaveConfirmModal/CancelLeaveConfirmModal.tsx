@@ -22,7 +22,7 @@ export const CancelLeaveConfirmModal: React.FC<CancelLeaveConfirmModalProps> = (
       closeOnBackdrop={!isSubmitting}
       title="Xác Nhận Hủy Đơn Xin Nghỉ"
       footer={
-        <div className={styles.modalFooter}>
+        <>
           <Button
             type="button"
             variant="outline"
@@ -36,17 +36,12 @@ export const CancelLeaveConfirmModal: React.FC<CancelLeaveConfirmModalProps> = (
             variant="danger"
             onClick={onConfirm}
             disabled={isSubmitting}
+            isLoading={isSubmitting}
+            leftIcon={<Trash2 size={16} />}
           >
-            {isSubmitting ? (
-              'Đang xử lý...'
-            ) : (
-              <>
-                <Trash2 size={15} style={{ marginRight: 6 }} />
-                Xác Nhận Hủy Đơn
-              </>
-            )}
+            {isSubmitting ? 'Đang xử lý...' : 'Xác Nhận Hủy Đơn'}
           </Button>
-        </div>
+        </>
       }
     >
       <div className={styles.modalBody}>
