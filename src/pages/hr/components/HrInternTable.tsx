@@ -303,6 +303,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                                   setOpenMenuId(null);
                                   onOpenEdit(intern);
                                 }}
+                                title="Chỉnh sửa thông tin hồ sơ (Đặc quyền: INTERN_EDIT)"
                               >
                                 <Edit3 size={13} /> Sửa thông tin
                               </button>
@@ -326,6 +327,11 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                                   onOpenContract(intern);
                                 }}
                                 disabled={intern.status !== 'APPROVED' && intern.status !== 'INTERNING'}
+                                title={
+                                  intern.status === 'APPROVED' || intern.status === 'INTERNING'
+                                    ? 'Tải lên & quản lý hợp đồng thực tập'
+                                    : 'Cần phê duyệt tiếp nhận hồ sơ trước khi tạo hợp đồng'
+                                }
                               >
                                 <FileSignature size={13} /> Hợp đồng thực tập
                               </button>

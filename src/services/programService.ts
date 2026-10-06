@@ -21,6 +21,21 @@ export const programService = {
   },
 
   /**
+   * Lấy dữ liệu tổng quan năng lực tiếp nhận & điều phối phòng ban (Department Capacity Overview)
+   */
+  async getCapacityOverview(signal?: AbortSignal): Promise<import('../types').DepartmentCapacityOverview> {
+    const response = await apiClient.get(API_ENDPOINTS.PROGRAM.CAPACITY_OVERVIEW, { signal });
+    return response.data?.data;
+  },
+
+  /**
+   * Cập nhật chỉ tiêu kế hoạch thực tập của phòng ban (Soft quota)
+   */
+  async updateDepartmentQuota(id: number, plannedCapacityQuota: number): Promise<void> {
+    await apiClient.put(API_ENDPOINTS.PROGRAM.UPDATE_QUOTA(id), { plannedCapacityQuota });
+  },
+
+  /**
    * Lấy danh sách các chương trình thực tập đang mở tuyển (dành cho ứng viên & Card Frontend)
    */
   async getOpenPrograms(signal?: AbortSignal): Promise<ProgramSummaryResponse[]> {

@@ -17,6 +17,7 @@ export interface AuthContextType {
   hasAnyPermission: (...permissionCodes: string[]) => boolean;
   hasAllPermissions: (...permissionCodes: string[]) => boolean;
   refreshPermissions: () => Promise<void>;
+  syncPermissionsWithRefreshToken: () => Promise<string[]>;
 }
 
 // Fallback mặc định an toàn
@@ -37,6 +38,7 @@ const getDefaultContextValue = (): AuthContextType => {
     hasAnyPermission: () => false,
     hasAllPermissions: () => false,
     refreshPermissions: async () => {},
+    syncPermissionsWithRefreshToken: async () => [],
   };
 };
 
@@ -150,6 +152,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Đồng bộ phân quyền thời gian thực chuẩn Single-Source-of-Truth:
+   * 1. Gọi POST /api/auth/refresh-token để lấy Access Token mới nhất từ server
+   * 2. Giải mã claims permissions trong Token trả về và cập nhật RAM
+   * 3. Trả về mảng permission mới để caller quyết định điều hướng nếu cần
+   */
+  const syncPermissionsWithRefreshToken = async (): Promise<string[]> => {
+    try {
+      const newToken = await authService.refreshToken();
+      if (newToken) {
+        const { extractPermissionsFromToken } = await import('../services/authService');
+        const updatedPermissions = extractPermissionsFromToken(newToken);
+        updateUser({ permissions: updatedPermissions });
+        return updatedPermissions;
+      }
+      return user?.permissions || [];
+    } catch (e) {
+      console.warn('Lỗi đồng bộ token ngầm khi nhận tín hiệu thay đổi quyền:', e);
+      return user?.permissions || [];
+    }
+  };
+
   // Tự động làm mới quyền khi phiên khởi động, khi chuyển tab, và khi nhận tín hiệu từ BroadcastChannel
   useEffect(() => {
     if (!user || isInitializing) return;
@@ -202,6 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       hasAnyPermission,
       hasAllPermissions,
       refreshPermissions,
+      syncPermissionsWithRefreshToken,
     }),
     [user, permissions, isInitializing]
   );

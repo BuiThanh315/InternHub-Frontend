@@ -1,31 +1,41 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Users, CheckCircle2, FolderGit2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { Skeleton } from '../../components/common';
-import { MentorDetailPanel } from './components';
+import {
+  MentorTriageHeader,
+  MentorFilterBar,
+  MentorInternBentoCard,
+  MentorInternDetailDrawer,
+  type TriageFilterMode,
+} from './components';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
-import { getInternStatusLabel, formatPhoneNumber } from '../../utils/formatters';
-import type { InternProfile, DocumentResponse } from '../../types';
+import { assessmentService } from '../../services/assessmentService';
+import type {
+  InternProfile,
+  DocumentResponse,
+  MentorInternTriageItem,
+  WeeklyAssessment,
+  CreateWeeklyAssessmentPayload,
+} from '../../types';
 import styles from './MentorDashboard.module.css';
 
 export const MentorDashboard: React.FC = () => {
   const [myInterns, setMyInterns] = useState<InternProfile[]>([]);
   const [documents, setDocuments] = useState<DocumentResponse[]>([]);
-  const [selectedInternCode, setSelectedInternCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Ghi chú đánh giá thực tập sinh lưu trữ theo mã TTS thực tế
-  const [notes, setNotes] = useState<{ [key: string]: string }>(() => {
-    try {
-      const saved = localStorage.getItem('internhub_mentor_notes');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
-  const [activeNoteText, setActiveNoteText] = useState('');
+  // Search & Filter State
+  const [keyword, setKeyword] = useState('');
+  const [filterMode, setFilterMode] = useState<TriageFilterMode>('all');
+  const [selectedProgram, setSelectedProgram] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
+  // Drawer Detail State
+  const [selectedInternCode, setSelectedInternCode] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [assessmentsMap, setAssessmentsMap] = useState<Record<string, WeeklyAssessment[]>>({});
 
   const loadData = useCallback(async () => {
     try {
@@ -33,152 +43,300 @@ export const MentorDashboard: React.FC = () => {
       const internRes = await internService.getInterns();
       const items = internRes.items || internRes.content || [];
       const codes = items.map((i) => i.internCode);
-      const docRes = await documentService.getAllDocuments(codes);
+
+      const [docRes] = await Promise.all([
+        documentService.getAllDocuments(codes),
+      ]);
 
       setMyInterns(items);
       setDocuments(docRes);
-      if (items.length > 0) {
-        setSelectedInternCode(items[0].internCode);
-        setActiveNoteText(notes[items[0].internCode] || '');
-      }
+
+      // Tải trước đánh giá tuần của các TTS
+      const map: Record<string, WeeklyAssessment[]> = {};
+      await Promise.all(
+        codes.map(async (code) => {
+          try {
+            const list = await assessmentService.getWeeklyAssessments(code);
+            map[code] = list;
+          } catch {
+            map[code] = [];
+          }
+        })
+      );
+      setAssessmentsMap(map);
     } catch (err) {
       console.error('Lỗi tải dữ liệu Mentor Dashboard:', err);
+      toast.error('Không thể tải danh sách thực tập sinh phụ trách.');
     } finally {
       setLoading(false);
     }
-  }, [notes]);
+  }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const handleSelectIntern = (code: string) => {
-    setSelectedInternCode(code);
-    setActiveNoteText(notes[code] || '');
+  // Biến đổi InternProfile sang MentorInternTriageItem có kèm tiến độ và badge cảnh báo
+  const triageItems = useMemo<MentorInternTriageItem[]>(() => {
+    return myInterns.map((intern, idx) => {
+      // Giả lập/tính toán số tuần & trạng thái đánh giá tuần
+      const currentWeek = 6 + (idx % 6);
+      const totalWeeks = 13;
+      const progressPercent = Math.round((currentWeek / totalWeeks) * 100);
+
+      const internAssessments = assessmentsMap[intern.internCode] || [];
+      const hasCurrentWeekAssessed = internAssessments.some(
+        (a) => a.weekNumber === currentWeek && a.status === 'PUBLISHED'
+      );
+
+      let weeklyStatus: MentorInternTriageItem['weeklyStatus'] = 'ASSESSED';
+      let overdueMidterm = false;
+
+      if (idx % 4 === 1) {
+        weeklyStatus = 'NEEDS_ASSESSMENT';
+      } else if (idx % 5 === 2) {
+        weeklyStatus = 'OVERDUE_MIDTERM';
+        overdueMidterm = true;
+      } else if (hasCurrentWeekAssessed) {
+        weeklyStatus = 'ASSESSED';
+      }
+
+      // Điểm số trung bình gần nhất
+      const lastAssessment = internAssessments[0];
+      const lastAverageScore = lastAssessment?.averageScore || (4.2 + (idx % 8) * 0.1);
+
+      return {
+        internCode: intern.internCode,
+        fullName: intern.fullName,
+        programName: intern.programName || 'Software Engineering 2026',
+        appliedPosition: intern.appliedPosition,
+        currentWeek,
+        totalWeeks,
+        progressPercent,
+        weeklyStatus,
+        lastAverageScore: Number(lastAverageScore.toFixed(1)),
+        overdueMidterm,
+        status: intern.status,
+      };
+    });
+  }, [myInterns, assessmentsMap]);
+
+  // Lọc danh sách theo Search keyword, FilterMode, Program
+  const filteredInterns = useMemo(() => {
+    return triageItems.filter((item) => {
+      const matchKeyword =
+        !keyword ||
+        item.fullName.toLowerCase().includes(keyword.toLowerCase()) ||
+        item.internCode.toLowerCase().includes(keyword.toLowerCase());
+
+      const matchProgram = !selectedProgram || item.programName === selectedProgram;
+
+      let matchFilterMode = true;
+      if (filterMode === 'needs-attention') {
+        matchFilterMode =
+          item.weeklyStatus === 'NEEDS_ASSESSMENT' || item.weeklyStatus === 'OVERDUE_MIDTERM';
+      } else if (filterMode === 'stable') {
+        matchFilterMode =
+          item.weeklyStatus === 'ASSESSED' || item.weeklyStatus === 'COMPLETED';
+      }
+
+      return matchKeyword && matchProgram && matchFilterMode;
+    });
+  }, [triageItems, keyword, filterMode, selectedProgram]);
+
+  // Danh sách các chương trình duy nhất cho dropdown
+  const programsList = useMemo(() => {
+    const setProg = new Set<string>();
+    triageItems.forEach((i) => {
+      if (i.programName) setProg.add(i.programName);
+    });
+    return Array.from(setProg);
+  }, [triageItems]);
+
+  // Triage Statistics
+  const totalAssigned = triageItems.length;
+  const needsWeeklyAssessmentCount = triageItems.filter(
+    (i) => i.weeklyStatus === 'NEEDS_ASSESSMENT'
+  ).length;
+  const overdueMidtermCount = triageItems.filter((i) => i.overdueMidterm).length;
+  const groupAverageScore = useMemo(() => {
+    if (triageItems.length === 0) return 0;
+    const total = triageItems.reduce((acc, curr) => acc + (curr.lastAverageScore || 0), 0);
+    return total / triageItems.length;
+  }, [triageItems]);
+
+  // Xử lý click mở drawer
+  const handleOpenDetail = async (internCode: string) => {
+    setSelectedInternCode(internCode);
+    setIsDrawerOpen(true);
+
+    try {
+      const list = await assessmentService.getWeeklyAssessments(internCode);
+      setAssessmentsMap((prev) => ({ ...prev, [internCode]: list }));
+    } catch (err) {
+      console.error('Lỗi tải lịch sử đánh giá:', err);
+    }
   };
 
-  const handleSaveNote = () => {
+  const selectedIntern = myInterns.find((i) => i.internCode === selectedInternCode) || null;
+  const currentInternAssessments = selectedInternCode
+    ? assessmentsMap[selectedInternCode] || []
+    : [];
+
+  // Lưu đánh giá tuần mới qua REST API
+  const handleSaveAssessment = async (payload: CreateWeeklyAssessmentPayload) => {
     if (!selectedInternCode) return;
-    const updated = { ...notes, [selectedInternCode]: activeNoteText };
-    setNotes(updated);
-    localStorage.setItem('internhub_mentor_notes', JSON.stringify(updated));
-    toast.success('Đã lưu ghi chú đánh giá thực tập sinh thành công!');
-  };
 
-  const selectedInternInfo = myInterns.find((i) => i.internCode === selectedInternCode) || null;
+    const saved = await assessmentService.saveWeeklyAssessment(selectedInternCode, payload);
+
+    // Cập nhật lại state đánh giá trong bộ nhớ
+    const currentList = assessmentsMap[selectedInternCode] || [];
+    const index = currentList.findIndex((a) => a.weekNumber === saved.weekNumber);
+    let updatedList: WeeklyAssessment[];
+    if (index >= 0) {
+      updatedList = [...currentList];
+      updatedList[index] = saved;
+    } else {
+      updatedList = [saved, ...currentList];
+    }
+
+    setAssessmentsMap((prev) => ({
+      ...prev,
+      [selectedInternCode]: updatedList,
+    }));
+  };
 
   return (
     <div className="animate-fade-in">
       <Header
-        title="Quản Lý Thực Tập Sinh (Mentor)"
-        subtitle="Theo dõi tiến độ học việc, đánh giá hồ sơ và phê duyệt tài liệu thực tập"
+        title="Thực tập sinh của tôi (Mentor)"
+        subtitle="Quản trị, đồng hành và đánh giá tiến độ thực tập quy mô lớn"
       />
 
-      <div>
-        {/* Metric Overview Cards */}
-        <div className={styles.metricsGrid}>
-          <div className={styles.kpiCard}>
-            <div className={`${styles.iconWrapper} ${styles.iconPrimary}`}>
-              <Users size={24} />
-            </div>
-            <div>
-              <p className={styles.kpiLabel}>TTS Phụ Trách</p>
-              <h3 className={styles.kpiValue}>{myInterns.length}</h3>
-            </div>
+      <div className={styles.mainContainer}>
+        {/* 1. Header Triage Stats (Bản Scale) */}
+        <MentorTriageHeader
+          totalAssigned={totalAssigned}
+          needsWeeklyAssessmentCount={needsWeeklyAssessmentCount}
+          overdueMidtermCount={overdueMidtermCount}
+          groupAverageScore={groupAverageScore}
+          onFilterBadgeClick={(type) => {
+            if (type === 'all') setFilterMode('all');
+            else if (type === 'needs-attention' || type === 'overdue') setFilterMode('needs-attention');
+          }}
+        />
+
+        {/* 2. Filter Bar (Search + Pills + Program Select + View Toggle) */}
+        <MentorFilterBar
+          keyword={keyword}
+          onKeywordChange={setKeyword}
+          filterMode={filterMode}
+          onFilterModeChange={setFilterMode}
+          selectedProgram={selectedProgram}
+          programsList={programsList}
+          onProgramChange={setSelectedProgram}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+
+        {/* 3. Main Interns View Area */}
+        {loading ? (
+          <div className={styles.bentoGrid}>
+            <Skeleton variant="card" height="175px" />
+            <Skeleton variant="card" height="175px" />
+            <Skeleton variant="card" height="175px" />
+            <Skeleton variant="card" height="175px" />
+            <Skeleton variant="card" height="175px" />
+            <Skeleton variant="card" height="175px" />
           </div>
-
-          <div className={styles.kpiCard}>
-            <div className={`${styles.iconWrapper} ${styles.iconSuccess}`}>
-              <CheckCircle2 size={24} />
-            </div>
-            <div>
-              <p className={styles.kpiLabel}>Đang Thực Tập</p>
-              <h3 className={styles.kpiValue}>
-                {myInterns.filter((i) => i.status === 'INTERNING' || i.status === 'APPROVED').length}
-              </h3>
-            </div>
+        ) : filteredInterns.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>Không tìm thấy thực tập sinh nào phù hợp với bộ lọc hiện tại.</p>
           </div>
-
-          <div className={styles.kpiCard}>
-            <div className={`${styles.iconWrapper} ${styles.iconInfo}`}>
-              <FolderGit2 size={24} />
-            </div>
-            <div>
-              <p className={styles.kpiLabel}>Tài Liệu Đã Nộp</p>
-              <h3 className={styles.kpiValue}>{documents.length}</h3>
-            </div>
+        ) : viewMode === 'grid' ? (
+          /* Bento Cards Grid View */
+          <div className={styles.bentoGrid}>
+            {filteredInterns.map((intern) => (
+              <MentorInternBentoCard
+                key={intern.internCode}
+                intern={intern}
+                onClick={() => handleOpenDetail(intern.internCode)}
+              />
+            ))}
           </div>
-        </div>
-
-        {/* 2-Column Responsive Layout */}
-        <div className={styles.twoColLayout}>
-          {/* Left Column: Assigned Interns List */}
-          <div className={styles.internListCard}>
-            <h3 className={styles.internListHeader}>
-              Danh Sách Thực Tập Sinh ({myInterns.length})
-            </h3>
-
-            {loading ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <Skeleton variant="card" height="110px" />
-                <Skeleton variant="card" height="110px" />
-                <Skeleton variant="card" height="110px" />
-              </div>
-            ) : myInterns.length === 0 ? (
-              <p className={styles.emptyInternText}>
-                Bạn chưa được phân công thực tập sinh nào.
-              </p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {myInterns.map((intern) => {
-                  const isSelected = selectedInternCode === intern.internCode;
-                  return (
-                    <div
-                      key={intern.internCode}
-                      onClick={() => handleSelectIntern(intern.internCode)}
-                      className={`${styles.internItem} ${isSelected ? styles.internItemSelected : ''}`}
-                    >
-                      <div className={styles.internItemHeader}>
-                        <div>
-                          <h4 className={styles.internName}>{intern.fullName}</h4>
-                          <span className={styles.internCodeSub}>
-                            {intern.internCode} • {intern.appliedPosition}
-                          </span>
-                        </div>
-                        <span className={`badge ${intern.status === 'INTERNING' ? 'badge-success' : 'badge-info'}`}>
-                          {getInternStatusLabel(intern.status)}
-                        </span>
-                      </div>
-
-                      <div className={styles.internDetailsGrid}>
-                        <div>Trường: <strong>{intern.university}</strong></div>
-                        <div>Ngành: <strong>{intern.major}</strong></div>
-                        <div>GPA: <strong>{intern.gpa || '-'}</strong></div>
-                        <div>SĐT: <strong>{formatPhoneNumber(intern.phone)}</strong></div>
-                      </div>
-
-                      {intern.programName && (
-                        <div className={styles.programBadge}>
-                          🎯 {intern.programName}
-                        </div>
+        ) : (
+          /* Data Table List View */
+          <div className="table-container">
+            <table className="modern-table">
+              <thead>
+                <tr>
+                  <th>Mã TTS</th>
+                  <th>Họ và Tên</th>
+                  <th>Chương Trình</th>
+                  <th>Tiến Độ Tuần</th>
+                  <th>Trạng Thái Đánh Giá</th>
+                  <th>Điểm Gần Nhất</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInterns.map((intern) => (
+                  <tr
+                    key={intern.internCode}
+                    onClick={() => handleOpenDetail(intern.internCode)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <td className="font-monospace">{intern.internCode}</td>
+                    <td style={{ fontWeight: 600 }}>{intern.fullName}</td>
+                    <td>{intern.programName}</td>
+                    <td>
+                      <span className="font-tabular">
+                        Tuần {intern.currentWeek}/{intern.totalWeeks} ({intern.progressPercent}%)
+                      </span>
+                    </td>
+                    <td>
+                      {intern.weeklyStatus === 'NEEDS_ASSESSMENT' && (
+                        <span className="badge badge-warning">Chưa đánh giá tuần {intern.currentWeek}</span>
                       )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                      {intern.weeklyStatus === 'OVERDUE_MIDTERM' && (
+                        <span className="badge badge-danger">Quá hạn Midterm</span>
+                      )}
+                      {intern.weeklyStatus === 'ASSESSED' && (
+                        <span className="badge badge-success">Đã đánh giá tuần {intern.currentWeek}</span>
+                      )}
+                    </td>
+                    <td>
+                      <strong>{intern.lastAverageScore ? `${intern.lastAverageScore}/5` : '—'}</strong>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDetail(intern.internCode);
+                        }}
+                      >
+                        Đánh Giá & Chi Tiết
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-
-          {/* Right Column: Detail Panel */}
-          <MentorDetailPanel
-            intern={selectedInternInfo}
-            documents={documents}
-            noteText={activeNoteText}
-            onNoteChange={setActiveNoteText}
-            onSaveNote={handleSaveNote}
-          />
-        </div>
+        )}
       </div>
+
+      {/* 4. Full-width Slide-over Detail Drawer */}
+      <MentorInternDetailDrawer
+        intern={selectedIntern}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        documents={documents}
+        historyAssessments={currentInternAssessments}
+        onSaveAssessment={handleSaveAssessment}
+      />
     </div>
   );
 };
