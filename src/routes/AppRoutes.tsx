@@ -23,7 +23,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../constants/routes';
 
 export const AppRoutes: React.FC = () => {
-  const { isAuthenticated, isInitializing, hasPermission, role } = useAuth();
+  const { isAuthenticated, isInitializing, role } = useAuth();
   const [searchParams] = useSearchParams();
 
   if (isInitializing) {
@@ -37,35 +37,43 @@ export const AppRoutes: React.FC = () => {
     );
   }
 
-  // Smart Redirection thuần túy dựa trên Permission (Single Source of Truth)
+  // Điều hướng Dashboard chuẩn TM-20 dựa trên vai trò trực tiếp (Role-Based)
   const getDashboardRedirect = () => {
     const redirectParam = searchParams.get('redirect');
-    if (redirectParam?.startsWith('/')) {
+    if (redirectParam?.startsWith('/') && redirectParam !== '/' && redirectParam !== '/login') {
       return <Navigate to={redirectParam} replace />;
     }
 
-    if (role === 'ADMIN' || hasPermission('ROLE_VIEW') || hasPermission('USER_VIEW') || hasPermission('SYSTEM_AUDIT_VIEW')) {
-      return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
+    switch (role) {
+      case 'ADMIN':
+        return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
+      case 'HR':
+        return <Navigate to={ROUTES.HR.DASHBOARD} replace />;
+      case 'MENTOR':
+        return <Navigate to={ROUTES.MENTOR.DASHBOARD} replace />;
+      case 'INTERN':
+      case 'USER':
+      default:
+        return <Navigate to={ROUTES.INTERN.DASHBOARD} replace />;
     }
-    if (hasPermission('INTERN_VIEW_ALL') || hasPermission('PROGRAM_MANAGE') || hasPermission('PROGRAM_VIEW')) {
-      return <Navigate to={ROUTES.HR.DASHBOARD} replace />;
-    }
-    if (hasPermission('INTERN_VIEW_OWN')) {
-      return <Navigate to={ROUTES.MENTOR.DASHBOARD} replace />;
-    }
-    if (hasPermission('INTERN_VIEW_OWN_PROFILE')) {
-      return <Navigate to={ROUTES.INTERN.DASHBOARD} replace />;
-    }
-
-    return <Navigate to={ROUTES.PROFILE} replace />;
   };
 
   return (
     <Routes>
-      {/* Root route: Nếu đã đăng nhập -> chuyển sang Dashboard tương ứng theo Permission, nếu chưa -> Landing Page */}
+      {/* Root route: Nếu đã đăng nhập -> chuyển sang Dashboard tương ứng theo vai trò, nếu chưa -> Landing Page */}
       <Route
         path={ROUTES.ROOT}
         element={isAuthenticated ? getDashboardRedirect() : <LandingPage />}
+      />
+      <Route
+        path="/apply"
+        element={
+          isAuthenticated ? (
+            <Navigate to={ROUTES.INTERN.APPLY} replace />
+          ) : (
+            <Navigate to="/?register=true" replace />
+          )
+        }
       />
       <Route path="/onboarding/activate" element={<OnboardingActivationPage />} />
 
@@ -76,16 +84,16 @@ export const AppRoutes: React.FC = () => {
 
       {/* Authenticated Dashboard Routes */}
       <Route element={<MainLayout />}>
-        {/* Admin Area (Bảo vệ bởi các quyền quản trị cao cấp) */}
-        <Route element={<ProtectedRoute requiredPermissions={['ROLE_VIEW', 'USER_VIEW', 'SYSTEM_AUDIT_VIEW']} />}>
+        {/* Admin Area */}
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
           <Route path={ROUTES.ADMIN.DASHBOARD} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.USERS} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.ROLES} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.SYSTEM} element={<AdminDashboard />} />
         </Route>
 
-        {/* HR Area (Bảo vệ bởi các quyền nghiệp vụ HR diện rộng) */}
-        <Route element={<ProtectedRoute requiredPermissions={['INTERN_VIEW_ALL', 'PROGRAM_VIEW', 'CONTRACT_VIEW', 'DOCUMENT_REVIEW', 'MENTOR_VIEW']} />}>
+        {/* HR Area */}
+        <Route element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']} />}>
           <Route path={ROUTES.HR.DASHBOARD} element={<HrDashboard />} />
           <Route path={ROUTES.HR.PROGRAMS} element={<HrProgramManagementPage />} />
           <Route path={ROUTES.HR.DEPARTMENTS} element={<Navigate to={ROUTES.HR.MENTORS} replace />} />
@@ -96,16 +104,16 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.HR.REVIEW} element={<HrDashboard />} />
         </Route>
 
-        {/* Mentor Area (Bảo vệ bởi quyền xem TTS do mình phụ trách) */}
-        <Route element={<ProtectedRoute requiredPermissions={['INTERN_VIEW_OWN', 'MENTOR_VIEW_OWN_DOCS']} />}>
+        {/* Mentor Area */}
+        <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']} />}>
           <Route path={ROUTES.MENTOR.DASHBOARD} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.MISSIONS} element={<MentorMissionPage />} />
           <Route path={ROUTES.MENTOR.INTERNS} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
         </Route>
 
-        {/* Intern Dedicated Area (Bảo vệ bởi quyền cá nhân của TTS) */}
-        <Route element={<ProtectedRoute requiredPermissions={['INTERN_VIEW_OWN_PROFILE', 'INTERN_VIEW_OWN_DOCUMENTS']} />}>
+        {/* Intern Dedicated Area */}
+        <Route element={<ProtectedRoute allowedRoles={['INTERN', 'USER', 'ADMIN']} />}>
           <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
           <Route path={ROUTES.INTERN.MISSIONS} element={<InternMissionPage />} />
           <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
@@ -114,13 +122,13 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
         </Route>
 
-        {/* Universal Profile Route (Bảo vệ bởi PROFILE_VIEW_OWN) */}
-        <Route element={<ProtectedRoute requiredPermissions={['PROFILE_VIEW_OWN']} />}>
+        {/* Universal Profile Route */}
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MENTOR', 'INTERN', 'USER']} />}>
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>
 
-      {/* Route Xác Nhận Điểm Danh QR Độc Lập - Toàn màn hình, không bị bao bọc bởi Sidebar/Header quản lý của MainLayout */}
+      {/* Route Xác Nhận Điểm Danh QR Độc Lập - Toàn màn hình */}
       <Route
         path={ROUTES.INTERN.ATTENDANCE_CONFIRM}
         element={<InternAttendanceConfirmPage />}

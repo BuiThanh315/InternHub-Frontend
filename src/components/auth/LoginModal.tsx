@@ -58,7 +58,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const handleRedirect = (role: RoleType | string) => {
     const redirectParam = searchParams.get("redirect");
-    if (redirectParam && redirectParam.startsWith("/")) {
+    if (redirectParam && redirectParam.startsWith("/") && redirectParam !== "/" && redirectParam !== "/login") {
       navigate(redirectParam, { replace: true });
       return;
     }
