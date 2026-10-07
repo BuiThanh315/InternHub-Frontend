@@ -14,6 +14,8 @@ import {
   Award,
   Kanban,
   CalendarCheck,
+  CalendarCheck2,
+  CalendarOff,
   X,
   ChevronLeft,
   ChevronRight,
@@ -142,7 +144,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['HR'],
     },
 
-    // 3. Phân hệ Người Hướng Dẫn (CHỈ MENTOR)
+    // 3. Phân hệ Người Hướng Dẫn (CHỈ MENTOR & HR)
     {
       to: ROUTES.MENTOR.DASHBOARD,
       label: 'Bảng Điều Khiển Mentor',
@@ -175,6 +177,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       section: 'Người Hướng Dẫn',
       allowedRoles: ['MENTOR'],
     },
+    {
+      to: ROUTES.MENTOR.LEAVE_REQUESTS,
+      label: 'Duyệt Đơn Nghỉ Phép',
+      icon: CalendarCheck2,
+      requiredPermission: 'INTERN_VIEW_OWN',
+      section: 'Người Hướng Dẫn',
+      allowedRoles: ['MENTOR', 'HR'],
+    },
 
     // 4. Phân hệ Thực Tập Sinh (CHỈ INTERN & USER)
     {
@@ -189,6 +199,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       to: ROUTES.INTERN.ATTENDANCE,
       label: 'Chấm Công & Chuyên Cần',
       icon: CalendarCheck,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.LEAVE_REQUESTS,
+      label: 'Đơn Xin Nghỉ Phép',
+      icon: CalendarOff,
       requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',
       allowedRoles: ['INTERN', 'USER'],
