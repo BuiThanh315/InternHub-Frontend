@@ -4,6 +4,9 @@ import type {
   WeeklyAssessment,
   CreateWeeklyAssessmentPayload,
   MentorTriageOverview,
+  MentorWeeklyReportReviewResponse,
+  RequestReportRevisionPayload,
+  ReportRevisionResponse,
 } from '../types';
 
 export const assessmentService = {
@@ -31,6 +34,36 @@ export const assessmentService = {
       INTERN_ENDPOINTS.WEEKLY_ASSESSMENTS(internCode)
     );
     return response.data?.data || [];
+  },
+
+  /**
+   * TM-22: Lấy chi tiết báo cáo tuần đối soát của TTS cho Mentor (Dual-Pane)
+   */
+  async getMentorWeeklyReportReview(
+    internCode: string,
+    weekNumber: number,
+    signal?: AbortSignal
+  ): Promise<MentorWeeklyReportReviewResponse> {
+    const response = await apiClient.get(
+      INTERN_ENDPOINTS.MENTOR_WEEKLY_REPORT_REVIEW(internCode, weekNumber),
+      { signal }
+    );
+    return response.data?.data;
+  },
+
+  /**
+   * TM-22: Mentor yêu cầu TTS chỉnh sửa lại báo cáo tuần
+   */
+  async requestReportRevision(
+    internCode: string,
+    weekNumber: number,
+    payload: RequestReportRevisionPayload
+  ): Promise<ReportRevisionResponse> {
+    const response = await apiClient.post(
+      INTERN_ENDPOINTS.MENTOR_REQUEST_REPORT_REVISION(internCode, weekNumber),
+      payload
+    );
+    return response.data?.data;
   },
 
   /**
@@ -99,3 +132,4 @@ export const assessmentService = {
     return response.data?.data;
   },
 };
+

@@ -3,4 +3,5 @@ export interface MentorFeedbackShowcaseProps {
   mentorScore?: number | null;
   mentorFeedback?: string | null;
   reviewedAt?: string | null;
+  onViewDetails?: () => void;
 }

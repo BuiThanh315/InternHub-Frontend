@@ -1,4 +1,4 @@
-export type WeeklyReportStatus = 'NOT_STARTED' | 'NOT_SUBMITTED' | 'DRAFT' | 'SUBMITTED' | 'REVIEWED';
+export type WeeklyReportStatus = 'NOT_STARTED' | 'NOT_SUBMITTED' | 'DRAFT' | 'SUBMITTED' | 'REVISION_REQUESTED' | 'REVIEWED';
 
 export interface WeeklyReportTimelineBackendResponse {
   currentWeek: number;
@@ -10,9 +10,10 @@ export interface WeeklyReportItemBackend {
   weekNumber: number;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
-  status: string; // NOT_STARTED, DRAFT, SUBMITTED, REVIEWED
+  status: string; // NOT_STARTED, DRAFT, SUBMITTED, REVISION_REQUESTED, REVIEWED
   statusDisplayName?: string;
   submittedAt: string | null;
+  revisionNote?: string | null;
   mentorAverageScore?: number | null;
   mentorFeedback?: string | null;
 }
@@ -24,6 +25,7 @@ export interface WeeklyReportTimelineItem {
   status: WeeklyReportStatus;
   statusDisplayName?: string;
   submittedAt: string | null;
+  revisionNote?: string | null;
   isCurrentWeek: boolean;
   isEditable: boolean;
   score: number | null;
@@ -63,6 +65,8 @@ export interface SuggestedKanbanTasksResponse {
 
 export interface MentorAssessmentSummary {
   id?: number;
+  mentorId?: number | null;
+  mentorName?: string | null;
   technicalScore?: number;
   attitudeScore?: number;
   teamworkScore?: number;
@@ -91,6 +95,7 @@ export interface WeeklyReportDetail {
   learningsAndKnowledge: string;
   nextWeekPlan?: string;
   reportAttachmentUrl?: string;
+  revisionNote?: string | null;
   submittedAt: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -121,3 +126,75 @@ export interface SaveWeeklyReportPayload {
     isCompleted?: boolean;
   }>;
 }
+
+// ==========================================
+// TM-22: MENTOR WEEKLY REPORT REVIEW & DUAL-PANE
+// ==========================================
+
+export interface MentorReportTaskSnapshot {
+  id: number;
+  missionItemId: number;
+  taskTitle: string;
+  taskStatus: 'TODO' | 'IN_PROGRESS' | 'COMPLETED';
+  submissionUrl?: string | null;
+  note?: string | null;
+  isCompleted: boolean;
+}
+
+export interface MentorReportDetail {
+  id: number;
+  reportDate: string;
+  status: WeeklyReportStatus;
+  statusDisplayName?: string;
+  submittedAt: string | null;
+  completedTasksSummary: string;
+  unfinishedTasksSummary?: string | null;
+  difficultiesAndChallenges?: string | null;
+  learningsAndKnowledge?: string | null;
+  nextWeekPlan?: string | null;
+  reportAttachmentUrl?: string | null;
+  revisionNote?: string | null;
+  tasks: MentorReportTaskSnapshot[];
+}
+
+export interface MentorAssessmentDetail {
+  id?: number;
+  mentorId?: number;
+  mentorName?: string;
+  technicalScore: number;
+  attitudeScore: number;
+  teamworkScore: number;
+  productivityScore: number;
+  averageScore: number;
+  feedback: string;
+  nextWeekGoals?: string | null;
+  status: 'DRAFT' | 'PUBLISHED';
+  publishedAt?: string | null;
+}
+
+
+export interface MentorWeeklyReportReviewResponse {
+  internCode: string;
+  internName: string;
+  programName?: string | null;
+  appliedPosition?: string | null;
+  weekNumber: number;
+  startDate: string;
+  endDate: string;
+  report: MentorReportDetail | null;
+  assessment: MentorAssessmentDetail | null;
+}
+
+export interface RequestReportRevisionPayload {
+  revisionNote: string;
+}
+
+export interface ReportRevisionResponse {
+  reportId: number;
+  internCode: string;
+  weekNumber: number;
+  status: 'REVISION_REQUESTED';
+  revisionNote: string;
+  requestedAt: string;
+}
+

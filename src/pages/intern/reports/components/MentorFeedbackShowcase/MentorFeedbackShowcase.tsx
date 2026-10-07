@@ -1,4 +1,5 @@
-import { Star, Clock } from 'lucide-react';
+import React from 'react';
+import { Star, Clock, Award } from 'lucide-react';
 import { formatDateTime } from '../../../../../utils/formatters';
 import type { MentorFeedbackShowcaseProps } from './MentorFeedbackShowcase.types';
 import styles from './MentorFeedbackShowcase.module.css';
@@ -8,6 +9,7 @@ export const MentorFeedbackShowcase: React.FC<MentorFeedbackShowcaseProps> = ({
   mentorScore,
   mentorFeedback,
   reviewedAt,
+  onViewDetails,
 }) => {
   if (!mentorFeedback && mentorScore === null && mentorScore === undefined) {
     return null;
@@ -44,12 +46,25 @@ export const MentorFeedbackShowcase: React.FC<MentorFeedbackShowcaseProps> = ({
         </div>
       )}
 
-      {reviewedAt && (
-        <div className={styles.reviewedTime}>
-          <Clock size={13} />
-          <span>Thời điểm công bố: {formatDateTime(reviewedAt)}</span>
-        </div>
-      )}
+      <div className={styles.footerRow}>
+        {reviewedAt ? (
+          <div className={styles.reviewedTime}>
+            <Clock size={13} />
+            <span>Thời điểm công bố: {formatDateTime(reviewedAt)}</span>
+          </div>
+        ) : <div />}
+
+        {onViewDetails && (
+          <button
+            type="button"
+            className={styles.viewDetailBtn}
+            onClick={onViewDetails}
+          >
+            <Award size={15} />
+            <span>Xem chi tiết bảng đánh giá Rubrics</span>
+          </button>
+        )}
+      </div>
     </section>
   );
 };

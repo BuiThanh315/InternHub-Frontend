@@ -10,6 +10,7 @@ import {
   Lock,
   RefreshCw,
   CalendarOff,
+  Award,
 } from 'lucide-react';
 
 import { Header } from '../../../components/layout/Header';
@@ -25,6 +26,7 @@ import {
   ReportPillarEditor,
   SuggestedTasksModal,
   SubmitConfirmationModal,
+  MentorAssessmentDetailModal,
 } from './components';
 
 import { useInternWeeklyReport } from '../../../hooks/useInternWeeklyReport';
@@ -58,9 +60,10 @@ const InternWeeklyReportContent: React.FC = () => {
     reloadAll,
   } = useInternWeeklyReport();
 
-  // Modals local state (Chỉ 2 boolean state đơn giản - Rule 14)
+  // Modals local state
   const [isKanbanModalOpen, setIsKanbanModalOpen] = useState(false);
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
+  const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
 
   // Mở modal gợi ý Kanban
   const handleOpenKanbanModal = () => {
@@ -223,10 +226,11 @@ const InternWeeklyReportContent: React.FC = () => {
 
                 {/* Showcase Đánh Giá Của Mentor (Nếu có) */}
                 <MentorFeedbackShowcase
-                  mentorName={reportDetail?.mentorName}
-                  mentorScore={reportDetail?.mentorScore}
-                  mentorFeedback={reportDetail?.mentorFeedback}
-                  reviewedAt={reportDetail?.reviewedAt}
+                  mentorName={reportDetail?.mentorName || reportDetail?.mentorAssessment?.mentorName}
+                  mentorScore={reportDetail?.mentorScore ?? reportDetail?.mentorAssessment?.averageScore}
+                  mentorFeedback={reportDetail?.mentorFeedback || reportDetail?.mentorAssessment?.feedback}
+                  reviewedAt={reportDetail?.reviewedAt || reportDetail?.mentorAssessment?.publishedAt}
+                  onViewDetails={() => setIsAssessmentModalOpen(true)}
                 />
 
                 {/* Khung Soạn Thảo 4 Trụ Cột */}
@@ -238,7 +242,7 @@ const InternWeeklyReportContent: React.FC = () => {
                   tasks={reportDetail?.tasks || []}
                 />
 
-                {/* Thanh Sticky Action Bar ở đáy */}
+                {/* Thanh Sticky Action Bar ở đáy khi đang mở quyền chỉnh sửa */}
                 {isEditable && (
                   <div className={styles.stickyActionBar}>
                     <div className={styles.actionStatusInfo}>
@@ -291,6 +295,34 @@ const InternWeeklyReportContent: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Thanh Action Xem Chi Tiết Đánh Giá ở đáy khi báo cáo đã được Mentor đánh giá */}
+                {!isEditable && (currentTimelineItem.status === 'REVIEWED' || Boolean(reportDetail?.mentorAssessment)) && (
+                  <div className={styles.reviewedActionCard}>
+                    <div className={styles.reviewedActionMeta}>
+                      <div className={styles.reviewedActionIcon}>
+                        <Award size={20} />
+                      </div>
+                      <div className={styles.reviewedActionText}>
+                        <span className={styles.reviewedActionTitle}>
+                          Báo cáo tuần {currentTimelineItem.weekNumber} đã được Mentor hoàn tất đánh giá & công bố
+                        </span>
+                        <span className={styles.reviewedActionSubtitle}>
+                          Điểm đánh giá: {reportDetail?.mentorScore ?? reportDetail?.mentorAssessment?.averageScore ?? '--'} / 5.0 • Xem chi tiết 4 tiêu chí rubrics và định hướng tuần tới
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setIsAssessmentModalOpen(true)}
+                    >
+                      <Award size={15} />
+                      <span>Xem chi tiết đánh giá của Mentor</span>
+                    </Button>
+                  </div>
+                )}
               </>
             ) : null}
           </main>
@@ -313,6 +345,17 @@ const InternWeeklyReportContent: React.FC = () => {
         isSubmitting={isSubmitting}
         weekNumber={selectedWeekNumber || 1}
         isAlreadySubmitted={currentTimelineItem?.status === 'SUBMITTED'}
+      />
+
+      <MentorAssessmentDetailModal
+        isOpen={isAssessmentModalOpen}
+        onClose={() => setIsAssessmentModalOpen(false)}
+        weekNumber={selectedWeekNumber || 1}
+        assessment={reportDetail?.mentorAssessment}
+        fallbackScore={reportDetail?.mentorScore}
+        fallbackFeedback={reportDetail?.mentorFeedback}
+        fallbackMentorName={reportDetail?.mentorName}
+        fallbackReviewedAt={reportDetail?.reviewedAt}
       />
     </div>
   );

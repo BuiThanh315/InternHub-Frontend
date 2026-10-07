@@ -366,3 +366,41 @@
   cursor: not-allowed;
   transform: none;
 }
+
+/* Dual-Pane Layout TM-22 */
+.dualPaneGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .dualPaneGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leftInspectionColumn {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 14px;
+  padding: 1.25rem;
+  max-height: calc(100vh - 210px);
+  overflow-y: auto;
+}
+
+.rightEvaluationColumn {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 14px;
+  padding: 1.25rem;
+  max-height: calc(100vh - 210px);
+  overflow-y: auto;
+}
+

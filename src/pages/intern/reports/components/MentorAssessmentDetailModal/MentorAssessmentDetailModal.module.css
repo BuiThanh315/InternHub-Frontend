@@ -1,0 +1,332 @@
+.modalContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: var(--text-main, #f1f5f9);
+}
+
+/* 1. Header Meta Bar */
+.metaHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.15rem;
+  background: var(--bg-surface, #1e2532);
+  border: 1px solid var(--border-default, #2e384d);
+  border-radius: 10px;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.mentorInfoGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mentorAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary, #3b82f6), #1d4ed8);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.mentorText {
+  display: flex;
+  flex-direction: column;
+}
+
+.mentorRole {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mentorName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main, #f1f5f9);
+}
+
+.publishStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.publishedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* 2. Hero Score Card */
+.heroScoreCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.scoreLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.scoreCircle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.05) 70%);
+  border: 2px solid #f59e0b;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+}
+
+.scoreValue {
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #f59e0b;
+  font-family: var(--font-tabular, monospace);
+}
+
+.scoreMax {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 2px;
+}
+
+.scoreMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.scoreLabel {
+  font-size: 0.85rem;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ratingTier {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main, #f8fafc);
+}
+
+.starRow {
+  display: flex;
+  gap: 0.25rem;
+  color: #f59e0b;
+}
+
+.scoreBadgeTier {
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tierExcellent {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.tierGood {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+
+.tierAverage {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.tierNeedsImprovement {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+/* 3. Rubrics Grid (4 Tiêu Chí) */
+.rubricsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main, #f1f5f9);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rubricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.rubricCard {
+  background: var(--bg-surface, #1e2532);
+  border: 1px solid var(--border-default, #2e384d);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.rubricCard:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
+}
+
+.rubricHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rubricNameGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rubricIcon {
+  color: var(--primary, #3b82f6);
+}
+
+.rubricName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main, #f1f5f9);
+}
+
+.rubricScoreTag {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #f59e0b;
+  font-family: var(--font-tabular, monospace);
+}
+
+.progressBarTrack {
+  width: 100%;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  transition: width 0.4s ease;
+}
+
+.rubricFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* 4. Feedback Section */
+.feedbackSection {
+  background: var(--bg-surface, #1e2532);
+  border: 1px solid var(--border-default, #2e384d);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.feedbackBox {
+  background: rgba(15, 23, 42, 0.6);
+  border-left: 4px solid var(--primary, #3b82f6);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.15rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-main, #f1f5f9);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 5. Next Week Goals Section */
+.goalsSection {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(15, 23, 42, 0.6));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.goalsTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.goalsContent {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-main, #f1f5f9);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Footer Action */
+.modalFooterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 100%;
+}

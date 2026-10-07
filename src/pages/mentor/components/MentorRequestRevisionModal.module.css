@@ -1,0 +1,94 @@
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.warningBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--warning-bg, rgba(245, 158, 11, 0.1));
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md, 8px);
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.warningIcon {
+  color: var(--warning);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.required {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+.charCount {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-main);
+  background: var(--bg-body);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  resize: vertical;
+  min-height: 110px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.textareaError {
+  border-color: var(--danger) !important;
+}
+
+.textareaError:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+}
+
+.errorMessage {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 2px;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+}
