@@ -2,26 +2,18 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../constants/routes';
+import type { RoleType } from '../types';
 
 interface ProtectedRouteProps {
   /**
-   * Danh sách mã đặc quyền tối thiểu cần để truy cập route này.
-   * Ví dụ: ['INTERN_VIEW_ALL'] hoặc ['PROGRAM_VIEW', 'PROGRAM_MANAGE']
+   * Danh sách vai trò được phép truy cập route này (Role-Based Access Control).
+   * Ví dụ: ['HR', 'ADMIN'] hoặc ['INTERN', 'USER']
    */
-  requiredPermissions?: string[];
-  /**
-   * Chế độ kiểm tra đặc quyền:
-   * 'ANY': Chỉ cần sở hữu ít nhất 1 quyền trong danh sách (Mặc định)
-   * 'ALL': Bắt buộc phải sở hữu đầy đủ tất cả các quyền
-   */
-  permissionMode?: 'ANY' | 'ALL';
+  allowedRoles?: RoleType[];
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  requiredPermissions,
-  permissionMode = 'ANY',
-}) => {
-  const { isAuthenticated, role, isInitializing, hasAnyPermission, hasAllPermissions, hasPermission } = useAuth();
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
+  const { isAuthenticated, role, isInitializing } = useAuth();
   const location = useLocation();
 
   if (isInitializing) {
@@ -40,33 +32,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={`/?login=true&redirect=${redirectTarget}`} replace />;
   }
 
-  // 1. Vai trò ADMIN luôn sở hữu đặc quyền tối thượng, bypass an toàn
+  // 1. Quản trị viên ADMIN luôn sở hữu quyền truy cập toàn hệ thống
   if (role === 'ADMIN') {
     return <Outlet />;
   }
 
-  // 2. Kiểm tra thẩm định Permission-First (Single Source of Truth)
-  if (requiredPermissions && requiredPermissions.length > 0) {
-    const isAuthorized =
-      permissionMode === 'ALL'
-        ? hasAllPermissions(...requiredPermissions)
-        : hasAnyPermission(...requiredPermissions);
-
-    if (!isAuthorized) {
-      // Smart Redirection thuần túy dựa trên Permission
-      if (hasPermission('ROLE_VIEW') || hasPermission('USER_VIEW') || hasPermission('SYSTEM_AUDIT_VIEW')) {
-        return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
+  // 2. Kiểm tra vai trò trực tiếp theo Domain Boundary (Chuẩn TM-20 ổn định)
+  if (allowedRoles && allowedRoles.length > 0) {
+    if (!role || !allowedRoles.includes(role)) {
+      switch (role) {
+        case 'HR':
+          return <Navigate to={ROUTES.HR.DASHBOARD} replace />;
+        case 'MENTOR':
+          return <Navigate to={ROUTES.MENTOR.DASHBOARD} replace />;
+        case 'INTERN':
+        case 'USER':
+        default:
+          return <Navigate to={ROUTES.INTERN.DASHBOARD} replace />;
       }
-      if (hasPermission('INTERN_VIEW_ALL') || hasPermission('PROGRAM_MANAGE') || hasPermission('PROGRAM_VIEW')) {
-        return <Navigate to={ROUTES.HR.DASHBOARD} replace />;
-      }
-      if (hasPermission('INTERN_VIEW_OWN')) {
-        return <Navigate to={ROUTES.MENTOR.DASHBOARD} replace />;
-      }
-      if (hasPermission('INTERN_VIEW_OWN_PROFILE')) {
-        return <Navigate to={ROUTES.INTERN.DASHBOARD} replace />;
-      }
-      return <Navigate to={ROUTES.PROFILE} replace />;
     }
   }
 

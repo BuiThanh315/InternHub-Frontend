@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed = false,
   onToggleCollapse,
 }) => {
-  const { user, role, hasPermission, logout } = useAuth();
+  const { user, role, logout } = useAuth();
 
   // Danh mục toàn bộ các mục điều hướng phân theo Section
   const ALL_NAV_ITEMS: NavItemConfig[] = [
@@ -237,17 +237,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
-  // Lọc động chuẩn Security & Domain Boundaries:
-  // Mỗi vai trò có Domain riêng biệt: ADMIN chỉ xem phân hệ quản trị, HR chỉ xem phân hệ nhân sự, Mentor/Intern tương ứng
+  // Lọc theo Role chuẩn TM-20: Hiển thị đầy đủ chức năng theo vai trò, không phụ thuộc vào quyền lẻ tẻ tránh làm mất menu
   const visibleNavItems = ALL_NAV_ITEMS.filter((item) => {
     if (item.allowedRoles && item.allowedRoles.length > 0) {
       if (!role || !item.allowedRoles.includes(role)) {
         return false;
       }
     }
-    if (!item.requiredPermission) return true;
-    if (role === 'ADMIN') return true;
-    return hasPermission(item.requiredPermission);
+    return true;
   });
 
   // Nhóm các link theo Section để phân tách rõ ràng
