@@ -19,4 +19,11 @@ export const INTERN_ENDPOINTS = {
   WEEKLY_ASSESSMENTS: (internCode: string) => `/api/interns/${internCode}/weekly-assessments`,
   EVALUATIONS: (internCode: string) => `/api/interns/${internCode}/evaluations`,
   MENTOR_OVERVIEW: '/api/mentors/my-interns/overview',
+  // TM-21: Báo cáo tuần Thực tập sinh
+  MY_WEEKLY_REPORTS_TIMELINE: '/api/interns/my-weekly-reports',
+  MY_WEEKLY_REPORTS_SUGGESTED_TASKS: (weekNumber: number) => `/api/interns/my-weekly-reports/${weekNumber}/kanban-tasks`,
+  MY_WEEKLY_REPORT_DETAIL: (weekNumber: number) => `/api/interns/my-weekly-reports/${weekNumber}`,
+  MY_WEEKLY_REPORT_SAVE: '/api/interns/my-weekly-reports',
+  MY_WEEKLY_REPORT_SUBMIT: (weekNumber: number) => `/api/interns/my-weekly-reports/${weekNumber}/submit`,
+  MY_WEEKLY_REPORT_UPDATE: (weekNumber: number) => `/api/interns/my-weekly-reports/${weekNumber}`,
 } as const;

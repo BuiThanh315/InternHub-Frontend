@@ -1,0 +1,238 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Lớp 2: Metrics Strip */
+.metricsStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.metricCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 14px);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metricCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.metricIconWrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md, 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconWeeks {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.iconSubmitted {
+  background-color: var(--success-bg);
+  color: var(--success);
+}
+
+.iconDrafts {
+  background-color: var(--warning-bg);
+  color: var(--warning);
+}
+
+.iconScore {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: var(--warning);
+}
+
+.metricInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.metricLabel {
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.metricValue {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+/* Lớp 3: Master-Detail Ergonomic Workspace */
+.workspaceLayout {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+@media (max-width: 1024px) {
+  .workspaceLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.canvasColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+/* Canvas Header Banner */
+.canvasBanner {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 14px);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.bannerTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bannerWeekTitle {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bannerDateRange {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.bannerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Sticky Action Bar ở đáy Canvas */
+.stickyActionBar {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 10;
+  background-color: var(--glass-bg, rgba(255, 255, 255, 0.9));
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 14px);
+  padding: 0.875rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-lg);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.actionStatusInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.dirtyIndicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--warning);
+}
+
+.actionButtonsGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Empty State */
+.emptyStateContainer {
+  background-color: var(--bg-card);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg, 14px);
+  padding: 3.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.emptyIconWrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyTitle {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.emptyDescription {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+/* Locked Banner */
+.lockedBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-hover, var(--border-subtle));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
