@@ -1,0 +1,216 @@
+.timelineContainer {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 14px);
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+}
+
+/* Custom Sleek Scrollbar (Rule 34) */
+.timelineContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.timelineContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.timelineContainer::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 9999px;
+}
+
+.timelineContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.railHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.railTitle {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.railBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.timelineList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.timelineItem {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid transparent;
+  background-color: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  position: relative;
+  width: 100%;
+}
+
+.timelineItem:hover {
+  background-color: var(--bg-hover, var(--border-subtle));
+  border-color: var(--border-default);
+}
+
+.timelineItemActive {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary-glow);
+}
+
+.timelineItemCurrent {
+  border-left: 3px solid var(--primary);
+}
+
+/* Node indicator dot & vertical line connector */
+.nodeWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 0.25rem;
+}
+
+.nodeDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--border-default);
+  background-color: var(--bg-card);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dotNotSubmitted {
+  border-color: var(--text-muted);
+  background-color: transparent;
+}
+
+.dotDraft {
+  border-color: var(--warning);
+  background-color: var(--warning-bg);
+}
+
+.dotSubmitted {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.dotReviewed {
+  border-color: var(--success);
+  background-color: var(--success);
+}
+
+.itemContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.weekTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.weekTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.currentBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--primary-gradient);
+  color: var(--text-inverse);
+  letter-spacing: 0.03em;
+}
+
+.dateRange {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.2rem;
+  font-size: 0.725rem;
+}
+
+.statusPill {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.statusNotSubmitted {
+  color: var(--text-muted);
+}
+
+.statusDraft {
+  color: var(--warning);
+}
+
+.statusSubmitted {
+  color: var(--primary);
+}
+
+.statusReviewed {
+  color: var(--success);
+}
+
+.scoreBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-weight: 700;
+  color: var(--success);
+  background-color: var(--success-bg);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.725rem;
+}

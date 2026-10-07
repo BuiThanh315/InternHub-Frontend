@@ -1,0 +1,174 @@
+.editorContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pillarCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 14px);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pillarCard:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary-glow);
+}
+
+.pillarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pillarTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.pillarIconWrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md, 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconCompleted {
+  background-color: var(--success-bg);
+  color: var(--success);
+}
+
+.iconUnfinished {
+  background-color: var(--warning-bg);
+  color: var(--warning);
+}
+
+.iconDifficulties {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+}
+
+.iconLearnings {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.pillarTitle {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.pillarPrompt {
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: -0.25rem;
+  max-width: 80ch;
+}
+
+.textareaWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.pillarTextarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.875rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--text-main);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 10px);
+  resize: vertical;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.pillarTextarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.pillarTextarea:read-only {
+  background-color: var(--bg-hover, var(--border-subtle));
+  color: var(--text-secondary);
+  cursor: default;
+  border-color: var(--border-subtle);
+  box-shadow: none;
+}
+
+.charCount {
+  align-self: flex-end;
+  font-size: 0.725rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+
+/* Tasks Snapshot Chips */
+.snapshotTasksContainer {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.snapshotTasksTitle {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.taskChipsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.taskChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--bg-hover, var(--border-subtle));
+  border: 1px solid var(--border-default);
+  font-size: 0.775rem;
+  color: var(--text-main);
+}
+
+.taskChipCompleted {
+  border-color: var(--success-border);
+  background-color: var(--success-bg);
+  color: var(--success);
+  font-weight: 600;
+}
+
+.taskChipUnfinished {
+  border-color: var(--warning-border);
+  background-color: var(--warning-bg);
+  color: var(--warning);
+  font-weight: 600;
+}

@@ -13,6 +13,7 @@ import { MentorMissionPage } from '../pages/mentor/missions/MentorMissionPage';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
 import { InternMissionPage } from '../pages/intern/missions/InternMissionPage';
+import { InternWeeklyReportPage } from '../pages/intern/reports';
 import { ProfilePage } from '../pages/profile';
 import { InternApplyPage } from '../pages/intern/InternApplyPage';
 import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
@@ -119,6 +120,7 @@ export const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={['INTERN', 'USER', 'ADMIN']} />}>
           <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
           <Route path={ROUTES.INTERN.MISSIONS} element={<InternMissionPage />} />
+          <Route path={ROUTES.INTERN.WEEKLY_REPORTS} element={<InternWeeklyReportPage />} />
           <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
           <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
           <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />

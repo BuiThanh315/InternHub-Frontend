@@ -6,3 +6,4 @@ export * from './useOtpCountdown';
 export * from './useGoogleAuth';
 export * from './useMentorMissions';
 export * from './useInternKanban';
+export * from './useInternWeeklyReport';

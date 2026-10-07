@@ -220,6 +220,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['INTERN', 'USER'],
     },
     {
+      to: ROUTES.INTERN.WEEKLY_REPORTS,
+      label: 'Báo Cáo Tuần',
+      icon: CalendarCheck2,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
       to: ROUTES.INTERN.APPLY,
       label: 'Nộp Hồ Sơ Ứng Tuyển',
       icon: GraduationCap,

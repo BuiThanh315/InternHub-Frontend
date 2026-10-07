@@ -8,7 +8,10 @@ import {
   AlertCircle,
   FilterX,
   RefreshCw,
+  CalendarCheck2,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../../constants/routes';
 
 import { Header } from '../../../components/layout/Header';
 import {
@@ -35,6 +38,7 @@ import type {
 import styles from './InternMissionPage.module.css';
 
 const InternMissionContent: React.FC = () => {
+  const navigate = useNavigate();
   const {
     totalCount,
     todoCount,
@@ -198,6 +202,16 @@ const InternMissionContent: React.FC = () => {
           >
             <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
             <span>Làm mới</span>
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => navigate(ROUTES.INTERN.WEEKLY_REPORTS)}
+            title="Đến trang Soạn thảo & Nộp báo cáo tuần"
+          >
+            <CalendarCheck2 size={15} />
+            <span>Báo cáo tuần</span>
           </Button>
         </div>
       </div>
