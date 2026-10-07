@@ -92,3 +92,24 @@
   font-weight: 600;
   color: var(--primary);
 }
+
+.leaveRequestBtn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.leaveRequestBtn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-glow);
+}

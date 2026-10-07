@@ -7,4 +7,5 @@ export const INTERN_ROUTES = {
   APPLY: '/intern/apply',
   ATTENDANCE: '/intern/attendance',
   ATTENDANCE_CONFIRM: '/intern/attendance/confirm',
+  LEAVE_REQUESTS: '/intern/leave-requests',
 } as const;
