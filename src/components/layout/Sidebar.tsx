@@ -14,6 +14,8 @@ import {
   Award,
   Kanban,
   CalendarCheck,
+  CalendarCheck2,
+  CalendarOff,
   X,
   ChevronLeft,
   ChevronRight,
@@ -46,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed = false,
   onToggleCollapse,
 }) => {
-  const { user, role, hasPermission, logout } = useAuth();
+  const { user, role, logout } = useAuth();
 
   // Danh mục toàn bộ các mục điều hướng phân theo Section
   const ALL_NAV_ITEMS: NavItemConfig[] = [
@@ -142,7 +144,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['HR'],
     },
 
-    // 3. Phân hệ Người Hướng Dẫn (CHỈ MENTOR)
+    // 3. Phân hệ Người Hướng Dẫn (CHỈ MENTOR & HR)
     {
       to: ROUTES.MENTOR.DASHBOARD,
       label: 'Bảng Điều Khiển Mentor',
@@ -175,6 +177,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       section: 'Người Hướng Dẫn',
       allowedRoles: ['MENTOR'],
     },
+    {
+      to: ROUTES.MENTOR.LEAVE_REQUESTS,
+      label: 'Duyệt Đơn Nghỉ Phép',
+      icon: CalendarCheck2,
+      requiredPermission: 'INTERN_VIEW_OWN',
+      section: 'Người Hướng Dẫn',
+      allowedRoles: ['MENTOR', 'HR'],
+    },
 
     // 4. Phân hệ Thực Tập Sinh (CHỈ INTERN & USER)
     {
@@ -189,6 +199,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       to: ROUTES.INTERN.ATTENDANCE,
       label: 'Chấm Công & Chuyên Cần',
       icon: CalendarCheck,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.LEAVE_REQUESTS,
+      label: 'Đơn Xin Nghỉ Phép',
+      icon: CalendarOff,
       requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',
       allowedRoles: ['INTERN', 'USER'],
@@ -219,17 +237,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
-  // Lọc động chuẩn Security & Domain Boundaries:
-  // Mỗi vai trò có Domain riêng biệt: ADMIN chỉ xem phân hệ quản trị, HR chỉ xem phân hệ nhân sự, Mentor/Intern tương ứng
+  // Lọc theo Role chuẩn TM-20: Hiển thị đầy đủ chức năng theo vai trò, không phụ thuộc vào quyền lẻ tẻ tránh làm mất menu
   const visibleNavItems = ALL_NAV_ITEMS.filter((item) => {
     if (item.allowedRoles && item.allowedRoles.length > 0) {
       if (!role || !item.allowedRoles.includes(role)) {
         return false;
       }
     }
-    if (!item.requiredPermission) return true;
-    if (role === 'ADMIN') return true;
-    return hasPermission(item.requiredPermission);
+    return true;
   });
 
   // Nhóm các link theo Section để phân tách rõ ràng

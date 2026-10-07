@@ -24,6 +24,10 @@ dist-ssr
 *.sw?
 
 # Local environment & references
+.env
+.env.local
+.env.*.local
+!.env.example
 docs/environment-reference.md
 
 # Agent and AI local configs

@@ -1,6 +1,8 @@
 import React from 'react';
-import { Calendar, Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Calendar, Info, CalendarOff } from 'lucide-react';
 import { Header } from '../../components/layout/Header';
+import { ROUTES } from '../../constants/routes';
 import { useAttendanceHistory } from './hooks/useAttendanceHistory';
 import {
   AttendanceSummaryCards,
@@ -81,13 +83,24 @@ export const InternAttendancePage: React.FC = () => {
             </select>
           </div>
 
-          <button
-            type="button"
-            onClick={goToCurrentMonth}
-            className={styles.currentMonthBtn}
-          >
-            Về tháng hiện tại
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <button
+              type="button"
+              onClick={goToCurrentMonth}
+              className={styles.currentMonthBtn}
+            >
+              Về tháng hiện tại
+            </button>
+
+            <Link
+              to={ROUTES.INTERN.LEAVE_REQUESTS}
+              className={styles.leaveRequestBtn}
+              title="Quản lý và nộp đơn xin nghỉ phép"
+            >
+              <CalendarOff size={14} />
+              <span>Xin Nghỉ Phép</span>
+            </Link>
+          </div>
         </div>
 
         {/* 4 Thẻ KPI Chỉ Số Chuyên Cần */}
