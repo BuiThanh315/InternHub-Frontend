@@ -1,0 +1,408 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Custom sleek scrollbar */
+.container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 9999px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Header thông tin báo cáo */
+.headerBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 10px);
+}
+
+.headerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weekTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.dateRange {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.headerStatus {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.submittedTime {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Status Badges */
+.badgeSubmitted {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: var(--primary-light, rgba(99, 102, 241, 0.1));
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.badgeRevision {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: var(--warning-bg, rgba(245, 158, 11, 0.1));
+  color: var(--warning);
+  border: 1px solid var(--warning);
+}
+
+.badgeReviewed {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: var(--success-bg, rgba(16, 185, 129, 0.1));
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.badgeDraft {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-default);
+}
+
+/* Alert Revision Note */
+.revisionAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--warning-bg, rgba(245, 158, 11, 0.1));
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md, 10px);
+}
+
+.revisionAlertIcon {
+  color: var(--warning);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.revisionAlertContent {
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.revisionAlertTitle {
+  font-weight: 600;
+  color: var(--warning);
+  margin-bottom: 2px;
+}
+
+/* 4 Trụ Cột Card Blocks */
+.pillarsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pillarCard {
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 10px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.pillarCard:hover {
+  border-color: var(--border-strong, var(--primary));
+}
+
+.pillarHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pillarIconSuccess {
+  color: var(--success);
+}
+
+.pillarIconWarning {
+  color: var(--warning);
+}
+
+.pillarIconDanger {
+  color: var(--danger);
+}
+
+.pillarIconPrimary {
+  color: var(--primary);
+}
+
+.pillarBody {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: pre-line;
+  background: var(--bg-body);
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle, var(--border-default));
+}
+
+.emptyPillar {
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* Snapshot Tasks Section */
+.tasksSection {
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 10px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tasksHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.tasksCount {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: var(--bg-hover);
+  border-radius: 9999px;
+  color: var(--text-secondary);
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.taskItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--bg-body);
+  border: 1px solid var(--border-subtle, var(--border-default));
+  border-radius: 8px;
+}
+
+.taskMainRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.taskTitleBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.taskStatusBadge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.taskDone {
+  background: var(--success-bg, rgba(16, 185, 129, 0.1));
+  color: var(--success);
+}
+
+.taskInProgress {
+  background: var(--warning-bg, rgba(245, 158, 11, 0.1));
+  color: var(--warning);
+}
+
+.taskTodo {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+.taskLinksRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.prLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.prLink:hover {
+  text-decoration: underline;
+}
+
+.taskNote {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Attachment Link Box */
+.attachmentBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-default);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.attachmentLink {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.attachmentLink:hover {
+  text-decoration: underline;
+}
+
+/* Action Bar Bottom */
+.inspectionActionBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 0 4px 0;
+}
+
+.btnRevision {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warning);
+  background: var(--warning-bg, rgba(245, 158, 11, 0.1));
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnRevision:hover {
+  background: var(--warning);
+  color: #ffffff;
+}
+
+/* Empty State */
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 40px 20px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md, 10px);
+}
+
+.emptyIcon {
+  color: var(--text-muted);
+}
+
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.emptyDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 380px;
+  line-height: 1.5;
+  margin: 0;
+}

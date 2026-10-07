@@ -35,9 +35,10 @@ export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> =
   return (
     <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true">
       <div 
-        className={styles.drawer} 
+        className={`${styles.drawer} ${activeTab === 'evaluation' ? styles.drawerWide : ''}`} 
         onClick={(e) => e.stopPropagation()}
       >
+
         {/* Header Drawer */}
         <div className={styles.drawerHeader}>
           <div className={styles.headerInfo}>

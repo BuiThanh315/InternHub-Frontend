@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
-import { Skeleton } from '../../components/common';
+import { Pagination, Skeleton } from '../../components/common';
 import {
   MentorTriageHeader,
   MentorFilterBar,
@@ -18,52 +18,97 @@ import type {
   MentorInternTriageItem,
   WeeklyAssessment,
   CreateWeeklyAssessmentPayload,
+  MentorTriageOverview,
 } from '../../types';
 import styles from './MentorDashboard.module.css';
+
+const PAGE_SIZE = 10;
 
 export const MentorDashboard: React.FC = () => {
   const [myInterns, setMyInterns] = useState<InternProfile[]>([]);
   const [documents, setDocuments] = useState<DocumentResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Pagination State (Rule 31: 10 items/page, 1-indexed UI)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  // Triage Overview State
+  const [triageOverview, setTriageOverview] = useState<MentorTriageOverview | null>(null);
+
   // Search & Filter State
   const [keyword, setKeyword] = useState('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState('');
   const [filterMode, setFilterMode] = useState<TriageFilterMode>('all');
   const [selectedProgram, setSelectedProgram] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
+  // Debounce search keyword (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(keyword);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
+  // Reset về trang 1 khi từ khóa tìm kiếm hoặc bộ lọc thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedKeyword, filterMode, selectedProgram]);
 
   // Drawer Detail State
   const [selectedInternCode, setSelectedInternCode] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [assessmentsMap, setAssessmentsMap] = useState<Record<string, WeeklyAssessment[]>>({});
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (page: number, kw: string) => {
     try {
       setLoading(true);
-      const internRes = await internService.getInterns();
-      const items = internRes.items || internRes.content || [];
-      const codes = items.map((i) => i.internCode);
-
-      const [docRes] = await Promise.all([
-        documentService.getAllDocuments(codes),
+      const pageBE = Math.max(0, page - 1);
+      const [internRes, overviewRes] = await Promise.allSettled([
+        internService.getInterns({
+          page: pageBE,
+          size: PAGE_SIZE,
+          keyword: kw.trim() || undefined,
+        }),
+        assessmentService.getMentorTriageOverview(),
       ]);
 
-      setMyInterns(items);
-      setDocuments(docRes);
+      let items: InternProfile[] = [];
+      if (internRes.status === 'fulfilled') {
+        const res = internRes.value;
+        items = res.items || res.content || [];
+        setMyInterns(items);
+        setTotalPages(res.totalPages || 1);
+        setTotalItems(res.totalItems || 0);
+      } else {
+        toast.error('Không thể tải danh sách thực tập sinh phụ trách.');
+      }
 
-      // Tải trước đánh giá tuần của các TTS
-      const map: Record<string, WeeklyAssessment[]> = {};
-      await Promise.all(
-        codes.map(async (code) => {
-          try {
-            const list = await assessmentService.getWeeklyAssessments(code);
-            map[code] = list;
-          } catch {
-            map[code] = [];
-          }
-        })
-      );
-      setAssessmentsMap(map);
+      if (overviewRes.status === 'fulfilled') {
+        setTriageOverview(overviewRes.value);
+      }
+
+      // Tải documents và assessments cho các TTS của trang hiện tại
+      const codes = items.map((i) => i.internCode);
+      if (codes.length > 0) {
+        const docRes = await documentService.getAllDocuments(codes).catch(() => []);
+        setDocuments(docRes);
+
+        const map: Record<string, WeeklyAssessment[]> = {};
+        await Promise.all(
+          codes.map(async (code) => {
+            try {
+              const list = await assessmentService.getWeeklyAssessments(code);
+              map[code] = list;
+            } catch {
+              map[code] = [];
+            }
+          })
+        );
+        setAssessmentsMap(map);
+      }
     } catch (err) {
       console.error('Lỗi tải dữ liệu Mentor Dashboard:', err);
       toast.error('Không thể tải danh sách thực tập sinh phụ trách.');
@@ -73,8 +118,8 @@ export const MentorDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadData(currentPage, debouncedKeyword);
+  }, [currentPage, debouncedKeyword, loadData]);
 
   // Biến đổi InternProfile sang MentorInternTriageItem có kèm tiến độ và badge cảnh báo
   const triageItems = useMemo<MentorInternTriageItem[]>(() => {
@@ -147,23 +192,33 @@ export const MentorDashboard: React.FC = () => {
   // Danh sách các chương trình duy nhất cho dropdown
   const programsList = useMemo(() => {
     const setProg = new Set<string>();
+    if (triageOverview?.interns) {
+      triageOverview.interns.forEach((i) => {
+        if (i.programName) setProg.add(i.programName);
+      });
+    }
     triageItems.forEach((i) => {
       if (i.programName) setProg.add(i.programName);
     });
     return Array.from(setProg);
-  }, [triageItems]);
+  }, [triageOverview, triageItems]);
 
   // Triage Statistics
-  const totalAssigned = triageItems.length;
-  const needsWeeklyAssessmentCount = triageItems.filter(
-    (i) => i.weeklyStatus === 'NEEDS_ASSESSMENT'
-  ).length;
-  const overdueMidtermCount = triageItems.filter((i) => i.overdueMidterm).length;
+  const totalAssigned = triageOverview?.totalAssigned ?? totalItems;
+  const needsWeeklyAssessmentCount =
+    triageOverview?.needsWeeklyAssessmentCount ??
+    triageItems.filter((i) => i.weeklyStatus === 'NEEDS_ASSESSMENT').length;
+  const overdueMidtermCount =
+    triageOverview?.overdueMidtermCount ??
+    triageItems.filter((i) => i.overdueMidterm).length;
   const groupAverageScore = useMemo(() => {
+    if (triageOverview?.groupAverageScore !== undefined) {
+      return triageOverview.groupAverageScore;
+    }
     if (triageItems.length === 0) return 0;
     const total = triageItems.reduce((acc, curr) => acc + (curr.lastAverageScore || 0), 0);
-    return total / triageItems.length;
-  }, [triageItems]);
+    return Number((total / triageItems.length).toFixed(1));
+  }, [triageOverview, triageItems]);
 
   // Xử lý click mở drawer
   const handleOpenDetail = async (internCode: string) => {
@@ -326,6 +381,17 @@ export const MentorDashboard: React.FC = () => {
             </table>
           </div>
         )}
+
+        {/* 4. Phân trang theo Quy tắc 10 giá trị (Rule 31: 10 items/trang, tự động ẩn khi <= 10 bản ghi) */}
+        <div className={styles.paginationWrapper}>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={PAGE_SIZE}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        </div>
       </div>
 
       {/* 4. Full-width Slide-over Detail Drawer */}

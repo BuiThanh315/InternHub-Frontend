@@ -27,7 +27,13 @@
   flex-direction: column;
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.12);
   animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: max-width 0.25s ease-in-out;
 }
+
+.drawerWide {
+  max-width: min(1280px, 95vw);
+}
+
 
 @keyframes slideLeft {
   from { transform: translateX(100%); }
@@ -258,6 +264,7 @@
   font-weight: 600;
   color: var(--text-main, #0f172a);
   margin: 0;
-  word-break: break-word;
+  overflow-wrap: break-word;
   line-height: 1.5;
 }
+

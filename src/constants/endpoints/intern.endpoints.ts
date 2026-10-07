@@ -26,4 +26,8 @@ export const INTERN_ENDPOINTS = {
   MY_WEEKLY_REPORT_SAVE: '/api/interns/my-weekly-reports',
   MY_WEEKLY_REPORT_SUBMIT: (weekNumber: number) => `/api/interns/my-weekly-reports/${weekNumber}/submit`,
   MY_WEEKLY_REPORT_UPDATE: (weekNumber: number) => `/api/interns/my-weekly-reports/${weekNumber}`,
+  // TM-22: Mentor Xem Báo Cáo Tuần & Đánh Giá
+  MENTOR_WEEKLY_REPORT_REVIEW: (internCode: string, weekNumber: number) => `/api/mentors/my-interns/${internCode}/weekly-reports/${weekNumber}`,
+  MENTOR_REQUEST_REPORT_REVISION: (internCode: string, weekNumber: number) => `/api/mentors/my-interns/${internCode}/weekly-reports/${weekNumber}/request-revision`,
 } as const;
+
