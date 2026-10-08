@@ -18,6 +18,7 @@ export const internService = {
       department?: string;
       appliedPosition?: string;
       status?: string;
+      programId?: number;
       page?: number; // 0-indexed Backend
       size?: number;
       sort?: string;
@@ -33,6 +34,7 @@ export const internService = {
       if (params.department && params.department.trim()) cleanParams.department = params.department.trim();
       if (params.appliedPosition && params.appliedPosition.trim()) cleanParams.appliedPosition = params.appliedPosition.trim();
       if (params.status && params.status.trim()) cleanParams.status = params.status.trim();
+      if (params.programId !== undefined) cleanParams.programId = params.programId;
       if (params.page !== undefined) cleanParams.page = params.page;
       if (params.size !== undefined) cleanParams.size = params.size;
       if (params.sort && params.sort.trim()) cleanParams.sort = params.sort.trim();

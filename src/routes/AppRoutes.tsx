@@ -19,6 +19,7 @@ import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
 import { InternAttendanceConfirmPage } from '../pages/intern/InternAttendanceConfirmPage';
 import { InternLeavePage } from '../pages/intern/leave';
 import { MentorLeaveApprovalPage } from '../pages/mentor/leave';
+import { InternContractSigningHub } from '../pages/intern/contract/InternContractSigningHub';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -107,12 +108,14 @@ export const AppRoutes: React.FC = () => {
         </Route>
 
         {/* Mentor Area */}
+        <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'HR', 'ADMIN']} />}>
+          <Route path={ROUTES.MENTOR.LEAVE_REQUESTS} element={<MentorLeaveApprovalPage />} />
+        </Route>
         <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']} />}>
           <Route path={ROUTES.MENTOR.DASHBOARD} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.MISSIONS} element={<MentorMissionPage />} />
           <Route path={ROUTES.MENTOR.INTERNS} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
-          <Route path={ROUTES.MENTOR.LEAVE_REQUESTS} element={<MentorLeaveApprovalPage />} />
         </Route>
 
         {/* Intern Dedicated Area */}
@@ -121,6 +124,7 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.INTERN.MISSIONS} element={<InternMissionPage />} />
           <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
           <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
+          <Route path={ROUTES.INTERN.CONTRACT_SIGNING} element={<InternContractSigningHub />} />
           <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
           <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
           <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />

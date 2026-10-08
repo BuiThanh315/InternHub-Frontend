@@ -16,11 +16,14 @@ import {
   FolderGit2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { contractService } from '../../../services/contractService';
-import type { ContractResponse } from '../../../types';
+import { contractService, dynamicContractService } from '../../../services/contractService';
+import { internService } from '../../../services/internService';
+import type { ContractResponse, DynamicContractResponse, InternProfile } from '../../../types';
 import { formatCurrency, formatDate, getContractStatusLabel } from '../../../utils/formatters';
 import { ContractExtensionModal } from './components/ContractExtensionModal/ContractExtensionModal';
 import { TerminateContractModal } from './components/TerminateContractModal/TerminateContractModal';
+import { ContractBuilderModal } from './components/ContractBuilderModal/ContractBuilderModal';
+import { ContractDocumentViewer } from '../../../components/contract/ContractDocumentViewer';
 import styles from './HrContractManagementPage.module.css';
 
 type StatusTab = 'ALL' | 'PENDING' | 'ACTIVE' | 'EXPIRING' | 'FEEDBACK' | 'HISTORY';
@@ -36,17 +39,83 @@ export const HrContractManagementPage: React.FC = () => {
   const [terminateTarget, setTerminateTarget] = useState<ContractResponse | null>(null);
   const [feedbackViewTarget, setFeedbackViewTarget] = useState<ContractResponse | null>(null);
 
+  // Studio Modal state
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [selectedInternForContract, setSelectedInternForContract] = useState<InternProfile | null>(null);
+  const [approvedInterns, setApprovedInterns] = useState<InternProfile[]>([]);
+  const [previewHtmlTarget, setPreviewHtmlTarget] = useState<{ title: string; contractNumber?: string; html: string } | null>(null);
+
   const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await contractService.getAllContracts();
-      setContracts(data);
+      // Gọi song song cả API contracts động mới và hợp đồng upload file S3 cũ
+      const [oldDataRes, dynamicDataRes] = await Promise.allSettled([
+        contractService.getAllContracts(),
+        dynamicContractService.getAllContracts(),
+      ]);
+
+      const oldList: ContractResponse[] = oldDataRes.status === 'fulfilled' ? oldDataRes.value : [];
+      const dynamicList: DynamicContractResponse[] = dynamicDataRes.status === 'fulfilled' ? dynamicDataRes.value : [];
+
+      // Chuyển đổi DynamicContractResponse sang ContractResponse để hợp nhất bảng hiển thị
+      const mappedDynamicList: ContractResponse[] = dynamicList.map((dc) => {
+        let mappedStatus: any = 'PENDING_SIGNATURE';
+        if (dc.status === 'DRAFT') mappedStatus = 'PENDING_SIGNATURE';
+        else if (dc.status === 'SENT' || dc.status === 'READY_TO_SEND') mappedStatus = 'PENDING_SIGNATURE';
+        else if (dc.status === 'CHANGES_REQUESTED' || dc.status === 'HR_REVISING') mappedStatus = 'PENDING_INTERN_FEEDBACK';
+        else if (dc.status === 'INTERN_CONFIRMED' || dc.status === 'SIGNED' || dc.status === 'ACTIVE') mappedStatus = 'ACTIVE';
+        else if (dc.status === 'WITHDRAWN') mappedStatus = 'TERMINATED';
+        else if (dc.status === 'EXPIRED') mappedStatus = 'EXPIRED';
+
+        return {
+          id: dc.id,
+          contractNumber: dc.contractNumber,
+          contractTitle: `Hợp đồng thực tập điện tử - ${dc.internFullName}`,
+          internCode: dc.internCode || `INT-${dc.internId}`,
+          internFullName: dc.internFullName,
+          internEmail: dc.internEmail || '',
+          startDate: dc.effectiveFrom ? String(dc.effectiveFrom) : '',
+          endDate: dc.effectiveTo ? String(dc.effectiveTo) : '',
+          allowanceAmount: dc.allowanceAmount !== undefined && dc.allowanceAmount !== null ? Number(dc.allowanceAmount) : null,
+          status: mappedStatus,
+          originalFileName: `${dc.contractNumber}.html`,
+          fileSize: 0,
+          uploadedBy: dc.createdBy || 'HR System',
+          createdAt: dc.createdAt ? String(dc.createdAt) : new Date().toISOString(),
+          notes: dc.snapshotHash ? `SHA-256: ${dc.snapshotHash.slice(0, 16)}...` : undefined,
+        };
+      });
+
+      // Lọc trùng theo mã hợp đồng contractNumber
+      const dynamicNumbers = new Set(mappedDynamicList.map((d) => d.contractNumber));
+      const combined = [
+        ...mappedDynamicList,
+        ...oldList.filter((o) => !dynamicNumbers.has(o.contractNumber)),
+      ];
+
+      setContracts(combined);
     } catch (err: any) {
       console.error('Lỗi khi tải danh sách hợp đồng HR:', err);
       toast.error(err.response?.data?.message || err.message || 'Không thể tải danh sách hợp đồng.');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Tải danh sách thực tập sinh đủ điều kiện tạo HĐ
+  useEffect(() => {
+    const loadInterns = async () => {
+      try {
+        const res = await internService.getInterns({ size: 100 });
+        const valid = (res.items || []).filter(
+          (i) => i.status === 'APPROVED' || i.status === 'INTERNING'
+        );
+        setApprovedInterns(valid);
+      } catch (err) {
+        console.warn('Không thể tải danh sách ứng viên tạo HĐ:', err);
+      }
+    };
+    loadInterns();
   }, []);
 
   useEffect(() => {
@@ -237,16 +306,34 @@ export const HrContractManagementPage: React.FC = () => {
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          className={styles.refreshBtn}
-          onClick={fetchContracts}
-          disabled={loading}
-          title="Tải lại dữ liệu"
-        >
-          <RefreshCw size={16} className={loading ? styles.spinning : ''} />
-          <span>Làm mới</span>
-        </button>
+        <div className={styles.headerRight}>
+          <button
+            type="button"
+            className={styles.createContractBtn}
+            onClick={() => {
+              if (approvedInterns.length === 0) {
+                toast.error('Không tìm thấy thực tập sinh nào đủ điều kiện (APPROVED hoặc INTERNING) để tạo hợp đồng.');
+                return;
+              }
+              setSelectedInternForContract(approvedInterns[0]);
+              setIsBuilderOpen(true);
+            }}
+            title="Soạn thảo hợp đồng điện tử mới cho thực tập sinh"
+          >
+            <PlusCircle size={16} />
+            <span>Tạo Hợp Đồng Mới</span>
+          </button>
+          <button
+            type="button"
+            className={styles.refreshBtn}
+            onClick={fetchContracts}
+            disabled={loading}
+            title="Tải lại dữ liệu"
+          >
+            <RefreshCw size={16} className={loading ? styles.spinning : ''} />
+            <span>Làm mới</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Status Navigation Tabs */}
@@ -399,12 +486,29 @@ export const HrContractManagementPage: React.FC = () => {
                     </td>
                     <td className={styles.td}>
                       <div className={styles.actions}>
-                        {/* Xem trước trực tiếp trên S3 */}
+                        {/* Xem trước văn bản (Hỗ trợ cả Dynamic HTML Preview lẫn S3 PDF) */}
                         <button
                           type="button"
                           className={styles.actionBtn}
-                          onClick={() => contractService.previewContractFile(contract.id)}
-                          title="Xem trước văn bản PDF (Direct S3 Presigned URL)"
+                          onClick={async () => {
+                            if (contract.originalFileName?.endsWith('.html')) {
+                              try {
+                                const previewData = await dynamicContractService.previewDraft(contract.id);
+                                if (previewData?.canonicalHtml) {
+                                  setPreviewHtmlTarget({
+                                    title: contract.contractTitle || `Hợp đồng thực tập - ${contract.internFullName}`,
+                                    contractNumber: contract.contractNumber,
+                                    html: previewData.canonicalHtml,
+                                  });
+                                  return;
+                                }
+                              } catch (e) {
+                                console.warn('Không thể tải preview dynamic HTML:', e);
+                              }
+                            }
+                            contractService.previewContractFile(contract.id);
+                          }}
+                          title="Xem trước văn bản hợp đồng"
                         >
                           <ExternalLink size={16} />
                         </button>
@@ -521,6 +625,61 @@ export const HrContractManagementPage: React.FC = () => {
                   Xem Bản Scan Hiện Tại
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Soạn thảo Hợp đồng Điện tử Động */}
+      {isBuilderOpen && selectedInternForContract && (
+        <ContractBuilderModal
+          isOpen={isBuilderOpen}
+          intern={selectedInternForContract}
+          onClose={() => {
+            setIsBuilderOpen(false);
+            setSelectedInternForContract(null);
+          }}
+          onSuccess={() => {
+            setIsBuilderOpen(false);
+            setSelectedInternForContract(null);
+            fetchContracts();
+            toast.success('Hợp đồng điện tử đã được tạo và lưu thành công!');
+          }}
+        />
+      )}
+
+      {/* Modal Xem trước Văn bản HTML Canonical của Hợp đồng Động */}
+      {previewHtmlTarget && (
+        <div
+          className={styles.feedbackDrawerOverlay}
+          onClick={() => setPreviewHtmlTarget(null)}
+          style={{ zIndex: 1200 }}
+        >
+          <div
+            className={styles.feedbackDrawer}
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: '850px', maxWidth: '95vw' }}
+          >
+            <div className={styles.drawerHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FileSignature size={18} className={styles.feedbackIcon} />
+                <h3 className={styles.drawerTitle}>{previewHtmlTarget.title}</h3>
+              </div>
+              <button
+                type="button"
+                className={styles.closeDrawerBtn}
+                onClick={() => setPreviewHtmlTarget(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.drawerBody} style={{ padding: '1rem', overflowY: 'auto' }}>
+              <ContractDocumentViewer
+                canonicalHtml={previewHtmlTarget.html}
+                status="ACTIVE"
+                contractNumber={previewHtmlTarget.contractNumber || previewHtmlTarget.title}
+                revisionNumber={1}
+              />
             </div>
           </div>
         </div>

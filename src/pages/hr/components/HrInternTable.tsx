@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, Edit3, Upload, SearchX, FileSignature, UserCheck, RefreshCw, UserX, History, MoreVertical, Play, CheckCircle2, Ban, RotateCcw } from 'lucide-react';
+import { Eye, Edit3, Upload, SearchX, FileSignature, UserCheck, RefreshCw, UserX, History, MoreVertical, Play, CheckCircle2, Ban, RotateCcw, UserMinus } from 'lucide-react';
 import type { InternProfile, InternStatus } from '../../../types';
 import { Skeleton, Pagination } from '../../../components/common';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -22,6 +22,7 @@ interface HrInternTableProps {
   onStatusChange: (internId: number, nextStatus: InternStatus) => void;
   onOpenAssignMentor?: (intern: InternProfile) => void;
   onOpenRevokeMentor?: (intern: InternProfile) => void;
+  onOpenRemoveProgram?: (intern: InternProfile) => void;
 }
 
 export const HrInternTable: React.FC<HrInternTableProps> = ({
@@ -40,6 +41,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
   onStatusChange,
   onOpenAssignMentor,
   onOpenRevokeMentor,
+  onOpenRemoveProgram,
 }) => {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -335,6 +337,19 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                                 }
                               >
                                 <FileSignature size={13} /> Hợp đồng thực tập
+                              </button>
+                            )}
+                            {canApprove && intern.programId && onOpenRemoveProgram && (
+                              <button
+                                type="button"
+                                className={`${styles.actionMenuItem} text-rose-600 hover:text-rose-700`}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onOpenRemoveProgram(intern);
+                                }}
+                                title="Gỡ thực tập sinh khỏi chương trình (Dành cho trường hợp xếp nhầm)"
+                              >
+                                <UserMinus size={13} /> Gỡ khỏi chương trình
                               </button>
                             )}
                           </div>

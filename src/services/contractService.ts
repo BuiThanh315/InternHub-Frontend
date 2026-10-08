@@ -319,6 +319,151 @@ export const contractService = {
   },
 };
 
+// ============================================================================
+// DYNAMIC STRUCTURED CONTRACT & E-SIGNATURE SERVICE
+// ============================================================================
+
+import { DYNAMIC_CONTRACT_ENDPOINTS } from '../constants/endpoints/contract.endpoints';
+import type {
+  ContractTemplateResponse,
+  DynamicContractResponse,
+  ContractRevisionResponse,
+  CreateContractDraftRequest,
+  UpdateContractDraftRequest,
+  RequestContractChangesRequest,
+  ConfirmContractRevisionRequest,
+  SignContractRevisionRequest,
+  ContractSignatureResponse,
+} from '../types';
+
+export const dynamicContractService = {
+  // Templates
+  async getTemplates(): Promise<ContractTemplateResponse[]> {
+    const res = await apiClient.get<ApiResponse<ContractTemplateResponse[]>>(DYNAMIC_CONTRACT_ENDPOINTS.TEMPLATES);
+    return res.data.data;
+  },
+
+  async getTemplateById(id: number | string): Promise<ContractTemplateResponse> {
+    const res = await apiClient.get<ApiResponse<ContractTemplateResponse>>(DYNAMIC_CONTRACT_ENDPOINTS.TEMPLATE_BY_ID(id));
+    return res.data.data;
+  },
+
+  // HR Draft & Issue
+  async getAllContracts(): Promise<DynamicContractResponse[]> {
+    const res = await apiClient.get<ApiResponse<DynamicContractResponse[]>>(DYNAMIC_CONTRACT_ENDPOINTS.HR_CONTRACTS);
+    return res.data.data;
+  },
+
+  async createDraft(payload: CreateContractDraftRequest): Promise<DynamicContractResponse> {
+    const res = await apiClient.post<ApiResponse<DynamicContractResponse>>(DYNAMIC_CONTRACT_ENDPOINTS.HR_CREATE_DRAFT, payload);
+    return res.data.data;
+  },
+
+  async getDraft(id: number | string): Promise<DynamicContractResponse> {
+    const res = await apiClient.get<ApiResponse<DynamicContractResponse>>(DYNAMIC_CONTRACT_ENDPOINTS.HR_GET_DRAFT(id));
+    return res.data.data;
+  },
+
+  async updateDraft(id: number | string, payload: UpdateContractDraftRequest): Promise<DynamicContractResponse> {
+    const res = await apiClient.put<ApiResponse<DynamicContractResponse>>(DYNAMIC_CONTRACT_ENDPOINTS.HR_UPDATE_DRAFT(id), payload);
+    return res.data.data;
+  },
+
+  async previewDraft(id: number | string): Promise<{ canonicalHtml: string }> {
+    const res = await apiClient.get<ApiResponse<{ canonicalHtml: string }>>(DYNAMIC_CONTRACT_ENDPOINTS.HR_PREVIEW_DRAFT(id));
+    return res.data.data;
+  },
+
+  async sendContract(id: number | string): Promise<DynamicContractResponse> {
+    const res = await apiClient.post<ApiResponse<DynamicContractResponse>>(DYNAMIC_CONTRACT_ENDPOINTS.HR_SEND_CONTRACT(id));
+    return res.data.data;
+  },
+
+  async createRevision(contractId: number | string, payload: UpdateContractDraftRequest): Promise<ContractRevisionResponse> {
+    const res = await apiClient.post<ApiResponse<ContractRevisionResponse>>(DYNAMIC_CONTRACT_ENDPOINTS.HR_CREATE_REVISION(contractId), payload);
+    return res.data.data;
+  },
+
+  async resendNotification(contractId: number | string): Promise<void> {
+    await apiClient.post(DYNAMIC_CONTRACT_ENDPOINTS.HR_RESEND_NOTIFICATION(contractId));
+  },
+
+  async withdrawContract(contractId: number | string, reason?: string): Promise<void> {
+    await apiClient.post(DYNAMIC_CONTRACT_ENDPOINTS.HR_WITHDRAW(contractId), { reason });
+  },
+
+  // Intern Actions
+  async getMyContract(): Promise<DynamicContractResponse | null> {
+    try {
+      const res = await apiClient.get<ApiResponse<DynamicContractResponse>>(DYNAMIC_CONTRACT_ENDPOINTS.INTERN_MY_CONTRACT);
+      return res.data.data;
+    } catch (err: any) {
+      if (err.response?.status === 404) return null;
+      throw err;
+    }
+  },
+
+  async previewMyRevision(contractId: number | string, revisionId: number | string): Promise<{ canonicalHtml: string; hash: string }> {
+    const res = await apiClient.get<ApiResponse<{ canonicalHtml: string; hash: string }>>(
+      DYNAMIC_CONTRACT_ENDPOINTS.INTERN_PREVIEW_REVISION(contractId, revisionId)
+    );
+    return res.data.data;
+  },
+
+  async requestChanges(contractId: number | string, revisionId: number | string, payload: RequestContractChangesRequest): Promise<void> {
+    await apiClient.post(DYNAMIC_CONTRACT_ENDPOINTS.INTERN_REQUEST_CHANGES(contractId, revisionId), payload);
+  },
+
+  async confirmRevision(contractId: number | string, revisionId: number | string, payload: ConfirmContractRevisionRequest): Promise<void> {
+    await apiClient.post(DYNAMIC_CONTRACT_ENDPOINTS.INTERN_CONFIRM_REVISION(contractId, revisionId), payload);
+  },
+
+  async signRevision(contractId: number | string, revisionId: number | string, payload: SignContractRevisionRequest): Promise<ContractSignatureResponse> {
+    const res = await apiClient.post<ApiResponse<ContractSignatureResponse>>(
+      DYNAMIC_CONTRACT_ENDPOINTS.INTERN_SIGN_REVISION(contractId, revisionId),
+      payload
+    );
+    return res.data.data;
+  },
+
+  async downloadSignedPdf(contractId?: number | string, revisionId?: number | string, fileName?: string): Promise<void> {
+    const url = (contractId && revisionId)
+      ? DYNAMIC_CONTRACT_ENDPOINTS.INTERN_DOWNLOAD_PDF(contractId, revisionId)
+      : DYNAMIC_CONTRACT_ENDPOINTS.INTERN_MY_PDF;
+
+    try {
+      const response = await apiClient.get(url, {
+        responseType: 'blob',
+      });
+      const fileBlob = new Blob([response.data], { type: 'application/pdf' });
+      const blobUrl = window.URL.createObjectURL(fileBlob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      if (fileName) a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      if (contractId && revisionId) {
+        console.warn('Lỗi khi tải theo ID, đang thử lại qua endpoint /intern/me/pdf...');
+        const fallbackRes = await apiClient.get(DYNAMIC_CONTRACT_ENDPOINTS.INTERN_MY_PDF, { responseType: 'blob' });
+        const fileBlob = new Blob([fallbackRes.data], { type: 'application/pdf' });
+        const blobUrl = window.URL.createObjectURL(fileBlob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        if (fileName) a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+      } else {
+        throw err;
+      }
+    }
+  },
+};
+
 interface ApiResponse<T> {
   code: number;
   message: string;

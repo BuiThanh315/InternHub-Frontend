@@ -17,6 +17,11 @@ import {
   EditProgramModal,
   ChangeStatusModal,
 } from './components';
+import { ProgramGroupModal } from '../components/ProgramGroupModal';
+import { groupService } from '../../../services/groupService';
+import { internService } from '../../../services/internService';
+import type { InternGroup, BatchGroupItem } from '../../../types/group.types';
+import type { InternProfile } from '../../../types/intern.types';
 import styles from './styles/hrPrograms.module.css';
 
 export const HrProgramManagementPage: React.FC = () => {
@@ -43,6 +48,58 @@ export const HrProgramManagementPage: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<ProgramDetailResponse | null>(null);
   const [statusProgram, setStatusProgram] = useState<ProgramDetailResponse | null>(null);
+
+  // Group Management Modal state
+  const [manageGroupProgram, setManageGroupProgram] = useState<ProgramDetailResponse | null>(null);
+  const [programInterns, setProgramInterns] = useState<InternProfile[]>([]);
+  const [existingGroups, setExistingGroups] = useState<InternGroup[]>([]);
+  const [isGroupLoading, setIsGroupLoading] = useState(false);
+
+  const handleOpenManageGroups = async (program: ProgramDetailResponse) => {
+    try {
+      setIsGroupLoading(true);
+      setManageGroupProgram(program);
+      const [groupsData, internsData] = await Promise.all([
+        groupService.getGroups(program.id),
+        internService.getInterns({ programId: program.id, size: 200 }),
+      ]);
+      setExistingGroups(groupsData);
+      setProgramInterns(internsData.items || []);
+    } catch (err: any) {
+      console.error('Lỗi nạp dữ liệu nhóm:', err);
+      setErrorMessage(err.message || 'Không thể tải danh sách nhóm thực tập');
+    } finally {
+      setIsGroupLoading(false);
+    }
+  };
+
+  const handleBatchApplyGroups = async (batchGroups: BatchGroupItem[]) => {
+    if (!manageGroupProgram) return;
+    try {
+      setIsGroupLoading(true);
+      await groupService.batchApplyGroups(manageGroupProgram.id, { groups: batchGroups });
+      setSuccessToast('Đã lưu và áp dụng phân bổ nhóm thành công!');
+      fetchPrograms();
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.message || 'Lỗi khi áp dụng chia nhóm');
+    } finally {
+      setIsGroupLoading(false);
+    }
+  };
+
+  const handleDisbandGroup = async (groupId: number) => {
+    if (!manageGroupProgram) return;
+    try {
+      setIsGroupLoading(true);
+      await groupService.disbandGroup(manageGroupProgram.id, groupId);
+      setSuccessToast('Đã giải tán nhóm thành công');
+      fetchPrograms();
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.message || 'Lỗi khi giải tán nhóm');
+    } finally {
+      setIsGroupLoading(false);
+    }
+  };
 
   // Load danh mục phòng ban
   useEffect(() => {
@@ -318,6 +375,7 @@ export const HrProgramManagementPage: React.FC = () => {
             onChangeStatus={(p) => setStatusProgram(p)}
             onToggleRecruitment={handleToggleRecruitment}
             onDelete={handleDeleteProgram}
+            onManageGroups={handleOpenManageGroups}
             currentPage={currentPage}
             totalPages={totalPages}
             totalElements={totalElements}
@@ -350,6 +408,21 @@ export const HrProgramManagementPage: React.FC = () => {
         onClose={() => setStatusProgram(null)}
         onSubmit={handleChangeStatusSubmit}
       />
+
+      {/* Modal Quản lý & Chia nhóm thực tập */}
+      {manageGroupProgram && (
+        <ProgramGroupModal
+          programId={manageGroupProgram.id}
+          programName={manageGroupProgram.name}
+          isOpen={Boolean(manageGroupProgram)}
+          onClose={() => setManageGroupProgram(null)}
+          interns={programInterns}
+          existingGroups={existingGroups}
+          onBatchApply={handleBatchApplyGroups}
+          onDisbandGroup={handleDisbandGroup}
+          isLoading={isGroupLoading}
+        />
+      )}
     </div>
   );
 };

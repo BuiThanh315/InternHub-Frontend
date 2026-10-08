@@ -20,6 +20,8 @@ import {
   X,
   FileCheck2,
   Sparkles,
+  Kanban,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../../components/common/Button/Button';
@@ -354,6 +356,12 @@ export const AdminRoleTab: React.FC = () => {
         return <Award size={18} className={styles.moduleIcon} />;
       case 'PROFILE':
         return <Users size={18} className={styles.moduleIcon} />;
+      case 'MISSION':
+        return <Kanban size={18} className={styles.moduleIcon} />;
+      case 'ATTENDANCE':
+        return <Clock size={18} className={styles.moduleIcon} />;
+      case 'EVALUATION':
+        return <Award size={18} className={styles.moduleIcon} />;
       case 'SYSTEM':
       default:
         return <Layers size={18} className={styles.moduleIcon} />;

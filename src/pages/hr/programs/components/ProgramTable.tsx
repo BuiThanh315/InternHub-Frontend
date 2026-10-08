@@ -12,6 +12,7 @@ interface ProgramTableProps {
   onChangeStatus: (program: ProgramDetailResponse) => void;
   onToggleRecruitment: (program: ProgramDetailResponse) => void;
   onDelete: (program: ProgramDetailResponse) => void;
+  onManageGroups?: (program: ProgramDetailResponse) => void;
   currentPage: number;
   totalPages: number;
   totalElements: number;
@@ -25,6 +26,7 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
   onChangeStatus,
   onToggleRecruitment,
   onDelete,
+  onManageGroups,
   currentPage,
   totalPages,
   totalElements,
@@ -171,6 +173,17 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                     {/* Cột 7: Thao tác */}
                     <td className={styles.tdCell} style={{ textAlign: 'center' }}>
                       <div className={styles.actionGroup}>
+                        {onManageGroups && (
+                          <button
+                            type="button"
+                            className={styles.actionBtn}
+                            onClick={() => onManageGroups(p)}
+                            title="Quản lý & Chia nhóm thực tập"
+                            aria-label={`Quản lý nhóm thực tập cho chương trình ${p.name}`}
+                          >
+                            <Users size={15} aria-hidden="true" />
+                          </button>
+                        )}
                         {canEdit && (
                           <button
                             type="button"
