@@ -1,0 +1,270 @@
+.tableCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  position: relative;
+}
+
+/* Custom Sleek Scrollbar (Rule 34) */
+.tableWrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: var(--bg-surface, rgba(0, 0, 0, 0.02));
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 9999px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.th {
+  background-color: var(--bg-surface, rgba(0, 0, 0, 0.02));
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tr {
+  transition: background-color 0.15s ease;
+}
+
+.tr:hover {
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.02));
+}
+
+.td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-main);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Sticky Columns (Rule 34) */
+.stickyLeft {
+  position: sticky;
+  left: 0;
+  background-color: var(--bg-card);
+  z-index: 2;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.03);
+}
+
+.tr:hover .stickyLeft {
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.02));
+}
+
+.stickyRight {
+  position: sticky;
+  right: 0;
+  background-color: var(--bg-card);
+  z-index: 2;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.03);
+  text-align: right;
+}
+
+.tr:hover .stickyRight {
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.02));
+}
+
+.codeBadge {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: rgba(59, 130, 246, 0.08);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.userCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.userName {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.userEmail {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.deptCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deptName {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.progTitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.mentorTag {
+  font-size: 11.5px;
+  color: var(--primary);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+
+.workDaysCell {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.actualDays {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.expectedDays {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.rateCell {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.rateHigh {
+  color: var(--success);
+}
+
+.rateMedium {
+  color: var(--warning);
+}
+
+.rateLow {
+  color: var(--danger);
+}
+
+/* Status Badges */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusExcellent {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: var(--success);
+}
+
+.statusGood {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: var(--info);
+}
+
+.statusWarning {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: var(--warning);
+}
+
+.statusCritical {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+
+.warningNotesText {
+  font-size: 12px;
+  color: var(--danger);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Empty / Error States */
+.stateContainer {
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.stateIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-surface, rgba(0, 0, 0, 0.04));
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.stateTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.stateDescription {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.paginationWrapper {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-card);
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
