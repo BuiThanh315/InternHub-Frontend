@@ -13,8 +13,9 @@ import {
   HelpCircle,
 } from 'lucide-react';
 
+import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '../../../../components/common';
-import { contractService } from '../../../../services/contractService';
+import { contractService, dynamicContractService } from '../../../../services/contractService';
 import type { ContractResponse } from '../../../../types';
 import type { InternContractSectionProps } from './InternContractSection.types';
 import { ConfirmContractModal } from '../ConfirmContractModal';
@@ -27,6 +28,7 @@ import {
   getContractStatusLabel,
 } from '../../../../utils/formatters';
 import { ContractInquiryModal } from '../ContractInquiryModal/ContractInquiryModal';
+import { ROUTES } from '../../../../constants/routes';
 
 import styles from './InternContractSection.module.css';
 
@@ -39,6 +41,7 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
   onContractUpdated,
   internName = '',
 }) => {
+  const navigate = useNavigate();
   const [contracts, setContracts] = useState<ContractResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -48,8 +51,74 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
     try {
       setLoading(true);
       setErrorMessage(null);
-      const data = await contractService.getMyContracts();
-      setContracts(data);
+
+      // Bước 1: Gọi song song cả hợp đồng file truyền thống và hợp đồng động mới (Studio)
+      const [legacyResult, dynamicResult] = await Promise.allSettled([
+        contractService.getMyContracts(),
+        dynamicContractService.getMyContract(),
+      ]);
+
+      const legacyContracts: ContractResponse[] =
+        legacyResult.status === 'fulfilled' ? legacyResult.value || [] : [];
+
+      let mergedContracts = [...legacyContracts];
+
+      if (dynamicResult.status === 'fulfilled' && dynamicResult.value) {
+        const dc = dynamicResult.value;
+
+        // Map trạng thái hợp đồng động sang ContractStatus hiển thị phía Intern
+        // SENT, INTERN_CONFIRMED, READY_TO_SEND -> PENDING_SIGNATURE (để TTS thấy nút Ký Ngay)
+        // SIGNED, ACTIVE, WAITING_EFFECTIVE_DATE -> SIGNED
+        let mappedStatus: any = 'PENDING_SIGNATURE';
+        const dynamicStatus = dc.status as string;
+        if (dynamicStatus === 'SIGNED' || dynamicStatus === 'ACTIVE' || dynamicStatus === 'WAITING_EFFECTIVE_DATE') {
+          mappedStatus = 'SIGNED';
+        } else if (dynamicStatus === 'EXPIRED') {
+          mappedStatus = 'EXPIRED';
+        } else if (dynamicStatus === 'WITHDRAWN') {
+          mappedStatus = 'TERMINATED';
+        } else {
+          mappedStatus = 'PENDING_SIGNATURE';
+        }
+
+        const startDate =
+          dc.effectiveFrom ||
+          dc.currentRevision?.variablesPayload?.startDate ||
+          new Date().toISOString().split('T')[0];
+
+        const endDate =
+          dc.effectiveTo ||
+          dc.currentRevision?.variablesPayload?.endDate ||
+          new Date().toISOString().split('T')[0];
+
+        const allowanceAmount =
+          dc.allowanceAmount ??
+          dc.currentRevision?.variablesPayload?.allowanceAmount ??
+          3000000;
+
+        const dynamicMapped: ContractResponse = {
+          id: dc.id,
+          contractNumber: dc.contractNumber,
+          contractTitle: 'Hợp Đồng Tiếp Nhận Thực Tập Sinh',
+          internCode: dc.internCode || `INTERN-${dc.internId}`,
+          internFullName: dc.internFullName,
+          startDate,
+          endDate,
+          allowanceAmount,
+          status: mappedStatus,
+          originalFileName: `${dc.contractNumber}.html`,
+          fileSize: 1024,
+          uploadedBy: dc.createdBy || 'Phòng Nhân Sự (HR)',
+          createdAt: dc.createdAt || new Date().toISOString(),
+          updatedAt: dc.updatedAt,
+        };
+
+        // Loại bỏ trùng số hợp đồng nếu có, ưu tiên hợp đồng động mới lên đầu danh sách
+        mergedContracts = mergedContracts.filter((c) => c.contractNumber !== dc.contractNumber);
+        mergedContracts.unshift(dynamicMapped);
+      }
+
+      setContracts(mergedContracts);
     } catch (err: any) {
       console.error('Lỗi khi tải danh sách hợp đồng cá nhân:', err);
       setErrorMessage(err.response?.data?.message || err.message || 'Không thể tải danh sách hợp đồng thực tập.');
@@ -66,6 +135,13 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
   const pendingContract = contracts.find((c) => c.status === 'PENDING_SIGNATURE');
 
   const handleOpenSign = (contract: ContractResponse) => {
+    // Bước 2: Nút "Ký Ngay" hành động thông minh:
+    // Nếu là hợp đồng động mới (HTML snapshot / Studio): chuyển thẳng đến InternContractSigningHub (/intern/contract-signing)
+    if (contract.originalFileName?.endsWith('.html') || contract.contractNumber.startsWith('HDTT-1')) {
+      navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+      return;
+    }
+    // Hợp đồng scan/file truyền thống: mở ConfirmContractModal cũ
     setModalState({ type: 'SIGN', contract });
   };
 
@@ -287,20 +363,30 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
                           <button
                             type="button"
                             className={styles.iconBtn}
-                            onClick={() => contractService.previewContractFile(contract.id)}
-                            title="Xem trước văn bản hợp đồng (Mở tab mới)"
+                            onClick={() => {
+                              if (contract.originalFileName?.endsWith('.html')) {
+                                navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+                              } else {
+                                contractService.previewContractFile(contract.id);
+                              }
+                            }}
+                            title="Xem trước văn bản hợp đồng"
                           >
                             <ExternalLink size={15} />
                           </button>
                           <button
                             type="button"
                             className={styles.iconBtn}
-                            onClick={() =>
-                              contractService.downloadContractFile(
-                                contract.id,
-                                contract.originalFileName
-                              )
-                            }
+                            onClick={() => {
+                              if (contract.originalFileName?.endsWith('.html')) {
+                                navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+                              } else {
+                                contractService.downloadContractFile(
+                                  contract.id,
+                                  contract.originalFileName
+                                );
+                              }
+                            }}
                             title="Tải văn bản hợp đồng về máy"
                           >
                             <Download size={15} />
@@ -372,7 +458,13 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
                     <button
                       type="button"
                       className={styles.iconBtn}
-                      onClick={() => contractService.previewContractFile(contract.id)}
+                      onClick={() => {
+                        if (contract.originalFileName?.endsWith('.html')) {
+                          navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+                        } else {
+                          contractService.previewContractFile(contract.id);
+                        }
+                      }}
                       title="Xem trước file"
                     >
                       <ExternalLink size={15} />
@@ -381,12 +473,16 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
                     <button
                       type="button"
                       className={styles.iconBtn}
-                      onClick={() =>
-                        contractService.downloadContractFile(
-                          contract.id,
-                          contract.originalFileName
-                        )
-                      }
+                      onClick={() => {
+                        if (contract.originalFileName?.endsWith('.html')) {
+                          navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+                        } else {
+                          contractService.downloadContractFile(
+                            contract.id,
+                            contract.originalFileName
+                          );
+                        }
+                      }}
                       title="Tải file"
                     >
                       <Download size={15} />

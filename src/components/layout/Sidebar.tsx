@@ -143,6 +143,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       section: 'Quản Trị Nhân Sự',
       allowedRoles: ['HR'],
     },
+    {
+      to: ROUTES.MENTOR.LEAVE_REQUESTS,
+      label: 'Duyệt Đơn Nghỉ Phép',
+      icon: CalendarCheck2,
+      requiredPermission: 'INTERN_VIEW_ALL',
+      section: 'Quản Trị Nhân Sự',
+      allowedRoles: ['HR'],
+    },
 
     // 3. Phân hệ Người Hướng Dẫn (CHỈ MENTOR & HR)
     {
@@ -183,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: CalendarCheck2,
       requiredPermission: 'INTERN_VIEW_OWN',
       section: 'Người Hướng Dẫn',
-      allowedRoles: ['MENTOR', 'HR'],
+      allowedRoles: ['MENTOR'],
     },
 
     // 4. Phân hệ Thực Tập Sinh (CHỈ INTERN & USER)
@@ -240,6 +248,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Quản Lý Tài Liệu',
       icon: FileText,
       requiredPermission: 'INTERN_VIEW_OWN_DOCUMENTS',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.CONTRACT_SIGNING,
+      label: 'Ký Kết Hợp Đồng',
+      icon: FileCheck2,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',
       allowedRoles: ['INTERN', 'USER'],
     },

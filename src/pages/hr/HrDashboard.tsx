@@ -24,10 +24,12 @@ import {
   RejectDocModal,
   ApproveConfirmModal,
   RejectInternModal,
-  UploadContractModal,
   AssignMentorModal,
   RevokeMentorModal,
 } from './components';
+import { RemoveProgramMemberModal } from './components/RemoveProgramMemberModal';
+import { ContractBuilderModal } from './contracts/components/ContractBuilderModal/ContractBuilderModal';
+import { groupService } from '../../services/groupService';
 
 export const HrDashboard: React.FC = () => {
   const [interns, setInterns] = useState<InternProfile[]>([]);
@@ -67,6 +69,25 @@ export const HrDashboard: React.FC = () => {
   // TM-16 Mentor Assignment Modal States
   const [assignMentorIntern, setAssignMentorIntern] = useState<InternProfile | null>(null);
   const [revokeMentorIntern, setRevokeMentorIntern] = useState<InternProfile | null>(null);
+
+  // TM-31 Remove Program Member Modal State
+  const [removeProgramIntern, setRemoveProgramIntern] = useState<InternProfile | null>(null);
+  const [isRemovingProgram, setIsRemovingProgram] = useState(false);
+
+  const handleConfirmRemoveProgram = async (intern: InternProfile) => {
+    if (!intern.programId) return;
+    try {
+      setIsRemovingProgram(true);
+      await groupService.removeInternFromProgram(intern.programId, intern.id);
+      setSuccessToast(`Đã gỡ thực tập sinh ${intern.fullName} khỏi chương trình`);
+      setRemoveProgramIntern(null);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.message || 'Lỗi khi gỡ thực tập sinh khỏi chương trình');
+    } finally {
+      setIsRemovingProgram(false);
+    }
+  };
 
   const loadData = React.useCallback(async () => {
     try {
@@ -399,6 +420,7 @@ export const HrDashboard: React.FC = () => {
             onStatusChange={handleStatusChange}
             onOpenAssignMentor={(intern) => setAssignMentorIntern(intern)}
             onOpenRevokeMentor={(intern) => setRevokeMentorIntern(intern)}
+            onOpenRemoveProgram={(intern) => setRemoveProgramIntern(intern)}
           />
         </div>
       </div>
@@ -481,15 +503,19 @@ export const HrDashboard: React.FC = () => {
         onConfirm={handleRejectDecision}
       />
 
-      {/* TM-13: Modal Tải Lên Hợp Đồng Thực Tập Sinh */}
-      <UploadContractModal
-        intern={contractIntern}
-        isOpen={Boolean(contractIntern)}
-        onClose={() => setContractIntern(null)}
-        onSuccess={() => {
-          loadData();
-        }}
-      />
+      {/* Hợp Đồng Thực Tập Sinh Điện Tử Động (Dynamic Contract & E-Signature) */}
+      {contractIntern && (
+        <ContractBuilderModal
+          isOpen={Boolean(contractIntern)}
+          intern={contractIntern}
+          onClose={() => setContractIntern(null)}
+          onSuccess={() => {
+            setContractIntern(null);
+            loadData();
+            toast.success('Hợp đồng điện tử đã được xử lý thành công!');
+          }}
+        />
+      )}
 
       {/* TM-16: Modals Phân công & Thu hồi Mentor */}
       <AssignMentorModal
@@ -514,6 +540,15 @@ export const HrDashboard: React.FC = () => {
           loadData();
           toast.success('Đã thu hồi mentor thành công!');
         }}
+      />
+
+      {/* TM-31: Modal Gỡ Thực Tập Sinh Khỏi Chương Trình */}
+      <RemoveProgramMemberModal
+        intern={removeProgramIntern}
+        isOpen={Boolean(removeProgramIntern)}
+        isLoading={isRemovingProgram}
+        onClose={() => setRemoveProgramIntern(null)}
+        onConfirm={handleConfirmRemoveProgram}
       />
     </div>
   );
