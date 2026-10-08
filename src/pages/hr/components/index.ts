@@ -13,3 +13,4 @@ export * from './UploadContractModal';
 export * from './AssignMentorModal';
 export * from './RevokeMentorModal';
 export * from './CreateMentorModal';
+export * from './HrActiveProgramsGrid';

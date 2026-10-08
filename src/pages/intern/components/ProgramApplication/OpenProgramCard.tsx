@@ -67,9 +67,33 @@ export const OpenProgramCard: React.FC<OpenProgramCardProps> = ({
             </span>
           </div>
         </div>
+
+        {/* Thanh hiển thị số lượng hồ sơ ứng tuyển */}
+        {program.pendingApplicationsCount !== undefined && (
+          <div className={styles.applicationStatBar}>
+            <div className={styles.applicationStatLabel}>
+              <span className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                <Users size={12} aria-hidden="true" />
+                Hồ sơ đã ứng tuyển:
+              </span>
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 font-tabular">
+                {program.pendingApplicationsCount} hồ sơ
+              </span>
+            </div>
+            <div className={styles.applicationTrack}>
+              <div
+                className={styles.applicationFill}
+                style={{
+                  width: `${Math.min(100, Math.max(program.pendingApplicationsCount > 0 ? 8 : 0, (program.pendingApplicationsCount / maxSlots) * 100))}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className={styles.footer}>
+
         {isApplied ? (
           <div className={styles.appliedBadge}>
             <CheckCircle2 size={16} />

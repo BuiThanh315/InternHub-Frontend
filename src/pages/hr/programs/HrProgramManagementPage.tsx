@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, FolderGit2, AlertCircle, Layers, Users, CheckCircle, Clock } from 'lucide-react';
 import { Header } from '../../../components/layout/Header';
+import { ConfirmModal } from '../../../components/common';
 import { useAuth } from '../../../contexts/AuthContext';
 import { programService } from '../../../services/programService';
+import { internService } from '../../../services/internService';
 import type {
   ProgramDetailResponse,
   DepartmentResponse,
@@ -16,6 +18,7 @@ import {
   CreateProgramModal,
   EditProgramModal,
   ChangeStatusModal,
+  EnrollInternModal,
 } from './components';
 import styles from './styles/hrPrograms.module.css';
 
@@ -43,6 +46,12 @@ export const HrProgramManagementPage: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<ProgramDetailResponse | null>(null);
   const [statusProgram, setStatusProgram] = useState<ProgramDetailResponse | null>(null);
+  const [enrollProgram, setEnrollProgram] = useState<ProgramDetailResponse | null>(null);
+  const [deletingProgram, setDeletingProgram] = useState<ProgramDetailResponse | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Số lượng đơn PENDING mong muốn tham gia từng chương trình
+  const [pendingCountsMap, setPendingCountsMap] = useState<Record<number, number>>({});
 
   // Load danh mục phòng ban
   useEffect(() => {
@@ -77,16 +86,35 @@ export const HrProgramManagementPage: React.FC = () => {
     }
   }, [keyword, departmentId, status, isHistorical, currentPage, pageSize]);
 
+  // Tải số lượng đơn PENDING của tất cả các chương trình (1 network request duy nhất)
+  const fetchPendingCounts = useCallback(async () => {
+    try {
+      const res = await internService.getInterns({ status: 'PENDING', size: 100 });
+      const items = res.items || res.content || [];
+      const counts: Record<number, number> = {};
+      items.forEach((intern) => {
+        if (intern.programId) {
+          counts[intern.programId] = (counts[intern.programId] || 0) + 1;
+        }
+      });
+      setPendingCountsMap(counts);
+    } catch (err) {
+      console.error('Không thể tải số lượng đơn chờ duyệt:', err);
+    }
+  }, []);
+
   useEffect(() => {
-    fetchPrograms();
-  }, [fetchPrograms]);
+    void fetchPrograms();
+    void fetchPendingCounts();
+  }, [fetchPrograms, fetchPendingCounts]);
 
   // Xử lý tạo mới
   const handleCreateSubmit = async (formData: CreateProgramRequest) => {
     await programService.createProgram(formData);
     setSuccessToast(`Đã thiết lập thành công kỳ thực tập "${formData.name}"!`);
     setIsCreateOpen(false);
-    fetchPrograms();
+    void fetchPrograms();
+    void fetchPendingCounts();
   };
 
   // Xử lý chỉnh sửa
@@ -94,7 +122,8 @@ export const HrProgramManagementPage: React.FC = () => {
     await programService.updateProgram(id, formData);
     setSuccessToast(`Đã cập nhật thông tin kỳ thực tập thành công!`);
     setEditProgram(null);
-    fetchPrograms();
+    void fetchPrograms();
+    void fetchPendingCounts();
   };
 
   // Xử lý đổi trạng thái
@@ -102,7 +131,8 @@ export const HrProgramManagementPage: React.FC = () => {
     await programService.changeStatus(id, request);
     setSuccessToast(`Đã chuyển trạng thái kỳ thực tập sang "${request.targetStatus}" thành công!`);
     setStatusProgram(null);
-    fetchPrograms();
+    void fetchPrograms();
+    void fetchPendingCounts();
   };
 
   // Xử lý toggle nhận hồ sơ
@@ -110,25 +140,32 @@ export const HrProgramManagementPage: React.FC = () => {
     try {
       const updated = await programService.toggleRecruitment(p.id);
       setSuccessToast(`Đã ${updated.isRecruitmentOpen ? 'mở' : 'đóng'} tiếp nhận hồ sơ cho chương trình "${p.name}".`);
-      fetchPrograms();
+      void fetchPrograms();
     } catch (err: any) {
       alert(err.response?.data?.message || err.message || 'Không thể thay đổi trạng thái nhận hồ sơ.');
     }
   };
 
-  // Xử lý xóa chương trình
-  const handleDeleteProgram = async (p: ProgramDetailResponse) => {
-    const confirmed = window.confirm(
-      `Bạn có chắc chắn muốn xóa vĩnh viễn chương trình "${p.name}" (${p.programCode})? Thao tác này không thể hoàn tác!`
-    );
-    if (!confirmed) return;
+  // Xử lý mở xác nhận xóa chương trình
+  const handleDeleteProgram = (p: ProgramDetailResponse) => {
+    setDeletingProgram(p);
+  };
+
+  // Xác nhận xóa chương trình (Tuân thủ Rule 33)
+  const handleConfirmDelete = async () => {
+    if (!deletingProgram) return;
 
     try {
-      await programService.deleteProgram(p.id);
-      setSuccessToast(`Đã xóa thành công chương trình "${p.name}".`);
+      setIsDeleting(true);
+      await programService.deleteProgram(deletingProgram.id);
+      setSuccessToast(`Đã xóa thành công chương trình "${deletingProgram.name}".`);
+      setDeletingProgram(null);
       fetchPrograms();
+      fetchPendingCounts();
     } catch (err: any) {
       alert(err.response?.data?.message || err.message || 'Không thể xóa chương trình.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -313,10 +350,12 @@ export const HrProgramManagementPage: React.FC = () => {
         ) : (
           <ProgramTable
             programs={programs}
+            pendingCountsMap={pendingCountsMap}
             userRole={role || undefined}
             onEdit={(p) => setEditProgram(p)}
             onChangeStatus={(p) => setStatusProgram(p)}
             onToggleRecruitment={handleToggleRecruitment}
+            onEnrollIntern={(p) => setEnrollProgram(p)}
             onDelete={handleDeleteProgram}
             currentPage={currentPage}
             totalPages={totalPages}
@@ -349,6 +388,30 @@ export const HrProgramManagementPage: React.FC = () => {
         program={statusProgram}
         onClose={() => setStatusProgram(null)}
         onSubmit={handleChangeStatusSubmit}
+      />
+
+      {/* Modal Tiếp nhận Thực tập sinh vào Chương trình (Phương án 1) */}
+      <EnrollInternModal
+        isOpen={Boolean(enrollProgram)}
+        program={enrollProgram}
+        onClose={() => setEnrollProgram(null)}
+        onSuccess={() => {
+          void fetchPrograms();
+          void fetchPendingCounts();
+        }}
+      />
+
+      {/* Modal Xác nhận Xóa chương trình (Rule 33 - Thay thế window.confirm) */}
+      <ConfirmModal
+        isOpen={Boolean(deletingProgram)}
+        title="Xác nhận xóa chương trình"
+        message={`Bạn có chắc chắn muốn xóa vĩnh viễn chương trình "${deletingProgram?.name}" (${deletingProgram?.programCode})? Thao tác này không thể hoàn tác!`}
+        confirmText="Xóa vĩnh viễn"
+        cancelText="Hủy bỏ"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeletingProgram(null)}
       />
     </div>
   );

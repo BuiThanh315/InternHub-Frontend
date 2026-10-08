@@ -121,6 +121,7 @@ export interface CreateInternRequest {
   appliedPosition: string;
   startDate: string;
   endDate?: string;
+  programId?: number;
   notes?: string;
 }
 

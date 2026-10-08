@@ -9,7 +9,9 @@ import type {
   ChangeProgramStatusRequest,
   ProgramFilterRequest,
   PageResponse,
+  InternProfile,
 } from '../types';
+
 
 export const programService = {
   /**
@@ -154,6 +156,40 @@ export const programService = {
   ): Promise<void> {
     await apiClient.delete(API_ENDPOINTS.PROGRAM.DELETE(id), { signal });
   },
+
+  /**
+   * Lấy danh sách thực tập sinh của một chương trình cụ thể
+   */
+  async getProgramInterns(
+    id: number,
+    signal?: AbortSignal
+  ): Promise<InternProfile[]> {
+    const response = await apiClient.get(API_ENDPOINTS.PROGRAM.INTERNS(id), { signal });
+    return response.data?.data || [];
+  },
+
+  /**
+   * Lấy danh sách mentor được phân công trong chương trình
+   */
+  async getProgramMentors(
+    id: number,
+    signal?: AbortSignal
+  ): Promise<any[]> {
+    const response = await apiClient.get(API_ENDPOINTS.PROGRAM.MENTORS(id), { signal });
+    return response.data?.data || [];
+  },
+
+  /**
+   * Tiếp nhận (enroll) thực tập sinh vào chương trình
+   */
+  async enrollIntern(
+    programId: number,
+    internId: number,
+    signal?: AbortSignal
+  ): Promise<void> {
+    await apiClient.post(API_ENDPOINTS.PROGRAM.ENROLL(programId), { internId, programId }, { signal });
+  },
 };
+
 
 export default programService;

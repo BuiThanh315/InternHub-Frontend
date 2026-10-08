@@ -5,6 +5,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { HrDashboard } from '../pages/hr/HrDashboard';
 import { HrProgramManagementPage } from '../pages/hr/programs/HrProgramManagementPage';
+import { ProgramWorkspacePage } from '../pages/hr/programs/workspace';
 import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPage';
 import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
 import { HrEvaluationManagementPage } from '../pages/hr/evaluations/HrEvaluationManagementPage';
@@ -99,6 +100,7 @@ export const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']} />}>
           <Route path={ROUTES.HR.DASHBOARD} element={<HrDashboard />} />
           <Route path={ROUTES.HR.PROGRAMS} element={<HrProgramManagementPage />} />
+          <Route path={ROUTES.HR.PROGRAM_WORKSPACE} element={<ProgramWorkspacePage />} />
           <Route path={ROUTES.HR.DEPARTMENTS} element={<Navigate to={ROUTES.HR.MENTORS} replace />} />
           <Route path={ROUTES.HR.MENTORS} element={<HrMentorManagementPage />} />
           <Route path={ROUTES.HR.INTERNS} element={<HrDashboard />} />

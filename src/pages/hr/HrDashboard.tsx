@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { internService } from '../../services/internService';
 import { documentService } from '../../services/documentService';
+import { programService } from '../../services/programService';
+import { ROUTES } from '../../constants/routes';
 import type {
   InternProfile,
   DocumentResponse,
@@ -11,12 +14,15 @@ import type {
   InternStatus,
   CreateInternRequest,
   UpdateInternRequest,
+  ProgramDetailResponse,
 } from '../../types';
 import {
   HrMetricsGrid,
+  HrActiveProgramsGrid,
   HrDocumentReviewTable,
   HrFilterBar,
   HrInternTable,
+
   CreateInternModal,
   EditInternModal,
   DetailInternModal,
@@ -30,7 +36,10 @@ import {
 } from './components';
 
 export const HrDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [interns, setInterns] = useState<InternProfile[]>([]);
+  const [activePrograms, setActivePrograms] = useState<ProgramDetailResponse[]>([]);
+  const [pendingCountsMap, setPendingCountsMap] = useState<Record<number, number>>({});
   const [documents, setDocuments] = useState<DocumentResponse[]>([]);
   const [keyword, setKeyword] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('');
@@ -73,7 +82,7 @@ export const HrDashboard: React.FC = () => {
       setLoading(true);
       setErrorMessage(null);
 
-      const [internRes, pendingRes, interningRes] = await Promise.all([
+      const [internRes, pendingRes, interningRes, progRes, allPendingRes] = await Promise.all([
         internService.getInterns({
           keyword: keyword || undefined,
           university: selectedUniversity || undefined,
@@ -83,6 +92,8 @@ export const HrDashboard: React.FC = () => {
         }),
         internService.getInterns({ status: 'PENDING', size: 1 }).catch(() => null),
         internService.getInterns({ status: 'INTERNING', size: 1 }).catch(() => null),
+        programService.getPrograms({ size: 6, sort: 'createdAt,desc' }).catch(() => null),
+        internService.getInterns({ status: 'PENDING', size: 100 }).catch(() => null),
       ]);
 
       const loadedInterns = internRes.items || internRes.content || [];
@@ -96,6 +107,21 @@ export const HrDashboard: React.FC = () => {
       if (interningRes) {
         setTotalInterning(interningRes.totalItems ?? 0);
       }
+      if (progRes) {
+        setActivePrograms(progRes.items || []);
+      }
+      if (allPendingRes) {
+        const items = allPendingRes.items || allPendingRes.content || [];
+        const counts: Record<number, number> = {};
+        items.forEach((intern) => {
+          if (intern.programId) {
+            counts[intern.programId] = (counts[intern.programId] || 0) + 1;
+          }
+        });
+        setPendingCountsMap(counts);
+      }
+
+
 
       // Nạp tài liệu từ các thực tập sinh
       const internCodes = loadedInterns.map((i) => i.internCode);
@@ -357,7 +383,16 @@ export const HrDashboard: React.FC = () => {
           pendingDocuments={pendingDocuments.length}
         />
 
+        <HrActiveProgramsGrid
+          programs={activePrograms}
+          pendingCountsMap={pendingCountsMap}
+          onViewAll={() => navigate(ROUTES.HR.PROGRAMS)}
+          onEnterWorkspace={(prog) => navigate(`/hr/programs/${prog.id}`)}
+        />
+
+
         <HrDocumentReviewTable
+
           documents={documents}
           onApprove={handleApproveDocument}
           onOpenRejectModal={(doc) => setReviewModalDoc(doc)}
