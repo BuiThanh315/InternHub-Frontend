@@ -186,3 +186,4 @@ export function getAttendanceStatusLabel(status?: string | null): string {
       return status || 'Chưa vào ca';
   }
 }
+

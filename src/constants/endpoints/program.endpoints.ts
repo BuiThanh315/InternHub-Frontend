@@ -13,6 +13,10 @@ export const PROGRAM_ENDPOINTS = {
   INTERNS: (id: string | number) => `/api/programs/${id}/interns`,
   MENTORS: (id: string | number) => `/api/programs/${id}/mentors`,
   ENROLL: (id: string | number) => `/api/programs/${id}/enroll`,
+  IMPORT_TEMPLATE: '/api/programs/import-template',
+  IMPORT_PREVIEW: (id: string | number) => `/api/programs/${id}/import-interns/preview`,
+  IMPORT_EXCEL: (id: string | number) => `/api/programs/${id}/import-interns`,
+  ASSIGN_MENTOR: (id: string | number) => `/api/programs/${id}/assign-mentor`,
 } as const;
 
 

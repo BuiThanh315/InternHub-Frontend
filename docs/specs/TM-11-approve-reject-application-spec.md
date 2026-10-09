@@ -191,21 +191,58 @@ export interface InternProfile {
 - [ ] **AC-4:** Nhập lý do hợp lệ ($\ge 5$ ký tự) và bấm xác nhận gửi request `{ decision: 'REJECTED', rejectionReason: '...' }`.
 - [ ] **AC-5:** Khi đang gửi request, các nút bấm hiển thị trạng thái loading / spinner và khóa tương tác chống double-click.
 - [ ] **AC-6:** Khi API thành công, hiển thị Toast thông báo, đóng modal và bảng dữ liệu tự động refetch mà không mất trang hay bộ lọc hiện tại.
-- [ ] **AC-7:** Khi API thất bại (400, 500), modal vẫn mở, dữ liệu lý do đã nhập được giữ nguyên, hiển thị thông báo lỗi rõ ràng cho người dùng.
-- [ ] **AC-8:** Modal xem chi tiết (`DetailInternModal`) hiển thị thông tin `reviewedBy`, `reviewedAt`, `rejectionReason` chuẩn xác và đẹp mắt.
-- [ ] **AC-9:** Toàn bộ component mới và chỉnh sửa tuân thủ CSS Modules, semantic tokens, hỗ trợ mượt mà cả Dark/Light mode.
+- [x] **AC-7:** Khi API thất bại (400, 500), modal vẫn mở, dữ liệu lý do đã nhập được giữ nguyên, hiển thị thông báo lỗi rõ ràng cho người dùng.
+- [x] **AC-8:** Modal xem chi tiết (`DetailInternModal`) hiển thị thông tin `reviewedBy`, `reviewedAt`, `rejectionReason` chuẩn xác và đẹp mắt.
+- [x] **AC-9:** Toàn bộ component mới và chỉnh sửa tuân thủ CSS Modules, semantic tokens, hỗ trợ mượt mà cả Dark/Light mode.
 
 ---
 
 ## 10. Implementation Plan & File Checklist
 
-1. [x] Tạo nhánh `feature/TM-11/approve-reject-application`.
-2. [ ] Cập nhật endpoint trong `src/constants/endpoints/intern.endpoints.ts`.
-3. [ ] Cập nhật Types trong `src/types/intern.types.ts`.
-4. [ ] Bổ sung hàm API trong `src/services/internService.ts`.
-5. [ ] Tạo component `ApproveConfirmModal` (`ApproveConfirmModal.tsx`, `ApproveConfirmModal.types.ts`, `ApproveConfirmModal.module.css`).
-6. [ ] Tạo component `RejectInternModal` (`RejectInternModal.tsx`, `RejectInternModal.types.ts`, `RejectInternModal.module.css`).
-7. [ ] Cập nhật `HrInternTable.tsx` để tích hợp 2 modal quyết định thay cho đổi status trực tiếp.
-8. [ ] Cập nhật `DetailInternModal.tsx` để hiển thị review metadata và các nút quyết định nhanh.
-9. [ ] Cập nhật `HrDashboard.tsx` điều phối state modal và mutation.
-10. [ ] Kiểm tra build `npm run build` / TypeScript typecheck.
+1. [x] Tạo nhánh `feature/TM-11/approve-reject-application` & mở rộng trên `feature/update-chuc-nang-xet-duyet-ho-so`.
+2. [x] Cập nhật endpoint trong `src/constants/endpoints/intern.endpoints.ts` và `src/constants/endpoints/program.endpoints.ts`.
+3. [x] Cập nhật Types trong `src/types/intern.types.ts` và `src/types/program.types.ts` (`pendingApplicationsCount`, `EnrollInternsRequest`).
+4. [x] Bổ sung hàm API trong `src/services/internService.ts` và `src/services/programService.ts` (`enrollInterns`, `getProgramInterns`).
+5. [x] Tạo component `ApproveConfirmModal` (`ApproveConfirmModal.tsx`, `ApproveConfirmModal.types.ts`, `ApproveConfirmModal.module.css`).
+6. [x] Tạo component `RejectInternModal` (`RejectInternModal.tsx`, `RejectInternModal.types.ts`, `RejectInternModal.module.css`).
+7. [x] Tạo component `EnrollInternModal` trong `src/pages/hr/programs/components/EnrollInternModal.tsx` phục vụ tiếp nhận theo kỳ.
+8. [x] Cập nhật `ProgramTable.tsx` tích hợp nút Workspace (`LayoutDashboard`), nút tiếp nhận (`UserPlus`), nút chia nhóm (`Users`) và cột hiển thị số lượng đơn chờ.
+9. [x] Cập nhật `HrProgramManagementPage.tsx` điều phối state các modal và tự động làm mới `fetchPendingCounts`.
+10. [x] Kiểm tra build `npx tsc --noEmit` & `npm run build` thành công không lỗi.
+
+---
+
+## 11. Program Workspace & Direct Enrollment Extension (Phương Án 1: Chuyển Đổi Vào Program)
+
+> [!IMPORTANT]
+> **Cải tiến Trải nghiệm Người dùng (UX Enhancement - Phương án 1):**
+> Nhằm khắc phục tình trạng phân mảnh khi HR phải duyệt hồ sơ riêng rẽ trên Dashboard rồi mới gán vào chương trình thực tập, hệ thống nâng cấp giao diện quản lý chương trình (`HrProgramManagementPage` & `ProgramTable`) thành trung tâm điều phối tiếp nhận ứng viên.
+
+### 11.1. Luồng Giao Diện Mới trên Program Management
+
+1. **Thanh Hiển Thị Hồ Sơ Ứng Tuyển Chờ Duyệt (`pendingApplicationsCount`):**
+   - Tại cột *"Tiếp Nhận & Đơn Chờ"* trên mỗi dòng chương trình trong `ProgramTable`, giao diện hiển thị đồng thời:
+     - Tỷ lệ tiếp nhận hiện tại: `currentParticipants / maxParticipants`.
+     - Huy hiệu cảnh báo hồ sơ chờ xét duyệt: Badge màu vàng/cam thể hiện số lượng ứng viên `PENDING` đang đăng ký vào kỳ.
+2. **Nút Điều Hướng Không Gian Làm Việc (Workspace Button):**
+   - Icon `<LayoutDashboard size={15} />`: Bấm để chuyển hướng sang `/hr/programs/{id}`, mở ra toàn bộ không gian làm việc chuyên sâu của riêng kỳ thực tập đó (danh sách thành viên, nhóm, nhiệm vụ, mentor).
+3. **Nút Tiếp Nhận & Xét Duyệt Vào Kỳ (Enroll Button):**
+   - Icon `<UserPlus size={15} />`: Mở trực tiếp `EnrollInternModal` với ngữ cảnh đã chọn sẵn chương trình mục tiêu.
+
+### 11.2. Component `EnrollInternModal`
+- **Chức năng:**
+  - Tải danh sách các ứng viên có trạng thái `PENDING` có nguyện vọng ứng tuyển vào phòng ban của chương trình hoặc chưa có chương trình.
+  - Cho phép lọc, tìm kiếm theo tên/email/trường, chọn checkbox từng ứng viên hoặc chọn tất cả.
+  - Hiển thị sức chứa còn lại của chương trình để cảnh báo không chọn quá chỉ tiêu.
+  - Nút *"Xác Nhận Tiếp Nhận Vào Kỳ"*: Gọi `programService.enrollInterns(program.id, { internIds })`.
+  - Khi hoàn tất: Hiển thị Toast thông báo thành công, đóng modal, gọi `fetchPrograms()` và `fetchPendingCounts()` để đồng bộ tức thì.
+
+### 11.3. Tiêu Chí Nghiệm Thu Bổ Sung (Acceptance Criteria - Frontend Extension)
+
+- [x] **AC-10:** Mỗi dòng chương trình trong `ProgramTable` hiển thị rõ ràng số lượng hồ sơ đang chờ xét duyệt (`pendingApplicationsCount`).
+- [x] **AC-11:** Nút Workspace `<LayoutDashboard />` điều hướng chính xác đến trang Workspace của chương trình `/hr/programs/{id}`.
+- [x] **AC-12:** Nút `<UserPlus />` mở đúng `EnrollInternModal` với thông tin chương trình tương ứng.
+- [x] **AC-13:** Trong `EnrollInternModal`, HR có thể chọn nhiều ứng viên cùng lúc và tiếp nhận hàng loạt thành công.
+- [x] **AC-14:** Xử lý đầy đủ trạng thái loading, khóa tương tác khi submit, và xử lý an toàn lỗi mạng/server.
+- [x] **AC-15:** Sau khi tiếp nhận thành công, số lượng đơn chờ và số lượng thực tập sinh của chương trình được cập nhật lại realtime mà không cần F5 trình duyệt.
+

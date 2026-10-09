@@ -45,6 +45,7 @@ export interface MentorsTabProps {
   mentors: any[];
   isLoading: boolean;
   onRefresh: () => void;
+  onAssignProgramMentor?: () => void;
 }
 
 export interface OverviewTabProps {
