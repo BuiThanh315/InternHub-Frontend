@@ -59,6 +59,7 @@ export interface ProgramDetailResponse {
   maxInterns: number;
   currentInterns: number;
   availableSlots: number;
+  pendingApplicationsCount?: number;
   startDate: string;
   endDate: string;
   durationWeeks: number;
@@ -84,10 +85,12 @@ export interface ProgramSummaryResponse {
   durationWeeks: number;
   maxInterns?: number;
   currentInterns?: number;
+  pendingApplicationsCount?: number;
   isRecruitmentOpen?: boolean;
   status: ProgramStatusType;
   statusDisplayName: string;
 }
+
 export type ProgramSummary = ProgramSummaryResponse;
 
 export interface CreateProgramRequest {

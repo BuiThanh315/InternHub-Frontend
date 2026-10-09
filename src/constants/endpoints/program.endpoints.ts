@@ -10,6 +10,10 @@ export const PROGRAM_ENDPOINTS = {
   CAPACITY_OVERVIEW: '/api/departments/capacity-overview',
   UPDATE_QUOTA: (id: string | number) => `/api/departments/${id}/quota`,
   OPEN_LIST: '/api/programs/open',
+  INTERNS: (id: string | number) => `/api/programs/${id}/interns`,
+  MENTORS: (id: string | number) => `/api/programs/${id}/mentors`,
+  ENROLL: (id: string | number) => `/api/programs/${id}/enroll`,
 } as const;
+
 
 

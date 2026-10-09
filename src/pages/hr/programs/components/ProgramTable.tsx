@@ -1,16 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit3, RefreshCw, Trash2, Users, Calendar, ArrowRight } from 'lucide-react';
+import { Edit3, RefreshCw, Trash2, Users, Calendar, ArrowRight, UserPlus, Clock, LayoutDashboard } from 'lucide-react';
+
 import type { ProgramDetailResponse } from '../../../../types';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
 import styles from '../styles/ProgramTable.module.css';
 
 interface ProgramTableProps {
   programs: ProgramDetailResponse[];
+  pendingCountsMap?: Record<number, number>;
   userRole?: string;
   onEdit: (program: ProgramDetailResponse) => void;
   onChangeStatus: (program: ProgramDetailResponse) => void;
   onToggleRecruitment: (program: ProgramDetailResponse) => void;
+  onEnrollIntern: (program: ProgramDetailResponse) => void;
   onDelete: (program: ProgramDetailResponse) => void;
   onManageGroups?: (program: ProgramDetailResponse) => void;
   currentPage: number;
@@ -21,10 +24,12 @@ interface ProgramTableProps {
 
 export const ProgramTable: React.FC<ProgramTableProps> = ({
   programs,
+  pendingCountsMap,
   userRole,
   onEdit,
   onChangeStatus,
   onToggleRecruitment,
+  onEnrollIntern,
   onDelete,
   onManageGroups,
   currentPage,
@@ -43,7 +48,7 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
               <th className={styles.thCell}>Mã & Tên Chương Trình</th>
               <th className={styles.thCell}>Phòng Ban</th>
               <th className={styles.thCell}>Thời Lượng Kỳ Thực Tập</th>
-              <th className={styles.thCell}>Chỉ Tiêu & Tiếp Nhận</th>
+              <th className={styles.thCell}>Tiếp Nhận & Đơn Chờ</th>
               <th className={styles.thCell}>Trạng Thái</th>
               <th className={styles.thCell}>Cổng Nhận Hồ Sơ</th>
               <th className={styles.thCell} style={{ textAlign: 'center' }}>Thao Tác</th>
@@ -78,7 +83,14 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                           <span className={styles.historicalTag}>Lưu trữ cũ</span>
                         )}
                       </div>
-                      <div className={styles.programName}>{p.name}</div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/hr/programs/${p.id}`)}
+                        className={styles.programNameLink}
+                        title={`Mở không gian làm việc Workspace cho kỳ "${p.name}"`}
+                      >
+                        {p.name}
+                      </button>
                     </td>
 
                     {/* Cột 2: Phòng ban */}
@@ -100,15 +112,16 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                       </div>
                     </td>
 
-                    {/* Cột 4: Chỉ tiêu & Tiếp nhận */}
+                    {/* Cột 4: Tiếp nhận & Đơn chờ */}
                     <td className={styles.tdCell}>
                       <button
                         type="button"
                         className={styles.slotButton}
-                        onClick={() => navigate(`/hr/interns?programId=${p.id}`)}
-                        title={`Xem danh sách thực tập sinh của chương trình ${p.name}`}
-                        aria-label={`Xem danh sách thực tập sinh của ${p.name}: hiện có ${p.currentInterns} trên ${p.maxInterns} chỉ tiêu`}
+                        onClick={() => navigate(`/hr/programs/${p.id}`)}
+                        title={`Xem Workspace của chương trình ${p.name}`}
+                        aria-label={`Xem Workspace của ${p.name}: hiện có ${p.currentInterns} trên ${p.maxInterns} chỉ tiêu`}
                       >
+
                         <div className={`${styles.slotInfo} font-tabular`}>
                           <Users size={15} aria-hidden="true" />
                           <span>{p.currentInterns} / {p.maxInterns} TTS</span>
@@ -130,6 +143,34 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                           )}
                         </span>
                       </button>
+
+                      {/* Huy hiệu số đơn mong muốn tham gia */}
+                      <div className={styles.pendingArea}>
+                        {(() => {
+                          const pendingCount = pendingCountsMap?.[p.id] ?? 0;
+                          if (pendingCount > 0) {
+                            return (
+                              <button
+                                type="button"
+                                className={styles.pendingBadgeBtn}
+                                onClick={() => onEnrollIntern(p)}
+                                title={`Có ${pendingCount} đơn đang chờ tiếp nhận. Nhấp để duyệt ngay!`}
+                                aria-label={`Có ${pendingCount} đơn chờ duyệt cho kỳ ${p.name}`}
+                              >
+                                <Clock size={12} aria-hidden="true" />
+                                <span>{pendingCount} đơn chờ duyệt</span>
+                                <ArrowRight size={11} aria-hidden="true" />
+                              </button>
+                            );
+                          }
+                          return (
+                            <span className={styles.noPendingBadge}>
+                              <Clock size={11} aria-hidden="true" />
+                              <span>0 đơn chờ</span>
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </td>
 
                     {/* Cột 5: Trạng thái */}
@@ -173,6 +214,24 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                     {/* Cột 7: Thao tác */}
                     <td className={styles.tdCell} style={{ textAlign: 'center' }}>
                       <div className={styles.actionGroup}>
+                        <button
+                          type="button"
+                          className={`${styles.actionBtn} ${styles.actionBtnWorkspace}`}
+                          onClick={() => navigate(`/hr/programs/${p.id}`)}
+                          title="Vào Không Gian Làm Việc (Workspace) của kỳ"
+                          aria-label={`Vào Workspace của chương trình ${p.name}`}
+                        >
+                          <LayoutDashboard size={15} aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
+                          onClick={() => onEnrollIntern(p)}
+                          title="Tiếp nhận & điều phối thực tập sinh vào kỳ này"
+                          aria-label={`Tiếp nhận thực tập sinh vào chương trình ${p.name}`}
+                        >
+                          <UserPlus size={15} aria-hidden="true" />
+                        </button>
                         {onManageGroups && (
                           <button
                             type="button"
