@@ -9,6 +9,7 @@ import {
   Inbox,
   Clock,
   Sparkles,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -17,6 +18,7 @@ import { internService } from '../../../../../services/internService';
 import { formatDate } from '../../../../../utils/formatters';
 import type { InternProfile, CreateInternRequest } from '../../../../../types';
 import type { EnrollInternModalProps } from './EnrollInternModal.types';
+import { ExcelImportTab } from './tabs';
 import styles from './EnrollInternModal.module.css';
 
 export const EnrollInternModal: React.FC<EnrollInternModalProps> = ({
@@ -25,7 +27,7 @@ export const EnrollInternModal: React.FC<EnrollInternModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [activeTab, setActiveTab] = useState<'pending' | 'create'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'create' | 'excel'>('pending');
   const [pendingInterns, setPendingInterns] = useState<InternProfile[]>([]);
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [actionInternId, setActionInternId] = useState<number | null>(null);
@@ -317,7 +319,7 @@ export const EnrollInternModal: React.FC<EnrollInternModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Tiếp Nhận & Điều Phối Thực Tập Sinh"
-      size="lg"
+      size={activeTab === 'excel' ? 'xl' : 'lg'}
       footer={
         <div className={styles.modalFooter}>
           <span className={styles.footerNote}>
@@ -397,6 +399,17 @@ export const EnrollInternModal: React.FC<EnrollInternModalProps> = ({
           >
             <UserPlus size={16} />
             <span>Thêm Mới Hồ Sơ Trực Tiếp</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'excel'}
+            className={`${styles.tabBtn} ${activeTab === 'excel' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('excel')}
+          >
+            <FileSpreadsheet size={16} />
+            <span>Nhập từ File Excel</span>
           </button>
         </div>
 
@@ -523,6 +536,13 @@ export const EnrollInternModal: React.FC<EnrollInternModalProps> = ({
               </Button>
             </div>
           </form>
+        )}
+
+        {/* Tab 3: Nhập dữ liệu từ Excel */}
+        {activeTab === 'excel' && (
+          <div className={styles.tabContent}>
+            <ExcelImportTab program={program} onSuccess={onSuccess} />
+          </div>
         )}
       </div>
     </Modal>

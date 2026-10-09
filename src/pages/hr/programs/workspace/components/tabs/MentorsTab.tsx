@@ -5,6 +5,7 @@ import {
   Building,
   RefreshCw,
   ShieldCheck,
+  UserCheck,
 } from 'lucide-react';
 
 import { Button, Skeleton } from '../../../../../../components/common';
@@ -16,6 +17,7 @@ export const MentorsTab: React.FC<MentorsTabProps> = ({
   mentors,
   isLoading,
   onRefresh,
+  onAssignProgramMentor,
 }) => {
   return (
     <div>
@@ -31,16 +33,30 @@ export const MentorsTab: React.FC<MentorsTabProps> = ({
           </p>
         </div>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onRefresh}
-          disabled={isLoading}
-          className="flex items-center gap-1.5"
-        >
-          <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} aria-hidden="true" />
-          Làm mới
-        </Button>
+        <div className="flex items-center gap-2">
+          {onAssignProgramMentor && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onAssignProgramMentor}
+              className="flex items-center gap-1.5 shadow-sm"
+            >
+              <UserCheck size={14} aria-hidden="true" />
+              Gán Mentor Cho Kỳ
+            </Button>
+          )}
+
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isLoading}
+            className="flex items-center gap-1.5"
+          >
+            <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} aria-hidden="true" />
+            Làm mới
+          </Button>
+        </div>
       </div>
 
       {/* Loading Skeleton */}
@@ -61,8 +77,19 @@ export const MentorsTab: React.FC<MentorsTabProps> = ({
           <h3 className={styles.emptyTitle}>Chưa Có Mentor Nào Phụ Trách Kỳ Này</h3>
           <p className={styles.emptyDescription}>
             Kỳ thực tập "{program.name}" chưa được gán Mentor hướng dẫn nào.
-            Khi bạn phân công Mentor cho từng thực tập sinh trong tab "Thực tập sinh", danh sách Mentor sẽ tự động xuất hiện tại đây.
+            Bạn có thể gán nhanh một Mentor cho toàn bộ thực tập sinh của kỳ này bằng nút bấm bên dưới.
           </p>
+          {onAssignProgramMentor && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onAssignProgramMentor}
+              className="mt-4 flex items-center gap-1.5 mx-auto shadow-sm"
+            >
+              <UserCheck size={15} aria-hidden="true" />
+              Gán Mentor Cho Kỳ Này
+            </Button>
+          )}
         </div>
       )}
 

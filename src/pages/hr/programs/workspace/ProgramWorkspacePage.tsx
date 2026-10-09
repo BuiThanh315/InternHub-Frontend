@@ -34,6 +34,7 @@ import {
   EnrollInternModal,
   EditProgramModal,
   ChangeStatusModal,
+  AssignMentorToProgramModal,
 } from '../components';
 import {
   DetailInternModal,
@@ -68,6 +69,7 @@ export const ProgramWorkspacePage: React.FC = () => {
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isAssignProgramMentorModalOpen, setIsAssignProgramMentorModalOpen] = useState(false);
 
   // Modal thao tác với Thực tập sinh cá nhân
   const [detailIntern, setDetailIntern] = useState<InternProfile | null>(null);
@@ -333,6 +335,7 @@ export const ProgramWorkspacePage: React.FC = () => {
                 mentors={mentors}
                 isLoading={isLoading}
                 onRefresh={() => void loadWorkspaceData()}
+                onAssignProgramMentor={() => setIsAssignProgramMentorModalOpen(true)}
               />
             )}
 
@@ -369,6 +372,15 @@ export const ProgramWorkspacePage: React.FC = () => {
             program={program}
             onClose={() => setIsStatusModalOpen(false)}
             onSubmit={handleChangeStatusSubmit}
+          />
+
+          <AssignMentorToProgramModal
+            isOpen={isAssignProgramMentorModalOpen}
+            program={program}
+            onClose={() => setIsAssignProgramMentorModalOpen(false)}
+            onSuccess={() => {
+              void loadWorkspaceData();
+            }}
           />
 
           {/* Detail Intern Modal */}

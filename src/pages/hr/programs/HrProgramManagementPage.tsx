@@ -25,6 +25,7 @@ import type { BatchGroupItem, InternGroup } from "../../../types/group.types";
 import type { InternProfile } from "../../../types/intern.types";
 import { ProgramGroupModal } from "../components/ProgramGroupModal";
 import {
+  AssignMentorToProgramModal,
   ChangeStatusModal,
   CreateProgramModal,
   EditProgramModal,
@@ -62,6 +63,8 @@ export const HrProgramManagementPage: React.FC = () => {
   const [statusProgram, setStatusProgram] =
     useState<ProgramDetailResponse | null>(null);
   const [enrollProgram, setEnrollProgram] =
+    useState<ProgramDetailResponse | null>(null);
+  const [assignMentorProgram, setAssignMentorProgram] =
     useState<ProgramDetailResponse | null>(null);
   const [deletingProgram, setDeletingProgram] =
     useState<ProgramDetailResponse | null>(null);
@@ -497,6 +500,7 @@ export const HrProgramManagementPage: React.FC = () => {
             onChangeStatus={(p) => setStatusProgram(p)}
             onToggleRecruitment={handleToggleRecruitment}
             onEnrollIntern={(p) => setEnrollProgram(p)}
+            onAssignMentor={(p) => setAssignMentorProgram(p)}
             onDelete={handleDeleteProgram}
             onManageGroups={handleOpenManageGroups}
             currentPage={currentPage}
@@ -540,6 +544,20 @@ export const HrProgramManagementPage: React.FC = () => {
         onSuccess={() => {
           void fetchPrograms();
           void fetchPendingCounts();
+        }}
+      />
+
+      {/* Modal Phân công Mentor toàn kỳ */}
+      <AssignMentorToProgramModal
+        isOpen={Boolean(assignMentorProgram)}
+        program={assignMentorProgram}
+        onClose={() => setAssignMentorProgram(null)}
+        onSuccess={(result) => {
+          setAssignMentorProgram(null);
+          setSuccessToast(
+            `Đã phân công thành công Mentor ${result.mentorName} cho kỳ "${result.programName}" (${result.totalAssignedInterns} thực tập sinh)!`
+          );
+          void fetchPrograms();
         }}
       />
 

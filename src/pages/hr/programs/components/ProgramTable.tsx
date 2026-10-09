@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit3, RefreshCw, Trash2, Users, Calendar, ArrowRight, UserPlus, Clock, LayoutDashboard } from 'lucide-react';
+import { Edit3, RefreshCw, Trash2, Users, Calendar, ArrowRight, UserPlus, Clock, LayoutDashboard, UserCheck } from 'lucide-react';
 
 import type { ProgramDetailResponse } from '../../../../types';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
@@ -16,6 +16,7 @@ interface ProgramTableProps {
   onEnrollIntern: (program: ProgramDetailResponse) => void;
   onDelete: (program: ProgramDetailResponse) => void;
   onManageGroups?: (program: ProgramDetailResponse) => void;
+  onAssignMentor?: (program: ProgramDetailResponse) => void;
   currentPage: number;
   totalPages: number;
   totalElements: number;
@@ -32,6 +33,7 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
   onEnrollIntern,
   onDelete,
   onManageGroups,
+  onAssignMentor,
   currentPage,
   totalPages,
   totalElements,
@@ -241,6 +243,17 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                             aria-label={`Quản lý nhóm thực tập cho chương trình ${p.name}`}
                           >
                             <Users size={15} aria-hidden="true" />
+                          </button>
+                        )}
+                        {onAssignMentor && (
+                          <button
+                            type="button"
+                            className={styles.actionBtn}
+                            onClick={() => onAssignMentor(p)}
+                            title="Phân công Mentor cho toàn bộ kỳ này"
+                            aria-label={`Phân công Mentor cho toàn bộ kỳ ${p.name}`}
+                          >
+                            <UserCheck size={15} aria-hidden="true" />
                           </button>
                         )}
                         {canEdit && (

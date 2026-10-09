@@ -10,6 +10,10 @@ import type {
   ProgramFilterRequest,
   PageResponse,
   InternProfile,
+  ExcelImportPreviewResponse,
+  ExcelImportResultResponse,
+  AssignMentorToProgramRequest,
+  AssignMentorToProgramResponse,
 } from '../types';
 
 
@@ -189,7 +193,81 @@ export const programService = {
   ): Promise<void> {
     await apiClient.post(API_ENDPOINTS.PROGRAM.ENROLL(programId), { internId, programId }, { signal });
   },
-};
 
+  /**
+   * Tải file Excel mẫu (.xlsx) để import thực tập sinh
+   */
+  async downloadImportTemplate(signal?: AbortSignal): Promise<Blob> {
+    const response = await apiClient.get(API_ENDPOINTS.PROGRAM.IMPORT_TEMPLATE, {
+      responseType: 'blob',
+      signal,
+    });
+    return response.data;
+  },
+
+  /**
+   * Xem trước và kiểm tra tính hợp lệ file Excel danh sách thực tập sinh
+   */
+  async previewImportExcel(
+    programId: number,
+    file: File,
+    signal?: AbortSignal
+  ): Promise<ExcelImportPreviewResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post(
+      API_ENDPOINTS.PROGRAM.IMPORT_PREVIEW(programId),
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        signal,
+      }
+    );
+    return response.data?.data;
+  },
+
+  /**
+   * Thực hiện nhập dữ liệu thực tập sinh từ Excel vào chương trình (All-or-Nothing)
+   */
+  async importInternsFromExcel(
+    programId: number,
+    file: File,
+    status: 'APPROVED' | 'PENDING' = 'APPROVED',
+    signal?: AbortSignal
+  ): Promise<ExcelImportResultResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post(
+      API_ENDPOINTS.PROGRAM.IMPORT_EXCEL(programId),
+      formData,
+      {
+        params: { status },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        signal,
+      }
+    );
+    return response.data?.data;
+  },
+
+  /**
+   * TM-101: Phân công Mentor cho toàn bộ kỳ thực tập (Batch Cascade Assignment)
+   */
+  async assignMentorToProgram(
+    programId: number,
+    payload: AssignMentorToProgramRequest,
+    signal?: AbortSignal
+  ): Promise<AssignMentorToProgramResponse> {
+    const response = await apiClient.post(
+      API_ENDPOINTS.PROGRAM.ASSIGN_MENTOR(programId),
+      payload,
+      { signal }
+    );
+    return response.data?.data;
+  },
+};
 
 export default programService;
