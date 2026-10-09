@@ -12,7 +12,12 @@ export interface AssigneeResponse {
   email: string;
   phone?: string;
   avatarUrl?: string;
+  groupId?: number;
+  groupName?: string;
+  activeTaskCount?: number;
+  completedTaskCount?: number;
 }
+
 
 export interface MissionItemResponse {
   id: number;
@@ -68,6 +73,11 @@ export interface MentorProgramResponse {
   status: string;
   totalInterns?: number;
   activeInterns?: number;
+  groupCount?: number;
+  totalTaskCount?: number;
+  completedTaskCount?: number;
+  progressPercent?: number;
+  mentorCount?: number;
 }
 
 export interface CreateMissionBoardRequest {

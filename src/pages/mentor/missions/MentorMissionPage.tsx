@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Kanban, FolderX, Plus } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Header } from '../../../components/layout/Header';
-import { Alert, Button, Skeleton } from '../../../components/common';
+import { Alert, Button } from '../../../components/common';
 import { useMentorMissions } from '../../../hooks/useMentorMissions';
+import { ProgramGroupModal } from '../../hr/components/ProgramGroupModal/ProgramGroupModal';
 import {
-  MissionBoardHeader,
-  MissionKanbanBoard,
+  MentorProgramHub,
+  MentorProgramWorkspace,
   MissionBoardModal,
   MissionItemModal,
   DeleteConfirmModal,
@@ -14,15 +15,26 @@ import type { MissionBoardFormData } from './components/MissionBoardModal/Missio
 import type {
   MissionItemResponse,
   CreateMissionItemRequest,
+  MissionItemStatus,
 } from '../../../types';
+import type { InternProfile } from '../../../types/intern.types';
+import type { BatchGroupItem } from '../../../types/group.types';
 import styles from './MentorMissionPage.module.css';
 
 export const MentorMissionPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const programIdParam = searchParams.get('programId');
+
   const {
     programs,
     selectedProgramId,
     setSelectedProgramId,
     programInterns,
+    groups,
+    isLoadingGroups,
+    batchApplyGroups,
+    disbandGroup,
+    internWorkloadMap,
     boards,
     activeBoardId,
     setActiveBoardId,
@@ -51,7 +63,19 @@ export const MentorMissionPage: React.FC = () => {
     deleteItem,
   } = useMentorMissions();
 
-  // Gom State Object quản lý Modals theo Quy tắc 14 (<= 3-4 states)
+  // Đồng bộ URL query param -> selectedProgramId
+  useEffect(() => {
+    if (programIdParam) {
+      const pId = Number(programIdParam);
+      if (!Number.isNaN(pId) && selectedProgramId !== pId) {
+        setSelectedProgramId(pId);
+      }
+    } else if (selectedProgramId !== null) {
+      setSelectedProgramId(null);
+    }
+  }, [programIdParam, selectedProgramId, setSelectedProgramId]);
+
+  // Gom State Modals theo Quy tắc 14 (<= 3-4 states)
   const [boardModal, setBoardModal] = useState<{
     isOpen: boolean;
     isEditing: boolean;
@@ -63,9 +87,13 @@ export const MentorMissionPage: React.FC = () => {
   const [itemModal, setItemModal] = useState<{
     isOpen: boolean;
     editingItem: MissionItemResponse | null;
+    initialAssigneeId: number | null;
+    initialTitle?: string;
   }>({
     isOpen: false,
     editingItem: null,
+    initialAssigneeId: null,
+    initialTitle: '',
   });
 
   const [deleteModal, setDeleteModal] = useState<{
@@ -79,6 +107,43 @@ export const MentorMissionPage: React.FC = () => {
     id: 0,
     name: '',
   });
+
+  const [groupModalOpen, setGroupModalOpen] = useState(false);
+
+  // Chọn chương trình từ Hub
+  const handleSelectProgram = (pId: number) => {
+    setSelectedProgramId(pId);
+    setSearchParams({ programId: String(pId) });
+  };
+
+  // Quay lại danh sách chương trình
+  const handleBackToHub = () => {
+    setSelectedProgramId(null);
+    setSearchParams({});
+  };
+
+  // Mở modal giao task với học viên được tick sẵn
+  const handleAssignTaskToIntern = (internId: number) => {
+    setItemModal({
+      isOpen: true,
+      editingItem: null,
+      initialAssigneeId: internId,
+      initialTitle: '',
+    });
+  };
+
+  // Tạo nhanh ở chân cột nhiệm vụ: Mở modal giao việc với tiêu đề được điền sẵn
+  const handleQuickAdd = (title: string): Promise<boolean> => {
+    if (!title.trim()) return Promise.resolve(false);
+    setItemModal({
+      isOpen: true,
+      editingItem: null,
+      initialAssigneeId: null,
+      initialTitle: title.trim(),
+    });
+    return Promise.resolve(true);
+  };
+
 
   // Xử lý nộp form Board (Tạo hoặc Sửa)
   const handleBoardSubmit = async (data: MissionBoardFormData): Promise<boolean> => {
@@ -105,130 +170,75 @@ export const MentorMissionPage: React.FC = () => {
     }
   };
 
-  // Render vùng board 3 cột
-  const renderBoardSection = () => {
-    if (isLoadingBoard) {
-      return (
-        <div className={styles.skeletonContainer}>
-          <div className={styles.skeletonColumn}>
-            <Skeleton height="28px" width="50%" />
-            <Skeleton height="90px" />
-            <Skeleton height="90px" />
-          </div>
-          <div className={styles.skeletonColumn}>
-            <Skeleton height="28px" width="50%" />
-            <Skeleton height="90px" />
-          </div>
-          <div className={styles.skeletonColumn}>
-            <Skeleton height="28px" width="50%" />
-            <Skeleton height="90px" />
-            <Skeleton height="90px" />
-          </div>
-        </div>
-      );
-    }
-
-    if (boards.length === 0) {
-      return (
-        <div className={styles.emptyStateCard}>
-          <div className={styles.emptyIconWrapper}>
-            <Kanban size={32} />
-          </div>
-          <h3 className={styles.emptyTitle}>Chưa Có Bảng Nhiệm Vụ Nào</h3>
-          <p className={styles.emptyDescription}>
-            Chương trình thực tập này hiện chưa có Bảng nhiệm vụ nào được tạo.
-            Hãy tạo bảng nhiệm vụ đầu tiên để bắt đầu giao việc cho các thực tập sinh.
-          </p>
-          <Button
-            variant="primary"
-            onClick={() => setBoardModal({ isOpen: true, isEditing: false })}
-          >
-            <Plus size={16} /> Tạo Bảng Nhiệm Vụ Đầu Tiên
-          </Button>
-        </div>
-      );
-    }
-
-    return (
-      <MissionKanbanBoard
-        todoItems={todoItems}
-        inProgressItems={inProgressItems}
-        completedItems={completedItems}
-        onAddNewItem={() => setItemModal({ isOpen: true, editingItem: null })}
-        onEditItem={(item) => setItemModal({ isOpen: true, editingItem: item })}
-        onDeleteItem={(item) =>
-          setDeleteModal({
-            isOpen: true,
-            type: 'item',
-            id: item.id,
-            name: item.title,
-          })
-        }
-        onStatusChange={(itemId, newStatus) => {
-          void updateItemStatus(itemId, newStatus);
-        }}
-      />
-    );
+  // Kéo thả thẻ Kanban
+  const handleDropItem = (itemId: number, targetStatus: MissionItemStatus) => {
+    void updateItemStatus(itemId, targetStatus);
   };
 
-  // Render nội dung chính
-  const renderMainContent = () => {
-    if (isLoadingPrograms) {
-      return (
-        <div className={styles.skeletonContainer}>
-          <div className={styles.skeletonColumn}>
-            <Skeleton height="32px" width="60%" />
-            <Skeleton height="80px" />
-            <Skeleton height="80px" />
-          </div>
-          <div className={styles.skeletonColumn}>
-            <Skeleton height="32px" width="60%" />
-            <Skeleton height="80px" />
-            <Skeleton height="80px" />
-          </div>
-          <div className={styles.skeletonColumn}>
-            <Skeleton height="32px" width="60%" />
-            <Skeleton height="80px" />
-            <Skeleton height="80px" />
-          </div>
-        </div>
-      );
-    }
+  // Tìm đối tượng chương trình đang chọn
+  const selectedProgram = useMemo(() => {
+    if (!selectedProgramId) return null;
+    return programs.find((p) => (p.programId ?? p.id) === selectedProgramId) || null;
+  }, [programs, selectedProgramId]);
 
-    if (programs.length === 0) {
-      return (
-        <div className={styles.emptyStateCard}>
-          <div className={styles.emptyIconWrapper}>
-            <FolderX size={32} />
-          </div>
-          <h3 className={styles.emptyTitle}>Chưa Được Phân Công Chương Trình</h3>
-          <p className={styles.emptyDescription}>
-            Tài khoản Mentor của bạn hiện chưa được liên kết với Chương trình thực tập nào.
-            Vui lòng liên hệ Bộ phận HR để được gán vào chương trình phụ trách.
-          </p>
-        </div>
-      );
-    }
+  // Adapter chuyển programInterns (AssigneeResponse[]) sang InternProfile[] cho ProgramGroupModal
+  const mappedInternProfiles: InternProfile[] = useMemo(() => {
+    return programInterns.map((i) => ({
+      id: i.id,
+      internCode: i.internCode,
+      fullName: i.fullName,
+      email: i.email,
+      phone: i.phone || '',
+      university: '',
+      major: '',
+      appliedPosition: '',
+      startDate: '',
+      status: 'INTERNING',
+      createdAt: '',
+      updatedAt: '',
+      programId: selectedProgramId,
+    } as InternProfile));
+  }, [programInterns, selectedProgramId]);
 
-    return (
-      <>
-        <MissionBoardHeader
+  // Handler lưu và giải tán nhóm cho ProgramGroupModal
+  const handleBatchApplyGroups = async (batchGroups: BatchGroupItem[]) => {
+    await batchApplyGroups(batchGroups);
+  };
+
+  const handleDisbandGroup = async (groupId: number) => {
+    await disbandGroup(groupId);
+  };
+
+  return (
+    <div className={styles.pageContainer}>
+      <Header
+        title="Phân Công & Giám Sát Nhiệm Vụ"
+        subtitle="Quản lý các kỳ thực tập, chia nhóm dự án và điều phối nhiệm vụ đào tạo cho thực tập sinh"
+      />
+
+      {error && (
+        <Alert type="error" message={error}>
+          <Button variant="outline" size="sm" onClick={() => void refreshAll()}>
+            Thử lại
+          </Button>
+        </Alert>
+      )}
+
+      {/* Điều phối hiển thị giữa Hub và Workspace */}
+      {!selectedProgram ? (
+        <MentorProgramHub
           programs={programs}
-          selectedProgramId={selectedProgramId}
-          onSelectProgram={setSelectedProgramId}
+          isLoading={isLoadingPrograms}
+          onSelectProgram={handleSelectProgram}
+          onRefresh={() => void refreshAll()}
+        />
+      ) : (
+        <MentorProgramWorkspace
+          program={selectedProgram}
+          onBackToHub={handleBackToHub}
           boards={boards}
           activeBoardId={activeBoardId}
           onSelectBoard={setActiveBoardId}
-          completionPercentage={completionPercentage}
-          totalItems={activeBoardDetail?.items?.length || 0}
-          completedItems={completedItems.length}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          programInterns={programInterns}
-          selectedAssigneeId={selectedAssigneeId}
-          onSelectAssignee={setSelectedAssigneeId}
-          selectedPriority={selectedPriority}
-          onSelectPriority={setSelectedPriority}
           onCreateBoard={() => setBoardModal({ isOpen: true, isEditing: false })}
           onEditBoard={() => setBoardModal({ isOpen: true, isEditing: true })}
           onDeleteBoard={() => {
@@ -241,31 +251,46 @@ export const MentorMissionPage: React.FC = () => {
               });
             }
           }}
-          onCreateItem={() => setItemModal({ isOpen: true, editingItem: null })}
+          todoItems={todoItems}
+          inProgressItems={inProgressItems}
+          completedItems={completedItems}
+          onCreateItem={() =>
+            setItemModal({ isOpen: true, editingItem: null, initialAssigneeId: null, initialTitle: '' })
+          }
+          onEditItem={(item) =>
+            setItemModal({ isOpen: true, editingItem: item, initialAssigneeId: null, initialTitle: '' })
+          }
+          onDeleteItem={(item) =>
+            setDeleteModal({
+              isOpen: true,
+              type: 'item',
+              id: item.id,
+              name: item.title,
+            })
+          }
+          onStatusChange={(itemId, newStatus) => {
+            void updateItemStatus(itemId, newStatus);
+          }}
+          onDropItem={handleDropItem}
+          onQuickAdd={handleQuickAdd}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedAssigneeId={selectedAssigneeId}
+          onSelectAssignee={setSelectedAssigneeId}
+          selectedPriority={selectedPriority}
+          onSelectPriority={setSelectedPriority}
+          programInterns={programInterns}
+          groups={groups}
+          internWorkloadMap={internWorkloadMap}
+          onOpenGroupModal={() => setGroupModalOpen(true)}
+          onAssignTaskToIntern={handleAssignTaskToIntern}
+          activeBoardDetail={activeBoardDetail}
+          completionPercentage={completionPercentage}
+          isLoadingBoard={isLoadingBoard}
         />
-
-        {renderBoardSection()}
-      </>
-    );
-  };
-
-  return (
-    <div className={styles.pageContainer}>
-      <Header
-        title="Phân Công & Giám Sát Nhiệm Vụ"
-        subtitle="Giao việc cho thực tập sinh, giám sát tiến độ thực hiện và nghiệm thu kết quả trên bảng Kanban"
-      />
-
-      {error && (
-        <Alert type="error" message={error}>
-          <Button variant="outline" size="sm" onClick={() => void refreshAll()}>
-            Thử lại
-          </Button>
-        </Alert>
       )}
 
-      {renderMainContent()}
-
+      {/* Modal Bảng Nhiệm Vụ */}
       <MissionBoardModal
         isOpen={boardModal.isOpen}
         onClose={() => setBoardModal((prev) => ({ ...prev, isOpen: false }))}
@@ -274,20 +299,52 @@ export const MentorMissionPage: React.FC = () => {
         isLoading={isMutating}
       />
 
+      {/* Modal Giao Việc Pro */}
       <MissionItemModal
         isOpen={itemModal.isOpen}
-        onClose={() => setItemModal((prev) => ({ ...prev, isOpen: false }))}
+        onClose={() =>
+          setItemModal((prev) => ({
+            ...prev,
+            isOpen: false,
+            initialAssigneeId: null,
+            initialTitle: '',
+          }))
+        }
         onSubmit={handleItemSubmit}
         programInterns={programInterns}
+        groups={groups}
+        internWorkloadMap={internWorkloadMap}
+        initialAssigneeId={itemModal.initialAssigneeId}
+        initialTitle={itemModal.initialTitle}
         editingItem={itemModal.editingItem}
         isLoading={isMutating}
       />
 
+      {/* Modal Quản Lý Nhóm Tái Sử Dụng 100% Của HR */}
+      {selectedProgram && (
+        <ProgramGroupModal
+          programId={selectedProgram.programId ?? selectedProgram.id ?? 0}
+          programName={selectedProgram.name}
+          isOpen={groupModalOpen}
+          onClose={() => setGroupModalOpen(false)}
+          interns={mappedInternProfiles}
+          existingGroups={groups}
+          onBatchApply={handleBatchApplyGroups}
+          onDisbandGroup={handleDisbandGroup}
+          isLoading={isLoadingGroups || isMutating}
+        />
+      )}
+
+      {/* Modal Xác Nhận Xóa Nguy Hiểm Chuẩn Rule 33 */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirm={handleDeleteConfirm}
-        title={deleteModal.type === 'board' ? 'Xác Nhận Xóa Bảng Nhiệm Vụ' : 'Xác Nhận Xóa Công Việc'}
+        title={
+          deleteModal.type === 'board'
+            ? 'Xác Nhận Xóa Bảng Nhiệm Vụ'
+            : 'Xác Nhận Xóa Công Việc'
+        }
         targetName={deleteModal.name}
         description={
           deleteModal.type === 'board'
