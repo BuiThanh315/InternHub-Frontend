@@ -1,26 +1,38 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, FolderGit2, AlertCircle, Layers, Users, CheckCircle, Clock } from 'lucide-react';
-import { Header } from '../../../components/layout/Header';
-import { ConfirmModal } from '../../../components/common';
-import { useAuth } from '../../../contexts/AuthContext';
-import { programService } from '../../../services/programService';
-import { internService } from '../../../services/internService';
-import type {
-  ProgramDetailResponse,
-  DepartmentResponse,
-  CreateProgramRequest,
-  UpdateProgramRequest,
-  ChangeProgramStatusRequest,
-} from '../../../types';
 import {
-  ProgramFilterBar,
-  ProgramTable,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  FolderGit2,
+  Layers,
+  Plus,
+  Users,
+} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { ConfirmModal } from "../../../components/common";
+import { Header } from "../../../components/layout/Header";
+import { useAuth } from "../../../contexts/AuthContext";
+import { groupService } from "../../../services/groupService";
+import { internService } from "../../../services/internService";
+import { programService } from "../../../services/programService";
+import type {
+  ChangeProgramStatusRequest,
+  CreateProgramRequest,
+  DepartmentResponse,
+  ProgramDetailResponse,
+  UpdateProgramRequest,
+} from "../../../types";
+import type { BatchGroupItem, InternGroup } from "../../../types/group.types";
+import type { InternProfile } from "../../../types/intern.types";
+import { ProgramGroupModal } from "../components/ProgramGroupModal";
+import {
+  ChangeStatusModal,
   CreateProgramModal,
   EditProgramModal,
-  ChangeStatusModal,
   EnrollInternModal,
-} from './components';
-import styles from './styles/hrPrograms.module.css';
+  ProgramFilterBar,
+  ProgramTable,
+} from "./components";
+import styles from "./styles/hrPrograms.module.css";
 
 export const HrProgramManagementPage: React.FC = () => {
   const { role } = useAuth();
@@ -33,10 +45,10 @@ export const HrProgramManagementPage: React.FC = () => {
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
   // Filter state
-  const [keyword, setKeyword] = useState('');
-  const [departmentId, setDepartmentId] = useState<number | ''>('');
-  const [status, setStatus] = useState<string>('');
-  const [isHistorical, setIsHistorical] = useState<boolean | ''>('');
+  const [keyword, setKeyword] = useState("");
+  const [departmentId, setDepartmentId] = useState<number | "">("");
+  const [status, setStatus] = useState<string>("");
+  const [isHistorical, setIsHistorical] = useState<boolean | "">("");
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -44,21 +56,89 @@ export const HrProgramManagementPage: React.FC = () => {
 
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editProgram, setEditProgram] = useState<ProgramDetailResponse | null>(null);
-  const [statusProgram, setStatusProgram] = useState<ProgramDetailResponse | null>(null);
-  const [enrollProgram, setEnrollProgram] = useState<ProgramDetailResponse | null>(null);
-  const [deletingProgram, setDeletingProgram] = useState<ProgramDetailResponse | null>(null);
+  const [editProgram, setEditProgram] = useState<ProgramDetailResponse | null>(
+    null,
+  );
+  const [statusProgram, setStatusProgram] =
+    useState<ProgramDetailResponse | null>(null);
+  const [enrollProgram, setEnrollProgram] =
+    useState<ProgramDetailResponse | null>(null);
+  const [deletingProgram, setDeletingProgram] =
+    useState<ProgramDetailResponse | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Số lượng đơn PENDING mong muốn tham gia từng chương trình
-  const [pendingCountsMap, setPendingCountsMap] = useState<Record<number, number>>({});
+  const [pendingCountsMap, setPendingCountsMap] = useState<
+    Record<number, number>
+  >({});
+
+  // Group Management Modal state
+  const [manageGroupProgram, setManageGroupProgram] =
+    useState<ProgramDetailResponse | null>(null);
+  const [programInterns, setProgramInterns] = useState<InternProfile[]>([]);
+  const [existingGroups, setExistingGroups] = useState<InternGroup[]>([]);
+  const [isGroupLoading, setIsGroupLoading] = useState(false);
+
+  const handleOpenManageGroups = async (program: ProgramDetailResponse) => {
+    try {
+      setIsGroupLoading(true);
+      setManageGroupProgram(program);
+      const [groupsData, internsData] = await Promise.all([
+        groupService.getGroups(program.id),
+        internService.getInterns({ programId: program.id, size: 200 }),
+      ]);
+      setExistingGroups(groupsData);
+      setProgramInterns(internsData.items || []);
+    } catch (err: any) {
+      console.error("Lỗi nạp dữ liệu nhóm:", err);
+      setErrorMessage(err.message || "Không thể tải danh sách nhóm thực tập");
+    } finally {
+      setIsGroupLoading(false);
+    }
+  };
+
+  const handleBatchApplyGroups = async (batchGroups: BatchGroupItem[]) => {
+    if (!manageGroupProgram) return;
+    try {
+      setIsGroupLoading(true);
+      await groupService.batchApplyGroups(manageGroupProgram.id, {
+        groups: batchGroups,
+      });
+      setSuccessToast("Đã lưu và áp dụng phân bổ nhóm thành công!");
+      fetchPrograms();
+    } catch (err: any) {
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "Lỗi khi áp dụng chia nhóm",
+      );
+    } finally {
+      setIsGroupLoading(false);
+    }
+  };
+
+  const handleDisbandGroup = async (groupId: number) => {
+    if (!manageGroupProgram) return;
+    try {
+      setIsGroupLoading(true);
+      await groupService.disbandGroup(manageGroupProgram.id, groupId);
+      setSuccessToast("Đã giải tán nhóm thành công");
+      fetchPrograms();
+    } catch (err: any) {
+      alert(
+        err.response?.data?.message || err.message || "Lỗi khi giải tán nhóm",
+      );
+    } finally {
+      setIsGroupLoading(false);
+    }
+  };
 
   // Load danh mục phòng ban
   useEffect(() => {
     programService
       .getDepartments()
       .then((data) => setDepartments(data))
-      .catch((err) => console.error('Failed to load departments:', err));
+      .catch((err) => console.error("Failed to load departments:", err));
   }, []);
 
   // Fetch dữ liệu chương trình
@@ -68,9 +148,9 @@ export const HrProgramManagementPage: React.FC = () => {
       setErrorMessage(null);
       const res = await programService.getPrograms({
         keyword: keyword || undefined,
-        departmentId: departmentId === '' ? undefined : departmentId,
+        departmentId: departmentId === "" ? undefined : departmentId,
         status: status || undefined,
-        isHistorical: isHistorical === '' ? undefined : isHistorical,
+        isHistorical: isHistorical === "" ? undefined : isHistorical,
         page: currentPage,
         size: pageSize,
       });
@@ -79,8 +159,12 @@ export const HrProgramManagementPage: React.FC = () => {
       setTotalPages(res.totalPages || 1);
       setTotalElements(res.totalElements || 0);
     } catch (err: any) {
-      console.error('Failed to load programs:', err);
-      setErrorMessage(err.response?.data?.message || err.message || 'Không thể tải danh sách chương trình thực tập.');
+      console.error("Failed to load programs:", err);
+      setErrorMessage(
+        err.response?.data?.message ||
+          err.message ||
+          "Không thể tải danh sách chương trình thực tập.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +173,10 @@ export const HrProgramManagementPage: React.FC = () => {
   // Tải số lượng đơn PENDING của tất cả các chương trình (1 network request duy nhất)
   const fetchPendingCounts = useCallback(async () => {
     try {
-      const res = await internService.getInterns({ status: 'PENDING', size: 100 });
+      const res = await internService.getInterns({
+        status: "PENDING",
+        size: 100,
+      });
       const items = res.items || res.content || [];
       const counts: Record<number, number> = {};
       items.forEach((intern) => {
@@ -99,7 +186,7 @@ export const HrProgramManagementPage: React.FC = () => {
       });
       setPendingCountsMap(counts);
     } catch (err) {
-      console.error('Không thể tải số lượng đơn chờ duyệt:', err);
+      console.error("Không thể tải số lượng đơn chờ duyệt:", err);
     }
   }, []);
 
@@ -118,7 +205,10 @@ export const HrProgramManagementPage: React.FC = () => {
   };
 
   // Xử lý chỉnh sửa
-  const handleEditSubmit = async (id: number, formData: UpdateProgramRequest) => {
+  const handleEditSubmit = async (
+    id: number,
+    formData: UpdateProgramRequest,
+  ) => {
     await programService.updateProgram(id, formData);
     setSuccessToast(`Đã cập nhật thông tin kỳ thực tập thành công!`);
     setEditProgram(null);
@@ -127,9 +217,14 @@ export const HrProgramManagementPage: React.FC = () => {
   };
 
   // Xử lý đổi trạng thái
-  const handleChangeStatusSubmit = async (id: number, request: ChangeProgramStatusRequest) => {
+  const handleChangeStatusSubmit = async (
+    id: number,
+    request: ChangeProgramStatusRequest,
+  ) => {
     await programService.changeStatus(id, request);
-    setSuccessToast(`Đã chuyển trạng thái kỳ thực tập sang "${request.targetStatus}" thành công!`);
+    setSuccessToast(
+      `Đã chuyển trạng thái kỳ thực tập sang "${request.targetStatus}" thành công!`,
+    );
     setStatusProgram(null);
     void fetchPrograms();
     void fetchPendingCounts();
@@ -139,10 +234,16 @@ export const HrProgramManagementPage: React.FC = () => {
   const handleToggleRecruitment = async (p: ProgramDetailResponse) => {
     try {
       const updated = await programService.toggleRecruitment(p.id);
-      setSuccessToast(`Đã ${updated.isRecruitmentOpen ? 'mở' : 'đóng'} tiếp nhận hồ sơ cho chương trình "${p.name}".`);
+      setSuccessToast(
+        `Đã ${updated.isRecruitmentOpen ? "mở" : "đóng"} tiếp nhận hồ sơ cho chương trình "${p.name}".`,
+      );
       void fetchPrograms();
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || 'Không thể thay đổi trạng thái nhận hồ sơ.');
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "Không thể thay đổi trạng thái nhận hồ sơ.",
+      );
     }
   };
 
@@ -158,30 +259,41 @@ export const HrProgramManagementPage: React.FC = () => {
     try {
       setIsDeleting(true);
       await programService.deleteProgram(deletingProgram.id);
-      setSuccessToast(`Đã xóa thành công chương trình "${deletingProgram.name}".`);
+      setSuccessToast(
+        `Đã xóa thành công chương trình "${deletingProgram.name}".`,
+      );
       setDeletingProgram(null);
       fetchPrograms();
       fetchPendingCounts();
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || 'Không thể xóa chương trình.');
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "Không thể xóa chương trình.",
+      );
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleResetFilter = () => {
-    setKeyword('');
-    setDepartmentId('');
-    setStatus('');
-    setIsHistorical('');
+    setKeyword("");
+    setDepartmentId("");
+    setStatus("");
+    setIsHistorical("");
     setCurrentPage(0);
   };
 
   // Metrics thống kê nhanh
   const totalPrograms = totalElements;
-  const activeRecruitingPrograms = programs.filter((p) => p.isRecruitmentOpen).length;
-  const ongoingPrograms = programs.filter((p) => p.status === 'ONGOING').length;
-  const totalSlotsAssigned = programs.reduce((acc, curr) => acc + (curr.currentInterns || 0), 0);
+  const activeRecruitingPrograms = programs.filter(
+    (p) => p.isRecruitmentOpen,
+  ).length;
+  const ongoingPrograms = programs.filter((p) => p.status === "ONGOING").length;
+  const totalSlotsAssigned = programs.reduce(
+    (acc, curr) => acc + (curr.currentInterns || 0),
+    0,
+  );
 
   return (
     <div className={styles.pageContainer}>
@@ -190,7 +302,7 @@ export const HrProgramManagementPage: React.FC = () => {
         subtitle="Thiết lập các kỳ thực tập theo phòng ban, ấn định ngày bắt đầu/kết thúc và giám sát chỉ tiêu tiếp nhận"
       />
 
-      <div style={{ marginTop: '1.75rem' }}>
+      <div style={{ marginTop: "1.75rem" }}>
         {/* Banner Action Header */}
         <div className={styles.bannerArea}>
           <div className={styles.bannerTitleWrapper}>
@@ -199,7 +311,9 @@ export const HrProgramManagementPage: React.FC = () => {
             </div>
             <div>
               <h2 className={styles.bannerTitle}>Kỳ Thực Tập Doanh Nghiệp</h2>
-              <p className={styles.bannerSubtitle}>Quản lý vòng đời và tuyển sinh cho từng phòng ban</p>
+              <p className={styles.bannerSubtitle}>
+                Quản lý vòng đời và tuyển sinh cho từng phòng ban
+              </p>
             </div>
           </div>
 
@@ -221,8 +335,12 @@ export const HrProgramManagementPage: React.FC = () => {
             </div>
             <div className={styles.metricContent}>
               <span className={styles.metricLabel}>Tổng Số Kỳ</span>
-              <span className={`${styles.metricValue} font-tabular`}>{totalPrograms}</span>
-              <span className={styles.metricSubtext}>Chương trình trên hệ thống</span>
+              <span className={`${styles.metricValue} font-tabular`}>
+                {totalPrograms}
+              </span>
+              <span className={styles.metricSubtext}>
+                Chương trình trên hệ thống
+              </span>
             </div>
           </div>
 
@@ -232,8 +350,12 @@ export const HrProgramManagementPage: React.FC = () => {
             </div>
             <div className={styles.metricContent}>
               <span className={styles.metricLabel}>Đang Mở Tuyển</span>
-              <span className={`${styles.metricValue} font-tabular`}>{activeRecruitingPrograms}</span>
-              <span className={styles.metricSubtext}>Sẵn sàng tiếp nhận hồ sơ</span>
+              <span className={`${styles.metricValue} font-tabular`}>
+                {activeRecruitingPrograms}
+              </span>
+              <span className={styles.metricSubtext}>
+                Sẵn sàng tiếp nhận hồ sơ
+              </span>
             </div>
           </div>
 
@@ -243,7 +365,9 @@ export const HrProgramManagementPage: React.FC = () => {
             </div>
             <div className={styles.metricContent}>
               <span className={styles.metricLabel}>Đang Diễn Ra</span>
-              <span className={`${styles.metricValue} font-tabular`}>{ongoingPrograms}</span>
+              <span className={`${styles.metricValue} font-tabular`}>
+                {ongoingPrograms}
+              </span>
               <span className={styles.metricSubtext}>Kỳ thực tập ONGOING</span>
             </div>
           </div>
@@ -254,8 +378,12 @@ export const HrProgramManagementPage: React.FC = () => {
             </div>
             <div className={styles.metricContent}>
               <span className={styles.metricLabel}>TTS Tiếp Nhận</span>
-              <span className={`${styles.metricValue} font-tabular`}>{totalSlotsAssigned}</span>
-              <span className={styles.metricSubtext}>TTS trong các kỳ hiển thị</span>
+              <span className={`${styles.metricValue} font-tabular`}>
+                {totalSlotsAssigned}
+              </span>
+              <span className={styles.metricSubtext}>
+                TTS trong các kỳ hiển thị
+              </span>
             </div>
           </div>
         </div>
@@ -266,18 +394,18 @@ export const HrProgramManagementPage: React.FC = () => {
             role="status"
             aria-live="polite"
             style={{
-              backgroundColor: 'var(--success-bg)',
-              border: '1px solid var(--success-border)',
-              borderRadius: 'var(--radius-md)',
-              padding: '0.85rem 1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.75rem',
-              color: 'var(--success)',
-              fontSize: '0.875rem',
+              backgroundColor: "var(--success-bg)",
+              border: "1px solid var(--success-border)",
+              borderRadius: "var(--radius-md)",
+              padding: "0.85rem 1.25rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+              color: "var(--success)",
+              fontSize: "0.875rem",
               fontWeight: 600,
-              marginBottom: '1.25rem',
+              marginBottom: "1.25rem",
             }}
           >
             <span>✓ {successToast}</span>
@@ -285,7 +413,13 @@ export const HrProgramManagementPage: React.FC = () => {
               type="button"
               onClick={() => setSuccessToast(null)}
               aria-label="Đóng thông báo thành công"
-              style={{ background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer', fontWeight: 700 }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--success)",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
             >
               ✕
             </button>
@@ -298,17 +432,17 @@ export const HrProgramManagementPage: React.FC = () => {
             role="alert"
             aria-live="assertive"
             style={{
-              backgroundColor: 'var(--danger-bg)',
-              border: '1px solid var(--danger-border)',
-              borderRadius: 'var(--radius-md)',
-              padding: '0.85rem 1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              color: 'var(--danger)',
-              fontSize: '0.875rem',
+              backgroundColor: "var(--danger-bg)",
+              border: "1px solid var(--danger-border)",
+              borderRadius: "var(--radius-md)",
+              padding: "0.85rem 1.25rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              color: "var(--danger)",
+              fontSize: "0.875rem",
               fontWeight: 600,
-              marginBottom: '1.25rem',
+              marginBottom: "1.25rem",
             }}
           >
             <AlertCircle size={18} aria-hidden="true" />
@@ -344,7 +478,14 @@ export const HrProgramManagementPage: React.FC = () => {
 
         {/* Bảng dữ liệu chương trình */}
         {isLoading ? (
-          <div className="card" style={{ padding: '3.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <div
+            className="card"
+            style={{
+              padding: "3.5rem",
+              textAlign: "center",
+              color: "var(--text-muted)",
+            }}
+          >
             Đang tải dữ liệu chương trình thực tập...
           </div>
         ) : (
@@ -357,6 +498,7 @@ export const HrProgramManagementPage: React.FC = () => {
             onToggleRecruitment={handleToggleRecruitment}
             onEnrollIntern={(p) => setEnrollProgram(p)}
             onDelete={handleDeleteProgram}
+            onManageGroups={handleOpenManageGroups}
             currentPage={currentPage}
             totalPages={totalPages}
             totalElements={totalElements}
@@ -413,6 +555,21 @@ export const HrProgramManagementPage: React.FC = () => {
         onConfirm={handleConfirmDelete}
         onClose={() => setDeletingProgram(null)}
       />
+
+      {/* Modal Quản lý & Chia nhóm thực tập */}
+      {manageGroupProgram && (
+        <ProgramGroupModal
+          programId={manageGroupProgram.id}
+          programName={manageGroupProgram.name}
+          isOpen={Boolean(manageGroupProgram)}
+          onClose={() => setManageGroupProgram(null)}
+          interns={programInterns}
+          existingGroups={existingGroups}
+          onBatchApply={handleBatchApplyGroups}
+          onDisbandGroup={handleDisbandGroup}
+          isLoading={isGroupLoading}
+        />
+      )}
     </div>
   );
 };

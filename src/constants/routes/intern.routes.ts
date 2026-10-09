@@ -8,4 +8,5 @@ export const INTERN_ROUTES = {
   ATTENDANCE: '/intern/attendance',
   ATTENDANCE_CONFIRM: '/intern/attendance/confirm',
   LEAVE_REQUESTS: '/intern/leave-requests',
+  CONTRACT_SIGNING: '/intern/contract-signing',
 } as const;
