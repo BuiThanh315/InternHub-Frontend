@@ -9,6 +9,7 @@ export default defineConfig({
     global: 'window',
   },
   server: {
+    host: true,
     port: 5173,
     proxy: {
       '/api': {

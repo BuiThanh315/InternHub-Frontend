@@ -5,6 +5,7 @@ import { MentorWeeklyEvaluationHub } from './MentorWeeklyEvaluationHub';
 import { MentorFinalEvaluationTab } from './MentorFinalEvaluationTab';
 import { documentService } from '../../../services/documentService';
 import { Button } from '../../../components/common/Button/Button';
+import { CreateMeetingModal } from '../../../components/meeting/CreateMeetingModal';
 import styles from './MentorInternDetailDrawer.module.css';
 
 interface MentorInternDetailDrawerProps {
@@ -27,6 +28,7 @@ export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> =
   loading = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'evaluation' | 'final' | 'documents' | 'profile'>('evaluation');
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
 
   if (!isOpen || !intern) return null;
 
@@ -53,14 +55,35 @@ export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> =
             </div>
           </div>
 
-          <button 
-            type="button" 
-            className={styles.closeBtn} 
-            onClick={onClose} 
-            aria-label="Đóng bảng chi tiết"
-          >
-            <X size={20} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              onClick={() => setIsMeetingModalOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#4f46e5',
+                color: '#ffffff',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              📅 Lên Lịch Họp
+            </button>
+            <button 
+              type="button" 
+              className={styles.closeBtn} 
+              onClick={onClose} 
+              aria-label="Đóng bảng chi tiết"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -193,6 +216,14 @@ export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> =
           )}
         </div>
       </div>
+
+      {/* Modal Lên Lịch Họp Với Thực Tập Sinh */}
+      <CreateMeetingModal
+        isOpen={isMeetingModalOpen}
+        onClose={() => setIsMeetingModalOpen(false)}
+        internProfileId={intern.id}
+        internName={intern.fullName}
+      />
     </div>
   );
 };

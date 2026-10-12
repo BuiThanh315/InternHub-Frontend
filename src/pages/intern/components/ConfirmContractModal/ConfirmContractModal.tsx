@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { contractService } from '../../../../services/contractService';
+import { contractService, dynamicContractService } from '../../../../services/contractService';
+import { SignatureCanvasPad } from '../../../../components/contract/SignatureCanvasPad';
 import type { ConfirmContractModalProps } from './ConfirmContractModal.types';
 import {
   formatCurrency,
@@ -38,6 +39,7 @@ export const ConfirmContractModal: React.FC<ConfirmContractModalProps> = ({
     agreeTerms: false,
     confirmationNote: '',
   });
+  const [signatureData, setSignatureData] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -49,6 +51,7 @@ export const ConfirmContractModal: React.FC<ConfirmContractModalProps> = ({
         agreeTerms: false,
         confirmationNote: '',
       });
+      setSignatureData(null);
       setErrorMessage(null);
       setIsSubmitting(false);
     }
@@ -98,24 +101,48 @@ export const ConfirmContractModal: React.FC<ConfirmContractModalProps> = ({
       return;
     }
 
+    if (!signatureData) {
+      setErrorMessage('Vui lòng thực hiện vẽ chữ ký điện tử trên bảng vẽ Canvas trước khi bấm xác nhận.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setErrorMessage(null);
 
+          {/* 1. Kiểm tra xem có hợp đồng động (Dynamic Contract Revision) tương ứng không */}
+          try {
+            const dynamicContract = await dynamicContractService.getMyContract();
+            if (dynamicContract && dynamicContract.currentRevisionId && 
+               (dynamicContract.contractNumber === contract.contractNumber || dynamicContract.id === contract.id)) {
+              // Ký điện tử hợp đồng số với nét vẽ Base64
+              await dynamicContractService.confirmRevision(dynamicContract.id, dynamicContract.currentRevisionId, {
+                consentTextVersion: 'v1.0-2026',
+                consentTextSnapshot: 'Tôi đã đọc kỹ toàn bộ điều khoản và xác nhận thông tin trên hợp đồng là chính xác.',
+              });
+              await dynamicContractService.signRevision(dynamicContract.id, dynamicContract.currentRevisionId, {
+                signatureData,
+                authMethod: 'JWT_SESSION',
+              });
+            }
+          } catch (dynamicErr) {
+            console.warn('Không thể ký theo luồng Dynamic Contract, tiếp tục luồng chuẩn:', dynamicErr);
+          }
+
+      // 2. Ký xác nhận theo luồng InternContract chuẩn
       const updated = await contractService.confirmContract(contract.id, {
         agreeTerms: true,
         signerFullName: formData.signerFullName.trim(),
         confirmationNote: formData.confirmationNote.trim() || undefined,
       });
 
-      toast.success('Xác nhận ký hợp đồng thực tập thành công! Chào mừng bạn chính thức gia nhập.', {
+      toast.success('Xác nhận ký hợp đồng thực tập và chữ ký điện tử Canvas thành công! Chào mừng bạn chính thức gia nhập.', {
         duration: 4000,
       });
       onClose();
       onSuccess(updated);
     } catch (err: any) {
       console.error('Lỗi khi ký hợp đồng:', err);
-      // Giữ nguyên modal và form, hiển thị lỗi rõ ràng (Safe Mutation UX - Nguyên tắc 24)
       const message =
         err.response?.data?.message ||
         err.message ||
@@ -259,6 +286,19 @@ export const ConfirmContractModal: React.FC<ConfirmContractModalProps> = ({
 
           {/* Form cam kết & xác nhận chữ ký */}
           <form id="confirmContractForm" onSubmit={handleSubmit} className={styles.formSection}>
+            {/* Bảng ký điện tử Canvas Pad trực quan */}
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Chữ ký điện tử của bạn <span className={styles.required}>*</span>
+              </label>
+              <div style={{ marginTop: '4px' }}>
+                <SignatureCanvasPad 
+                  onSignatureChange={(sig) => setSignatureData(sig)} 
+                  height={160} 
+                />
+              </div>
+            </div>
+
             <div className={styles.formGroup}>
               <label htmlFor="signerFullName" className={styles.label}>
                 Họ và tên người ký xác nhận <span className={styles.required}>*</span>

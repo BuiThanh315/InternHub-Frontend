@@ -9,9 +9,12 @@ import {
   AlertCircle,
   Loader2,
   QrCode,
-  Timer,
   Copy,
   ExternalLink,
+  Smartphone,
+  Scan,
+  ShieldCheck,
+  PauseCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -19,6 +22,7 @@ import {
   attendanceService,
   calculateHaversineDistance,
 } from '../../../../services/attendanceService';
+import { ATTENDANCE_ENDPOINTS } from '../../../../constants/endpoints/attendance.endpoints';
 import { useGeolocation } from '../../../../hooks/useGeolocation';
 import type { AttendanceActionModalProps } from './AttendanceActionModal.types';
 import styles from './AttendanceActionModal.module.css';
@@ -26,6 +30,9 @@ import styles from './AttendanceActionModal.module.css';
 // Toạ độ mặc định trụ sở chính InternHub (đồng bộ với OfficeLocationDataInitializer tại backend)
 const DEFAULT_OFFICE_LAT = 21.035665;
 const DEFAULT_OFFICE_LON = 105.768296;
+
+const QR_TTL_SECONDS = 60;
+const AUTO_PAUSE_SECONDS = 180; // 3 phút = 180s tự động tạm dừng để chống hao tổn tài nguyên
 
 interface QrSessionState {
   qrToken: string;
@@ -36,6 +43,9 @@ interface QrSessionState {
   remainingSeconds: number;
   isExpired: boolean;
   isInitiating: boolean;
+  isPaused: boolean;
+  isSuccess: boolean;
+  successData?: any;
 }
 
 export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
@@ -51,14 +61,15 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
   const { coords, loading: geoLoading, error: geoError, permissionDenied, refreshLocation } =
     useGeolocation({ immediate: isOpen });
 
-  // Tuân thủ Nguyên tắc 14: Tối đa 3-4 useState
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [qrSession, setQrSession] = useState<QrSessionState | null>(null);
 
   const countdownTimerRef = useRef<any>(null);
-  const pollTimerRef = useRef<any>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const sessionElapsedTimeRef = useRef<number>(0);
+  const prefetchingRef = useRef<boolean>(false);
 
   // Toạ độ văn phòng mục tiêu (ưu tiên toạ độ động từ backend nếu có)
   const targetLat = officeLatitude ?? DEFAULT_OFFICE_LAT;
@@ -77,42 +88,119 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
 
   const isWithinRadius = clientDistance !== null && clientDistance <= allowedRadiusMeters;
 
-  // Xoá các bộ đếm thời gian
+  const previousTokenRef = useRef<string | null>(null);
+  const fallbackPollTimerRef = useRef<any>(null);
+
+  // Đóng kết nối SSE
+  const closeSse = useCallback(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+  }, []);
+
+  // Xoá các bộ đếm thời gian & SSE
   const clearTimers = useCallback(() => {
     if (countdownTimerRef.current) {
       clearInterval(countdownTimerRef.current);
       countdownTimerRef.current = null;
     }
-    if (pollTimerRef.current) {
-      clearInterval(pollTimerRef.current);
-      pollTimerRef.current = null;
+    if (fallbackPollTimerRef.current) {
+      clearInterval(fallbackPollTimerRef.current);
+      fallbackPollTimerRef.current = null;
     }
-  }, []);
+    closeSse();
+  }, [closeSse]);
 
-  // Khởi tạo phiên QR Code check-in (Bước 1 - TM-25)
-  const handleInitiateQr = useCallback(async () => {
-    if (!coords) return;
+  // Xử lý khi Check-in thành công qua SSE hoặc Polling
+  const handleCheckInSuccess = useCallback((attendanceData?: any) => {
     clearTimers();
-    setApiError(null);
-    setQrSession((prev) => ({
-      qrToken: prev?.qrToken ?? '',
-      qrCodeDataUrl: prev?.qrCodeDataUrl ?? '',
-      confirmationUrl: prev?.confirmationUrl,
-      serverDistance: prev?.serverDistance,
-      officeName: prev?.officeName,
-      remainingSeconds: 60,
-      isExpired: false,
-      isInitiating: true,
-    }));
+    setQrSession((prev) => (prev ? { ...prev, isSuccess: true, successData: attendanceData } : null));
+    toast.success('Điểm danh thành công! Hệ thống đã tự động đồng bộ thời gian thực.');
+
+    // Chờ 2.5s hoạt họa ăn mừng rồi tự đóng modal và trigger onSuccess
+    setTimeout(() => {
+      onSuccess();
+      onClose();
+    }, 2500);
+  }, [clearTimers, onSuccess, onClose]);
+
+  // Bắt đầu Fallback Polling (mỗi 2.5s kiểm tra xem hôm nay đã check-in thành công chưa)
+  const startFallbackPolling = useCallback(() => {
+    if (fallbackPollTimerRef.current) return;
+    fallbackPollTimerRef.current = setInterval(async () => {
+      try {
+        const todayStatus = await attendanceService.getTodayAttendance();
+        if (todayStatus && todayStatus.hasCheckedIn) {
+          // Điện thoại đã quét thành công, cập nhật ngay lập tức!
+          handleCheckInSuccess(todayStatus);
+        }
+      } catch {
+        // Silent catch polling error
+      }
+    }, 2500);
+  }, [handleCheckInSuccess]);
+
+  // Mở luồng SSE nghe tín hiệu xác nhận từ điện thoại (hỗ trợ native auto-reconnect)
+  const connectSse = useCallback((qrToken: string) => {
+    closeSse();
+    if (!qrToken) return;
+
+    try {
+      const sseUrl = `${ATTENDANCE_ENDPOINTS.CHECK_IN_STREAM}?qrToken=${encodeURIComponent(qrToken)}`;
+      const es = new EventSource(sseUrl, { withCredentials: true });
+
+      es.addEventListener('CHECK_IN_SUCCESS', (event: MessageEvent) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          handleCheckInSuccess(parsed);
+        } catch {
+          handleCheckInSuccess();
+        }
+      });
+
+      es.onerror = () => {
+        // Không gọi es.close() để trình duyệt tự động reconnect nếu tạm mất mạng.
+        // Đồng thời kích hoạt fallback polling kiểm tra 2.5s/lần
+        startFallbackPolling();
+      };
+
+      eventSourceRef.current = es;
+    } catch (err) {
+      console.warn('Không thể khởi tạo EventSource SSE, chuyển sang Polling:', err);
+      startFallbackPolling();
+    }
+  }, [closeSse, handleCheckInSuccess, startFallbackPolling]);
+
+  // Khởi tạo phiên QR Code check-in (TM-25 v2.0 - Khởi tạo tự do trên Laptop)
+  const handleInitiateQr = useCallback(async (isPrefetch = false) => {
+    if (!isPrefetch) {
+      clearTimers();
+      setApiError(null);
+      setQrSession((prev) => ({
+        qrToken: prev?.qrToken ?? '',
+        qrCodeDataUrl: prev?.qrCodeDataUrl ?? '',
+        confirmationUrl: prev?.confirmationUrl,
+        serverDistance: prev?.serverDistance,
+        officeName: prev?.officeName,
+        remainingSeconds: QR_TTL_SECONDS,
+        isExpired: false,
+        isInitiating: true,
+        isPaused: false,
+        isSuccess: false,
+      }));
+    }
 
     try {
       const res = await attendanceService.initiateCheckIn({
-        latitude: coords.latitude,
-        longitude: coords.longitude,
+        latitude: coords?.latitude,
+        longitude: coords?.longitude,
         clientBaseUrl: window.location.origin,
       });
 
-      const expiresIn = res.expiresInSeconds || 60;
+      const expiresIn = res.expiresInSeconds || QR_TTL_SECONDS;
+      prefetchingRef.current = false;
+
       setQrSession({
         qrToken: res.qrToken,
         qrCodeDataUrl: res.qrCodeDataUrl,
@@ -122,45 +210,80 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
         remainingSeconds: expiresIn,
         isExpired: false,
         isInitiating: false,
+        isPaused: false,
+        isSuccess: false,
       });
 
+      // Mở kết nối SSE theo qrToken mới
+      connectSse(res.qrToken);
+
       // Bắt đầu đếm ngược 60s
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+
       countdownTimerRef.current = setInterval(() => {
+        sessionElapsedTimeRef.current += 1;
+
+        // Kiểm tra Auto-pause 3 phút (180 giây)
+        if (sessionElapsedTimeRef.current >= AUTO_PAUSE_SECONDS) {
+          clearTimers();
+          setQrSession((prev) => (prev ? { ...prev, isPaused: true, isExpired: true } : null));
+          return;
+        }
+
         setQrSession((prev) => {
-          if (!prev) return null;
-          if (prev.remainingSeconds <= 1) {
-            if (countdownTimerRef.current) {
-              clearInterval(countdownTimerRef.current);
-              countdownTimerRef.current = null;
-            }
+          if (!prev || prev.isSuccess || prev.isPaused) return prev;
+
+          const nextSec = prev.remainingSeconds - 1;
+
+          // Silent prefetch khi còn <= 5s
+          if (nextSec === 5 && !prefetchingRef.current) {
+            prefetchingRef.current = true;
+            attendanceService.initiateCheckIn({
+              latitude: coords?.latitude,
+              longitude: coords?.longitude,
+              clientBaseUrl: window.location.origin,
+            }).then((nextRes) => {
+              // Khi đúng 0s, swap mượt sang mã mới
+              setTimeout(() => {
+                prefetchingRef.current = false;
+                previousTokenRef.current = prev.qrToken;
+                setQrSession({
+                  qrToken: nextRes.qrToken,
+                  qrCodeDataUrl: nextRes.qrCodeDataUrl,
+                  confirmationUrl: nextRes.confirmationUrl,
+                  serverDistance: nextRes.distance,
+                  officeName: nextRes.officeName,
+                  remainingSeconds: nextRes.expiresInSeconds || QR_TTL_SECONDS,
+                  isExpired: false,
+                  isInitiating: false,
+                  isPaused: false,
+                  isSuccess: false,
+                });
+                connectSse(nextRes.qrToken);
+              }, 5000);
+            }).catch(() => {
+              prefetchingRef.current = false;
+            });
+          }
+
+          if (nextSec <= 0) {
             return {
               ...prev,
               remainingSeconds: 0,
               isExpired: true,
             };
           }
+
           return {
             ...prev,
-            remainingSeconds: prev.remainingSeconds - 1,
+            remainingSeconds: nextSec,
           };
         });
       }, 1000);
-
-      // Bắt đầu Polling tự động phát hiện khi TTS quét xác nhận bằng điện thoại
-      pollTimerRef.current = setInterval(async () => {
-        try {
-          const today = await attendanceService.getTodayAttendance();
-          if (today?.hasCheckedIn) {
-            clearTimers();
-            toast.success('Hệ thống đã nhận diện điểm danh qua thiết bị di động thành công!');
-            onSuccess();
-            onClose();
-          }
-        } catch {
-          // Bỏ qua lỗi tạm thời khi polling
-        }
-      }, 3000);
     } catch (err: any) {
+      prefetchingRef.current = false;
       const errorMsg =
         err.response?.data?.message ||
         err.message ||
@@ -168,7 +291,7 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
       setApiError(errorMsg);
       setQrSession(null);
     }
-  }, [coords, clearTimers, onSuccess, onClose]);
+  }, [coords, clearTimers, connectSse]);
 
   // Reset form khi modal mở / đóng
   useEffect(() => {
@@ -176,6 +299,8 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
       setNotes('');
       setApiError(null);
       setQrSession(null);
+      sessionElapsedTimeRef.current = 0;
+      prefetchingRef.current = false;
       refreshLocation();
     } else {
       clearTimers();
@@ -183,19 +308,17 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
     return () => clearTimers();
   }, [isOpen, refreshLocation, clearTimers]);
 
-  // Tự động khởi tạo mã QR khi có toạ độ hợp lệ (chỉ cho CHECK_IN)
+  // Tự động khởi tạo mã QR ngay khi mở Modal Check-in mà không bị chặn bởi GPS Laptop
   useEffect(() => {
     if (
       isOpen &&
       actionType === 'CHECK_IN' &&
-      coords &&
-      isWithinRadius &&
       !qrSession &&
       !apiError
     ) {
       handleInitiateQr();
     }
-  }, [isOpen, actionType, coords, isWithinRadius, qrSession, apiError, handleInitiateQr]);
+  }, [isOpen, actionType, qrSession, apiError, handleInitiateQr]);
 
   // Đóng modal bằng phím Esc
   useEffect(() => {
@@ -214,7 +337,6 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    // Giờ kết thúc ca chuẩn: 17:30
     return hours < 17 || (hours === 17 && minutes < 30);
   }, [actionType]);
 
@@ -226,29 +348,26 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
     }
   };
 
-  // Mở tab xác nhận trên trình duyệt
+  // Mở tab xác nhận trên trình duyệt (chỉ dùng cho môi trường test/dev)
   const handleOpenConfirmationUrl = () => {
     if (qrSession?.confirmationUrl) {
       window.open(qrSession.confirmationUrl, '_blank');
     }
   };
 
-  // Lắng nghe tín hiệu hoàn tất Check-in từ cửa sổ xác nhận mới (postMessage)
+  // Lắng nghe tín hiệu hoàn tất Check-in qua postMessage (fallback)
   useEffect(() => {
     if (!isOpen || actionType !== 'CHECK_IN') return;
 
     const handleWindowMessage = (event: MessageEvent) => {
       if (event.data?.type === 'ATTENDANCE_CHECKED_IN') {
-        clearTimers();
-        toast.success('Hệ thống đã ghi nhận check-in thành công!');
-        onSuccess();
-        onClose();
+        handleCheckInSuccess(event.data);
       }
     };
 
     window.addEventListener('message', handleWindowMessage);
     return () => window.removeEventListener('message', handleWindowMessage);
-  }, [isOpen, actionType, clearTimers, onSuccess, onClose]);
+  }, [isOpen, actionType, handleCheckInSuccess]);
 
   // Gửi xác nhận điểm danh Check-out
   const handleSubmit = useCallback(async () => {
@@ -362,8 +481,8 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
             </div>
           )}
 
-          {/* Thông báo khoảng cách hợp lệ / cảnh báo ngoài phạm vi */}
-          {coords && effectiveDistance !== null && (
+          {/* Thông báo khoảng cách hợp lệ / cảnh báo ngoài phạm vi (chỉ hiển thị cho CHECK_OUT trên Laptop) */}
+          {!isCheckIn && coords && effectiveDistance !== null && (
             <>
               {isWithinRadius ? (
                 <div className={`${styles.alertBox} ${styles.alertValid}`}>
@@ -386,18 +505,37 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
           )}
 
           {/* KHỐI XÁC THỰC 2 BƯỚC CHECK-IN: QR CODE & COUNTDOWN */}
-          {isCheckIn && isWithinRadius && (
+          {isCheckIn && (
             <div className={styles.qrSection}>
               <div className={styles.qrBadgeHeader}>
                 <QrCode size={13} />
-                <span>XÁC THỰC BẢO MẬT 2 BƯỚC (QR 60S)</span>
+                <span>XÁC THỰC BẢO MẬT ĐA TẦNG (PERSONAL QR)</span>
               </div>
+
+              {/* Thông báo Tự động tạm dừng sau 3 phút */}
+              {qrSession?.isPaused && (
+                <div className={styles.qrAutoPauseBanner}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem' }}>
+                    <PauseCircle size={18} />
+                    <span>Đã tạm dừng phát sinh mã QR sau 3 phút để bảo vệ tài nguyên.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleInitiateQr(false)}
+                    className={styles.refreshButton}
+                    style={{ background: 'var(--bg-card)' }}
+                  >
+                    <RefreshCw size={12} />
+                    <span>Tiếp tục</span>
+                  </button>
+                </div>
+              )}
 
               {qrSession?.isInitiating ? (
                 <div style={{ padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                   <Loader2 size={30} className={styles.spinning} style={{ color: 'var(--primary)' }} />
                   <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                    Đang khởi tạo phiên mã QR xác thực...
+                    Đang khởi tạo phiên mã QR bảo mật...
                   </span>
                 </div>
               ) : qrSession?.qrCodeDataUrl ? (
@@ -408,13 +546,20 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
                       alt="Mã QR Xác Thực Điểm Danh"
                       className={styles.qrImage}
                     />
-                    {qrSession.isExpired && (
+
+                    {/* Laser scan hiệu ứng */}
+                    {!qrSession.isExpired && !qrSession.isPaused && !qrSession.isSuccess && (
+                      <div className={styles.laserBeam} />
+                    )}
+
+                    {/* Overlay hết hạn */}
+                    {qrSession.isExpired && !qrSession.isPaused && !qrSession.isSuccess && (
                       <div className={styles.qrExpiredOverlay}>
                         <AlertTriangle size={24} style={{ color: 'var(--warning)' }} />
                         <span className={styles.qrExpiredText}>Mã QR đã hết hạn</span>
                         <button
                           type="button"
-                          onClick={handleInitiateQr}
+                          onClick={() => handleInitiateQr(false)}
                           className={styles.refreshButton}
                           style={{ marginTop: '0.25rem', background: 'var(--bg-card)' }}
                         >
@@ -423,48 +568,96 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
                         </button>
                       </div>
                     )}
+
+                    {/* Overlay ăn mừng khi SSE nhận CHECK_IN_SUCCESS */}
+                    {qrSession.isSuccess && (
+                      <div className={styles.qrSuccessOverlay}>
+                        <div className={styles.qrSuccessIcon}>
+                          <CheckCircle2 size={28} />
+                        </div>
+                        <h4 className={styles.qrSuccessTitle}>Check-in Thành Công!</h4>
+                        <p className={styles.qrSuccessSubtitle}>
+                          Đã đồng bộ thiết bị tức thì. Đang quay lại trang tổng quan...
+                        </p>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Thanh đếm ngược thời gian */}
-                  <div className={styles.qrTimerWrapper}>
-                    <div className={styles.qrTimerHeader}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Timer size={13} />
-                        <span>Hiệu lực phiên:</span>
-                      </span>
-                      <span
-                        className={styles.qrTimerSeconds}
-                        style={{
-                          color:
-                            qrSession.remainingSeconds <= 15
-                              ? 'var(--danger)'
-                              : 'var(--text-main)',
-                        }}
-                      >
-                        {qrSession.remainingSeconds}s
-                      </span>
-                    </div>
-
-                    <div className={styles.qrTimerTrack}>
-                      <div
-                        className={styles.qrTimerProgress}
-                        style={{
-                          width: `${(qrSession.remainingSeconds / 60) * 100}%`,
-                          backgroundColor:
+                  {/* SVG RADIAL PROGRESS COUNTDOWN (60s -> 0s) */}
+                  {!qrSession.isPaused && !qrSession.isSuccess && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.25rem' }}>
+                      <div className={styles.qrRadialWrapper}>
+                        {(() => {
+                          const size = 64;
+                          const strokeWidth = 5;
+                          const radius = (size - strokeWidth) / 2;
+                          const circumference = 2 * Math.PI * radius;
+                          const progress = Math.max(0, Math.min(1, qrSession.remainingSeconds / QR_TTL_SECONDS));
+                          const offset = circumference * (1 - progress);
+                          const strokeColor =
                             qrSession.remainingSeconds <= 15
                               ? 'var(--danger)'
                               : qrSession.remainingSeconds <= 30
                               ? 'var(--warning)'
-                              : 'var(--primary)',
-                        }}
-                      />
+                              : 'var(--primary)';
+
+                          return (
+                            <>
+                              <svg width={size} height={size} className={styles.qrRadialSvg}>
+                                <circle
+                                  cx={size / 2}
+                                  cy={size / 2}
+                                  r={radius}
+                                  strokeWidth={strokeWidth}
+                                  fill="transparent"
+                                  className={styles.qrRadialBackground}
+                                />
+                                <circle
+                                  cx={size / 2}
+                                  cy={size / 2}
+                                  r={radius}
+                                  strokeWidth={strokeWidth}
+                                  fill="transparent"
+                                  stroke={strokeColor}
+                                  strokeDasharray={circumference}
+                                  strokeDashoffset={offset}
+                                  className={styles.qrRadialIndicator}
+                                />
+                              </svg>
+                              <div className={styles.qrRadialContent}>
+                                <span className={styles.qrRadialSeconds} style={{ color: strokeColor }}>
+                                  {qrSession.remainingSeconds}
+                                </span>
+                                <span className={styles.qrRadialUnit}>Giây</span>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                          <ShieldCheck size={14} style={{ color: 'var(--success)' }} />
+                          <span>Mã làm mới tự động</span>
+                        </div>
+                        <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.35 }}>
+                          Hệ thống tự động prefetch mã tiếp theo khi còn 5 giây.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Micro-guide hướng dẫn quét */}
+                  <div className={styles.qrMicroGuide}>
+                    <div className={styles.qrMicroGuideItem}>
+                      <Scan size={13} style={{ color: 'var(--primary)' }} />
+                      <span>Camera điện thoại</span>
+                    </div>
+                    <div className={styles.qrMicroGuideItem}>
+                      <Smartphone size={13} style={{ color: 'var(--info)' }} />
+                      <span>Zalo / App quét QR</span>
                     </div>
                   </div>
-
-                  {/* Hướng dẫn & Tiện ích quét mã QR */}
-                  <p className={styles.qrInstruction}>
-                    Dùng camera điện thoại quét mã QR hoặc bấm &quot;Mở link xác nhận&quot; bên dưới để mở cửa sổ xác nhận Check-in.
-                  </p>
 
                   <div className={styles.qrActionRow}>
                     <button
@@ -477,19 +670,22 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
                       <span>Sao chép link QR</span>
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={handleOpenConfirmationUrl}
-                      className={styles.qrSecondaryBtn}
-                      title="Mở trang xác nhận di động trên tab mới"
-                    >
-                      <ExternalLink size={13} />
-                      <span>Mở link xác nhận</span>
-                    </button>
+                    {/* Chỉ hiển thị Mở link xác nhận khi ở môi trường DEV */}
+                    {import.meta.env.DEV && (
+                      <button
+                        type="button"
+                        onClick={handleOpenConfirmationUrl}
+                        className={styles.qrSecondaryBtn}
+                        title="Mở trang xác nhận di động trên tab mới (Dành cho Dev)"
+                      >
+                        <ExternalLink size={13} />
+                        <span>Mở link test (Dev)</span>
+                      </button>
+                    )}
 
                     <button
                       type="button"
-                      onClick={handleInitiateQr}
+                      onClick={() => handleInitiateQr(false)}
                       disabled={isSubmitting || qrSession.isInitiating}
                       className={styles.refreshLinkBtn}
                     >
@@ -504,7 +700,7 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
                   </p>
                   <button
                     type="button"
-                    onClick={handleInitiateQr}
+                    onClick={() => handleInitiateQr(false)}
                     className={styles.refreshButton}
                   >
                     <RefreshCw size={13} />
@@ -580,7 +776,7 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
                 <button
                   type="button"
                   disabled={isSubmitting || qrSession.isInitiating}
-                  onClick={handleInitiateQr}
+                  onClick={() => handleInitiateQr(false)}
                   className={styles.submitButton}
                   style={{ background: 'var(--warning)' }}
                 >

@@ -9,12 +9,16 @@ import { ProgramWorkspacePage } from '../pages/hr/programs/workspace';
 import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPage';
 import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
 import { HrEvaluationManagementPage } from '../pages/hr/evaluations/HrEvaluationManagementPage';
+import { HrAllowancePage } from '../pages/hr/allowance/HrAllowancePage';
+import { HrSupportRequestsPage } from '../pages/hr/support/HrSupportRequestsPage';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { MentorMissionPage } from '../pages/mentor/missions/MentorMissionPage';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
 import { InternMissionPage } from '../pages/intern/missions/InternMissionPage';
 import { InternWeeklyReportPage } from '../pages/intern/reports';
+import { InternAllowanceHistoryPage } from '../pages/intern/allowance/InternAllowanceHistoryPage';
+import { InternSupportRequestPage } from '../pages/intern/support/InternSupportRequestPage';
 import { ProfilePage } from '../pages/profile';
 import { InternApplyPage } from '../pages/intern/InternApplyPage';
 import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
@@ -107,6 +111,8 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.HR.INTERNS} element={<HrDashboard />} />
           <Route path={ROUTES.HR.CONTRACTS} element={<HrContractManagementPage />} />
           <Route path={ROUTES.HR.EVALUATIONS} element={<HrEvaluationManagementPage />} />
+          <Route path={ROUTES.HR.ALLOWANCES} element={<HrAllowancePage />} />
+          <Route path={ROUTES.HR.SUPPORT_REQUESTS} element={<HrSupportRequestsPage />} />
           <Route path={ROUTES.HR.REVIEW} element={<HrDashboard />} />
         </Route>
 
@@ -129,6 +135,8 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
           <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
           <Route path={ROUTES.INTERN.CONTRACT_SIGNING} element={<InternContractSigningHub />} />
+          <Route path={ROUTES.INTERN.ALLOWANCES} element={<InternAllowanceHistoryPage />} />
+          <Route path={ROUTES.INTERN.SUPPORT_REQUESTS} element={<InternSupportRequestPage />} />
           <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
           <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
           <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />

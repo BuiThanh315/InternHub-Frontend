@@ -517,7 +517,22 @@ export const HrContractManagementPage: React.FC = () => {
                         <button
                           type="button"
                           className={styles.actionBtn}
-                          onClick={() => contractService.downloadContractFile(contract.id, contract.originalFileName)}
+                          onClick={async () => {
+                            if (contract.originalFileName?.endsWith('.html')) {
+                              try {
+                                await dynamicContractService.downloadContractPdfForHr(
+                                  contract.id,
+                                  `${contract.contractNumber}.pdf`
+                                );
+                                return;
+                              } catch (e: any) {
+                                console.warn('Lỗi khi tải PDF hợp đồng điện tử:', e);
+                                toast.error('Không thể xuất PDF hợp đồng: ' + (e.response?.data?.message || e.message || 'Lỗi server'));
+                                return;
+                              }
+                            }
+                            contractService.downloadContractFile(contract.id, contract.originalFileName);
+                          }}
                           title="Tải tệp hợp đồng về máy"
                         >
                           <Download size={16} />

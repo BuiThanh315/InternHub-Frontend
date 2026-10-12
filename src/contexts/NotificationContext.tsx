@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { notificationService, type NotificationItem, type SecurityCommand } from '../services/notificationService';
 import { useQueryClient } from '@tanstack/react-query';
+import { getInMemoryAccessToken } from '../services/api';
 
 interface NotificationContextType {
   notifications: NotificationItem[];
@@ -13,6 +14,7 @@ interface NotificationContextType {
   markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   fetchMore: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;
   hasMore: boolean;
 }
 
@@ -100,7 +102,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Quản lý vòng đời WebSocket theo Authentication State
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
+    const token = getInMemoryAccessToken();
     if (!isAuthenticated || !token || !user) {
       if (stompClientRef.current) {
         stompClientRef.current.deactivate();
@@ -133,6 +135,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             setNotifications((prev) => [item, ...prev]);
             setUnreadCount((prev) => prev + 1);
             queueToast(item.title, item.content);
+
+            // Bắn custom event để các widget trên trang (như widget lịch họp) tự động reload tức thì
+            window.dispatchEvent(new CustomEvent('internhub:new-notification', { detail: item }));
           } catch (e) {
             console.error('Lỗi parse notification STOMP frame:', e);
           }
@@ -221,6 +226,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         markAsRead,
         markAllAsRead,
         fetchMore,
+        refreshNotifications: loadInitialData,
         hasMore,
       }}
     >

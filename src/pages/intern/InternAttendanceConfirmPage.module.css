@@ -490,3 +490,94 @@
     max-width: 120px;
   }
 }
+
+/* PHONG CÁCH TM-25 V2.0: TRUST LEVEL & PENDING REVIEW STYLES */
+.trustLevelBadgeHigh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background-color: var(--success-bg, rgba(16, 185, 129, 0.1));
+  color: var(--success, #10b981);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid var(--success-border, rgba(16, 185, 129, 0.3));
+}
+
+.trustLevelBadgePending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background-color: var(--warning-bg, rgba(245, 158, 11, 0.1));
+  color: var(--warning, #f59e0b);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid var(--warning-border, rgba(245, 158, 11, 0.3));
+}
+
+.pendingReviewBanner {
+  background-color: var(--warning-bg, rgba(245, 158, 11, 0.08));
+  border: 1px solid var(--warning-border, rgba(245, 158, 11, 0.3));
+  border-radius: var(--radius-md, 10px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--text-main);
+}
+
+.pendingReviewHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--warning, #f59e0b);
+  font-weight: 700;
+  font-size: 0.925rem;
+}
+
+.pendingReviewText {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.deviceInfoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--bg-card);
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  font-size: 0.775rem;
+}
+
+.gpsPrePermissionBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--info-bg, rgba(59, 130, 246, 0.08));
+  border: 1px solid var(--info-border, rgba(59, 130, 246, 0.3));
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.8125rem;
+  color: var(--text-main);
+}
+
+.gpsAllowBtn {
+  background-color: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+

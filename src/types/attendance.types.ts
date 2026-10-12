@@ -3,7 +3,11 @@ export type AttendanceStatus =
   | 'LATE'
   | 'EARLY_LEAVE'
   | 'LATE_AND_EARLY_LEAVE'
-  | 'ABSENT';
+  | 'ABSENT'
+  | 'FORGOTTEN_CHECKOUT';
+
+export type AttendanceReviewStatus = 'AUTO_APPROVED' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+export type TrustLevel = 'HIGH' | 'MEDIUM' | 'LOW';
 
 export interface TodayAttendanceResponse {
   workDate: string;
@@ -13,6 +17,8 @@ export interface TodayAttendanceResponse {
   checkOutTime: string | null;
   totalWorkingHours: number | null;
   status: AttendanceStatus | null;
+  reviewStatus?: AttendanceReviewStatus | null;
+  trustLevel?: TrustLevel | null;
   officeName: string;
   allowedRadiusMeters: number;
   officeLatitude?: number;
@@ -44,6 +50,20 @@ export interface CheckInQrResponse {
 
 export interface CheckInConfirmRequest {
   qrToken: string;
+  deviceFingerprint?: string;
+  deviceModel?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracyMeters?: number;
+  notes?: string;
+}
+
+export interface QuickCheckOutRequest {
+  deviceFingerprint?: string;
+  deviceModel?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracyMeters?: number;
   notes?: string;
 }
 
@@ -63,6 +83,9 @@ export interface AttendanceRecordResponse {
   checkOutDistance?: number;
   totalWorkingHours: number | null;
   status: AttendanceStatus;
+  reviewStatus?: AttendanceReviewStatus;
+  trustLevel?: TrustLevel;
+  auditFlags?: string;
   distanceMeters?: number;
   notes?: string;
 }

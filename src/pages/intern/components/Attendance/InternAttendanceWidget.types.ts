@@ -3,8 +3,9 @@ import type { TodayAttendanceResponse } from '../../../../types';
 export interface InternAttendanceWidgetProps {
   todayData: TodayAttendanceResponse | null;
   loading: boolean;
-  currentTime: Date;
+  currentTime?: Date;
   onCheckInClick: () => void;
   onCheckOutClick: () => void;
+  onQuickCheckOut?: () => void;
   onViewHistoryClick?: () => void;
 }

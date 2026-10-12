@@ -74,6 +74,15 @@ export const InternContractSigningHub: React.FC = () => {
     }
     setIsSubmitting(true);
     try {
+      // Nếu TTS chưa ấn Xác nhận đúng (đang ở trạng thái SENT), tự động hoàn tất bước xác nhận
+      if (contract.status === 'SENT' && !hasConfirmedInfo) {
+        await dynamicContractService.confirmRevision(contract.id, contract.currentRevisionId, {
+          consentTextVersion: 'v1.0-2026',
+          consentTextSnapshot: 'Tôi đã đọc kỹ toàn bộ điều khoản và xác nhận thông tin trên hợp đồng là chính xác.',
+        });
+        setHasConfirmedInfo(true);
+      }
+
       await dynamicContractService.signRevision(contract.id, contract.currentRevisionId, {
         signatureData,
         authMethod: 'JWT_SESSION',

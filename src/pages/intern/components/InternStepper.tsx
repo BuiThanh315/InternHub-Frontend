@@ -14,7 +14,7 @@ const STEPS = [
   { num: 4, label: 'Hoàn Thành (COMPLETED)', desc: 'Đánh giá & Cấp chứng nhận' },
 ];
 
-export const InternStepper: React.FC<InternStepperProps> = ({ status }) => {
+export const InternStepper: React.FC<InternStepperProps> = React.memo(({ status }) => {
   const isRejected = status === 'REJECTED';
 
   const getStepStatus = (step: number) => {
@@ -99,4 +99,4 @@ export const InternStepper: React.FC<InternStepperProps> = ({ status }) => {
       )}
     </div>
   );
-};
+});
