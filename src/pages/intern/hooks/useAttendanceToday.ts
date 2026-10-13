@@ -6,7 +6,6 @@ export interface UseAttendanceTodayReturn {
   todayData: TodayAttendanceResponse | null;
   loading: boolean;
   error: string | null;
-  currentTime: Date;
   refetch: () => Promise<void>;
 }
 
@@ -14,7 +13,6 @@ export const useAttendanceToday = (): UseAttendanceTodayReturn => {
   const [todayData, setTodayData] = useState<TodayAttendanceResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
   const lastWorkDateRef = useRef<string>(new Date().toISOString().split('T')[0]);
 
@@ -48,19 +46,16 @@ export const useAttendanceToday = (): UseAttendanceTodayReturn => {
     return () => controller.abort();
   }, [fetchTodayAttendance]);
 
-  // Đồng hồ chạy từng giây & Midnight Watcher
+  // Midnight Watcher kiểm tra chuyển ngày (chỉ check mỗi 60 giây, không set state mỗi giây)
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      setCurrentTime(now);
-
-      // Kiểm tra chuyển ngày (Midnight Watcher)
       const currentDateStr = now.toISOString().split('T')[0];
       if (currentDateStr !== lastWorkDateRef.current) {
         lastWorkDateRef.current = currentDateStr;
         fetchTodayAttendance();
       }
-    }, 1000);
+    }, 60000);
 
     return () => clearInterval(timer);
   }, [fetchTodayAttendance]);
@@ -73,7 +68,6 @@ export const useAttendanceToday = (): UseAttendanceTodayReturn => {
     todayData,
     loading,
     error,
-    currentTime,
     refetch,
   };
 };

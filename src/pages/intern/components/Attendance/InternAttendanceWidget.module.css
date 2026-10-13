@@ -76,6 +76,9 @@
   color: var(--text-main);
   letter-spacing: -0.02em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  min-width: 170px;
 }
 
 .statusPill {

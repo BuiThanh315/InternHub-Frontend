@@ -282,7 +282,7 @@ export const ProgramGroupModal: React.FC<ProgramGroupModalProps> = ({
                 <input
                   type="number"
                   min={1}
-                  max={20}
+                  max={500}
                   className={styles.numInput}
                   value={numPerGroup}
                   onChange={(e) => setNumPerGroup(Number(e.target.value))}
@@ -294,7 +294,7 @@ export const ProgramGroupModal: React.FC<ProgramGroupModalProps> = ({
                 <input
                   type="number"
                   min={1}
-                  max={20}
+                  max={500}
                   className={styles.numInput}
                   value={numGroups}
                   onChange={(e) => setNumGroups(Number(e.target.value))}

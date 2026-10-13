@@ -34,6 +34,7 @@ export const DYNAMIC_CONTRACT_ENDPOINTS = {
   HR_CREATE_REVISION: (contractId: number | string) => `/api/v1/contracts/${contractId}/revisions`,
   HR_RESEND_NOTIFICATION: (contractId: number | string) => `/api/v1/contracts/${contractId}/resend`,
   HR_WITHDRAW: (contractId: number | string) => `/api/v1/contracts/${contractId}/withdraw`,
+  HR_DOWNLOAD_PDF: (id: number | string) => `/api/v1/contracts/${id}/pdf`,
 
   // Intern Operations
   INTERN_MY_CONTRACT: '/api/v1/contracts/intern/me',

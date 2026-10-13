@@ -377,9 +377,20 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
                           <button
                             type="button"
                             className={styles.iconBtn}
-                            onClick={() => {
+                            onClick={async () => {
                               if (contract.originalFileName?.endsWith('.html')) {
-                                navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+                                try {
+                                  await dynamicContractService.downloadSignedPdf(
+                                    contract.id,
+                                    undefined,
+                                    `${contract.contractNumber}.pdf`
+                                  );
+                                  return;
+                                } catch (e) {
+                                  console.warn('Lỗi tải PDF trực tiếp, chuyển hướng sang cổng ký:', e);
+                                  navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+                                  return;
+                                }
                               } else {
                                 contractService.downloadContractFile(
                                   contract.id,
@@ -473,9 +484,20 @@ export const InternContractSection: React.FC<InternContractSectionProps> = ({
                     <button
                       type="button"
                       className={styles.iconBtn}
-                      onClick={() => {
+                      onClick={async () => {
                         if (contract.originalFileName?.endsWith('.html')) {
-                          navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+                          try {
+                            await dynamicContractService.downloadSignedPdf(
+                              contract.id,
+                              undefined,
+                              `${contract.contractNumber}.pdf`
+                            );
+                            return;
+                          } catch (e) {
+                            console.warn('Lỗi tải PDF trực tiếp, chuyển hướng sang cổng ký:', e);
+                            navigate(ROUTES.INTERN.CONTRACT_SIGNING);
+                            return;
+                          }
                         } else {
                           contractService.downloadContractFile(
                             contract.id,

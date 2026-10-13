@@ -176,6 +176,7 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
               <th>Giờ Check-out</th>
               <th>Tổng Giờ Làm</th>
               <th>Trạng Thái</th>
+              <th>Kiểm Duyệt</th>
               <th>Ghi Chú</th>
             </tr>
           </thead>
@@ -214,6 +215,19 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
                     : '—'}
                 </td>
                 <td>{renderStatusBadge(record.status)}</td>
+                <td>
+                  {record.reviewStatus === 'PENDING_REVIEW' ? (
+                    <span className={`${styles.statusBadge} ${styles.badgeReviewPending}`}>
+                      <AlertTriangle size={11} />
+                      Chờ duyệt
+                    </span>
+                  ) : (
+                    <span className={`${styles.statusBadge} ${styles.badgeReviewApproved}`}>
+                      <CheckCircle2 size={11} />
+                      Đã duyệt
+                    </span>
+                  )}
+                </td>
                 <td title={record.notes}>
                   {record.notes ? record.notes : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                 </td>

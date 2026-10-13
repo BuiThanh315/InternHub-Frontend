@@ -547,3 +547,149 @@
   margin-top: -0.25rem;
 }
 
+/* RADIAL PROGRESS & SSE REALTIME SUCCESS STYLES */
+.qrRadialWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qrRadialSvg {
+  transform: rotate(-90deg);
+}
+
+.qrRadialBackground {
+  stroke: var(--border-default);
+}
+
+.qrRadialIndicator {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s linear, stroke 0.3s ease;
+}
+
+.qrRadialContent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.qrRadialSeconds {
+  font-size: 1.125rem;
+  font-weight: 800;
+  font-family: monospace;
+  line-height: 1;
+}
+
+.qrRadialUnit {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.qrSuccessOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 185, 129, 0.95);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  color: #ffffff;
+  border-radius: 12px;
+  animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 20;
+}
+
+.qrSuccessIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  animation: pulseSuccess 1.5s infinite;
+}
+
+.qrSuccessTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.qrSuccessSubtitle {
+  font-size: 0.785rem;
+  opacity: 0.92;
+  margin: 0;
+  text-align: center;
+}
+
+.qrAutoPauseBanner {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.qrMicroGuide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-default);
+  border-radius: 8px;
+  font-size: 0.725rem;
+  color: var(--text-secondary);
+}
+
+.qrMicroGuideItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+@keyframes pulseSuccess {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+

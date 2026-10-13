@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Clock,
   LogIn,
@@ -31,11 +31,20 @@ const DAYS_OF_WEEK = [
 export const InternAttendanceWidget: React.FC<InternAttendanceWidgetProps> = ({
   todayData,
   loading,
-  currentTime,
   onCheckInClick,
   onCheckOutClick,
+  onQuickCheckOut,
   onViewHistoryClick,
 }) => {
+  const [internalTime, setInternalTime] = useState<Date>(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setInternalTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   if (loading) {
     return (
       <div className={styles.widgetContainer}>
@@ -55,13 +64,13 @@ export const InternAttendanceWidget: React.FC<InternAttendanceWidgetProps> = ({
   }
 
   // Format ngày hiện tại
-  const dayOfWeek = DAYS_OF_WEEK[currentTime.getDay()];
-  const day = String(currentTime.getDate()).padStart(2, '0');
-  const month = String(currentTime.getMonth() + 1).padStart(2, '0');
-  const year = currentTime.getFullYear();
+  const dayOfWeek = DAYS_OF_WEEK[internalTime.getDay()];
+  const day = String(internalTime.getDate()).padStart(2, '0');
+  const month = String(internalTime.getMonth() + 1).padStart(2, '0');
+  const year = internalTime.getFullYear();
   const dateString = `${dayOfWeek}, ${day}/${month}/${year}`;
 
-  const clockString = formatTime(currentTime, true);
+  const clockString = formatTime(internalTime, true);
 
   const hasCheckedIn = Boolean(todayData?.hasCheckedIn);
   const hasCheckedOut = Boolean(todayData?.hasCheckedOut);
@@ -168,14 +177,34 @@ export const InternAttendanceWidget: React.FC<InternAttendanceWidgetProps> = ({
               <span>Điểm Danh Vào Ca</span>
             </button>
           ) : !hasCheckedOut ? (
-            <button
-              type="button"
-              onClick={onCheckOutClick}
-              className={`${styles.actionButton} ${styles.actionButtonCheckOut}`}
-            >
-              <LogOut size={18} />
-              <span>Điểm Danh Tan Ca</span>
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+              <button
+                type="button"
+                onClick={onCheckOutClick}
+                className={`${styles.actionButton} ${styles.actionButtonCheckOut}`}
+              >
+                <LogOut size={18} />
+                <span>Điểm Danh Tan Ca (QR)</span>
+              </button>
+
+              {onQuickCheckOut && (
+                <button
+                  type="button"
+                  onClick={onQuickCheckOut}
+                  className={styles.actionButton}
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--primary)',
+                    color: 'var(--primary)',
+                    boxShadow: 'none',
+                  }}
+                  title="Tan ca nhanh 1-chạm nếu máy đang kết nối Wi-Fi văn phòng"
+                >
+                  <CheckCircle2 size={16} />
+                  <span>Tan Ca Nhanh 1-Chạm</span>
+                </button>
+              )}
+            </div>
           ) : (
             <button
               type="button"

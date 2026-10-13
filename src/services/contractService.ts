@@ -392,6 +392,22 @@ export const dynamicContractService = {
     await apiClient.post(DYNAMIC_CONTRACT_ENDPOINTS.HR_WITHDRAW(contractId), { reason });
   },
 
+  async downloadContractPdfForHr(contractId: number | string, fileName?: string): Promise<void> {
+    const url = DYNAMIC_CONTRACT_ENDPOINTS.HR_DOWNLOAD_PDF(contractId);
+    const response = await apiClient.get(url, {
+      responseType: 'blob',
+    });
+    const fileBlob = new Blob([response.data], { type: 'application/pdf' });
+    const blobUrl = window.URL.createObjectURL(fileBlob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName || `contract_${contractId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+  },
+
   // Intern Actions
   async getMyContract(): Promise<DynamicContractResponse | null> {
     try {

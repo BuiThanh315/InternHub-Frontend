@@ -123,6 +123,19 @@
   border: 1px solid var(--border-default);
 }
 
+.badgeReviewPending {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid var(--warning-border);
+  font-weight: 700;
+}
+
+.badgeReviewApproved {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
 /* 5 TRẠNG THÁI GIAO DIỆN BẮT BUỘC (Nguyên tắc 32) */
 .stateContainer {
   padding: 3rem 1.5rem;
