@@ -11,7 +11,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
-import { ROUTES } from "../../constants/routes";
+import { getValidatedRedirectRoute } from "../../constants/routes";
 import { useAuth } from "../../contexts/AuthContext";
 import type { RoleType } from "../../types";
 import { Alert } from "../common/Alert/Alert";
@@ -58,26 +58,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const handleRedirect = (role: RoleType | string) => {
     const redirectParam = searchParams.get("redirect");
-    if (redirectParam && redirectParam.startsWith("/") && redirectParam !== "/" && redirectParam !== "/login") {
-      navigate(redirectParam, { replace: true });
-      return;
-    }
-
-    switch (role) {
-      case "ADMIN":
-        navigate(ROUTES.ADMIN.DASHBOARD, { replace: true });
-        break;
-      case "HR":
-        navigate(ROUTES.HR.DASHBOARD, { replace: true });
-        break;
-      case "MENTOR":
-        navigate(ROUTES.MENTOR.DASHBOARD, { replace: true });
-        break;
-      case "INTERN":
-      default:
-        navigate(ROUTES.INTERN.DASHBOARD, { replace: true });
-        break;
-    }
+    const targetRoute = getValidatedRedirectRoute(role, redirectParam);
+    navigate(targetRoute, { replace: true });
   };
 
   const handleGoogleSuccess = async (idToken: string) => {

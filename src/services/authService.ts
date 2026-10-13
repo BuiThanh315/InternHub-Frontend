@@ -179,10 +179,13 @@ export const authService = {
     } catch (err) {
       console.warn('Lỗi khi gọi API đăng xuất phía máy chủ:', err);
     } finally {
-      // Xóa Access Token trong RAM và profile trong LocalStorage
+      // Xóa Access Token trong RAM, thông tin user và cache lưu tạm trong LocalStorage/SessionStorage
       setInMemoryAccessToken(null);
       localStorage.removeItem('internhub_token');
       localStorage.removeItem('internhub_user');
+      localStorage.removeItem('intern_profile_latest');
+      localStorage.removeItem('intern_documents_latest');
+      sessionStorage.removeItem('intended_program_id');
     }
   },
 };

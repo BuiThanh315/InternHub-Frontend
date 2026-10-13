@@ -1,5 +1,6 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Users,
@@ -49,6 +50,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse,
 }) => {
   const { user, role, logout } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleLogout = async () => {
+    try {
+      queryClient.clear();
+      navigate(ROUTES.ROOT, { replace: true });
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   // Danh mục toàn bộ các mục điều hướng phân theo Section
   const ALL_NAV_ITEMS: NavItemConfig[] = [
@@ -422,7 +435,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <button
               type="button"
-              onClick={() => void logout()}
+              onClick={() => void handleLogout()}
               className={styles.logoutGhostBtn}
               title="Đăng xuất khỏi hệ thống"
               aria-label="Đăng xuất"
