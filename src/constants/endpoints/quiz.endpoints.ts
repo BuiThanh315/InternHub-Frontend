@@ -4,7 +4,7 @@ export const QUIZ_ENDPOINTS = {
   CREATE: '/api/quizzes',
   UPDATE: (id: number | string) => `/api/quizzes/${id}`,
   DETAIL: (id: number | string) => `/api/quizzes/${id}`,
-  BY_PROGRAM: (programId: number | string) => `/api/quizzes/program/${programId}`,
+  BY_PROGRAM: (programId: number | string) => `/api/quizzes/programs/${programId}`,
   ASSIGN: (id: number | string) => `/api/quizzes/${id}/assign`,
   REPORT: (id: number | string) => `/api/quizzes/${id}/report`,
 
