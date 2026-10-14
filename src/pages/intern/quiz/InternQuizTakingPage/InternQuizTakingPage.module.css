@@ -1,0 +1,383 @@
+.examContainer {
+  min-height: 100vh;
+  background: var(--bg-main);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Exam Sticky Header */
+.examHeader {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0.875rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-md, 8px);
+  transition: all 0.15s ease;
+}
+
+.backBtn:hover {
+  background: var(--bg-main);
+  color: var(--text-main);
+}
+
+.quizInfoGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.quizTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.attemptBadge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Timer Display */
+.timerWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-default);
+  border-radius: 9999px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 1px 2px var(--shadow-sm);
+}
+
+.timerWarning {
+  background: var(--danger-light, rgba(239, 68, 68, 0.1));
+  border-color: var(--danger, #ef4444);
+  color: var(--danger, #ef4444);
+  animation: pulseTimer 1s infinite alternate;
+}
+
+@keyframes pulseTimer {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  100% { transform: scale(1.03); box-shadow: 0 0 12px 2px rgba(239, 68, 68, 0.3); }
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Exam Body Layout */
+.examBody {
+  flex: 1;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .examBody {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Question Stage Card */
+.questionStage {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl, 16px);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 1rem;
+}
+
+.questionCounter {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.typeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--bg-main);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.typeBadgeMultiple {
+  background: var(--warning-light, rgba(245, 158, 11, 0.1));
+  border-color: var(--warning-border, rgba(245, 158, 11, 0.3));
+  color: var(--warning, #f59e0b);
+}
+
+.questionText {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Options List */
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.optionCard {
+  background: var(--bg-main);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  width: 100%;
+}
+
+.optionCard:hover {
+  border-color: var(--primary-light, rgba(99, 102, 241, 0.5));
+  background: var(--bg-card);
+  transform: translateX(4px);
+}
+
+.optionCardSelected {
+  border-color: var(--primary);
+  background: var(--primary-light, rgba(99, 102, 241, 0.08));
+  box-shadow: 0 0 0 1px var(--primary), 0 4px 12px var(--primary-glow, rgba(99, 102, 241, 0.2));
+}
+
+.optionIndicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.optionIndicatorSquare {
+  border-radius: 6px;
+}
+
+.optionIndicatorSelected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+.optionText {
+  font-size: 1rem;
+  color: var(--text-main);
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* Bottom Nav Controls */
+.stageFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Right Question Dock */
+.dockCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl, 16px);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 90px;
+}
+
+.dockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dockTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.dockAnsweredCount {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light, rgba(99, 102, 241, 0.1));
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+}
+
+.dockGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.6rem;
+}
+
+.dockBtn {
+  aspect-ratio: 1;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-main);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.dockBtn:hover {
+  border-color: var(--primary);
+  color: var(--text-main);
+}
+
+.dockBtnAnswered {
+  background: var(--primary-light, rgba(99, 102, 241, 0.15));
+  border-color: var(--primary-border, rgba(99, 102, 241, 0.4));
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.dockBtnCurrent {
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow, rgba(99, 102, 241, 0.3));
+}
+
+.dockLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.75rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.legendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--border-default);
+}
+
+.legendAnswered {
+  background: var(--primary-light, rgba(99, 102, 241, 0.2));
+  border-color: var(--primary);
+}
+
+.legendCurrent {
+  border: 2px solid var(--primary);
+}
+
+.legendUnanswered {
+  background: var(--bg-main);
+}
+
+/* Loading & Error States */
+.loadingContainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--bg-main);
+  color: var(--text-secondary);
+}
+
+.errorContainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  background: var(--bg-main);
+  padding: 1.5rem;
+  text-align: center;
+}

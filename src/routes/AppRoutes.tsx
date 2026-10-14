@@ -26,6 +26,11 @@ import { InternAttendanceConfirmPage } from '../pages/intern/InternAttendanceCon
 import { InternLeavePage } from '../pages/intern/leave';
 import { MentorLeaveApprovalPage } from '../pages/mentor/leave';
 import { InternContractSigningHub } from '../pages/intern/contract/InternContractSigningHub';
+import {
+  InternQuizListPage,
+  InternQuizTakingPage,
+  InternQuizResultPage,
+} from '../pages/intern/quiz';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -126,6 +131,8 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
           <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
           <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />
+          <Route path={ROUTES.INTERN.QUIZZES} element={<InternQuizListPage />} />
+          <Route path="/intern/quizzes/submissions/:submissionId" element={<InternQuizResultPage />} />
         </Route>
 
         {/* Universal Profile Route */}
@@ -139,6 +146,14 @@ export const AppRoutes: React.FC = () => {
         path={ROUTES.INTERN.ATTENDANCE_CONFIRM}
         element={<InternAttendanceConfirmPage />}
       />
+
+      {/* Route Phòng Thi Focus Exam Room - Toàn màn hình độc lập */}
+      <Route element={<ProtectedRoute allowedRoles={['INTERN', 'USER', 'ADMIN']} />}>
+        <Route
+          path="/intern/quizzes/:assignmentId/take"
+          element={<InternQuizTakingPage />}
+        />
+      </Route>
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to={ROUTES.ROOT} replace />} />
