@@ -30,7 +30,7 @@ import { InternContractSigningHub } from '../pages/intern/contract/InternContrac
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
-import { ROUTES } from '../constants/routes';
+import { ROUTES, getValidatedRedirectRoute } from '../constants/routes';
 
 export const AppRoutes: React.FC = () => {
   const { isAuthenticated, isInitializing, role } = useAuth();
@@ -50,22 +50,8 @@ export const AppRoutes: React.FC = () => {
   // Điều hướng Dashboard chuẩn TM-20 dựa trên vai trò trực tiếp (Role-Based)
   const getDashboardRedirect = () => {
     const redirectParam = searchParams.get('redirect');
-    if (redirectParam?.startsWith('/') && redirectParam !== '/' && redirectParam !== '/login') {
-      return <Navigate to={redirectParam} replace />;
-    }
-
-    switch (role) {
-      case 'ADMIN':
-        return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
-      case 'HR':
-        return <Navigate to={ROUTES.HR.DASHBOARD} replace />;
-      case 'MENTOR':
-        return <Navigate to={ROUTES.MENTOR.DASHBOARD} replace />;
-      case 'INTERN':
-      case 'USER':
-      default:
-        return <Navigate to={ROUTES.INTERN.DASHBOARD} replace />;
-    }
+    const targetRoute = getValidatedRedirectRoute(role, redirectParam);
+    return <Navigate to={targetRoute} replace />;
   };
 
   return (

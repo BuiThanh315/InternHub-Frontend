@@ -8,6 +8,8 @@ import {
   Trash2,
   Users,
   Info,
+  UserPlus,
+  UserCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -126,8 +128,14 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
           `Số lượng thực tập sinh (${previewData.validRowsCount}) vượt quá chỉ tiêu còn trống (${previewData.availableSlots}) của kỳ này.`
         );
       } else {
+        const newCount = previewData.newCandidatesCount ?? previewData.validRowsCount;
+        const existingCount = previewData.existingCandidatesCount ?? 0;
+        const breakdownText =
+          existingCount > 0
+            ? ` (${newCount} ứng viên mới, ${existingCount} đã có tài khoản)`
+            : ` (${newCount} ứng viên mới)`;
         toast.success(
-          `Kiểm tra thành công! File có ${previewData.validRowsCount} bản ghi hợp lệ sẵn sàng tiếp nhận.`
+          `Kiểm tra thành công! File có ${previewData.validRowsCount} bản ghi hợp lệ${breakdownText} sẵn sàng tiếp nhận.`
         );
       }
     } catch (err: any) {
@@ -205,8 +213,14 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
         state.status
       );
 
+      const newCount = result.newCandidatesCount ?? result.importedCount;
+      const existingCount = result.existingCandidatesCount ?? 0;
+      const detailMsg =
+        existingCount > 0
+          ? ` (${newCount} mới, ${existingCount} đã có tài khoản)`
+          : '';
       toast.success(
-        `Đã tiếp nhận thành công ${result.importedCount} thực tập sinh vào chương trình "${program.name}".`
+        `Đã tiếp nhận thành công ${result.importedCount} thực tập sinh${detailMsg} vào chương trình "${program.name}".`
       );
       handleClearFile();
       onSuccess();
@@ -229,6 +243,36 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
     state.preview.validRowsCount > 0 &&
     !state.isSubmitting
   );
+
+  const renderFooterSummary = () => {
+    if (!state.preview) return null;
+    if (hasErrors) {
+      return (
+        <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
+          Chưa thể tiếp nhận: Cần sửa {state.preview.errors.length} lỗi trong file Excel.
+        </span>
+      );
+    }
+    if (isQuotaExceeded) {
+      return (
+        <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
+          Chưa thể tiếp nhận: Vượt quá chỉ tiêu còn lại của chương trình.
+        </span>
+      );
+    }
+    const newCount = state.preview.newCandidatesCount ?? state.preview.validRowsCount;
+    const existingCount = state.preview.existingCandidatesCount ?? 0;
+    const countDetail =
+      existingCount > 0
+        ? ` (${newCount} mới, ${existingCount} đã có tài khoản)`
+        : '';
+
+    return (
+      <span style={{ color: 'var(--success)', fontWeight: 600 }}>
+        Sẵn sàng nhập {state.preview.validRowsCount} thực tập sinh{countDetail} vào chương trình.
+      </span>
+    );
+  };
 
   return (
     <div className={styles.container}>
@@ -415,6 +459,18 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
                     <Info size={13} />
                     <span>Slot trống: {state.preview.availableSlots}</span>
                   </div>
+                  {state.preview.newCandidatesCount !== undefined && (
+                    <div className={`${styles.metricPill} ${styles.metricPillSuccess}`}>
+                      <UserPlus size={13} />
+                      <span>Mới: {state.preview.newCandidatesCount}</span>
+                    </div>
+                  )}
+                  {state.preview.existingCandidatesCount !== undefined && (
+                    <div className={`${styles.metricPill} ${styles.metricPillInfo}`}>
+                      <UserCheck size={13} />
+                      <span>Đã có tài khoản: {state.preview.existingCandidatesCount}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -422,10 +478,11 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th style={{ width: '60px' }}>#</th>
+                      <th style={{ width: '50px' }}>#</th>
                       <th>Họ và tên</th>
                       <th>Email</th>
                       <th>Số điện thoại</th>
+                      <th style={{ width: '130px' }}>Phân loại</th>
                       <th>Giới tính</th>
                       <th>Trường ĐH</th>
                       <th>Ngành học</th>
@@ -441,6 +498,25 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
                         <td style={{ fontWeight: 600 }}>{row.fullName}</td>
                         <td>{row.email}</td>
                         <td>{row.phone}</td>
+                        <td>
+                          {row.isExistingUser ? (
+                            <span
+                              className={styles.candidateTagExisting}
+                              title="Ứng viên đã có tài khoản trong hệ thống (tái ghi danh)"
+                            >
+                              <UserCheck size={12} />
+                              <span>Đã có tài khoản</span>
+                            </span>
+                          ) : (
+                            <span
+                              className={styles.candidateTagNew}
+                              title="Ứng viên mới hoàn toàn, hệ thống sẽ tự động tạo tài khoản"
+                            >
+                              <UserPlus size={12} />
+                              <span>Mới</span>
+                            </span>
+                          )}
+                        </td>
                         <td>{row.gender || '—'}</td>
                         <td>{row.university}</td>
                         <td>{row.major}</td>
@@ -497,19 +573,7 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
           {/* 4.5. Thanh hành động Footer */}
           <div className={styles.actionFooter}>
             <div className={styles.footerSummary}>
-              {hasErrors ? (
-                <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
-                  Chưa thể tiếp nhận: Cần sửa {state.preview.errors.length} lỗi trong file Excel.
-                </span>
-              ) : isQuotaExceeded ? (
-                <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
-                  Chưa thể tiếp nhận: Vượt quá chỉ tiêu còn lại của chương trình.
-                </span>
-              ) : (
-                <span style={{ color: 'var(--success)', fontWeight: 600 }}>
-                  Sẵn sàng nhập {state.preview.validRowsCount} thực tập sinh vào chương trình.
-                </span>
-              )}
+              {renderFooterSummary()}
             </div>
 
             <div className={styles.footerButtons}>

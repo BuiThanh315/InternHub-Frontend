@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Inbox,
   UserCheck,
@@ -9,46 +9,91 @@ import {
   AlertCircle,
   RefreshCw,
   Clock,
+  Sparkles,
+  Filter,
 } from 'lucide-react';
-
 import { toast } from 'sonner';
+
 import { Button, Skeleton, Modal } from '../../../../../../components/common';
+import { useAiScreening, type AiFilterOption } from '../../../../../../hooks';
 import { internService } from '../../../../../../services/internService';
 import { formatDate } from '../../../../../../utils/formatters';
-import type { InternProfile } from '../../../../../../types';
+import type { InternProfile, ScreeningResultDto } from '../../../../../../types';
 import type { ApplicationsTabProps } from '../../types/ProgramWorkspace.types';
 import styles from '../../styles/ProgramWorkspace.module.css';
+
+interface RejectionDialogState {
+  intern: InternProfile | null;
+  reason: string;
+  isSubmitting: boolean;
+}
 
 export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   program,
   onEnrollSuccess,
   onViewInternDetail,
 }) => {
+  // Rule 14: Tối đa 3 - 4 state trong 1 component (Gom nhóm dữ liệu nhất quán)
+  // State 1: Danh sách ứng viên
   const [applicants, setApplicants] = useState<InternProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // State 2: Trạng thái tải danh sách
+  const [fetchStatus, setFetchStatus] = useState<{ isLoading: boolean; errorMessage: string | null }>({
+    isLoading: true,
+    errorMessage: null,
+  });
+
+  // State 3: ID ứng viên đang thực hiện thao tác duyệt
   const [actionInternId, setActionInternId] = useState<number | null>(null);
 
-  // Rejection Dialog State
-  const [rejectingIntern, setRejectingIntern] = useState<InternProfile | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [isRejecting, setIsRejecting] = useState(false);
+  // State 4: Trạng thái Modal từ chối ứng viên
+  const [rejectionDialog, setRejectionDialog] = useState<RejectionDialogState>({
+    intern: null,
+    reason: '',
+    isSubmitting: false,
+  });
+
+  // Custom Hook quản lý AI Screening hàng loạt & bộ lọc
+  const aiScreening = useAiScreening(program.id);
 
   const fetchApplicants = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setErrorMessage(null);
-      const res = await internService.getInterns({
+      setFetchStatus({ isLoading: true, errorMessage: null });
+      const firstPage = await internService.getInterns({
         programId: program.id,
         status: 'PENDING',
-        size: 50,
+        page: 0,
+        size: 100,
       });
-      setApplicants(res.items || res.content || []);
+
+      let allItems = firstPage.items || firstPage.content || [];
+      if (firstPage.totalPages > 1) {
+        const remainingRequests = [];
+        for (let p = 1; p < firstPage.totalPages; p++) {
+          remainingRequests.push(
+            internService.getInterns({
+              programId: program.id,
+              status: 'PENDING',
+              page: p,
+              size: 100,
+            })
+          );
+        }
+        const remainingResults = await Promise.all(remainingRequests);
+        remainingResults.forEach((pageRes) => {
+          allItems = allItems.concat(pageRes.items || pageRes.content || []);
+        });
+      }
+
+      setApplicants(allItems);
     } catch (err: any) {
       console.error('Lỗi khi nạp danh sách ứng viên chờ tiếp nhận:', err);
-      setErrorMessage(err.message || 'Không thể tải danh sách đơn đăng ký.');
+      setFetchStatus({
+        isLoading: false,
+        errorMessage: err.message || 'Không thể tải danh sách đơn đăng ký.',
+      });
     } finally {
-      setIsLoading(false);
+      setFetchStatus((prev) => ({ ...prev, isLoading: false }));
     }
   }, [program.id]);
 
@@ -56,9 +101,31 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
     void fetchApplicants();
   }, [fetchApplicants]);
 
+  // Nạp kết quả đánh giá AI khi danh sách applicants thay đổi hoặc khi AI hoàn thành batch
+  useEffect(() => {
+    if (applicants.length > 0) {
+      void aiScreening.loadEvaluations(applicants);
+    }
+  }, [applicants, aiScreening.loadEvaluations, aiScreening.completedVersion]);
+
   const currentCount = Number(program.currentInterns || 0);
   const maxCount = Number(program.maxInterns || 0);
   const isFull = maxCount > 0 && currentCount >= maxCount;
+
+  // Lọc ứng viên theo tiêu chí điểm số AI
+  const filteredApplicants = useMemo(
+    () => aiScreening.filterApplicants(applicants),
+    [applicants, aiScreening.filterApplicants]
+  );
+
+  const displayedIds = useMemo(
+    () => filteredApplicants.map((item) => item.id),
+    [filteredApplicants]
+  );
+
+  const isAllSelected =
+    displayedIds.length > 0 &&
+    displayedIds.every((id) => aiScreening.isSelected(id));
 
   // Tiếp nhận ứng viên vào kỳ
   const handleApprove = async (intern: InternProfile) => {
@@ -86,29 +153,57 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
 
   // Xác nhận từ chối đơn
   const handleConfirmReject = async () => {
-    if (!rejectingIntern) return;
-    if (!rejectionReason.trim() || rejectionReason.trim().length < 5) {
+    if (!rejectionDialog.intern) return;
+    if (!rejectionDialog.reason.trim() || rejectionDialog.reason.trim().length < 5) {
       toast.error('Lý do từ chối cần có ít nhất 5 ký tự.');
       return;
     }
 
     try {
-      setIsRejecting(true);
-      await internService.submitDecision(rejectingIntern.id, {
+      setRejectionDialog((prev) => ({ ...prev, isSubmitting: true }));
+      await internService.submitDecision(rejectionDialog.intern.id, {
         decision: 'REJECTED',
-        rejectionReason: rejectionReason.trim(),
+        rejectionReason: rejectionDialog.reason.trim(),
       });
-      toast.success(`Đã từ chối đơn đăng ký của "${rejectingIntern.fullName}".`);
-      setApplicants((prev) => prev.filter((item) => item.id !== rejectingIntern.id));
-      setRejectingIntern(null);
-      setRejectionReason('');
+      toast.success(`Đã từ chối đơn đăng ký của "${rejectionDialog.intern.fullName}".`);
+      setApplicants((prev) => prev.filter((item) => item.id !== rejectionDialog.intern?.id));
+      setRejectionDialog({ intern: null, reason: '', isSubmitting: false });
       onEnrollSuccess();
     } catch (err: any) {
       console.error('Lỗi từ chối:', err);
       toast.error(err.response?.data?.message || 'Không thể cập nhật từ chối đơn.');
     } finally {
-      setIsRejecting(false);
+      setRejectionDialog((prev) => ({ ...prev, isSubmitting: false }));
     }
+  };
+
+  const renderAiBadge = (evaluation?: ScreeningResultDto) => {
+    if (!evaluation) {
+      return <span className="badge badge-neutral">-- Chưa quét</span>;
+    }
+    const score = evaluation.overallScore;
+    if (score >= 75) {
+      return (
+        <span className="badge badge-success flex items-center gap-1 font-tabular">
+          <Sparkles size={11} aria-hidden="true" />
+          {score}% · Phù hợp
+        </span>
+      );
+    }
+    if (score >= 50) {
+      return (
+        <span className="badge badge-warning flex items-center gap-1 font-tabular">
+          <Sparkles size={11} aria-hidden="true" />
+          {score}% · Cân nhắc
+        </span>
+      );
+    }
+    return (
+      <span className="badge badge-danger flex items-center gap-1 font-tabular">
+        <Sparkles size={11} aria-hidden="true" />
+        {score}% · Chưa đạt
+      </span>
+    );
   };
 
   return (
@@ -130,21 +225,87 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
             variant="secondary"
             size="sm"
             onClick={fetchApplicants}
-            disabled={isLoading}
+            disabled={fetchStatus.isLoading}
             className="flex items-center gap-1.5"
           >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} aria-hidden="true" />
+            <RefreshCw
+              size={14}
+              className={fetchStatus.isLoading ? 'animate-spin' : ''}
+              aria-hidden="true"
+            />
             Làm mới
           </Button>
         </div>
       </div>
 
+      {/* AI Batch Screening Toolbar (TM-103) */}
+      {applicants.length > 0 && (
+        <div className={styles.aiToolbar} role="toolbar" aria-label="Thanh công cụ đánh giá AI">
+          <div className={styles.aiToolbarLeft}>
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                checked={isAllSelected}
+                onChange={() => aiScreening.toggleSelectAll(displayedIds)}
+                aria-label="Chọn tất cả ứng viên đang hiển thị"
+              />
+              <span>Chọn tất cả</span>
+            </label>
+
+            {aiScreening.selectedIds.length > 0 && (
+              <span className={styles.aiSelectionCount}>
+                (Đã chọn {aiScreening.selectedIds.length} ứng viên)
+              </span>
+            )}
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => void aiScreening.triggerBatch()}
+              disabled={aiScreening.selectedIds.length === 0 || aiScreening.isSubmitting}
+              leftIcon={<Sparkles size={14} />}
+            >
+              {aiScreening.isSubmitting
+                ? 'Đang gửi...'
+                : `Đánh giá AI đã chọn (${aiScreening.selectedIds.length})`}
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void aiScreening.triggerBatch(displayedIds)}
+              disabled={displayedIds.length === 0 || aiScreening.isSubmitting}
+              leftIcon={<Sparkles size={14} />}
+            >
+              Quét AI toàn bộ ({displayedIds.length})
+            </Button>
+          </div>
+
+          <div className={styles.aiToolbarRight}>
+            <Filter size={14} className="text-slate-400" aria-hidden="true" />
+            <select
+              className={styles.aiSelectFilter}
+              value={aiScreening.aiScoreFilter}
+              onChange={(e) => aiScreening.setAiScoreFilter(e.target.value as AiFilterOption)}
+              aria-label="Lọc ứng viên theo điểm số AI"
+            >
+              <option value="ALL">Tất cả mức điểm AI</option>
+              <option value="HIGH">Phù hợp cao (≥ 75%)</option>
+              <option value="MEDIUM">Cân nhắc (50 - 74%)</option>
+              <option value="LOW">Chưa đạt (&lt; 50%)</option>
+              <option value="UNRATED">Chưa quét AI</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Error state */}
-      {errorMessage && (
+      {fetchStatus.errorMessage && (
         <div className={styles.errorBanner} role="alert">
           <div className={styles.errorBannerContent}>
             <AlertCircle size={18} aria-hidden="true" />
-            <span>{errorMessage}</span>
+            <span>{fetchStatus.errorMessage}</span>
           </div>
           <button
             type="button"
@@ -157,7 +318,7 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
       )}
 
       {/* Loading Skeleton */}
-      {isLoading && (
+      {fetchStatus.isLoading && (
         <div className="space-y-3 py-4">
           <Skeleton height={52} />
           <Skeleton height={52} />
@@ -167,7 +328,7 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
       )}
 
       {/* Empty State */}
-      {!isLoading && !errorMessage && applicants.length === 0 && (
+      {!fetchStatus.isLoading && !fetchStatus.errorMessage && applicants.length === 0 && (
         <div className={styles.emptyState}>
           <div className={styles.emptyIconCircle}>
             <Inbox size={30} aria-hidden="true" />
@@ -180,23 +341,50 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
         </div>
       )}
 
+      {/* Filtered Empty State */}
+      {!fetchStatus.isLoading && !fetchStatus.errorMessage && applicants.length > 0 && filteredApplicants.length === 0 && (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIconCircle}>
+            <Filter size={28} aria-hidden="true" />
+          </div>
+          <h3 className={styles.emptyTitle}>Không Tìm Thấy Ứng Viên Phù Hợp Bộ Lọc</h3>
+          <p className={styles.emptyDescription}>
+            Không có ứng viên nào thỏa mãn tiêu chí lọc điểm AI hiện tại.
+          </p>
+          <div className="pt-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => aiScreening.setAiScoreFilter('ALL')}
+            >
+              Đặt lại bộ lọc
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Applicants Table */}
-      {!isLoading && !errorMessage && applicants.length > 0 && (
+      {!fetchStatus.isLoading && !fetchStatus.errorMessage && filteredApplicants.length > 0 && (
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>
               <tr>
+                <th style={{ width: '40px', textAlign: 'center' }}>
+                  <span className="sr-only">Chọn dòng</span>
+                </th>
                 <th>Ứng Viên</th>
                 <th>Trường & Chuyên Ngành</th>
                 <th>GPA</th>
                 <th>Ngày Nộp Đơn</th>
-                <th>Ghi Chú</th>
+                <th>Đánh Giá AI</th>
                 <th style={{ textAlign: 'right' }}>Thao Tác</th>
               </tr>
             </thead>
             <tbody>
-              {applicants.map((intern) => {
+              {filteredApplicants.map((intern) => {
                 const isProcessing = actionInternId === intern.id;
+                const isSelected = aiScreening.isSelected(intern.id);
+                const evaluation = aiScreening.evaluationsMap[intern.id];
                 const initials = (intern.fullName || 'U')
                   .split(' ')
                   .map((n) => n[0])
@@ -205,7 +393,21 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                   .toUpperCase();
 
                 return (
-                  <tr key={intern.id}>
+                  <tr
+                    key={intern.id}
+                    className={isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/20' : ''}
+                  >
+                    {/* Checkbox chọn hàng */}
+                    <td style={{ textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        checked={isSelected}
+                        onChange={() => aiScreening.toggleSelect(intern.id)}
+                        aria-label={`Chọn ứng viên ${intern.fullName}`}
+                      />
+                    </td>
+
                     {/* Cột Ứng viên */}
                     <td>
                       <div className={styles.internAvatarCell}>
@@ -214,7 +416,9 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                         </div>
                         <div>
                           <div className={styles.internName}>{intern.fullName}</div>
-                          <div className={styles.internEmail}>{intern.email} • {intern.phone}</div>
+                          <div className={styles.internEmail}>
+                            {intern.email} • {intern.phone}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -231,7 +435,13 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                     {/* Cột GPA */}
                     <td className="font-tabular font-medium">
                       {intern.gpa ? (
-                        <span className={intern.gpa >= 3.2 ? 'text-emerald-600 font-semibold' : 'text-slate-700 dark:text-slate-300'}>
+                        <span
+                          className={
+                            intern.gpa >= 3.2
+                              ? 'text-emerald-600 font-semibold'
+                              : 'text-slate-700 dark:text-slate-300'
+                          }
+                        >
                           {intern.gpa.toFixed(2)}
                         </span>
                       ) : (
@@ -247,9 +457,29 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                       </div>
                     </td>
 
-                    {/* Cột Ghi chú */}
-                    <td className="text-xs text-slate-500 max-w-45 truncate" title={intern.notes || ''}>
-                      {intern.notes || <span className="text-slate-400 italic">Không có</span>}
+                    {/* Cột Đánh giá AI */}
+                    <td>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          className="bg-transparent border-0 p-0 cursor-pointer text-left"
+                          onClick={() => onViewInternDetail(intern)}
+                          title="Bấm để xem chi tiết đối soát năng lực AI"
+                        >
+                          {renderAiBadge(evaluation)}
+                        </button>
+                        {!evaluation && (
+                          <button
+                            type="button"
+                            className={styles.actionIconBtn}
+                            onClick={() => void aiScreening.triggerBatch([intern.id])}
+                            title="Thẩm định hồ sơ bằng AI ngay"
+                            aria-label={`Thẩm định AI cho ${intern.fullName}`}
+                          >
+                            <Sparkles size={13} className="text-indigo-600 dark:text-indigo-400" />
+                          </button>
+                        )}
+                      </div>
                     </td>
 
                     {/* Cột Thao tác */}
@@ -283,8 +513,14 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                           type="button"
                           className={`${styles.actionIconBtn} ${styles.actionIconBtnDanger}`}
                           onClick={() => {
-                            setRejectingIntern(intern);
-                            setRejectionReason('Hồ sơ chưa đạt tiêu chí tuyển sinh của chương trình.');
+                            const defaultReason =
+                              evaluation?.draftRejectionReason ||
+                              'Hồ sơ chưa đạt tiêu chí tuyển sinh của chương trình.';
+                            setRejectionDialog({
+                              intern,
+                              reason: defaultReason,
+                              isSubmitting: false,
+                            });
                           }}
                           disabled={isProcessing}
                           title="Từ chối đơn ứng tuyển"
@@ -303,11 +539,11 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
       )}
 
       {/* Rejection Modal */}
-      {rejectingIntern && (
+      {rejectionDialog.intern && (
         <Modal
-          isOpen={!!rejectingIntern}
-          onClose={() => setRejectingIntern(null)}
-          title={`Từ chối hồ sơ ứng viên: ${rejectingIntern.fullName}`}
+          isOpen={!!rejectionDialog.intern}
+          onClose={() => setRejectionDialog({ intern: null, reason: '', isSubmitting: false })}
+          title={`Từ chối hồ sơ ứng viên: ${rejectionDialog.intern.fullName}`}
         >
           <div className="space-y-4">
             <p className="text-sm text-slate-600 dark:text-slate-300">
@@ -315,15 +551,20 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
             </p>
 
             <div>
-              <label htmlFor="rejectionReasonInput" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="rejectionReasonInput"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Lý do từ chối <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="rejectionReasonInput"
                 className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
                 rows={4}
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
+                value={rejectionDialog.reason}
+                onChange={(e) =>
+                  setRejectionDialog((prev) => ({ ...prev, reason: e.target.value }))
+                }
                 placeholder="Nhập lý do chi tiết..."
               />
             </div>
@@ -331,17 +572,21 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 variant="secondary"
-                onClick={() => setRejectingIntern(null)}
-                disabled={isRejecting}
+                onClick={() =>
+                  setRejectionDialog({ intern: null, reason: '', isSubmitting: false })
+                }
+                disabled={rejectionDialog.isSubmitting}
               >
                 Hủy bỏ
               </Button>
               <Button
                 variant="danger"
                 onClick={handleConfirmReject}
-                disabled={isRejecting || rejectionReason.trim().length < 5}
+                disabled={
+                  rejectionDialog.isSubmitting || rejectionDialog.reason.trim().length < 5
+                }
               >
-                {isRejecting ? 'Đang xử lý...' : 'Xác nhận từ chối'}
+                {rejectionDialog.isSubmitting ? 'Đang xử lý...' : 'Xác nhận từ chối'}
               </Button>
             </div>
           </div>

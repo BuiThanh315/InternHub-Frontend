@@ -3,10 +3,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import { AppRoutes } from './routes/AppRoutes';
-import { ErrorBoundary } from './components/common';
+import { ErrorBoundary, FloatingProgressWidget } from './components/common';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AiJobProvider } from './contexts/AiJobContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,8 +25,11 @@ export const App: React.FC = () => {
         <BrowserRouter>
           <AuthProvider>
             <NotificationProvider>
-              <AppRoutes />
-              <Toaster position="top-right" richColors closeButton />
+              <AiJobProvider>
+                <AppRoutes />
+                <FloatingProgressWidget />
+                <Toaster position="top-right" richColors closeButton />
+              </AiJobProvider>
             </NotificationProvider>
           </AuthProvider>
         </BrowserRouter>
