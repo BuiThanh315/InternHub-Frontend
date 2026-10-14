@@ -14,6 +14,7 @@ import {
   History,
   Clock,
   UserCheck,
+  Sparkles,
 } from 'lucide-react';
 import type { InternProfile, DocumentResponse, ContractResponse, MentorAssignmentResponse } from '../../../types';
 import { Modal, Button } from '../../../components/common';
@@ -21,11 +22,12 @@ import { documentService } from '../../../services/documentService';
 import { internService } from '../../../services/internService';
 import { contractService } from '../../../services/contractService';
 import { formatFileSize, formatDateTime, formatPhoneNumber, formatDate, formatCurrency, getContractStatusLabel } from '../../../utils/formatters';
+import { AiScreeningDossierTab } from './AiScreeningDossierTab';
 
 interface DetailInternModalProps {
   intern: InternProfile | null;
   documents: DocumentResponse[];
-  initialTab?: 'profile' | 'history';
+  initialTab?: 'profile' | 'history' | 'ai-screening';
   onClose: () => void;
   onOpenEdit: (intern: InternProfile) => void;
   onOpenUpload: (intern: InternProfile) => void;
@@ -72,7 +74,7 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
     list: [],
     loading: false,
   });
-  const [activeTab, setActiveTab] = useState<'profile' | 'history'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'profile' | 'history' | 'ai-screening'>(initialTab);
   const [mentorHistory, setMentorHistory] = useState<MentorAssignmentResponse[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -409,6 +411,26 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             <History size={15} />
             <span>Lịch Sử Phân Công Mentor</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('ai-screening')}
+            style={{
+              padding: '0.6rem 1rem',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'ai-screening' ? '2px solid var(--primary)' : '2px solid transparent',
+              color: activeTab === 'ai-screening' ? 'var(--primary)' : 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <Sparkles size={15} />
+            <span>Đánh Giá Tuyển Dụng AI</span>
+          </button>
         </div>
 
         {activeTab === 'profile' ? (
@@ -592,7 +614,7 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
               </div>
             )}
           </>
-        ) : (
+        ) : activeTab === 'history' ? (
           /* Tab: Lịch Sử Phân Công Mentor */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {loadingHistory ? (
@@ -713,6 +735,13 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
               </div>
             )}
           </div>
+        ) : (
+          <AiScreeningDossierTab
+            intern={intern}
+            onApplyRejectionReason={() => {
+              if (onOpenReject) onOpenReject(intern);
+            }}
+          />
         )}
 
         {/* Contract Section (TM-13) */}

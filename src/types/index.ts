@@ -13,3 +13,4 @@ export * from './attendance.types';
 export * from './mission.types';
 export * from './weeklyReport.types';
 export * from './leave.types';
+export * from './ai.types';

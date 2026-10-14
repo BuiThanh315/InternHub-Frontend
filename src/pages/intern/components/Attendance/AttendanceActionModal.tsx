@@ -193,8 +193,8 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
 
     try {
       const res = await attendanceService.initiateCheckIn({
-        latitude: coords?.latitude,
-        longitude: coords?.longitude,
+        latitude: coords?.latitude ?? 0,
+        longitude: coords?.longitude ?? 0,
         clientBaseUrl: window.location.origin,
       });
 
@@ -241,8 +241,8 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
           if (nextSec === 5 && !prefetchingRef.current) {
             prefetchingRef.current = true;
             attendanceService.initiateCheckIn({
-              latitude: coords?.latitude,
-              longitude: coords?.longitude,
+              latitude: coords?.latitude ?? 0,
+              longitude: coords?.longitude ?? 0,
               clientBaseUrl: window.location.origin,
             }).then((nextRes) => {
               // Khi đúng 0s, swap mượt sang mã mới

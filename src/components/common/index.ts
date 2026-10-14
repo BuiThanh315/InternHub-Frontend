@@ -27,3 +27,4 @@ export * from './Modal/ConfirmModal';
 
 export * from './ApiConsole/ApiConsoleModal';
 export * from './HasPermission/HasPermission';
+export * from './FloatingProgressWidget';

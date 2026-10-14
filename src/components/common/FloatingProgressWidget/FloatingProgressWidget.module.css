@@ -1,0 +1,333 @@
+.widgetContainer {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  font-family: var(--font-sans);
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   COLLAPSED PILL STATE
+   ========================================================================== */
+.collapsedPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.collapsedPill:hover {
+  border-color: var(--primary);
+  box-shadow: 0 8px 24px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+.pillIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.pillIconSpin {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pillTextGroup {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+}
+
+.pillTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.pillSubtitle {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.pillMiniBar {
+  width: 100%;
+  height: 3px;
+  background-color: var(--border-default);
+  border-radius: var(--radius-full);
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.pillMiniProgress {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.pillMiniProgressCompleted {
+  background: var(--emerald-gradient);
+}
+
+.pillActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.pillActionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pillActionBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+/* ==========================================================================
+   EXPANDED CARD STATE
+   ========================================================================== */
+.expandedCard {
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+}
+
+.headerTitleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerIcon {
+  color: var(--primary);
+}
+
+.headerTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.headerActionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.headerActionBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.cardBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progressLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.progressPercent {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.progressPercentCompleted {
+  color: var(--success);
+}
+
+.progressBarTrack {
+  width: 100%;
+  height: 8px;
+  background-color: var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+}
+
+.progressBarFill {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.progressBarFillCompleted {
+  background: var(--emerald-gradient);
+}
+
+.progressSubtitle {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+/* Results Mini List */
+.resultsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resultsSectionTitle {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.resultsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Custom Sleek Scrollbar (Rule 34) */
+.resultsList::-webkit-scrollbar {
+  width: 5px;
+}
+
+.resultsList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.resultsList::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}
+
+.resultsList::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.resultItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+}
+
+.resultInternId {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.cardFooter {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footerNote {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
