@@ -23,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Bot,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
@@ -97,6 +98,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Giám Sát Hệ Thống',
       icon: ShieldCheck,
       requiredPermission: 'SYSTEM_AUDIT_VIEW',
+      section: 'Hệ Thống',
+      allowedRoles: ['ADMIN'],
+    },
+    {
+      to: ROUTES.ADMIN.AI_SETTINGS,
+      label: 'Cấu Hình Trợ Lý AI',
+      icon: Bot,
+      requiredPermission: 'AI_CONFIG_MANAGE',
       section: 'Hệ Thống',
       allowedRoles: ['ADMIN'],
     },
