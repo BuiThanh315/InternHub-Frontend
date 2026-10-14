@@ -59,6 +59,7 @@ export interface ProgramDetailResponse {
   maxInterns: number;
   currentInterns: number;
   availableSlots: number;
+  pendingApplicationsCount?: number;
   startDate: string;
   endDate: string;
   durationWeeks: number;
@@ -84,10 +85,12 @@ export interface ProgramSummaryResponse {
   durationWeeks: number;
   maxInterns?: number;
   currentInterns?: number;
+  pendingApplicationsCount?: number;
   isRecruitmentOpen?: boolean;
   status: ProgramStatusType;
   statusDisplayName: string;
 }
+
 export type ProgramSummary = ProgramSummaryResponse;
 
 export interface CreateProgramRequest {
@@ -130,4 +133,71 @@ export interface ChangeProgramStatusRequest {
   cancellationReason?: string;
 }
 export type ChangeProgramStatusPayload = ChangeProgramStatusRequest;
+
+export interface ExcelRowError {
+  rowNumber: number;
+  fieldName: string;
+  cellValue?: string;
+  errorMessage: string;
+}
+
+export interface ExcelInternRow {
+  rowNumber: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  gender?: string;
+  dateOfBirth?: string;
+  university: string;
+  major: string;
+  academicYear?: string;
+  address?: string;
+  appliedPosition?: string;
+  notes?: string;
+  isExistingUser?: boolean;
+  existingUserId?: number;
+}
+
+export interface ExcelImportPreviewResponse {
+  programId: number;
+  programName: string;
+  totalRows: number;
+  validRowsCount: number;
+  invalidRowsCount: number;
+  availableSlots: number;
+  isQuotaExceeded: boolean;
+  errors: ExcelRowError[];
+  previewRows: ExcelInternRow[];
+  newCandidatesCount?: number;
+  existingCandidatesCount?: number;
+}
+
+export interface ExcelImportResultResponse {
+  programId: number;
+  programName: string;
+  importedCount: number;
+  currentInterns: number;
+  maxInterns: number;
+  importedInternCodes: string[];
+  importedAt: string;
+  newCandidatesCount?: number;
+  existingCandidatesCount?: number;
+}
+
+export interface AssignMentorToProgramRequest {
+  mentorId: number;
+  notes?: string;
+}
+
+export interface AssignMentorToProgramResponse {
+  programId: number;
+  programName: string;
+  mentorId: number;
+  mentorName: string;
+  mentorEmail: string;
+  totalAssignedInterns: number;
+  replacedMentorsCount: number;
+  affectedInternCodes: string[];
+  assignedAt: string;
+}
 

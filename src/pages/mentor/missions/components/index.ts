@@ -6,3 +6,5 @@ export * from './MissionBoardHeader';
 export * from './MissionBoardModal';
 export * from './MissionItemModal';
 export * from './DeleteConfirmModal';
+export * from './MentorProgramHub';
+export * from './MentorProgramWorkspace';

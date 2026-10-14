@@ -1,12 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Clock,
   Edit3,
   Trash2,
-  ArrowRight,
-  ArrowLeft,
-  CheckCircle2,
-  RotateCcw,
   AlertCircle,
 } from 'lucide-react';
 import { AssigneeAvatarStack } from '../AssigneeAvatarStack';
@@ -18,9 +14,11 @@ export const MissionCard: React.FC<MissionCardProps> = ({
   item,
   onEdit,
   onDelete,
-  onStatusChange,
+  onStatusChange: _onStatusChange,
   className = '',
 }) => {
+  const [isDragging, setIsDragging] = useState(false);
+
   // Tính toán hạn chót: bình thường, khẩn cấp (<= 2 ngày) hoặc quá hạn
   const getDueDateStatus = () => {
     if (!item.dueDate) return null;
@@ -63,8 +61,23 @@ export const MissionCard: React.FC<MissionCardProps> = ({
     COMPLETED: styles.cardCompleted,
   }[item.status];
 
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
+    e.dataTransfer.setData('text/plain', String(item.id));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
   return (
-    <div className={`${styles.card} ${cardStatusClass} ${className}`}>
+    <div
+      className={`${styles.card} ${cardStatusClass} ${isDragging ? styles.cardDragging : ''} ${className}`}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       {/* Header: Priority Badge & Action Buttons */}
       <div className={styles.cardHeader}>
         <span className={`${styles.priorityBadge} ${priorityConfig.class}`}>
@@ -119,52 +132,6 @@ export const MissionCard: React.FC<MissionCardProps> = ({
 
         {/* Danh sách TTS được gán */}
         <AssigneeAvatarStack assignees={item.assignees} size="sm" maxVisible={3} />
-      </div>
-
-      {/* Quick Transition Bar (Đề xuất 2) */}
-      <div className={styles.transitionBar}>
-        {item.status === 'TODO' && (
-          <button
-            type="button"
-            className={styles.transitionButton}
-            onClick={() => onStatusChange(item.id, 'IN_PROGRESS')}
-            title="Chuyển sang trạng thái Đang làm"
-          >
-            Bắt đầu làm <ArrowRight size={13} />
-          </button>
-        )}
-
-        {item.status === 'IN_PROGRESS' && (
-          <>
-            <button
-              type="button"
-              className={styles.transitionButton}
-              onClick={() => onStatusChange(item.id, 'TODO')}
-              title="Yêu cầu thực tập sinh làm lại"
-            >
-              <ArrowLeft size={13} /> Yêu cầu làm lại
-            </button>
-            <button
-              type="button"
-              className={`${styles.transitionButton} ${styles.transitionButtonSuccess}`}
-              onClick={() => onStatusChange(item.id, 'COMPLETED')}
-              title="Nghiệm thu hoàn thành công việc"
-            >
-              Nghiệm thu <CheckCircle2 size={13} />
-            </button>
-          </>
-        )}
-
-        {item.status === 'COMPLETED' && (
-          <button
-            type="button"
-            className={styles.transitionButton}
-            onClick={() => onStatusChange(item.id, 'IN_PROGRESS')}
-            title="Mở lại công việc để tiếp tục kiểm tra"
-          >
-            <RotateCcw size={13} /> Mở lại kiểm tra
-          </button>
-        )}
       </div>
     </div>
   );

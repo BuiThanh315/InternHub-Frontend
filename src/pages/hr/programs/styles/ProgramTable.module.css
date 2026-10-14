@@ -122,7 +122,6 @@
   flex-direction: column;
   gap: 0.35rem;
   text-align: left;
-  group: pointer;
 }
 
 .slotInfo {
@@ -235,6 +234,54 @@
   border-color: var(--danger-border);
 }
 
+.actionBtnPrimary {
+  color: var(--primary);
+  border-color: var(--border-focus);
+}
+
+.actionBtnPrimary:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-hover);
+  border-color: var(--primary);
+}
+
+/* Pending Application Badges */
+.pendingArea {
+  margin-top: 0.45rem;
+  display: flex;
+  align-items: center;
+}
+
+.pendingBadgeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  background-color: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning);
+  font-size: 0.735rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pendingBadgeBtn:hover {
+  background-color: var(--warning);
+  color: var(--text-inverse);
+  box-shadow: 0 0 0 2px var(--warning-border);
+  transform: translateY(-1px);
+}
+
+.noPendingBadge {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 /* Pagination */
 .pagination {
   display: flex;
@@ -274,3 +321,36 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+.programNameLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  margin-top: 0.35rem;
+  line-height: 1.35;
+  transition: color var(--transition-fast);
+  display: block;
+}
+
+.programNameLink:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.actionBtnWorkspace {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: rgba(79, 70, 229, 0.25);
+}
+
+.actionBtnWorkspace:hover {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+

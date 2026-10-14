@@ -1,0 +1,327 @@
+.workspaceContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Header Workspace */
+.workspaceHeaderCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.topBreadcrumbRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm, 6px);
+  transition: all 0.15s ease;
+}
+
+.backButton:hover {
+  color: var(--primary);
+  background: var(--primary-light, rgba(99, 102, 241, 0.08));
+}
+
+.programHeadingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.programTitle {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.programMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.metaDot {
+  color: var(--border-default);
+}
+
+.headerActionButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Segmented Control Tab Navigation */
+.tabNav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 0.5rem;
+}
+
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tabBtn:hover {
+  color: var(--text-main);
+  background: var(--bg-main);
+}
+
+.tabBtnActive {
+  color: var(--primary);
+  background: var(--primary-light, rgba(99, 102, 241, 0.1));
+  border-color: var(--primary-border, rgba(99, 102, 241, 0.2));
+}
+
+.tabCountPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.725rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  background: var(--border-default);
+  color: var(--text-main);
+}
+
+.tabBtnActive .tabCountPill {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+/* Horizontal Pills Chọn Board/Tuần */
+.boardPillsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  overflow-x: auto;
+}
+
+.pillsScrollList {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.boardPill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.boardPill:hover {
+  border-color: var(--primary);
+}
+
+.boardPillActive {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.boardPillBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.boardPillBtn:hover {
+  color: var(--text-main);
+}
+
+.boardPillActive .boardPillBtn {
+  color: #ffffff;
+}
+
+.boardPillActions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding-right: 0.5rem;
+}
+
+.pillIconButton {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.15rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  transition: opacity 0.15s ease;
+}
+
+.pillIconButton:hover {
+  opacity: 1;
+}
+
+.addBoardPillBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: 1px dashed var(--primary-border, rgba(99, 102, 241, 0.4));
+  background: var(--primary-light, rgba(99, 102, 241, 0.05));
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.addBoardPillBtn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-style: solid;
+}
+
+/* Kanban Filters Toolbar */
+.kanbanToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 8px);
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  flex: 1;
+  min-width: 260px;
+  max-width: 400px;
+}
+
+.filterControls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  min-width: 170px;
+}
+
+/* Edge Case 2: Empty Boards State */
+.emptyBoardCard {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 3.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.emptyIconWrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-main);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.emptyDescription {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  max-width: 460px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Skeleton Loading */
+.skeletonContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+.skeletonColumn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .skeletonContainer {
+    grid-template-columns: 1fr;
+  }
+}

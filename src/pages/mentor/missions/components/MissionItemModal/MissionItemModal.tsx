@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { X, Users, UserPlus, UserMinus } from 'lucide-react';
 import { Modal, Input, Select, Button } from '../../../../../components/common';
 import { getAvatarUrl } from '../../../../../utils/avatar';
 import type {
@@ -13,6 +14,10 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
   onClose,
   onSubmit,
   programInterns,
+  groups = [],
+  internWorkloadMap = {},
+  initialAssigneeId = null,
+  initialTitle = '',
   editingItem,
   isLoading = false,
 }) => {
@@ -31,9 +36,13 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
   });
 
   const [searchInternQuery, setSearchInternQuery] = useState('');
-  const [errorTitle, setErrorTitle] = useState<string | null>(null);
-  const [errorDueDate, setErrorDueDate] = useState<string | null>(null);
-  const [errorAssignee, setErrorAssignee] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('ALL');
+  const [keepOpen, setKeepOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{
+    title?: string;
+    dueDate?: string;
+    assignee?: string;
+  }>({});
 
   const todayString = useMemo(() => {
     const now = new Date();
@@ -54,34 +63,53 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
       });
     } else {
       setFormData({
-        title: '',
+        title: initialTitle || '',
         description: '',
         priority: 'MEDIUM',
         dueDate: '',
-        assigneeInternIds: [],
+        assigneeInternIds: initialAssigneeId ? [initialAssigneeId] : [],
       });
     }
     setSearchInternQuery('');
-    setErrorTitle(null);
-    setErrorDueDate(null);
-    setErrorAssignee(null);
-  }, [editingItem, isOpen]);
+    setSelectedGroupId('ALL');
+    setFieldErrors({});
+  }, [editingItem, isOpen, initialAssigneeId, initialTitle]);
 
-  // Lọc TTS theo từ khóa tìm kiếm
+  // Lọc TTS theo từ khóa và theo nhóm
   const filteredInterns = useMemo(() => {
-    if (!searchInternQuery.trim()) return programInterns;
-    const q = searchInternQuery.toLowerCase();
-    return programInterns.filter(
-      (intern) =>
+    const q = searchInternQuery.toLowerCase().trim();
+    return programInterns.filter((intern) => {
+      const matchesSearch =
+        q === '' ||
         intern.fullName.toLowerCase().includes(q) ||
         intern.internCode.toLowerCase().includes(q) ||
-        intern.email.toLowerCase().includes(q)
-    );
-  }, [programInterns, searchInternQuery]);
+        intern.email.toLowerCase().includes(q);
+
+      let matchesGroup = true;
+      if (selectedGroupId !== 'ALL') {
+        const targetGroupId = Number(selectedGroupId);
+        const group = groups.find((g) => g.id === targetGroupId);
+        matchesGroup = Boolean(group?.members.some((m) => m.id === intern.id));
+      }
+
+      return matchesSearch && matchesGroup;
+    });
+  }, [programInterns, searchInternQuery, selectedGroupId, groups]);
+
+  // Tìm đối tượng nhóm đang chọn lọc
+  const selectedGroup = useMemo(() => {
+    if (selectedGroupId === 'ALL') return null;
+    return groups.find((g) => g.id === Number(selectedGroupId)) || null;
+  }, [groups, selectedGroupId]);
+
+  // Danh sách các intern đã chọn (để hiển thị chips)
+  const selectedAssignees = useMemo(() => {
+    return programInterns.filter((i) => formData.assigneeInternIds.includes(i.id));
+  }, [programInterns, formData.assigneeInternIds]);
 
   // Toggle chọn TTS
   const handleToggleIntern = (internId: number) => {
-    setErrorAssignee(null);
+    setFieldErrors((prev) => ({ ...prev, assignee: undefined }));
     setFormData((prev) => {
       const exists = prev.assigneeInternIds.includes(internId);
       return {
@@ -93,30 +121,64 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
     });
   };
 
+  // Nút Chọn tất cả (toàn bộ chương trình)
+  const handleSelectAll = () => {
+    setFieldErrors((prev) => ({ ...prev, assignee: undefined }));
+    const allIds = programInterns.map((i) => i.id);
+    setFormData((prev) => ({ ...prev, assigneeInternIds: allIds }));
+  };
+
+  // Nút Bỏ chọn tất cả
+  const handleClearAll = () => {
+    setFormData((prev) => ({ ...prev, assigneeInternIds: [] }));
+  };
+
+  // Nút Chọn toàn bộ các học viên đang hiển thị theo bộ lọc / nhóm
+  const handleSelectFiltered = () => {
+    if (filteredInterns.length === 0) return;
+    setFieldErrors((prev) => ({ ...prev, assignee: undefined }));
+    const filteredIds = filteredInterns.map((i) => i.id);
+    setFormData((prev) => {
+      const merged = new Set([...prev.assigneeInternIds, ...filteredIds]);
+      return { ...prev, assigneeInternIds: Array.from(merged) };
+    });
+  };
+
+  // Nút Bỏ chọn các học viên thuộc danh sách đang lọc / nhóm
+  const handleClearFiltered = () => {
+    if (filteredInterns.length === 0) return;
+    const filteredIdSet = new Set(filteredInterns.map((i) => i.id));
+    setFormData((prev) => ({
+      ...prev,
+      assigneeInternIds: prev.assigneeInternIds.filter((id) => !filteredIdSet.has(id)),
+    }));
+  };
+
+
   const handleSubmit = async (e?: React.SyntheticEvent) => {
     if (e) {
       e.preventDefault();
     }
 
-    let hasError = false;
+    const errors: { title?: string; dueDate?: string; assignee?: string } = {};
     if (!formData.title.trim()) {
-      setErrorTitle('Vui lòng nhập tiêu đề công việc');
-      hasError = true;
+      errors.title = 'Vui lòng nhập tiêu đề công việc';
     } else if (formData.title.trim().length < 3) {
-      setErrorTitle('Tiêu đề công việc phải có từ 3 đến 200 ký tự');
-      hasError = true;
+      errors.title = 'Tiêu đề công việc phải có từ 3 đến 200 ký tự';
     }
 
     if (formData.dueDate && formData.dueDate < todayString) {
-      setErrorDueDate('Hạn hoàn thành không được ở trong quá khứ');
-      hasError = true;
+      errors.dueDate = 'Hạn hoàn thành không được ở trong quá khứ';
     }
 
     if (formData.assigneeInternIds.length === 0) {
-      setErrorAssignee('Vui lòng chọn ít nhất 1 thực tập sinh tham gia công việc');
-      hasError = true;
+      errors.assignee = 'Vui lòng chọn ít nhất 1 thực tập sinh tham gia công việc';
     }
-    if (hasError) return;
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
 
     const payload: CreateMissionItemRequest = {
       title: formData.title.trim(),
@@ -129,7 +191,19 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
 
     const success = await onSubmit(payload);
     if (success) {
-      onClose();
+      if (keepOpen && !editingItem) {
+        // Reset form để tiếp tục tạo công việc khác
+        setFormData({
+          title: '',
+          description: '',
+          priority: 'MEDIUM',
+          dueDate: '',
+          assigneeInternIds: [],
+        });
+        setFieldErrors({});
+      } else {
+        onClose();
+      }
     }
   };
 
@@ -141,19 +215,55 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
     { value: 'LOW', label: 'Thấp' },
   ];
 
+  const groupFilterOptions = [
+    { value: 'ALL', label: 'Tất cả các nhóm' },
+    ...groups.map((g) => ({
+      value: String(g.id),
+      label: g.name,
+    })),
+  ];
+
+  // Render Workload Badge nhỏ gọn
+  const renderItemWorkloadBadge = (internId: number) => {
+    const count = internWorkloadMap[internId] || 0;
+    if (count >= 5) {
+      return <span className={`${styles.workloadBadge} ${styles.workloadOverload}`}>{count} task (quá tải)</span>;
+    }
+    if (count >= 3) {
+      return <span className={`${styles.workloadBadge} ${styles.workloadHeavy}`}>{count} task</span>;
+    }
+    return <span className={`${styles.workloadBadge} ${styles.workloadNormal}`}>{count} task</span>;
+  };
+
   const footerContent = (
     <div className={styles.modalFooter}>
-      <Button variant="outline" onClick={onClose} disabled={isLoading}>
-        Hủy
-      </Button>
-      <Button
-        variant="primary"
-        onClick={handleSubmit}
-        isLoading={isLoading}
-        disabled={isLoading}
-      >
-        {isEditing ? 'Lưu Thay Đổi' : 'Giao Việc Cho TTS'}
-      </Button>
+      <div>
+        {!isEditing && (
+          <label className={styles.keepOpenLabel}>
+            <input
+              type="checkbox"
+              checked={keepOpen}
+              onChange={(e) => setKeepOpen(e.target.checked)}
+              className={styles.checkbox}
+            />
+            <span>Tiếp tục tạo công việc khác</span>
+          </label>
+        )}
+      </div>
+
+      <div className={styles.footerButtons}>
+        <Button variant="outline" onClick={onClose} disabled={isLoading}>
+          Hủy
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          isLoading={isLoading}
+          disabled={isLoading}
+        >
+          {isEditing ? 'Lưu Thay Đổi' : 'Giao Việc Cho TTS'}
+        </Button>
+      </div>
     </div>
   );
 
@@ -172,9 +282,11 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
           value={formData.title}
           onChange={(e) => {
             setFormData((prev) => ({ ...prev, title: e.target.value }));
-            if (errorTitle) setErrorTitle(null);
+            if (fieldErrors.title) {
+              setFieldErrors((prev) => ({ ...prev, title: undefined }));
+            }
           }}
-          error={errorTitle || undefined}
+          error={fieldErrors.title}
           required
         />
 
@@ -214,37 +326,162 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
               id="mission-item-duedate"
               type="date"
               min={todayString}
-              className={`${styles.dateInput} ${errorDueDate ? styles.inputError : ''}`}
+              className={`${styles.dateInput} ${fieldErrors.dueDate ? styles.inputError : ''}`}
               value={formData.dueDate}
               onChange={(e) => {
                 setFormData((prev) => ({ ...prev, dueDate: e.target.value }));
-                if (errorDueDate) setErrorDueDate(null);
+                if (fieldErrors.dueDate) {
+                  setFieldErrors((prev) => ({ ...prev, dueDate: undefined }));
+                }
               }}
             />
-            {errorDueDate && (
+            {fieldErrors.dueDate && (
               <p className={styles.fieldError} role="alert">
-                {errorDueDate}
+                {fieldErrors.dueDate}
               </p>
             )}
           </div>
         </div>
 
-        {/* Checklist Thực tập sinh nhận việc */}
+        {/* Checklist Thực tập sinh nhận việc (Pro Task Delegation) */}
         <div className={styles.assigneeSection}>
           <div className={styles.sectionHeader}>
             <label className={styles.label}>
               Thực tập sinh phụ trách ({formData.assigneeInternIds.length} đã chọn) *
             </label>
+            <div className={styles.quickActionButtons}>
+              {selectedGroupId !== 'ALL' ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.textBtn}
+                    onClick={handleSelectFiltered}
+                    disabled={filteredInterns.length === 0}
+                    title={`Chọn toàn bộ ${filteredInterns.length} học viên trong ${selectedGroup?.name || 'nhóm'}`}
+                  >
+                    Chọn cả nhóm ({filteredInterns.length})
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    className={styles.textBtn}
+                    onClick={handleClearFiltered}
+                    disabled={filteredInterns.length === 0}
+                    title="Bỏ chọn các học viên trong nhóm đang lọc"
+                  >
+                    Bỏ chọn nhóm
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    className={styles.textBtn}
+                    onClick={handleSelectAll}
+                    disabled={programInterns.length === 0}
+                    title="Chọn tất cả học viên của toàn bộ chương trình"
+                  >
+                    Tất cả TTS ({programInterns.length})
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={styles.textBtn}
+                    onClick={handleSelectAll}
+                    disabled={programInterns.length === 0}
+                  >
+                    Chọn tất cả ({programInterns.length})
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    className={styles.textBtn}
+                    onClick={handleClearAll}
+                    disabled={formData.assigneeInternIds.length === 0}
+                  >
+                    Bỏ chọn
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
-          <input
-            type="text"
-            className={styles.searchInternInput}
-            placeholder="Tìm theo tên, mã TTS hoặc email..."
-            aria-label="Tìm kiếm thực tập sinh"
-            value={searchInternQuery}
-            onChange={(e) => setSearchInternQuery(e.target.value)}
-          />
+          {/* Chips danh sách đã chọn */}
+          {selectedAssignees.length > 0 && (
+            <div className={styles.selectedChipsContainer}>
+              {selectedAssignees.map((assignee) => (
+                <span key={assignee.id} className={styles.chipTag}>
+                  <span>{assignee.fullName}</span>
+                  <button
+                    type="button"
+                    className={styles.removeChipBtn}
+                    onClick={() => handleToggleIntern(assignee.id)}
+                    title={`Bỏ chọn ${assignee.fullName}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Filter row: Search input & Nhóm dropdown */}
+          <div className={styles.filterRow}>
+            <input
+              type="text"
+              className={styles.searchInternInput}
+              placeholder="Tìm theo tên, mã TTS..."
+              aria-label="Tìm kiếm thực tập sinh"
+              value={searchInternQuery}
+              onChange={(e) => setSearchInternQuery(e.target.value)}
+            />
+
+            {groups.length > 0 && (
+              <div className={styles.groupFilterSelect}>
+                <Select
+                  options={groupFilterOptions}
+                  value={selectedGroupId}
+                  onChange={(e) => {
+                    setSelectedGroupId(e.target.value);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Quick Group Action Bar khi đang lọc theo nhóm */}
+          {selectedGroup && (
+            <div className={styles.groupActionRow}>
+              <div className={styles.groupActionLeft}>
+                <Users size={14} />
+                <span>
+                  Đang lọc: <strong>{selectedGroup.name}</strong> ({filteredInterns.length} học viên)
+                </span>
+              </div>
+              <div className={styles.groupActionBtns}>
+                <button
+                  type="button"
+                  className={styles.groupActionBtn}
+                  onClick={handleSelectFiltered}
+                  disabled={filteredInterns.length === 0}
+                  title={`Chọn toàn bộ học viên trong nhóm ${selectedGroup.name}`}
+                >
+                  <UserPlus size={13} />
+                  <span>Chọn cả nhóm ({filteredInterns.length})</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.groupActionBtn} ${styles.groupActionBtnSecondary}`}
+                  onClick={handleClearFiltered}
+                  disabled={filteredInterns.length === 0}
+                  title={`Bỏ chọn học viên trong nhóm ${selectedGroup.name}`}
+                >
+                  <UserMinus size={13} />
+                  <span>Bỏ chọn</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className={styles.internList}>
             {filteredInterns.length === 0 ? (
@@ -271,45 +508,51 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
                       isSelected ? styles.internItemSelected : ''
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleToggleIntern(intern.id)}
-                      className={styles.checkbox}
-                      aria-label={`Chọn ${intern.fullName}`}
-                    />
-
-                    {avatarSrc ? (
-                      <img
-                        src={avatarSrc}
-                        alt={intern.fullName}
-                        className={styles.internAvatar}
-                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                    <div className={styles.internItemLeft}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleIntern(intern.id)}
+                        className={styles.checkbox}
+                        aria-label={`Chọn ${intern.fullName}`}
                       />
-                    ) : (
-                      <div className={styles.internAvatarFallback}>
-                        {intern.fullName.charAt(0).toUpperCase()}
-                      </div>
-                    )}
 
-                    <div className={styles.internInfo}>
-                      <span className={styles.internName}>{intern.fullName}</span>
-                      <span className={styles.internMeta}>
-                        {intern.internCode} • {intern.email}
-                      </span>
+                      {avatarSrc ? (
+                        <img
+                          src={avatarSrc}
+                          alt={intern.fullName}
+                          className={styles.internAvatar}
+                          onError={(e) => (e.currentTarget.style.display = 'none')}
+                        />
+                      ) : (
+                        <div className={styles.internAvatarFallback}>
+                          {intern.fullName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+
+                      <div className={styles.internInfo}>
+                        <span className={styles.internName}>{intern.fullName}</span>
+                        <span className={styles.internMeta}>
+                          {intern.internCode} • {intern.email}
+                        </span>
+                      </div>
                     </div>
+
+                    <div>{renderItemWorkloadBadge(intern.id)}</div>
                   </label>
                 );
               })
             )}
           </div>
-          {errorAssignee && (
+
+          {fieldErrors.assignee && (
             <p className={styles.fieldError} role="alert">
-              {errorAssignee}
+              {fieldErrors.assignee}
             </p>
           )}
+
           <p className={styles.internHelpText}>
-            Chỉ các thực tập sinh đang trong giai đoạn đào tạo (INTERNING/APPROVED) mới có thể nhận nhiệm vụ.
+            Học viên đang nhận việc sẽ hiển thị số task đang làm để bạn tránh giao dồn task.
           </p>
         </div>
       </form>

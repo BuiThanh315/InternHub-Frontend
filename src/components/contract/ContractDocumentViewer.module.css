@@ -1,0 +1,114 @@
+.viewerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: transparent;
+  padding: 0;
+  width: 100%;
+}
+
+.metaBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 720px;
+  margin-bottom: 12px;
+  padding: 8px 14px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.metaInfo {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.contractBadge,
+.revisionBadge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  background-color: #e2e8f0;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.statusBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.draft {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.sent {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.signed {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.changes_requested {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.hashInfo {
+  font-family: monospace;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.a4Page {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  min-height: 980px;
+  background-color: #ffffff;
+  padding: 44px 40px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.watermark {
+  position: absolute;
+  top: 40%;
+  left: 15%;
+  transform: rotate(-30deg);
+  font-size: 54px;
+  font-weight: 900;
+  color: rgba(203, 213, 225, 0.35);
+  pointer-events: none;
+  user-select: none;
+}
+
+.watermarkWarning {
+  position: absolute;
+  top: 40%;
+  left: 10%;
+  transform: rotate(-30deg);
+  font-size: 42px;
+  font-weight: 900;
+  color: rgba(239, 68, 68, 0.25);
+  pointer-events: none;
+  user-select: none;
+}
+
+.documentBody {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 13pt;
+  line-height: 1.55;
+  color: #0f172a;
+}

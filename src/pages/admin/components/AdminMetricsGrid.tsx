@@ -25,8 +25,8 @@ const INITIAL_SERVICES: ServiceStatus[] = [
   { id: 'identity', name: 'Identity & Access Service', port: '8081', role: 'Xác thực & Quản lý User', status: 'CHECKING' },
   { id: 'intern', name: 'Intern & Program Service', port: '8082', role: 'Hồ sơ TTS & Tài liệu', status: 'CHECKING' },
   { id: 'reporting', name: 'Reporting & Integration Service', port: '8083', role: 'Sao lưu & Nhật ký kiểm toán', status: 'CHECKING' },
-  { id: 'notification', name: 'Notification Service', port: '8084', role: 'Thông báo & Đẩy SSE/WebSocket', status: 'CHECKING' },
-  { id: 'file', name: 'File Storage Service', port: '8085', role: 'Lưu trữ MinIO S3 & Tải tệp', status: 'CHECKING' },
+  { id: 'notification', name: 'Notification Service', port: '8085', role: 'Thông báo & Đẩy SSE/WebSocket', status: 'CHECKING' },
+  { id: 'file', name: 'File Storage Service', port: '8084', role: 'Lưu trữ MinIO S3 & Tải tệp', status: 'CHECKING' },
 ];
 
 export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => {
@@ -110,7 +110,7 @@ export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => 
     };
 
     // Probe 6: File Storage Service
-    const fileRes = await checkEndpoint('/api/files/health');
+    const fileRes = await checkEndpoint('/api/files/actuator/health');
     updated[7] = {
       ...updated[7],
       status: fileRes.ok ? 'ONLINE' : 'OFFLINE',

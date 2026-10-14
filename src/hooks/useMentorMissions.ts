@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { missionService } from '../services/missionService';
+import { groupService } from '../services/groupService';
 import type {
   MentorProgramResponse,
   AssigneeResponse,
@@ -15,6 +16,7 @@ import type {
   CreateMissionItemRequest,
   UpdateMissionItemRequest,
 } from '../types';
+import type { InternGroup, BatchGroupItem } from '../types/group.types';
 
 export interface UseMentorMissionsReturn {
   // Programs & Interns
@@ -22,6 +24,16 @@ export interface UseMentorMissionsReturn {
   selectedProgramId: number | null;
   setSelectedProgramId: (id: number | null) => void;
   programInterns: AssigneeResponse[];
+
+  // Groups
+  groups: InternGroup[];
+  isLoadingGroups: boolean;
+  loadGroups: (programId: number) => Promise<void>;
+  batchApplyGroups: (payloadGroups: BatchGroupItem[]) => Promise<boolean>;
+  disbandGroup: (groupId: number) => Promise<boolean>;
+
+  // Workload Matrix
+  internWorkloadMap: Record<number, number>;
 
   // Boards
   boards: MissionBoardResponse[];
@@ -56,6 +68,7 @@ export interface UseMentorMissionsReturn {
   updateBoard: (boardId: number, payload: UpdateMissionBoardRequest) => Promise<boolean>;
   deleteBoard: (boardId: number) => Promise<boolean>;
   createItem: (payload: CreateMissionItemRequest) => Promise<boolean>;
+  quickCreateItem: (title: string) => Promise<boolean>;
   updateItem: (itemId: number, payload: UpdateMissionItemRequest) => Promise<boolean>;
   updateItemStatus: (itemId: number, status: MissionItemStatus) => Promise<boolean>;
   deleteItem: (itemId: number) => Promise<boolean>;
@@ -66,6 +79,10 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
   const [programs, setPrograms] = useState<MentorProgramResponse[]>([]);
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
   const [programInterns, setProgramInterns] = useState<AssigneeResponse[]>([]);
+
+  // Groups
+  const [groups, setGroups] = useState<InternGroup[]>([]);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
 
   // Boards
   const [boards, setBoards] = useState<MissionBoardResponse[]>([]);
@@ -92,6 +109,21 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
     err?.message === 'canceled' ||
     Boolean(err?.originalError && isAbortOrCancelError(err.originalError));
 
+  // Tải danh sách nhóm riêng lẻ
+  const loadGroups = useCallback(async (programId: number) => {
+    try {
+      setIsLoadingGroups(true);
+      const data = await groupService.getGroups(programId);
+      setGroups(data || []);
+    } catch (err: any) {
+      if (!isAbortOrCancelError(err)) {
+        toast.error('Không thể tải danh sách nhóm của chương trình');
+      }
+    } finally {
+      setIsLoadingGroups(false);
+    }
+  }, []);
+
   // 1. Tải danh sách Programs mà Mentor phụ trách
   const loadPrograms = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -99,12 +131,6 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
       setError(null);
       const data = await missionService.getMyMentoredPrograms(signal);
       setPrograms(data);
-      if (data.length > 0) {
-        const firstProgramId = data[0].programId ?? data[0].id;
-        if (firstProgramId) {
-          setSelectedProgramId((prev) => prev || firstProgramId);
-        }
-      }
     } catch (err: any) {
       if (isAbortOrCancelError(err)) {
         return;
@@ -122,19 +148,22 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
     return () => controller.abort();
   }, [loadPrograms]);
 
-  // 2. Khi selectedProgramId thay đổi: Tải danh sách TTS và danh sách Boards trong Program
+  // 2. Khi selectedProgramId thay đổi: Tải danh sách TTS, Boards và Groups trong Program
   const loadProgramData = useCallback(async (programId: number, signal?: AbortSignal) => {
     try {
       setIsLoadingBoard(true);
+      setIsLoadingGroups(true);
       setError(null);
 
-      const [internsRes, boardsRes] = await Promise.all([
+      const [internsRes, boardsRes, groupsRes] = await Promise.all([
         missionService.getProgramInterns(programId, signal),
         missionService.getBoardsByProgram(programId, signal),
+        groupService.getGroups(programId).catch(() => [] as InternGroup[]),
       ]);
 
       setProgramInterns(internsRes);
       setBoards(boardsRes);
+      setGroups(groupsRes || []);
 
       // Tự động chọn board đầu tiên nếu có
       if (boardsRes.length > 0) {
@@ -151,6 +180,7 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
       toast.error('Không thể tải danh sách bảng nhiệm vụ');
     } finally {
       setIsLoadingBoard(false);
+      setIsLoadingGroups(false);
     }
   }, []);
 
@@ -250,6 +280,66 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
     const completed = allCurrentItems.filter((i) => i.status === 'COMPLETED').length;
     return Math.round((completed / total) * 100);
   }, [allCurrentItems]);
+
+  // Ma trận tải trọng học viên: Đếm số lượng task chưa hoàn thành (TODO + IN_PROGRESS)
+  const internWorkloadMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    allCurrentItems.forEach((item) => {
+      if (item.status !== 'COMPLETED' && Array.isArray(item.assignees)) {
+        item.assignees.forEach((a) => {
+          map[a.id] = (map[a.id] || 0) + 1;
+        });
+      }
+    });
+    return map;
+  }, [allCurrentItems]);
+
+  // Actions quản lý nhóm
+  const batchApplyGroups = async (payloadGroups: BatchGroupItem[]): Promise<boolean> => {
+    if (!selectedProgramId) {
+      toast.error('Vui lòng chọn chương trình thực tập');
+      return false;
+    }
+    try {
+      setIsMutating(true);
+      const res = await groupService.batchApplyGroups(selectedProgramId, { groups: payloadGroups });
+      setGroups(res);
+      toast.success('Lưu và áp dụng danh sách nhóm thành công!');
+      return true;
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi khi lưu và áp dụng nhóm');
+      return false;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const disbandGroup = async (groupId: number): Promise<boolean> => {
+    if (!selectedProgramId) return false;
+    try {
+      setIsMutating(true);
+      await groupService.disbandGroup(selectedProgramId, groupId);
+      toast.success('Đã giải tán nhóm thành công!');
+      await loadGroups(selectedProgramId);
+      return true;
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi khi giải tán nhóm');
+      return false;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  // Tạo nhanh công việc ở chân cột TODO
+  const quickCreateItem = async (title: string): Promise<boolean> => {
+    if (!title.trim()) return false;
+    return await createItem({
+      title: title.trim(),
+      priority: 'MEDIUM',
+      assigneeInternIds: [],
+      internIds: [],
+    });
+  };
 
   // Refresh toàn bộ dữ liệu
   const refreshAll = async () => {
@@ -451,6 +541,12 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
     selectedProgramId,
     setSelectedProgramId,
     programInterns,
+    groups,
+    isLoadingGroups,
+    loadGroups,
+    batchApplyGroups,
+    disbandGroup,
+    internWorkloadMap,
     boards,
     activeBoardId,
     setActiveBoardId,
@@ -475,6 +571,7 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
     updateBoard,
     deleteBoard,
     createItem,
+    quickCreateItem,
     updateItem,
     updateItemStatus,
     deleteItem,

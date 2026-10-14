@@ -87,3 +87,175 @@ export interface ViewContractUrlResponse {
   presignedUrl?: string | null;
   expiresInSeconds: number;
 }
+
+// ============================================================================
+// DYNAMIC STRUCTURED CONTRACT & E-SIGNATURE (ENTERPRISE EXTENSION)
+// ============================================================================
+
+export type DynamicContractStatus =
+  | 'DRAFT'
+  | 'READY_TO_SEND'
+  | 'SENT'
+  | 'CHANGES_REQUESTED'
+  | 'HR_REVISING'
+  | 'INTERN_CONFIRMED'
+  | 'SIGNED'
+  | 'WAITING_EFFECTIVE_DATE'
+  | 'ACTIVE'
+  | 'WITHDRAWN'
+  | 'EXPIRED';
+
+export type TemplateVersionStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+
+export interface ContractTemplateVersionResponse {
+  id: number;
+  templateId: number;
+  versionNumber: number;
+  contentTemplate: string;
+  status: TemplateVersionStatus;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface ContractTemplateResponse {
+  id: number;
+  code: string;
+  title: string;
+  description?: string | null;
+  isActive: boolean;
+  currentVersionNumber: number;
+  latestVersion?: ContractTemplateVersionResponse | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ContractVariablesPayload {
+  internFullName: string;
+  internCccd: string;
+  internUniversity: string;
+  internEmail: string;
+  internPhone?: string;
+  allowanceAmount: number;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  position: string;
+  department: string;
+  supervisorName: string;
+  customTerms?: string;
+}
+
+export interface ContractRevisionResponse {
+  id: number;
+  contractId: number;
+  revisionNumber: number;
+  templateVersionId: number;
+  variablesPayload: ContractVariablesPayload;
+  canonicalSnapshotContent: string;
+  snapshotHash: string;
+  pdfStorageKey?: string | null;
+  pdfHash?: string | null;
+  status: DynamicContractStatus;
+  changeRequestReason?: string | null;
+  consentTextVersion?: string | null;
+  consentTextSnapshot?: string | null;
+  confirmedAt?: string | null;
+  signedAt?: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+  version: number;
+}
+
+export interface DynamicContractResponse {
+  id: number;
+  contractNumber: string;
+  internId: number;
+  internCode?: string;
+  internFullName: string;
+  internEmail?: string;
+  programId: number;
+  programName?: string;
+  status: DynamicContractStatus;
+  currentRevisionId?: number | null;
+  currentRevision?: ContractRevisionResponse | null;
+  snapshotHash?: string | null;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  allowanceAmount?: number | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+  version: number;
+}
+
+export interface CreateContractDraftRequest {
+  internId: number;
+  programId: number;
+  templateId: number;
+  templateVersionNumber?: number;
+  position?: string;
+  department?: string;
+  supervisorName?: string;
+  allowanceAmount?: number;
+  startDate?: string;
+  endDate?: string;
+  customTerms?: string;
+  variables?: Partial<ContractVariablesPayload>;
+}
+
+export interface UpdateContractDraftRequest {
+  templateVersionNumber?: number;
+  position?: string;
+  department?: string;
+  supervisorName?: string;
+  allowanceAmount?: number;
+  startDate?: string;
+  endDate?: string;
+  customTerms?: string;
+  variables?: Partial<ContractVariablesPayload>;
+}
+
+export interface RequestContractChangesRequest {
+  reason: string;
+}
+
+export interface ConfirmContractRevisionRequest {
+  consentTextVersion: string;
+  consentTextSnapshot: string;
+}
+
+export interface SignContractRevisionRequest {
+  signatureData: string; // Vector/SVG/Base64 từ Canvas
+  authMethod: 'JWT_SESSION' | 'RE_AUTH_OTP';
+  otpCode?: string;
+  clientIp?: string;
+  clientUserAgent?: string;
+}
+
+export interface ContractSignatureResponse {
+  id: number;
+  contractRevisionId: number;
+  signerUserId: number;
+  signatureData: string;
+  signedAt: string;
+  ipAddress: string;
+  userAgent: string;
+  authMethod: string;
+  documentHash: string;
+  signatureHash: string;
+  consentTextVersion: string;
+}
+
+export interface ContractAuditLogResponse {
+  id: number;
+  contractId: number;
+  contractRevisionId?: number | null;
+  actorUserId: number;
+  actorRole: string;
+  action: string;
+  timestamp: string;
+  ipAddress: string;
+  userAgent: string;
+  metadata?: Record<string, unknown>;
+}

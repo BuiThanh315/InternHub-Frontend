@@ -5,26 +5,32 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { HrDashboard } from '../pages/hr/HrDashboard';
 import { HrProgramManagementPage } from '../pages/hr/programs/HrProgramManagementPage';
+import { ProgramWorkspacePage } from '../pages/hr/programs/workspace';
 import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPage';
 import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
 import { HrEvaluationManagementPage } from '../pages/hr/evaluations/HrEvaluationManagementPage';
 import { HRAttendanceReportPage } from '../pages/hr/attendance-reports';
+import { HrAllowancePage } from '../pages/hr/allowance/HrAllowancePage';
+import { HrSupportRequestsPage } from '../pages/hr/support/HrSupportRequestsPage';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { MentorMissionPage } from '../pages/mentor/missions/MentorMissionPage';
 import { InternDashboard } from '../pages/intern/InternDashboard';
 import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
 import { InternMissionPage } from '../pages/intern/missions/InternMissionPage';
 import { InternWeeklyReportPage } from '../pages/intern/reports';
+import { InternAllowanceHistoryPage } from '../pages/intern/allowance/InternAllowanceHistoryPage';
+import { InternSupportRequestPage } from '../pages/intern/support/InternSupportRequestPage';
 import { ProfilePage } from '../pages/profile';
 import { InternApplyPage } from '../pages/intern/InternApplyPage';
 import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
 import { InternAttendanceConfirmPage } from '../pages/intern/InternAttendanceConfirmPage';
 import { InternLeavePage } from '../pages/intern/leave';
 import { MentorLeaveApprovalPage } from '../pages/mentor/leave';
+import { InternContractSigningHub } from '../pages/intern/contract/InternContractSigningHub';
 import { LandingPage } from '../pages/public/LandingPage';
 import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
-import { ROUTES } from '../constants/routes';
+import { ROUTES, getValidatedRedirectRoute } from '../constants/routes';
 
 export const AppRoutes: React.FC = () => {
   const { isAuthenticated, isInitializing, role } = useAuth();
@@ -44,22 +50,8 @@ export const AppRoutes: React.FC = () => {
   // Điều hướng Dashboard chuẩn TM-20 dựa trên vai trò trực tiếp (Role-Based)
   const getDashboardRedirect = () => {
     const redirectParam = searchParams.get('redirect');
-    if (redirectParam?.startsWith('/') && redirectParam !== '/' && redirectParam !== '/login') {
-      return <Navigate to={redirectParam} replace />;
-    }
-
-    switch (role) {
-      case 'ADMIN':
-        return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
-      case 'HR':
-        return <Navigate to={ROUTES.HR.DASHBOARD} replace />;
-      case 'MENTOR':
-        return <Navigate to={ROUTES.MENTOR.DASHBOARD} replace />;
-      case 'INTERN':
-      case 'USER':
-      default:
-        return <Navigate to={ROUTES.INTERN.DASHBOARD} replace />;
-    }
+    const targetRoute = getValidatedRedirectRoute(role, redirectParam);
+    return <Navigate to={targetRoute} replace />;
   };
 
   return (
@@ -100,11 +92,14 @@ export const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']} />}>
           <Route path={ROUTES.HR.DASHBOARD} element={<HrDashboard />} />
           <Route path={ROUTES.HR.PROGRAMS} element={<HrProgramManagementPage />} />
+          <Route path={ROUTES.HR.PROGRAM_WORKSPACE} element={<ProgramWorkspacePage />} />
           <Route path={ROUTES.HR.DEPARTMENTS} element={<Navigate to={ROUTES.HR.MENTORS} replace />} />
           <Route path={ROUTES.HR.MENTORS} element={<HrMentorManagementPage />} />
           <Route path={ROUTES.HR.INTERNS} element={<HrDashboard />} />
           <Route path={ROUTES.HR.CONTRACTS} element={<HrContractManagementPage />} />
           <Route path={ROUTES.HR.EVALUATIONS} element={<HrEvaluationManagementPage />} />
+          <Route path={ROUTES.HR.ALLOWANCES} element={<HrAllowancePage />} />
+          <Route path={ROUTES.HR.SUPPORT_REQUESTS} element={<HrSupportRequestsPage />} />
           <Route path={ROUTES.HR.REVIEW} element={<HrDashboard />} />
         </Route>
 
@@ -116,12 +111,14 @@ export const AppRoutes: React.FC = () => {
 
 
         {/* Mentor Area */}
+        <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'HR', 'ADMIN']} />}>
+          <Route path={ROUTES.MENTOR.LEAVE_REQUESTS} element={<MentorLeaveApprovalPage />} />
+        </Route>
         <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']} />}>
           <Route path={ROUTES.MENTOR.DASHBOARD} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.MISSIONS} element={<MentorMissionPage />} />
           <Route path={ROUTES.MENTOR.INTERNS} element={<MentorDashboard />} />
           <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
-          <Route path={ROUTES.MENTOR.LEAVE_REQUESTS} element={<MentorLeaveApprovalPage />} />
         </Route>
 
         {/* Intern Dedicated Area */}
@@ -131,6 +128,9 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.INTERN.WEEKLY_REPORTS} element={<InternWeeklyReportPage />} />
           <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
           <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
+          <Route path={ROUTES.INTERN.CONTRACT_SIGNING} element={<InternContractSigningHub />} />
+          <Route path={ROUTES.INTERN.ALLOWANCES} element={<InternAllowanceHistoryPage />} />
+          <Route path={ROUTES.INTERN.SUPPORT_REQUESTS} element={<InternSupportRequestPage />} />
           <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
           <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
           <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />

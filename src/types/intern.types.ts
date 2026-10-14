@@ -49,6 +49,8 @@ export interface InternProfile {
   reassignmentReason?: string | null;
   needsMentorReassignment?: boolean;
   mentorReassignmentReason?: string | null;
+  groupId?: number | null;
+  groupName?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -121,6 +123,7 @@ export interface CreateInternRequest {
   appliedPosition: string;
   startDate: string;
   endDate?: string;
+  programId?: number;
   notes?: string;
 }
 

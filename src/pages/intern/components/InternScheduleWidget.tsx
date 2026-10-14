@@ -1,16 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, Clock, CheckCircle2, Circle, AlertCircle, Users, Award, BookOpen, Briefcase } from 'lucide-react';
 import type { InternProfile } from '../../../types';
 import { formatDate } from '../../../utils/formatters';
 import { useInternScheduleTimeline } from '../hooks/useInternScheduleTimeline';
+import { meetingService } from '../../../services/meetingService';
+import type { MeetingSchedule } from '../../../types/meeting.types';
 import styles from './InternScheduleWidget.module.css';
 
 interface InternScheduleWidgetProps {
   profile: InternProfile;
 }
 
-export const InternScheduleWidget: React.FC<InternScheduleWidgetProps> = ({ profile }) => {
+export const InternScheduleWidget: React.FC<InternScheduleWidgetProps> = React.memo(({ profile }) => {
   const { startDate, endDate, programName, mentorName, mentorEmail, status } = profile;
+
+  const [meetings, setMeetings] = useState<MeetingSchedule[]>([]);
+  const [isLoadingMeetings, setIsLoadingMeetings] = useState(false);
+
+  const fetchMeetings = useCallback(async () => {
+    setIsLoadingMeetings(true);
+    try {
+      let data = await meetingService.getMyMeetings();
+      // Nếu data trống và có userId của profile, thử fallback getMeetingsByIntern
+      if ((!data || data.length === 0) && profile.userId) {
+        data = await meetingService.getMeetingsByIntern(profile.userId);
+      }
+      setMeetings(data || []);
+    } catch (err) {
+      console.warn('Lỗi tải danh sách lịch họp:', err);
+    } finally {
+      setIsLoadingMeetings(false);
+    }
+  }, [profile.userId]);
+
+  useEffect(() => {
+    fetchMeetings();
+
+    const handleNewNotification = () => {
+      fetchMeetings();
+    };
+
+    window.addEventListener('internhub:new-notification', handleNewNotification);
+    return () => {
+      window.removeEventListener('internhub:new-notification', handleNewNotification);
+    };
+  }, [fetchMeetings]);
 
   // Sử dụng custom hook tách biệt hoàn toàn thuật toán ngày tháng và chuẩn hóa múi giờ
   const timeline = useInternScheduleTimeline(startDate, endDate, status);
@@ -156,6 +190,107 @@ export const InternScheduleWidget: React.FC<InternScheduleWidgetProps> = ({ prof
                 </div>
               </div>
             </div>
+
+            {/* Meetings Box for Intern */}
+            <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-default)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Lịch họp & Trao đổi định kỳ:
+                </span>
+                {isLoadingMeetings && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Đang tải...</span>}
+              </div>
+
+              {meetings.length === 0 ? (
+                <div style={{ padding: '12px 16px', background: 'var(--border-subtle, #f8fafc)', borderRadius: '10px', fontSize: '0.825rem', color: 'var(--text-muted)', border: '1px dashed var(--border-default)' }}>
+                  Hiện tại bạn chưa có lịch hẹn cuộc họp nào mới từ Mentor hoặc HR.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {meetings.map((m) => {
+                    const isOnline = m.meetingType === 'ONLINE';
+                    const isCancelled = m.status === 'CANCELLED';
+                    const isCompleted = m.status === 'COMPLETED';
+                    const meetingEndTime = m.endTime ? new Date(m.endTime) : (m.startTime ? new Date(new Date(m.startTime).getTime() + 2 * 60 * 60 * 1000) : null);
+                    const isExpired = isCompleted || (meetingEndTime ? meetingEndTime.getTime() < Date.now() : false);
+
+                    return (
+                      <div
+                        key={m.id}
+                        style={{
+                          padding: '12px 16px',
+                          background: isCancelled ? '#fef2f2' : isExpired ? 'var(--bg-muted, #f8fafc)' : 'var(--border-subtle, #f8fafc)',
+                          borderRadius: '10px',
+                          border: `1px solid ${isCancelled ? '#fecaca' : isExpired ? 'var(--border-subtle, #e2e8f0)' : 'var(--border-default)'}`,
+                          opacity: isExpired && !isCancelled ? 0.75 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <strong style={{ fontSize: '0.9rem', color: isCancelled ? '#dc2626' : isExpired ? 'var(--text-muted)' : 'var(--text-main)' }}>
+                              {m.title}
+                            </strong>
+                            <span
+                              style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '999px',
+                                background: isCancelled ? '#fee2e2' : isExpired ? '#f1f5f9' : '#e0e7ff',
+                                color: isCancelled ? '#b91c1c' : isExpired ? '#64748b' : '#4338ca',
+                              }}
+                            >
+                              {isCancelled ? 'ĐÃ HỦY' : isExpired ? 'ĐÃ KẾT THÚC' : (m.status === 'UPDATED' ? 'ĐÃ DỜI LỊCH' : isOnline ? 'ONLINE' : 'OFFLINE')}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.785rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            ⏰ {new Date(m.startTime).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            {m.provider && (
+                              <span style={{ marginLeft: '8px', padding: '1px 6px', borderRadius: '4px', background: '#f3f4f6', fontSize: '0.725rem', color: '#374151' }}>
+                                {m.provider === 'GOOGLE_MEET' ? '🟢 Google Meet' : m.provider === 'JITSI' ? '🟣 Jitsi Meet' : '🔗 Link tùy chỉnh'}
+                              </span>
+                            )}
+                            {(m.joinUrl || m.locationOrUrl) && ` • 📍 ${m.joinUrl || m.locationOrUrl}`}
+                          </div>
+                        </div>
+
+                        {!isCancelled && !isExpired && isOnline && (m.joinUrl || (m.locationOrUrl && m.locationOrUrl.startsWith('http'))) && (
+                          <a
+                            href={m.joinUrl || m.locationOrUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '8px',
+                              background: '#4f46e5',
+                              color: '#ffffff',
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                              whiteSpace: 'nowrap',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            <span>Vào phòng họp</span>
+                            <span aria-hidden="true">→</span>
+                          </a>
+                        )}
+                        {isExpired && !isCancelled && (
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                            Cuộc họp đã kết thúc
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -197,4 +332,4 @@ export const InternScheduleWidget: React.FC<InternScheduleWidgetProps> = ({ prof
       </div>
     </section>
   );
-};
+});

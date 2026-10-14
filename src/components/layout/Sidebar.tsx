@@ -1,5 +1,6 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Users,
@@ -17,6 +18,8 @@ import {
   CalendarCheck2,
   CalendarOff,
   BarChart3,
+  WalletCards,
+  LifeBuoy,
   X,
 
   ChevronLeft,
@@ -51,6 +54,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse,
 }) => {
   const { user, role, logout } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleLogout = async () => {
+    try {
+      queryClient.clear();
+      navigate(ROUTES.ROOT, { replace: true });
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   // Danh mục toàn bộ các mục điều hướng phân theo Section
   const ALL_NAV_ITEMS: NavItemConfig[] = [
@@ -147,10 +162,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['HR'],
     },
     {
+      to: ROUTES.HR.ALLOWANCES,
+      label: 'Quản Lý Phụ Cấp',
+      icon: WalletCards,
+      requiredPermission: 'CONTRACT_VIEW',
+      section: 'Quản Trị Nhân Sự',
+      allowedRoles: ['HR'],
+    },
+    {
+      to: ROUTES.HR.SUPPORT_REQUESTS,
+      label: 'Yêu Cầu Hỗ Trợ',
+      icon: LifeBuoy,
+      requiredPermission: 'INTERN_VIEW_ALL',
+      section: 'Quản Trị Nhân Sự',
+      allowedRoles: ['HR'],
+    },
+    {
       to: ROUTES.HR.REVIEW,
       label: 'Duyệt Tài Liệu & CV',
       icon: FileCheck2,
       requiredPermission: 'DOCUMENT_REVIEW',
+      section: 'Quản Trị Nhân Sự',
+      allowedRoles: ['HR'],
+    },
+    {
+      to: ROUTES.MENTOR.LEAVE_REQUESTS,
+      label: 'Duyệt Đơn Nghỉ Phép',
+      icon: CalendarCheck2,
+      requiredPermission: 'INTERN_VIEW_ALL',
       section: 'Quản Trị Nhân Sự',
       allowedRoles: ['HR'],
     },
@@ -194,7 +233,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: CalendarCheck2,
       requiredPermission: 'INTERN_VIEW_OWN',
       section: 'Người Hướng Dẫn',
-      allowedRoles: ['MENTOR', 'HR'],
+      allowedRoles: ['MENTOR'],
     },
     {
       to: ROUTES.HR.ATTENDANCE_REPORTS,
@@ -211,6 +250,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       to: ROUTES.INTERN.DASHBOARD,
       label: 'Tiến Độ Thực Tập',
       icon: LayoutDashboard,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.ALLOWANCES,
+      label: 'Phụ Cấp & Thu Nhập',
+      icon: WalletCards,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.SUPPORT_REQUESTS,
+      label: 'Yêu Cầu Hỗ Trợ',
+      icon: LifeBuoy,
       requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',
       allowedRoles: ['INTERN', 'USER'],
@@ -260,6 +315,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Quản Lý Tài Liệu',
       icon: FileText,
       requiredPermission: 'INTERN_VIEW_OWN_DOCUMENTS',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.CONTRACT_SIGNING,
+      label: 'Ký Kết Hợp Đồng',
+      icon: FileCheck2,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',
       allowedRoles: ['INTERN', 'USER'],
     },
@@ -426,7 +489,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <button
               type="button"
-              onClick={() => void logout()}
+              onClick={() => void handleLogout()}
               className={styles.logoutGhostBtn}
               title="Đăng xuất khỏi hệ thống"
               aria-label="Đăng xuất"

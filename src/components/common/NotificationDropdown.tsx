@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from './NotificationDropdown.module.css';
 
 export const NotificationDropdown: React.FC = () => {
-  const { notifications, unreadCount, isConnected, markAsRead, markAllAsRead } = useNotification();
+  const { notifications, unreadCount, isConnected, markAsRead, markAllAsRead, refreshNotifications } = useNotification();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -20,6 +20,16 @@ export const NotificationDropdown: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleToggle = () => {
+    setIsOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        refreshNotifications().catch(() => {});
+      }
+      return next;
+    });
+  };
+
   const handleItemClick = async (id: number, actionUrl?: string) => {
     await markAsRead(id);
     if (actionUrl) {
@@ -33,7 +43,7 @@ export const NotificationDropdown: React.FC = () => {
       {/* Bell Button */}
       <button
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={handleToggle}
         className={styles.bellBtn}
         title="Thông báo hệ thống"
         aria-label="Thông báo hệ thống"

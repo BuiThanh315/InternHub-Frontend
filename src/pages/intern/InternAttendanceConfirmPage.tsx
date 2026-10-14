@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   QrCode,
@@ -124,7 +124,26 @@ export const InternAttendanceConfirmPage: React.FC = () => {
     }
   };
 
-  // Xử lý gửi xác nhận điểm danh Check-in
+  // Lấy hoặc khởi tạo Device Fingerprint bền vững trong localStorage
+  const getDeviceFingerprint = useCallback(() => {
+    let fp = localStorage.getItem('internhub_device_fingerprint');
+    if (!fp) {
+      fp = 'DEV-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36);
+      localStorage.setItem('internhub_device_fingerprint', fp);
+    }
+    return fp;
+  }, []);
+
+  const getDeviceModel = useCallback(() => {
+    const ua = navigator.userAgent;
+    if (/android/i.test(ua)) return 'Android Device';
+    if (/iPad|iPhone|iPod/.test(ua)) return 'iOS Device';
+    if (/Macintosh/.test(ua)) return 'macOS Computer';
+    if (/Windows/.test(ua)) return 'Windows PC';
+    return 'Unknown Browser Device';
+  }, []);
+
+  // Xử lý gửi xác nhận điểm danh Check-in (TM-25 v2.0)
   const handleConfirm = async () => {
     if (!token) {
       toast.error('Không tìm thấy mã xác thực QR token trong liên kết.');
@@ -134,8 +153,37 @@ export const InternAttendanceConfirmPage: React.FC = () => {
     setState((prev) => ({ ...prev, isSubmitting: true, errorMsg: null }));
 
     try {
+      const fingerprint = getDeviceFingerprint();
+      const model = getDeviceModel();
+
+      // Thử lấy toạ độ GPS nếu trình duyệt cho phép, nếu không vẫn cho điểm danh theo chuẩn ADR 0003
+      let lat: number | undefined;
+      let lon: number | undefined;
+      let acc: number | undefined;
+
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 4000,
+              enableHighAccuracy: true,
+            });
+          });
+          lat = pos.coords.latitude;
+          lon = pos.coords.longitude;
+          acc = pos.coords.accuracy;
+        } catch {
+          // Người dùng từ chối cấp GPS hoặc timeout -> Bỏ qua, backend dùng Subnet IP + Device Fingerprint
+        }
+      }
+
       const response = await attendanceService.confirmCheckIn({
         qrToken: token,
+        deviceFingerprint: fingerprint,
+        deviceModel: model,
+        latitude: lat,
+        longitude: lon,
+        accuracyMeters: acc,
         notes: state.notes.trim() || undefined,
       });
 
@@ -143,7 +191,7 @@ export const InternAttendanceConfirmPage: React.FC = () => {
         ...prev,
         confirmedRecord: response,
         isSubmitting: false,
-        countdown: 3,
+        countdown: 5, // 5s để TTS đọc thông báo nếu rơi vào PENDING_REVIEW
       }));
 
       // Báo hiệu cho cửa sổ máy tính (tab cha) nếu có
@@ -155,11 +203,15 @@ export const InternAttendanceConfirmPage: React.FC = () => {
         }
       }
 
-      toast.success(
-        `Check-in thành công! Trạng thái: ${
-          response.status === 'ON_TIME' ? 'Đúng giờ' : 'Đi muộn'
-        }`
-      );
+      if (response.reviewStatus === 'PENDING_REVIEW') {
+        toast.warning('Điểm danh thành công! Bản ghi đang được chuyển Quản trị viên/HR duyệt đối soát.');
+      } else {
+        toast.success(
+          `Check-in thành công! Trạng thái: ${
+            response.status === 'ON_TIME' ? 'Đúng giờ' : 'Đi muộn'
+          }`
+        );
+      }
     } catch (err: any) {
       const apiMessage =
         err.response?.data?.message ||
@@ -381,6 +433,22 @@ export const InternAttendanceConfirmPage: React.FC = () => {
                     {getAttendanceStatusLabel(state.confirmedRecord.status)}
                   </span>
                 </div>
+
+                <div className={styles.infoRow}>
+                  <span>Kiểm duyệt:</span>
+                  {state.confirmedRecord.reviewStatus === 'PENDING_REVIEW' ? (
+                    <span className={styles.trustLevelBadgePending}>
+                      <AlertTriangle size={12} />
+                      <span>Chờ Quản trị viên/HR duyệt</span>
+                    </span>
+                  ) : (
+                    <span className={styles.trustLevelBadgeHigh}>
+                      <ShieldCheck size={12} />
+                      <span>Đã tự động duyệt</span>
+                    </span>
+                  )}
+                </div>
+
                 {state.confirmedRecord.notes && (
                   <div className={styles.infoRow}>
                     <span>Ghi chú:</span>
@@ -391,12 +459,26 @@ export const InternAttendanceConfirmPage: React.FC = () => {
                 )}
               </div>
 
-              <div className={`${styles.alertBox} ${styles.alertSuccess}`}>
-                <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 1, color: 'var(--success)' }} />
-                <div>
-                  Cảm ơn bạn đã điểm danh đúng quy trình. Chúc bạn có một ca làm việc tràn đầy năng lượng!
+              {/* THÔNG BÁO MINH BẠCH KHI BẢN GHI RƠI VÀO PENDING REVIEW (ADR 0003) */}
+              {state.confirmedRecord.reviewStatus === 'PENDING_REVIEW' ? (
+                <div className={styles.pendingReviewBanner}>
+                  <div className={styles.pendingReviewHeader}>
+                    <AlertTriangle size={18} />
+                    <span>Hệ thống ghi nhận: Thiết bị hoặc vị trí mới</span>
+                  </div>
+                  <p className={styles.pendingReviewText}>
+                    Buổi điểm danh này đã được lưu vào hệ thống và đang ở trạng thái <strong>Chờ Quản trị viên/HR duyệt</strong> đối soát cuối tháng.
+                    Bạn không cần thao tác lại và vẫn có thể bắt đầu làm việc bình thường!
+                  </p>
                 </div>
-              </div>
+              ) : (
+                <div className={`${styles.alertBox} ${styles.alertSuccess}`}>
+                  <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 1, color: 'var(--success)' }} />
+                  <div>
+                    Cảm ơn bạn đã điểm danh đúng quy trình. Chúc bạn có một ca làm việc tràn đầy năng lượng!
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className={styles.cardFooter}>

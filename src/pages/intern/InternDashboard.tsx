@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { Skeleton } from '../../components/common';
 import { internService } from '../../services/internService';
+import { attendanceService } from '../../services/attendanceService';
 import { documentService } from '../../services/documentService';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
@@ -36,7 +37,6 @@ export const InternDashboard: React.FC = () => {
   const {
     todayData,
     loading: attendanceLoading,
-    currentTime,
     refetch: refetchAttendance,
   } = useAttendanceToday();
 
@@ -101,6 +101,51 @@ export const InternDashboard: React.FC = () => {
     }
   };
 
+  const handleQuickCheckOut = async () => {
+    try {
+      let lat: number | undefined;
+      let lon: number | undefined;
+      let acc: number | undefined;
+
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 4000,
+              enableHighAccuracy: true,
+            });
+          });
+          lat = pos.coords.latitude;
+          lon = pos.coords.longitude;
+          acc = pos.coords.accuracy;
+        } catch {
+          // GPS optional
+        }
+      }
+
+      // Generate or retrieve device fingerprint
+      let fp = localStorage.getItem('internhub_device_fingerprint');
+      if (!fp) {
+        fp = 'dev_' + Math.random().toString(36).substring(2, 12) + '_' + Date.now().toString(36);
+        localStorage.setItem('internhub_device_fingerprint', fp);
+      }
+
+      await attendanceService.quickCheckOut({
+        deviceFingerprint: fp,
+        latitude: lat,
+        longitude: lon,
+        accuracyMeters: acc,
+        notes: 'Tan ca nhanh qua Mobile Dashboard',
+      });
+
+      toast.success('Tan ca thành công! Chúc bạn buổi tối vui vẻ.');
+      refetchAttendance();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Không thể thực hiện tan ca nhanh.';
+      toast.error(msg);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <Header
@@ -150,9 +195,9 @@ export const InternDashboard: React.FC = () => {
               <InternAttendanceWidget
                 todayData={todayData}
                 loading={attendanceLoading}
-                currentTime={currentTime}
                 onCheckInClick={() => setModalAction('CHECK_IN')}
                 onCheckOutClick={() => setModalAction('CHECK_OUT')}
+                onQuickCheckOut={handleQuickCheckOut}
                 onViewHistoryClick={() => navigate(ROUTES.INTERN.ATTENDANCE)}
               />
 

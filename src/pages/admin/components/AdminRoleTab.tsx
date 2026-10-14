@@ -20,6 +20,12 @@ import {
   X,
   FileCheck2,
   Sparkles,
+  Kanban,
+  Clock,
+  DollarSign,
+  LifeBuoy,
+  CalendarOff,
+  Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../../components/common/Button/Button';
@@ -51,6 +57,26 @@ const SYSTEM_ROLES_ORDER = ['ADMIN', 'HR', 'MENTOR', 'INTERN'];
 
 // Các đặc quyền tối cao của vai trò ADMIN - BẮT BUỘC KHÓA (Cấm tắt để chống Admin Self-Lockout)
 const ROOT_ADMIN_LOCKED_PERMISSIONS = ['ROLE_MANAGE', 'ROLE_VIEW', 'USER_MANAGE', 'USER_VIEW'];
+
+// Danh sách các quyền thuộc các tính năng mới nhất vừa triển khai (C4 Allowance, C4 Support, TM-28 Leave, Meeting, Dynamic Contract v2)
+const NEW_FEATURE_PERMISSIONS = [
+  'ALLOWANCE_CALCULATE',
+  'ALLOWANCE_ADJUST',
+  'ALLOWANCE_APPROVE',
+  'ALLOWANCE_EXPORT',
+  'ALLOWANCE_VIEW_OWN',
+  'SUPPORT_REQUEST_CREATE',
+  'SUPPORT_REQUEST_REVIEW',
+  'SUPPORT_REQUEST_VIEW_ALL',
+  'LEAVE_REQUEST_CREATE',
+  'LEAVE_REQUEST_APPROVE',
+  'LEAVE_REQUEST_VIEW_ALL',
+  'MEETING_SCHEDULE_MANAGE',
+  'MEETING_SCHEDULE_VIEW_ALL',
+  'MEETING_SCHEDULE_VIEW_OWN',
+  'PROGRAM_IMPORT_EXCEL',
+  'CONTRACT_TEMPLATE_MANAGE',
+];
 
 export const AdminRoleTab: React.FC = () => {
   const [roles, setRoles] = useState<RoleItem[]>([]);
@@ -354,6 +380,20 @@ export const AdminRoleTab: React.FC = () => {
         return <Award size={18} className={styles.moduleIcon} />;
       case 'PROFILE':
         return <Users size={18} className={styles.moduleIcon} />;
+      case 'MISSION':
+        return <Kanban size={18} className={styles.moduleIcon} />;
+      case 'ATTENDANCE':
+        return <Clock size={18} className={styles.moduleIcon} />;
+      case 'ALLOWANCE':
+        return <DollarSign size={18} className={styles.moduleIcon} />;
+      case 'SUPPORT':
+        return <LifeBuoy size={18} className={styles.moduleIcon} />;
+      case 'LEAVE':
+        return <CalendarOff size={18} className={styles.moduleIcon} />;
+      case 'MEETING':
+        return <Video size={18} className={styles.moduleIcon} />;
+      case 'EVALUATION':
+        return <Award size={18} className={styles.moduleIcon} />;
       case 'SYSTEM':
       default:
         return <Layers size={18} className={styles.moduleIcon} />;
@@ -715,6 +755,24 @@ export const AdminRoleTab: React.FC = () => {
                               <div className={styles.permNameRow}>
                                 <span className={styles.permName}>{perm.name}</span>
                                 <span className={styles.permCode}>{perm.code}</span>
+                                {NEW_FEATURE_PERMISSIONS.includes(perm.code) && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 700,
+                                      padding: '1px 6px',
+                                      borderRadius: '999px',
+                                      background: 'rgba(16, 185, 129, 0.12)',
+                                      color: '#059669',
+                                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                                    }}
+                                  >
+                                    <Sparkles size={10} /> Mới
+                                  </span>
+                                )}
                                 {isLocked && (
                                   <span className={styles.lockedBadge}>
                                     <Lock size={10} /> Khóa an toàn

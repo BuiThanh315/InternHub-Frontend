@@ -7,6 +7,7 @@ import type {
   CheckInQrResponse,
   CheckInConfirmRequest,
   CheckOutRequest,
+  QuickCheckOutRequest,
   AttendanceRecordResponse,
   MonthlyAttendanceSummaryResponse,
   AttendanceReportFilterParams,
@@ -111,7 +112,7 @@ export const attendanceService = {
   },
 
   /**
-   * Thực hiện Check-out tan ca làm việc
+   * Thực hiện Check-out tan ca làm việc (phương thức chuẩn qua quét QR hoặc toạ độ)
    */
   async checkOut(
     data: CheckOutRequest,
@@ -122,6 +123,19 @@ export const attendanceService = {
       data,
       { signal }
     );
+    return response.data.data;
+  },
+
+  /**
+   * Thực hiện Check-out tan ca nhanh 1-chạm (Mobile Quick Check-out khi thỏa mãn Trust Level)
+   */
+  async quickCheckOut(
+    data: QuickCheckOutRequest,
+    signal?: AbortSignal
+  ): Promise<AttendanceRecordResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.CHECK_OUT_QUICK, data, {
+      signal,
+    });
     return response.data.data;
   },
 

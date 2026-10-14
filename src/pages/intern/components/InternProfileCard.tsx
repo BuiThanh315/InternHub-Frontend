@@ -8,7 +8,7 @@ interface InternProfileCardProps {
   profile: InternProfile;
 }
 
-export const InternProfileCard: React.FC<InternProfileCardProps> = ({ profile }) => {
+export const InternProfileCard: React.FC<InternProfileCardProps> = React.memo(({ profile }) => {
   const getBadgeClass = (status: string) => {
     switch (status) {
       case 'INTERNING':
@@ -87,4 +87,4 @@ export const InternProfileCard: React.FC<InternProfileCardProps> = ({ profile })
       </div>
     </div>
   );
-};
+});

@@ -16,6 +16,9 @@ import {
   RotateCcw,
   Eye,
   Loader2,
+  Kanban,
+  Clock,
+  Award,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Modal } from '../../../components/common/Modal/Modal';
@@ -54,13 +57,14 @@ const MATRIX_COLUMNS: CategoryCol[] = [
 ];
 
 function getPermissionCategory(code: string): CapabilityCategory {
-  if (code.endsWith('_VIEW')) return 'VIEW';
+  if (code.endsWith('_VIEW') || code.includes('_VIEW')) return 'VIEW';
   if (code.endsWith('_CREATE')) return 'CREATE';
   if (code.endsWith('_EDIT')) return 'EDIT';
   if (
     code.includes('APPROVE') ||
     code.includes('ASSIGN') ||
-    code.includes('REVIEW')
+    code.includes('REVIEW') ||
+    code.includes('CHECK')
   ) {
     return 'ACTION';
   }
@@ -256,6 +260,16 @@ export const RoleModal: React.FC<RoleModalProps> = ({
         return <FileCheck2 size={16} className={styles.moduleIcon} />;
       case 'DOCUMENT':
         return <FileText size={16} className={styles.moduleIcon} />;
+      case 'MENTOR':
+        return <Award size={16} className={styles.moduleIcon} />;
+      case 'PROFILE':
+        return <Users size={16} className={styles.moduleIcon} />;
+      case 'MISSION':
+        return <Kanban size={16} className={styles.moduleIcon} />;
+      case 'ATTENDANCE':
+        return <Clock size={16} className={styles.moduleIcon} />;
+      case 'EVALUATION':
+        return <Award size={16} className={styles.moduleIcon} />;
       case 'SYSTEM':
       default:
         return <Layers size={16} className={styles.moduleIcon} />;

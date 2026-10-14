@@ -1,0 +1,323 @@
+.tabContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   SCORE HERO CARD
+   ========================================================================== */
+.scoreHeroCard {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+}
+
+.scoreCircleWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-full);
+  background: var(--bg-body);
+  border: 3px solid var(--border-default);
+  flex-shrink: 0;
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.scoreCircleSuccess {
+  border-color: var(--success);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+}
+
+.scoreCircleWarning {
+  border-color: var(--warning);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.2);
+}
+
+.scoreCircleDanger {
+  border-color: var(--danger);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
+}
+
+.scoreNumber {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+  font-family: var(--font-heading);
+}
+
+.scoreMax {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 260px;
+}
+
+.heroTopRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.recommendationTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.matchSummaryText {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.metaInfoText {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ==========================================================================
+   COMPARATIVE DOSSIER (2-COLUMN)
+   ========================================================================== */
+.dossierGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.dossierCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dossierCardStrengths {
+  border-left: 3px solid var(--success);
+}
+
+.dossierCardWeaknesses {
+  border-left: 3px solid var(--warning);
+}
+
+.dossierCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.dossierList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 0;
+  list-style: none;
+  margin: 0;
+}
+
+.dossierListItem {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.bulletIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   MATCHED SKILLS
+   ========================================================================== */
+.skillsCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skillsTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-main);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.skillsWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.skillChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-light);
+  border: 1px solid var(--primary-glow);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   INTERVIEW QUESTIONS
+   ========================================================================== */
+.questionsCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.questionsTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-main);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.questionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-left: 0;
+  list-style: none;
+  margin: 0;
+}
+
+.questionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  background-color: var(--bg-body);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.8125rem;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+
+.questionNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background-color: var(--border-default);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   DRAFT REJECTION BANNER
+   ========================================================================== */
+.rejectionDraftBanner {
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.draftContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 240px;
+}
+
+.draftTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--danger);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.draftText {
+  font-size: 0.8125rem;
+  color: var(--text-main);
+  line-height: 1.45;
+  margin: 0;
+  font-style: italic;
+}
