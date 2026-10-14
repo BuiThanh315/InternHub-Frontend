@@ -85,6 +85,9 @@ Tài liệu này định nghĩa nguyên tắc tối cao và quy trình làm vi�
     - **Giao diện đa thiết bị & Thanh cuộn tinh tế**: Desktop dùng khung App Shell cố định, bảng nhiều cột chỉ cuộn ngang trong khung kèm cột đinh cố định (Sticky Columns); dùng thanh cuộn siêu mảnh (6px-8px). Mobile tự động chuyển bảng sang dạng thẻ Card dọc.
     - **Zero-Jank 5 States**: Bắt buộc dùng Skeleton Shimmer (cấm chữ Loading thô), Rich Empty State có Icon + Tiêu đề + Hướng dẫn + Nút CTA, Error State kèm Retry.
     - **Tuyệt đối cấm hardcode mã màu Hex trong CSS Modules**; cấm `window.confirm()` và bắt buộc dùng Confirmation Modal nguy hiểm nền đỏ nhạt cho thao tác xóa.
+19. **NGHIÊM CẤM HOÀN TOÀN HÀNH VI ĐỌC, SỬA, PHÂN TÍCH FILE `.env` (STRICT ZERO-ACCESS TO `.env`)**:
+    - **Vùng cấm tuyệt đối (Zero-Access Security Zone)**: File `.env` của người dùng (`.env`, `.env.local`, `.env.production`, `.env.development`, `.env.*`) là khu vực bảo mật tối mật chứa credentials, secret keys, API keys và cấu hình môi trường nhạy cảm. Nghiêm cấm hoàn toàn các hành vi mở, đọc (`view_file`, `cat`, lệnh terminal), chỉnh sửa (`write_to_file`, `replace_file_content`), hoặc phân tích (`grep_search`, parse) từ AI Agent hay bất kỳ tiến trình tự động nào của hệ thống.
+    - **Quy trình phối hợp bắt buộc**: Nếu cần bất kỳ thông tin, cấu hình, biến môi trường hay giá trị nào liên quan đến file `.env`, Agent **BẮT BUỘC PHẢI THÔNG BÁO VÀ YÊU CẦU NGƯỜI DÙNG KIỂM TRA GIÚP**. Người dùng sẽ chủ động kiểm tra và cung cấp thông tin cần thiết. Tuyệt đối cấm tự ý can thiệp dưới mọi hình thức.
 
 ---
 
