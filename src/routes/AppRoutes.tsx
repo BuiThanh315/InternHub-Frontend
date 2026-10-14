@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
+import { AiSettingsPage } from '../pages/admin/AiSettingsPage';
 import { HrDashboard } from '../pages/hr/HrDashboard';
 import { HrProgramManagementPage } from '../pages/hr/programs/HrProgramManagementPage';
 import { ProgramWorkspacePage } from '../pages/hr/programs/workspace';
@@ -94,11 +95,12 @@ export const AppRoutes: React.FC = () => {
       {/* Authenticated Dashboard Routes */}
       <Route element={<MainLayout />}>
         {/* Admin Area */}
-        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
           <Route path={ROUTES.ADMIN.DASHBOARD} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.USERS} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.ROLES} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN.SYSTEM} element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN.AI_SETTINGS} element={<AiSettingsPage />} />
         </Route>
 
         {/* HR Area */}

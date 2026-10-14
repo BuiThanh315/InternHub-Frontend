@@ -99,6 +99,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async (): Promise<void> => {
+    // Dọn dẹp session chat AI khi logout (AC-14)
+    const aiSessionId = sessionStorage.getItem('ai_chat_session_id');
+    if (aiSessionId) {
+      try {
+        const { aiService } = await import('../services/aiService');
+        await aiService.clearSession(aiSessionId);
+      } catch {
+        // Ignored
+      }
+      sessionStorage.removeItem('ai_chat_session_id');
+      sessionStorage.removeItem('ai_chat_messages');
+    }
+
     await authService.logout();
     setUser(null);
   };
