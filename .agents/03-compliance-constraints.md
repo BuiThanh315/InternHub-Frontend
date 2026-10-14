@@ -119,3 +119,15 @@ Khi triển khai các chức năng liên quan đến nộp CV, upload báo cáo 
    - Tên file gửi lên máy chủ phải loại bỏ ký tự đặc biệt, dấu cách hoặc tiếng Việt có dấu để tránh lỗi mã hóa URL trên máy chủ.
 4. **Hỗ trợ hủy thao tác (Upload Cancellation)**:
    - Mọi tác vụ upload file phải kết nối với `AbortController`. Nếu người dùng đóng Modal hoặc bấm nút "Hủy", request upload phải lập tức được hủy bỏ để giải phóng băng thông.
+
+---
+
+## 7. Nghiêm Cấm Hoàn Toàn Hành Vi Đọc, Sửa, Phân Tích File `.env` (Strict Zero-Access to `.env`)
+
+> [!CAUTION]
+> **VÙNG CẤM TUYỆT ĐỐI (ZERO-ACCESS SECURITY ZONE):**
+> 
+> 1. **Nghiêm cấm truy cập**: Tuyệt đối nghiêm cấm AI Agent và bất kỳ tiến trình tự động nào thực hiện hành vi mở, đọc (`view_file`, `cat`, lệnh terminal), sửa đổi (`write_to_file`, `replace_file_content`), hoặc phân tích cú pháp (`grep_search`, parse) đối với bất kỳ file `.env*` nào của người dùng (`.env`, `.env.local`, `.env.production`, `.env.development`, `.env.*`).
+> 2. **Bảo mật bí mật cá nhân**: File `.env` chứa toàn bộ credentials, private keys, client IDs, API keys và bí mật môi trường riêng tư của người dùng.
+> 3. **Quy trình khi cần thông tin**: Nếu trong quá trình phát triển, kiểm thử hoặc cấu hình mà Agent cần bất kỳ thông tin nào liên quan đến biến môi trường, Agent **BẮT BUỘC PHẢI THÔNG BÁO VÀ YÊU CẦU NGƯỜI DÙNG KIỂM TRA GIÚP**. Người dùng sẽ trực tiếp kiểm tra và cung cấp. Tuyệt đối không tự ý can thiệp dưới bất kỳ hình thức nào.
+

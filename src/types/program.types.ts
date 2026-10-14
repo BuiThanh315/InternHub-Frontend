@@ -154,6 +154,8 @@ export interface ExcelInternRow {
   address?: string;
   appliedPosition?: string;
   notes?: string;
+  isExistingUser?: boolean;
+  existingUserId?: number;
 }
 
 export interface ExcelImportPreviewResponse {
@@ -166,6 +168,8 @@ export interface ExcelImportPreviewResponse {
   isQuotaExceeded: boolean;
   errors: ExcelRowError[];
   previewRows: ExcelInternRow[];
+  newCandidatesCount?: number;
+  existingCandidatesCount?: number;
 }
 
 export interface ExcelImportResultResponse {
@@ -176,6 +180,8 @@ export interface ExcelImportResultResponse {
   maxInterns: number;
   importedInternCodes: string[];
   importedAt: string;
+  newCandidatesCount?: number;
+  existingCandidatesCount?: number;
 }
 
 export interface AssignMentorToProgramRequest {
