@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { aiService, type ChatMessage, type QuickPromptsData } from '../../services/aiService';
+import { useAuth } from '../../contexts/AuthContext';
 import styles from './InternChatWidget.module.css';
 
 export const InternChatWidget: React.FC = () => {
+  const { role, hasPermission } = useAuth();
+  const canUseChat = role === 'USER' || hasPermission('AI_CHAT_USE');
+
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string>(() => {
     const saved = sessionStorage.getItem('ai_chat_session_id');
@@ -100,6 +104,10 @@ export const InternChatWidget: React.FC = () => {
   const handleClearSession = () => {
     setShowConfirmModal(true);
   };
+
+  if (!canUseChat) {
+    return null;
+  }
 
   return (
     <>

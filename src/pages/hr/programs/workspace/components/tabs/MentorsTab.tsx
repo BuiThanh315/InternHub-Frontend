@@ -105,39 +105,39 @@ export const MentorsTab: React.FC<MentorsTabProps> = ({
             return (
               <div
                 key={mentor.id || idx}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm hover:border-indigo-400 dark:hover:border-indigo-500 transition-all flex flex-col justify-between"
+                className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-sm">
+                      <div className="w-11 h-11 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-sm shadow-inner">
                         {name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
+                        <h4 className="font-bold text-slate-800 text-sm leading-tight">
                           {name}
                         </h4>
-                        <div className="flex items-center gap-1 text-xs text-slate-500">
-                          <Building size={12} />
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                          <Building size={13} className="text-slate-400" />
                           <span>{dept}</span>
                         </div>
                       </div>
                     </div>
 
-                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                    <span className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
                       Mentor
                     </span>
                   </div>
 
-                  <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mb-2">
-                    <Mail size={13} className="text-slate-400" />
-                    <span className="truncate">{email}</span>
+                  <div className="text-xs text-slate-600 flex items-center gap-2 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <Mail size={14} className="text-slate-400 flex-shrink-0" />
+                    <span className="truncate font-medium">{email}</span>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-medium">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium">
                   <span className="text-slate-500">Đang kèm trong kỳ:</span>
-                  <span className="font-tabular font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded">
+                  <span className="font-tabular font-bold text-indigo-600 bg-indigo-50/80 px-2.5 py-0.5 rounded-full border border-indigo-100">
                     {internCount} TTS
                   </span>
                 </div>

@@ -96,51 +96,51 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       {/* Thông Tin Chi Tiết Chương Trình & Phân Bố */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Box Chi tiết cấu hình */}
-        <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
+        <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-5 shadow-xs">
+          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
             <Info size={18} className="text-indigo-600" aria-hidden="true" />
             Thông Tin Thiết Lập Kỳ Thực Tập
           </h3>
 
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-800">
-              <span className="text-slate-500">Mã chương trình:</span>
-              <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+            <div className="flex justify-between py-1.5 border-b border-slate-200/80">
+              <span className="text-slate-600 font-medium">Mã chương trình:</span>
+              <span className="font-mono font-semibold text-slate-900">
                 {program.programCode || `PRG-${program.id}`}
               </span>
             </div>
 
-            <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-800">
-              <span className="text-slate-500">Phòng ban phụ trách:</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
+            <div className="flex justify-between py-1.5 border-b border-slate-200/80">
+              <span className="text-slate-600 font-medium">Phòng ban phụ trách:</span>
+              <span className="font-semibold text-slate-900">
                 {program.departmentName || 'Chung'} ({program.departmentCode || 'DEPT'})
               </span>
             </div>
 
-            <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-800">
-              <span className="text-slate-500">Thời gian diễn ra:</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 font-tabular">
+            <div className="flex justify-between py-1.5 border-b border-slate-200/80">
+              <span className="text-slate-600 font-medium">Thời gian diễn ra:</span>
+              <span className="font-semibold text-slate-900 font-tabular">
                 {program.startDate} → {program.endDate} ({program.durationWeeks} tuần)
               </span>
             </div>
 
-            <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-800">
-              <span className="text-slate-500">Chỉ tiêu tối đa:</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 font-tabular">
+            <div className="flex justify-between py-1.5 border-b border-slate-200/80">
+              <span className="text-slate-600 font-medium">Chỉ tiêu tối đa:</span>
+              <span className="font-semibold text-slate-900 font-tabular">
                 {program.maxInterns} thực tập sinh
               </span>
             </div>
 
-            <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-800">
-              <span className="text-slate-500">Cổng tiếp nhận hồ sơ:</span>
+            <div className="flex justify-between py-1.5 border-b border-slate-200/80">
+              <span className="text-slate-600 font-medium">Cổng tiếp nhận hồ sơ:</span>
               <span className={`font-semibold ${program.isRecruitmentOpen ? 'text-emerald-600' : 'text-slate-500'}`}>
                 {program.isRecruitmentOpen ? 'Đang mở trực tuyến' : 'Đã đóng tiếp nhận'}
               </span>
             </div>
 
             <div className="pt-2">
-              <span className="text-slate-500 block mb-1">Mục tiêu & Mô tả chương trình:</span>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+              <span className="text-slate-600 font-medium block mb-1.5">Mục tiêu & Mô tả chương trình:</span>
+              <p className="text-xs text-slate-700 leading-relaxed bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs">
                 {program.description || 'Chưa có thông tin mô tả chi tiết cho chương trình này.'}
               </p>
             </div>
@@ -148,14 +148,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
 
         {/* Box Nguồn Trường Đại Học */}
-        <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
+        <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-5 shadow-xs">
+          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
             <GraduationCap size={18} className="text-indigo-600" aria-hidden="true" />
             Phân Bố Trường Đại Học Của Học Viên
           </h3>
 
           {universityDistribution.length === 0 ? (
-            <p className="text-sm text-slate-500 italic py-6 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400 italic py-6 text-center">
               Chưa có dữ liệu sinh viên trong kỳ để thống kê nguồn trường.
             </p>
           ) : (
@@ -165,10 +165,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 return (
                   <div key={item.name} className="space-y-1">
                     <div className="flex justify-between text-xs font-medium">
-                      <span className="text-slate-700 dark:text-slate-300 truncate max-w-65">
+                      <span className="text-slate-800 dark:text-slate-200 truncate max-w-65 font-medium">
                         {item.name}
                       </span>
-                      <span className="font-tabular text-slate-500">
+                      <span className="font-tabular text-slate-600 dark:text-slate-300 font-semibold">
                         {item.count} TTS ({uniPercent}%)
                       </span>
                     </div>
