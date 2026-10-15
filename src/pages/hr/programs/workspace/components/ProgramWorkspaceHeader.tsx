@@ -26,6 +26,7 @@ export const ProgramWorkspaceHeader: React.FC<ProgramWorkspaceHeaderProps> = ({
   onOpenStatus,
   onToggleRecruitment,
   isTogglingRecruitment = false,
+  onOpenInterviewQuestions,
 }) => {
   const currentCount = Number(program.currentInterns || internsCount || 0);
   const maxCount = Number(program.maxInterns || 0);
@@ -118,6 +119,18 @@ export const ProgramWorkspaceHeader: React.FC<ProgramWorkspaceHeaderProps> = ({
               <RefreshCw size={15} aria-hidden="true" />
               <span>Đổi Trạng Thái</span>
             </button>
+
+            {onOpenInterviewQuestions && (
+              <button
+                type="button"
+                className={styles.btnAction}
+                onClick={onOpenInterviewQuestions}
+                title="Sinh câu hỏi phỏng vấn chuẩn theo JD chương trình"
+              >
+                <Sparkles size={15} className="text-indigo-600" aria-hidden="true" />
+                <span>Câu Hỏi Phỏng Vấn</span>
+              </button>
+            )}
 
             <button
               type="button"

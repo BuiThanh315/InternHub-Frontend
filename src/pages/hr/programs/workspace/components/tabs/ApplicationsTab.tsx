@@ -11,6 +11,7 @@ import {
   Clock,
   Sparkles,
   Filter,
+  MessageSquareQuote,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,6 +21,7 @@ import { internService } from '../../../../../../services/internService';
 import { formatDate } from '../../../../../../utils/formatters';
 import type { InternProfile, ScreeningResultDto } from '../../../../../../types';
 import type { ApplicationsTabProps } from '../../types/ProgramWorkspace.types';
+import { InterviewQuestionModal } from '../InterviewQuestionModal';
 import styles from '../../styles/ProgramWorkspace.module.css';
 
 interface RejectionDialogState {
@@ -52,6 +54,9 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
     reason: '',
     isSubmitting: false,
   });
+
+  // State 5: Modal sinh câu hỏi phỏng vấn theo ứng viên
+  const [interviewModalIntern, setInterviewModalIntern] = useState<InternProfile | null>(null);
 
   // Custom Hook quản lý AI Screening hàng loạt & bộ lọc
   const aiScreening = useAiScreening(program.id);
@@ -425,32 +430,32 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
 
                     {/* Cột Trường & Ngành */}
                     <td>
-                      <div className="flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-200">
+                      <div className="flex items-center gap-1.5 font-semibold text-slate-800 text-xs">
                         <GraduationCap size={14} className="text-slate-400" aria-hidden="true" />
                         <span>{intern.university || 'Chưa cập nhật'}</span>
                       </div>
-                      <div className="text-xs text-slate-500">{intern.major || 'Chưa rõ'}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{intern.major || 'Chưa rõ'}</div>
                     </td>
 
                     {/* Cột GPA */}
-                    <td className="font-tabular font-medium">
+                    <td className="font-tabular font-medium text-xs">
                       {intern.gpa ? (
                         <span
                           className={
                             intern.gpa >= 3.2
-                              ? 'text-emerald-600 font-semibold'
-                              : 'text-slate-700 dark:text-slate-300'
+                              ? 'text-emerald-700 font-bold'
+                              : 'text-slate-800 font-semibold'
                           }
                         >
                           {intern.gpa.toFixed(2)}
                         </span>
                       ) : (
-                        <span className="text-slate-400">--</span>
+                        <span className="text-slate-400 font-medium">--</span>
                       )}
                     </td>
 
                     {/* Cột Ngày nộp */}
-                    <td className="font-tabular text-sm text-slate-600 dark:text-slate-400">
+                    <td className="font-tabular text-xs text-slate-700 font-medium">
                       <div className="flex items-center gap-1.5">
                         <Calendar size={13} className="text-slate-400" aria-hidden="true" />
                         <span>{formatDate(intern.createdAt)}</span>
@@ -476,7 +481,7 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                             title="Thẩm định hồ sơ bằng AI ngay"
                             aria-label={`Thẩm định AI cho ${intern.fullName}`}
                           >
-                            <Sparkles size={13} className="text-indigo-600 dark:text-indigo-400" />
+                            <Sparkles size={13} className="text-indigo-600" />
                           </button>
                         )}
                       </div>
@@ -494,6 +499,17 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                           aria-label={`Xem chi tiết hồ sơ của ${intern.fullName}`}
                         >
                           <Eye size={15} aria-hidden="true" />
+                        </button>
+
+                        {/* Sinh / Xem câu hỏi phỏng vấn AI */}
+                        <button
+                          type="button"
+                          className={styles.actionIconBtn}
+                          onClick={() => setInterviewModalIntern(intern)}
+                          title="Bộ câu hỏi phỏng vấn AI cho ứng viên này"
+                          aria-label={`Bộ câu hỏi phỏng vấn cho ${intern.fullName}`}
+                        >
+                          <MessageSquareQuote size={15} className="text-indigo-600" aria-hidden="true" />
                         </button>
 
                         {/* Tiếp nhận */}
@@ -591,6 +607,18 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Modal Câu hỏi phỏng vấn theo ứng viên (Candidate Scope) */}
+      {interviewModalIntern && (
+        <InterviewQuestionModal
+          isOpen={!!interviewModalIntern}
+          onClose={() => setInterviewModalIntern(null)}
+          programId={program.id}
+          programName={program.name}
+          internId={interviewModalIntern.id}
+          internName={interviewModalIntern.fullName}
+        />
       )}
     </div>
   );

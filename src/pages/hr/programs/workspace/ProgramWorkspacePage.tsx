@@ -28,6 +28,7 @@ import { ApplicationsTab } from './components/tabs/ApplicationsTab';
 import { InternsTab } from './components/tabs/InternsTab';
 import { MentorsTab } from './components/tabs/MentorsTab';
 import { OverviewTab } from './components/tabs/OverviewTab';
+import { InterviewQuestionModal } from './components/InterviewQuestionModal';
 
 // Tái sử dụng các Modals hiện có từ HR Module
 import {
@@ -70,6 +71,7 @@ export const ProgramWorkspacePage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isAssignProgramMentorModalOpen, setIsAssignProgramMentorModalOpen] = useState(false);
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
 
   // Modal thao tác với Thực tập sinh cá nhân
   const [detailIntern, setDetailIntern] = useState<InternProfile | null>(null);
@@ -261,6 +263,7 @@ export const ProgramWorkspacePage: React.FC = () => {
             onOpenEnroll={() => setIsEnrollModalOpen(true)}
             onOpenEdit={() => setIsEditModalOpen(true)}
             onOpenStatus={() => setIsStatusModalOpen(true)}
+            onOpenInterviewQuestions={() => setIsInterviewModalOpen(true)}
             onToggleRecruitment={handleToggleRecruitment}
             isTogglingRecruitment={isTogglingRecruitment}
           />
@@ -446,6 +449,16 @@ export const ProgramWorkspacePage: React.FC = () => {
             onClose={() => setUploadDocIntern(null)}
             onSubmit={handleUploadDocSubmit}
           />
+
+          {/* Modal Sinh Câu Hỏi Phỏng Vấn AI (Program Scope) */}
+          {isInterviewModalOpen && program && (
+            <InterviewQuestionModal
+              isOpen={isInterviewModalOpen}
+              onClose={() => setIsInterviewModalOpen(false)}
+              programId={program.id}
+              programName={program.name}
+            />
+          )}
         </>
       )}
     </div>
