@@ -20,6 +20,7 @@ export interface ProgramWorkspaceHeaderProps {
   onOpenStatus: () => void;
   onToggleRecruitment: () => void;
   isTogglingRecruitment?: boolean;
+  onOpenInterviewQuestions?: () => void;
 }
 
 export interface ApplicationsTabProps {
