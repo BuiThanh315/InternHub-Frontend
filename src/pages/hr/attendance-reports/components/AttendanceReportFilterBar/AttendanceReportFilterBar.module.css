@@ -1,0 +1,81 @@
+.filterBar {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.controlsGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.selectItem {
+  min-width: 140px;
+}
+
+.selectMonth {
+  width: 130px;
+}
+
+.selectYear {
+  width: 110px;
+}
+
+.selectDepartment {
+  min-width: 180px;
+}
+
+.selectProgram {
+  min-width: 200px;
+}
+
+.selectMentor {
+  min-width: 180px;
+}
+
+.selectStatus {
+  min-width: 150px;
+}
+
+
+.searchWrapper {
+  flex: 1;
+  min-width: 240px;
+  max-width: 360px;
+}
+
+.actionsGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 1024px) {
+  .searchWrapper {
+    max-width: 100%;
+    width: 100%;
+  }
+}

@@ -10,6 +10,7 @@ import { ProgramWorkspacePage } from '../pages/hr/programs/workspace';
 import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPage';
 import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
 import { HrEvaluationManagementPage } from '../pages/hr/evaluations/HrEvaluationManagementPage';
+import { HRAttendanceReportPage } from '../pages/hr/attendance-reports';
 import { HrAllowancePage } from '../pages/hr/allowance/HrAllowancePage';
 import { HrSupportRequestsPage } from '../pages/hr/support/HrSupportRequestsPage';
 import { MentorDashboard } from '../pages/mentor/MentorDashboard';
@@ -103,6 +104,13 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.HR.SUPPORT_REQUESTS} element={<HrSupportRequestsPage />} />
           <Route path={ROUTES.HR.REVIEW} element={<HrDashboard />} />
         </Route>
+
+        {/* Attendance Reports - Phân hệ chuyên cần cho HR, ADMIN và MENTOR (TM-26) */}
+        <Route element={<ProtectedRoute allowedRoles={['HR', 'ADMIN', 'MENTOR']} />}>
+          <Route path={ROUTES.HR.ATTENDANCE_REPORTS} element={<HRAttendanceReportPage />} />
+        </Route>
+
+
 
         {/* Mentor Area */}
         <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'HR', 'ADMIN']} />}>

@@ -10,7 +10,27 @@ import type {
   QuickCheckOutRequest,
   AttendanceRecordResponse,
   MonthlyAttendanceSummaryResponse,
+  AttendanceReportFilterParams,
+  AttendanceSummaryKpiResponse,
+  InternDiligenceReportResponse,
+  InternAttendanceDetailReportResponse,
+  ApiResponse,
+  PageResponse,
 } from '../types';
+
+/**
+ * Tiện ích tải file Blob an toàn trên trình duyệt (chống rò rỉ bộ nhớ)
+ */
+export function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  window.URL.revokeObjectURL(url);
+}
 
 /**
  * Tính khoảng cách giữa hai toạ độ GPS (theo mét) sử dụng công thức Haversine
@@ -39,9 +59,10 @@ export const attendanceService = {
    * Lấy trạng thái chấm công của TTS trong ngày hôm nay
    */
   async getTodayAttendance(signal?: AbortSignal): Promise<TodayAttendanceResponse> {
-    const response = await apiClient.get(API_ENDPOINTS.ATTENDANCE.TODAY, {
-      signal,
-    });
+    const response = await apiClient.get<ApiResponse<TodayAttendanceResponse>>(
+      API_ENDPOINTS.ATTENDANCE.TODAY,
+      { signal }
+    );
     return response.data.data;
   },
 
@@ -52,7 +73,7 @@ export const attendanceService = {
     data: CheckInInitiateRequest,
     signal?: AbortSignal
   ): Promise<CheckInQrResponse> {
-    const response = await apiClient.post(
+    const response = await apiClient.post<ApiResponse<CheckInQrResponse>>(
       API_ENDPOINTS.ATTENDANCE.CHECK_IN_INITIATE,
       data,
       { signal }
@@ -67,7 +88,7 @@ export const attendanceService = {
     data: CheckInConfirmRequest,
     signal?: AbortSignal
   ): Promise<AttendanceRecordResponse> {
-    const response = await apiClient.post(
+    const response = await apiClient.post<ApiResponse<AttendanceRecordResponse>>(
       API_ENDPOINTS.ATTENDANCE.CHECK_IN_CONFIRM,
       data,
       { signal }
@@ -82,9 +103,11 @@ export const attendanceService = {
     data: CheckInRequest,
     signal?: AbortSignal
   ): Promise<AttendanceRecordResponse> {
-    const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.CHECK_IN, data, {
-      signal,
-    });
+    const response = await apiClient.post<ApiResponse<AttendanceRecordResponse>>(
+      API_ENDPOINTS.ATTENDANCE.CHECK_IN,
+      data,
+      { signal }
+    );
     return response.data.data;
   },
 
@@ -95,9 +118,11 @@ export const attendanceService = {
     data: CheckOutRequest,
     signal?: AbortSignal
   ): Promise<AttendanceRecordResponse> {
-    const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.CHECK_OUT, data, {
-      signal,
-    });
+    const response = await apiClient.post<ApiResponse<AttendanceRecordResponse>>(
+      API_ENDPOINTS.ATTENDANCE.CHECK_OUT,
+      data,
+      { signal }
+    );
     return response.data.data;
   },
 
@@ -121,10 +146,77 @@ export const attendanceService = {
     params?: { month?: number; year?: number },
     signal?: AbortSignal
   ): Promise<MonthlyAttendanceSummaryResponse> {
-    const response = await apiClient.get(API_ENDPOINTS.ATTENDANCE.MY_HISTORY, {
-      params,
-      signal,
-    });
+    const response = await apiClient.get<ApiResponse<MonthlyAttendanceSummaryResponse>>(
+      API_ENDPOINTS.ATTENDANCE.MY_HISTORY,
+      { params, signal }
+    );
     return response.data.data;
   },
+
+  // ==========================================
+  // Phân hệ Báo cáo chuyên cần HR (TM-26)
+  // ==========================================
+
+  /**
+   * Lấy Dashboard KPI tổng quan toàn công ty về chuyên cần (TM-26)
+   */
+  async getAttendanceSummaryKpi(
+    filter?: AttendanceReportFilterParams,
+    signal?: AbortSignal
+  ): Promise<AttendanceSummaryKpiResponse> {
+    const response = await apiClient.get<ApiResponse<AttendanceSummaryKpiResponse>>(
+      API_ENDPOINTS.ATTENDANCE.REPORTS.SUMMARY,
+      { params: filter, signal }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Lấy danh sách bảng tổng hợp chuyên cần của các TTS (phân trang 0-indexed - TM-26)
+   */
+  async getInternDiligenceReports(
+    filter?: AttendanceReportFilterParams,
+    signal?: AbortSignal
+  ): Promise<PageResponse<InternDiligenceReportResponse>> {
+    const response = await apiClient.get<ApiResponse<PageResponse<InternDiligenceReportResponse>>>(
+      API_ENDPOINTS.ATTENDANCE.REPORTS.INTERNS,
+      { params: filter, signal }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Lấy chi tiết bảng công và các ngày nghỉ phép của 1 TTS trong tháng (TM-26)
+   */
+  async getInternAttendanceDetailReport(
+    internId: number,
+    month?: number,
+    year?: number,
+    signal?: AbortSignal
+  ): Promise<InternAttendanceDetailReportResponse> {
+    const response = await apiClient.get<ApiResponse<InternAttendanceDetailReportResponse>>(
+      API_ENDPOINTS.ATTENDANCE.REPORTS.INTERN_DETAILS(internId),
+      { params: { month, year }, signal }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Xuất báo cáo chuyên cần ra file CSV UTF-8 BOM chuẩn tiếng Việt (TM-26)
+   */
+  async exportAttendanceReportCsv(
+    filter?: AttendanceReportFilterParams,
+    signal?: AbortSignal
+  ): Promise<Blob> {
+    const response = await apiClient.get(
+      API_ENDPOINTS.ATTENDANCE.REPORTS.EXPORT,
+      {
+        params: filter,
+        responseType: 'blob',
+        signal,
+      }
+    );
+    return response.data;
+  },
 };
+
