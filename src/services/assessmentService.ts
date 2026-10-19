@@ -131,5 +131,25 @@ export const assessmentService = {
     );
     return response.data?.data;
   },
+
+  /**
+   * AI-04: Lấy kết quả phân tích AI hiện hành của báo cáo tuần
+   */
+  async getWeeklyReportAiEvaluation(reportId: number): Promise<import('../types/assessment.types').WeeklyReportAiEvaluation | null> {
+    const response = await apiClient.get(
+      INTERN_ENDPOINTS.MENTOR_REPORT_AI_EVALUATION(reportId)
+    );
+    return response.data?.data || null;
+  },
+
+  /**
+   * AI-04: Kích hoạt phân tích hoặc tái phân tích báo cáo tuần bằng AI (Gemini 1.5 Pro)
+   */
+  async triggerWeeklyReportAiEvaluation(reportId: number): Promise<import('../types/assessment.types').WeeklyReportAiEvaluation> {
+    const response = await apiClient.post(
+      INTERN_ENDPOINTS.MENTOR_REPORT_AI_EVALUATE(reportId)
+    );
+    return response.data?.data;
+  },
 };
 

@@ -6,4 +6,5 @@ export interface AttendanceHistoryTableProps {
   error: string | null;
   onRetry?: () => void;
   onGoToCurrentMonth?: () => void;
+  onAppealSuccess?: () => void;
 }

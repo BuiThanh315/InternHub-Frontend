@@ -9,6 +9,7 @@ export interface AllowanceRecord {
   internEmail?: string;
   contractId?: number;
   contractNumber?: string;
+  contractStatus?: string;
   periodMonth: string; // YYYY-MM
   standardWorkingDays: number;
   actualWorkingDays: number;

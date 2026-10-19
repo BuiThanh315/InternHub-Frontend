@@ -1,6 +1,7 @@
 import React, { useState, createContext, useContext } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
+import { InternChatWidget } from '../components/chat/InternChatWidget';
 import styles from './MainLayout.module.css';
 
 interface LayoutContextType {
@@ -75,6 +76,8 @@ export const MainLayout: React.FC = () => {
           <main className={styles.mainContent}>
             <Outlet />
           </main>
+          {/* Trợ lý ảo AI Chatbot cho TTS */}
+          <InternChatWidget />
         </div>
       </div>
     </LayoutContext.Provider>

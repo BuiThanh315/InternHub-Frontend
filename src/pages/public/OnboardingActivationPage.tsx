@@ -95,6 +95,25 @@ export const OnboardingActivationPage: React.FC = () => {
     );
   }
 
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
+
+  const handleResendActivation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resendEmail.trim()) return;
+    setResendLoading(true);
+    setResendStatus(null);
+    try {
+      const res = await apiClient.post('/api/onboarding/resend-activation', { email: resendEmail.trim() });
+      setResendStatus(res.data?.message || 'Liên kết kích hoạt mới đã được gửi vào email của bạn!');
+    } catch (err: any) {
+      setResendStatus(err.response?.data?.message || 'Không thể gửi lại liên kết kích hoạt. Vui lòng kiểm tra lại email.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   if (!isValid) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '1rem' }}>
@@ -102,13 +121,64 @@ export const OnboardingActivationPage: React.FC = () => {
           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
             <AlertCircle size={28} />
           </div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>Liên kết không khả dụng</h3>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>Liên kết không khả dụng hoặc đã hết hạn</h3>
           <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
             {errorMessage}
           </p>
+
+          {/* Form yêu cầu cấp lại link kích hoạt */}
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem', marginBottom: '1.25rem', textAlign: 'left' }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
+              Yêu cầu gửi lại liên kết kích hoạt
+            </h4>
+            <p style={{ fontSize: '0.825rem', color: '#64748b', marginBottom: '0.75rem' }}>
+              Nhập email bạn đã ứng tuyển để nhận ngay đường link kích hoạt mới:
+            </p>
+            <form onSubmit={handleResendActivation} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <input
+                type="email"
+                placeholder="email.ung.vien@gmail.com"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.625rem 0.75rem',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.875rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <button
+                type="submit"
+                disabled={resendLoading}
+                style={{
+                  padding: '0.625rem',
+                  borderRadius: '6px',
+                  background: '#4f46e5',
+                  color: '#fff',
+                  border: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  cursor: resendLoading ? 'not-allowed' : 'pointer',
+                  opacity: resendLoading ? 0.7 : 1,
+                }}
+              >
+                {resendLoading ? 'Đang gửi...' : 'Gửi lại liên kết vào email'}
+              </button>
+            </form>
+            {resendStatus && (
+              <p style={{ marginTop: '0.5rem', fontSize: '0.825rem', color: '#2563eb', lineHeight: 1.4 }}>
+                {resendStatus}
+              </p>
+            )}
+          </div>
+
           <button
             onClick={() => navigate('/login')}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: '#0f172a', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+            style={{ width: '100%', padding: '0.625rem', borderRadius: '6px', background: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}
           >
             Quay lại trang Đăng nhập
           </button>

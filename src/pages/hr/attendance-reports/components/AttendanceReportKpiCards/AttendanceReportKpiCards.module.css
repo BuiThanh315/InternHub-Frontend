@@ -1,0 +1,281 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1200px) {
+  .cardsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .cardsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpiCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.kpiCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-color: var(--border-hover, var(--primary));
+}
+
+.cardCritical {
+  border-left: 4px solid var(--danger);
+  background-color: var(--bg-card);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.iconWrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconPrimary {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--primary);
+}
+
+.iconSuccess {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.iconWarning {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.iconInfo {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--info);
+}
+
+.iconDanger {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.cardValueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cardValue {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.cardUnit {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.cardSubtext {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badgeSubtext {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.badgeDanger {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.metricsDualGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .metricsDualGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Distribution Bar Block */
+.distributionCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.distributionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.distributionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.distributionLegend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dotExcellent {
+  background-color: var(--success);
+}
+
+.dotGood {
+  background-color: var(--info);
+}
+
+.dotWarning {
+  background-color: var(--warning);
+}
+
+.dotCritical {
+  background-color: var(--danger);
+}
+
+.dotSick {
+  background-color: var(--warning);
+}
+
+.dotPersonal {
+  background-color: var(--primary);
+}
+
+.dotExam {
+  background-color: var(--info);
+}
+
+.dotBereavement {
+  background-color: var(--text-muted);
+}
+
+.dotOther {
+  background-color: var(--info);
+}
+
+
+.progressBarTrack {
+  height: 10px;
+  background-color: var(--bg-surface, var(--border-default));
+  border-radius: 9999px;
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+}
+
+.barSegment {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.segExcellent {
+  background-color: var(--success);
+}
+
+.segGood {
+  background-color: var(--info);
+}
+
+.segWarning {
+  background-color: var(--warning);
+}
+
+.segCritical {
+  background-color: var(--danger);
+}
+
+.segSick {
+  background-color: var(--warning);
+}
+
+.segPersonal {
+  background-color: var(--primary);
+}
+
+.segExam {
+  background-color: var(--info);
+}
+
+.segBereavement {
+  background-color: var(--text-muted);
+}
+
+.segOther {
+  background-color: var(--info);
+}
+
+

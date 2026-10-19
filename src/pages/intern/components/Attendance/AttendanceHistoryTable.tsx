@@ -15,8 +15,10 @@ import {
   formatTime,
   getAttendanceStatusLabel,
 } from '../../../../utils/formatters';
+import { toast } from 'sonner';
+import { attendanceService } from '../../../../services/attendanceService';
 import type { AttendanceHistoryTableProps } from './AttendanceHistoryTable.types';
-import type { AttendanceStatus } from '../../../../types';
+import type { AttendanceStatus, AttendanceRecordResponse } from '../../../../types';
 import styles from './AttendanceHistoryTable.module.css';
 
 const PAGE_SIZE = 10;
@@ -27,8 +29,39 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
   error,
   onRetry,
   onGoToCurrentMonth,
+  onAppealSuccess,
 }) => {
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecordResponse | null>(null);
+  const [appealReason, setAppealReason] = useState<string>('');
+  const [appealEvidenceUrl, setAppealEvidenceUrl] = useState<string>('');
+  const [submittingAppeal, setSubmittingAppeal] = useState<boolean>(false);
+
+  const handleOpenAppeal = (record: AttendanceRecordResponse) => {
+    setSelectedRecord(record);
+    setAppealReason('');
+    setAppealEvidenceUrl('');
+  };
+
+  const handleSubmitAppeal = async () => {
+    if (!selectedRecord || !appealReason.trim()) return;
+    setSubmittingAppeal(true);
+    try {
+      await attendanceService.appealAttendance(selectedRecord.id, {
+        reason: appealReason.trim(),
+        evidenceUrl: appealEvidenceUrl.trim() || undefined,
+      });
+      toast.success('Đã gửi giải trình chấm công thành công. HR/Mentor sẽ xem xét duyệt lại.');
+      setSelectedRecord(null);
+      if (onAppealSuccess) {
+        onAppealSuccess();
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || 'Gửi giải trình thất bại');
+    } finally {
+      setSubmittingAppeal(false);
+    }
+  };
 
   // Tính toán dữ liệu hiển thị trên trang hiện tại
   const totalItems = attendances.length;
@@ -178,10 +211,13 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
               <th>Trạng Thái</th>
               <th>Kiểm Duyệt</th>
               <th>Ghi Chú</th>
+              <th>Thao Tác</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((record) => (
+            {paginatedData.map((record) => {
+              const canAppeal = record.reviewStatus === 'PENDING_REVIEW' || record.status === 'FORGOTTEN_CHECKOUT' || record.status === 'LATE' || record.status === 'EARLY_LEAVE' || record.status === 'ABSENT';
+              return (
               <tr key={record.id || record.workDate}>
                 <td className={styles.stickyColumn}>
                   <strong>{formatDate(record.workDate)}</strong>
@@ -231,11 +267,143 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
                 <td title={record.notes}>
                   {record.notes ? record.notes : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                 </td>
+                <td>
+                  {canAppeal && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAppeal(record)}
+                      style={{
+                        padding: '0.3rem 0.6rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        borderRadius: '6px',
+                        border: '1px solid var(--primary)',
+                        color: 'var(--primary)',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title="Gửi đơn khiếu nại / giải trình cho ca làm việc này"
+                    >
+                      Khiếu nại
+                    </button>
+                  )}
+                </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/* MODAL GIẢI TRÌNH CHẤM CÔNG */}
+      {selectedRecord && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem',
+        }}>
+          <div style={{
+            background: 'var(--bg-card, #ffffff)',
+            borderRadius: '12px',
+            maxWidth: '480px',
+            width: '100%',
+            padding: '1.5rem',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            border: '1px solid var(--border-default)',
+          }}>
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: 'var(--text-main)' }}>
+              Giải Trình Chấm Công Ngày {formatDate(selectedRecord.workDate)}
+            </h3>
+            <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Nhập lý do chi tiết (ví dụ: GPS trôi, lỗi thiết bị, đi công tác) kèm đường dẫn ảnh minh chứng để HR/Mentor xét duyệt lại.
+            </p>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                Lý do giải trình (*):
+              </label>
+              <textarea
+                value={appealReason}
+                onChange={(e) => setAppealReason(e.target.value)}
+                placeholder="Nhập lý do giải trình chi tiết..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-default)',
+                  fontSize: '0.875rem',
+                  background: 'var(--bg-main)',
+                  color: 'var(--text-main)',
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                Link ảnh / tài liệu minh chứng (tùy chọn):
+              </label>
+              <input
+                type="text"
+                value={appealEvidenceUrl}
+                onChange={(e) => setAppealEvidenceUrl(e.target.value)}
+                placeholder="https://drive.google.com/... hoặc link ảnh"
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-default)',
+                  fontSize: '0.875rem',
+                  background: 'var(--bg-main)',
+                  color: 'var(--text-main)',
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button
+                type="button"
+                disabled={submittingAppeal}
+                onClick={() => setSelectedRecord(null)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-default)',
+                  background: 'transparent',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={submittingAppeal || !appealReason.trim()}
+                onClick={handleSubmitAppeal}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: 'var(--primary)',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  cursor: submittingAppeal || !appealReason.trim() ? 'not-allowed' : 'pointer',
+                  opacity: submittingAppeal || !appealReason.trim() ? 0.6 : 1,
+                }}
+              >
+                {submittingAppeal ? 'Đang gửi...' : 'Gửi Giải Trình'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PHÂN TRANG: Tự động ẩn khi <= 10 dòng (Nguyên tắc 31) */}
       {totalItems > PAGE_SIZE && (

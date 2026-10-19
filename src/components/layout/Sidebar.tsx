@@ -17,13 +17,16 @@ import {
   CalendarCheck,
   CalendarCheck2,
   CalendarOff,
+  BarChart3,
   WalletCards,
   LifeBuoy,
   X,
+
   ChevronLeft,
   ChevronRight,
   LogOut,
   BookOpen,
+  Bot,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants/routes';
@@ -101,6 +104,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       section: 'Hệ Thống',
       allowedRoles: ['ADMIN'],
     },
+    {
+      to: ROUTES.ADMIN.AI_SETTINGS,
+      label: 'Cấu Hình Trợ Lý AI',
+      icon: Bot,
+      requiredPermission: 'AI_CONFIG_MANAGE',
+      section: 'Hệ Thống',
+      allowedRoles: ['ADMIN'],
+    },
 
     // 2. Phân hệ Quản Trị Nhân Sự (DÀNH CHO HR)
     {
@@ -136,7 +147,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['HR'],
     },
     {
+      to: ROUTES.HR.ATTENDANCE_REPORTS,
+      label: 'Báo Cáo Chuyên Cần',
+      icon: BarChart3,
+      requiredPermission: 'INTERN_VIEW_ALL',
+      section: 'Quản Trị Nhân Sự',
+      allowedRoles: ['HR', 'ADMIN'],
+    },
+    {
       to: ROUTES.HR.EVALUATIONS,
+
       label: 'Đánh Giá Cuối Kỳ',
       icon: Award,
       requiredPermission: 'INTERN_APPROVE',
@@ -225,8 +245,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       section: 'Người Hướng Dẫn',
       allowedRoles: ['MENTOR'],
     },
+    {
+      to: ROUTES.HR.ATTENDANCE_REPORTS,
+      label: 'Báo Cáo Chuyên Cần',
+      icon: BarChart3,
+      requiredPermission: 'INTERN_VIEW_OWN',
+      section: 'Người Hướng Dẫn',
+      allowedRoles: ['MENTOR'],
+    },
 
     // 4. Phân hệ Thực Tập Sinh (CHỈ INTERN & USER)
+
     {
       to: ROUTES.INTERN.DASHBOARD,
       label: 'Tiến Độ Thực Tập',

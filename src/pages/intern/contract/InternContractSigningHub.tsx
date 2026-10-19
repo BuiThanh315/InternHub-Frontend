@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Award, CheckCircle2, Download, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Award, CheckCircle2, Download, ArrowRight, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { dynamicContractService } from '../../../services/contractService';
 import { ContractDocumentViewer } from '../../../components/contract/ContractDocumentViewer';
@@ -130,6 +130,35 @@ export const InternContractSigningHub: React.FC = () => {
       <div className={styles.emptyContainer}>
         <h3>Chưa có hợp đồng nào</h3>
         <p>{error || 'Hiện tại bạn chưa có hợp đồng thực tập nào cần xác nhận.'}</p>
+      </div>
+    );
+  }
+
+  if (contract.status === 'WITHDRAWN') {
+    return (
+      <div className={styles.emptyContainer}>
+        <div style={{ color: '#ef4444', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+          <AlertCircle size={48} />
+        </div>
+        <h3 style={{ color: '#0f172a', fontWeight: 700 }}>Hợp đồng đã được thu hồi</h3>
+        <p style={{ color: '#64748b', maxWidth: '480px', margin: '0.5rem auto 1.5rem', lineHeight: 1.6 }}>
+          Phòng Nhân sự đã thu hồi văn bản hợp đồng này để cập nhật hoặc điều chỉnh lại các điều khoản. Vui lòng đợi bản sửa đổi mới từ HR hoặc liên hệ trực tiếp phụ trách nhân sự.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/intern/documents')}
+          style={{
+            padding: '0.625rem 1.25rem',
+            borderRadius: '8px',
+            background: '#4f46e5',
+            color: '#fff',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          Quay lại Hồ sơ của tôi
+        </button>
       </div>
     );
   }

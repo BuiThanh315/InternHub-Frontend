@@ -20,12 +20,16 @@ export interface ProgramWorkspaceHeaderProps {
   onOpenStatus: () => void;
   onToggleRecruitment: () => void;
   isTogglingRecruitment?: boolean;
+  onOpenInterviewQuestions?: () => void;
+  onOpenCreateSchedule?: () => void;
 }
 
 export interface ApplicationsTabProps {
   program: ProgramDetailResponse;
   onEnrollSuccess: () => void;
   onViewInternDetail: (intern: InternProfile) => void;
+  onOpenCreateSchedule?: (candidate?: { candidateId?: number; email: string; fullName: string }) => void;
+  onOpenAiDossier?: (intern: InternProfile) => void;
 }
 
 export interface InternsTabProps {
@@ -38,6 +42,7 @@ export interface InternsTabProps {
   onAssignMentor: (intern: InternProfile) => void;
   onUploadContract: (intern: InternProfile) => void;
   onStatusChange: (intern: InternProfile, newStatus: string) => void;
+  onOpenAiDossier?: (intern: InternProfile) => void;
 }
 
 export interface MentorsTabProps {

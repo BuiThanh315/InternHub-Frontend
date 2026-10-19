@@ -7,6 +7,7 @@ export const HR_ROUTES = {
   DEPARTMENTS: '/hr/departments',
   REVIEW: '/hr/review',
   EVALUATIONS: '/hr/evaluations',
+  ATTENDANCE_REPORTS: '/hr/attendance-reports',
   PROGRAM_WORKSPACE: '/hr/programs/:id',
   ALLOWANCES: '/hr/allowances',
   SUPPORT_REQUESTS: '/hr/support-requests',

@@ -286,6 +286,7 @@ export const HrAllowancePage: React.FC = () => {
               <th>Mã / Tên TTS</th>
               <th>Hợp đồng</th>
               <th>Công chuẩn / Thực tế</th>
+              <th>Tiến độ Báo cáo Tuần</th>
               <th>Mức trợ cấp gốc</th>
               <th>Công tính toán</th>
               <th>Thưởng / Khấu trừ</th>
@@ -324,13 +325,61 @@ export const HrAllowancePage: React.FC = () => {
                     <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{rec.internEmail || `ID: ${rec.internUserId}`}</div>
                   </td>
                   <td>
-                    <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 500 }}>
-                      {rec.contractNumber || (rec.contractId ? `HĐ #${rec.contractId}` : '-')}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 500 }}>
+                        {rec.contractNumber || (rec.contractId ? `HĐ #${rec.contractId}` : '-')}
+                      </span>
+                      {rec.contractStatus && rec.contractStatus !== 'SIGNED' && rec.contractStatus !== 'ACTIVE' ? (
+                        <span 
+                          style={{ 
+                            fontSize: '0.7rem', 
+                            padding: '1px 6px', 
+                            borderRadius: '4px', 
+                            backgroundColor: '#fef3c7', 
+                            color: '#92400e', 
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            width: 'fit-content'
+                          }}
+                          title="Hợp đồng chưa hoàn tất ký số, mức phụ cấp được tạm tính từ hợp đồng dự thảo thực tế"
+                        >
+                          📋 HĐ chưa ký ({rec.contractStatus})
+                        </span>
+                      ) : rec.contractStatus === 'SIGNED' || rec.contractStatus === 'ACTIVE' ? (
+                        <span 
+                          style={{ 
+                            fontSize: '0.7rem', 
+                            padding: '1px 6px', 
+                            borderRadius: '4px', 
+                            backgroundColor: '#dcfce7', 
+                            color: '#166534', 
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            width: 'fit-content'
+                          }}
+                        >
+                          ✓ Đã ký
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td>
                     {rec.actualWorkingDays} / {rec.standardWorkingDays} công
                     {rec.paidLeaveDays ? ` (+${rec.paidLeaveDays} phép)` : ''}
+                  </td>
+                  <td>
+                    {/* Báo cáo tuần liên kết: Kiểm tra tỷ lệ ngày công vs báo cáo */}
+                    {rec.actualWorkingDays >= (rec.standardWorkingDays * 0.75) ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800" title="Đã nộp đủ báo cáo tuần theo kỳ">
+                        ✓ Đủ điều kiện
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800" title="Cần lưu ý: Số ngày công hoặc tiến độ báo cáo thấp, HR cần kiểm tra trước khi duyệt">
+                        ⚠️ Cần rà soát
+                      </span>
+                    )}
                   </td>
                   <td>{formatCurrency(rec.baseAllowance)}</td>
                   <td>{formatCurrency(rec.autoCalculatedAmount || 0)}</td>

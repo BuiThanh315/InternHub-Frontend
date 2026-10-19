@@ -28,6 +28,10 @@ import { ApplicationsTab } from './components/tabs/ApplicationsTab';
 import { InternsTab } from './components/tabs/InternsTab';
 import { MentorsTab } from './components/tabs/MentorsTab';
 import { OverviewTab } from './components/tabs/OverviewTab';
+import { InterviewQuestionModal } from './components/InterviewQuestionModal';
+import { CreateInterviewScheduleModal } from '../../components/CreateInterviewScheduleModal';
+import { EvaluationDossierDrawer } from '../../components/EvaluationDossierDrawer';
+import { aiInterviewService } from '../../../../services/aiInterviewService';
 
 // Tái sử dụng các Modals hiện có từ HR Module
 import {
@@ -70,6 +74,9 @@ export const ProgramWorkspacePage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isAssignProgramMentorModalOpen, setIsAssignProgramMentorModalOpen] = useState(false);
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [scheduleCandidate, setScheduleCandidate] = useState<{ candidateId?: number; email: string; fullName: string } | null>(null);
 
   // Modal thao tác với Thực tập sinh cá nhân
   const [detailIntern, setDetailIntern] = useState<InternProfile | null>(null);
@@ -79,6 +86,27 @@ export const ProgramWorkspacePage: React.FC = () => {
   const [contractIntern, setContractIntern] = useState<InternProfile | null>(null);
   const [uploadDocIntern, setUploadDocIntern] = useState<InternProfile | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+
+  // Module AI-02: Phiếu đánh giá chi tiết phỏng vấn AI (Drawer)
+  const [dossierSessionId, setDossierSessionId] = useState<number | null>(null);
+
+  const handleOpenAiDossier = async (intern: InternProfile) => {
+    try {
+      const res = await aiInterviewService.getCandidateInterviewSession({
+        candidateId: intern.id,
+        email: intern.email,
+      });
+
+      if (res && res.sessionId) {
+        setDossierSessionId(res.sessionId);
+      } else {
+        toast.error(`Ứng viên "${intern.fullName}" chưa tham gia phiên phỏng vấn AI nào.`);
+      }
+    } catch (err: any) {
+      console.error('Lỗi khi tra cứu phiên phỏng vấn của ứng viên:', err);
+      toast.error('Không thể kiểm tra lịch sử phỏng vấn của ứng viên này.');
+    }
+  };
 
   // Nạp toàn bộ dữ liệu của kỳ thực tập
   const loadWorkspaceData = useCallback(async () => {
@@ -261,6 +289,8 @@ export const ProgramWorkspacePage: React.FC = () => {
             onOpenEnroll={() => setIsEnrollModalOpen(true)}
             onOpenEdit={() => setIsEditModalOpen(true)}
             onOpenStatus={() => setIsStatusModalOpen(true)}
+            onOpenInterviewQuestions={() => setIsInterviewModalOpen(true)}
+            onOpenCreateSchedule={() => setIsScheduleModalOpen(true)}
             onToggleRecruitment={handleToggleRecruitment}
             isTogglingRecruitment={isTogglingRecruitment}
           />
@@ -309,6 +339,11 @@ export const ProgramWorkspacePage: React.FC = () => {
                   setDetailTab('profile');
                   setDetailIntern(intern);
                 }}
+                onOpenCreateSchedule={(candidate) => {
+                  setScheduleCandidate(candidate || null);
+                  setIsScheduleModalOpen(true);
+                }}
+                onOpenAiDossier={handleOpenAiDossier}
               />
             )}
 
@@ -326,6 +361,7 @@ export const ProgramWorkspacePage: React.FC = () => {
                 onAssignMentor={(intern) => setAssigningMentorIntern(intern)}
                 onUploadContract={(intern) => setContractIntern(intern)}
                 onStatusChange={() => void loadWorkspaceData()}
+                onOpenAiDossier={handleOpenAiDossier}
               />
             )}
 
@@ -445,6 +481,46 @@ export const ProgramWorkspacePage: React.FC = () => {
             uploading={uploadingDoc}
             onClose={() => setUploadDocIntern(null)}
             onSubmit={handleUploadDocSubmit}
+          />
+
+          {/* Modal Sinh Câu Hỏi Phỏng Vấn AI (Program Scope) */}
+          {isInterviewModalOpen && program && (
+            <InterviewQuestionModal
+              isOpen={isInterviewModalOpen}
+              onClose={() => setIsInterviewModalOpen(false)}
+              programId={program.id}
+              programName={program.name}
+            />
+          )}
+
+          {/* Modal Lên Lịch Phỏng Vấn AI (Module AI-01) */}
+          {isScheduleModalOpen && program && (
+            <CreateInterviewScheduleModal
+              isOpen={isScheduleModalOpen}
+              onClose={() => {
+                setIsScheduleModalOpen(false);
+                setScheduleCandidate(null);
+              }}
+              programId={program.id}
+              initialCandidates={
+                scheduleCandidate
+                  ? [{ candidateId: scheduleCandidate.candidateId, email: scheduleCandidate.email, fullName: scheduleCandidate.fullName }]
+                  : []
+              }
+              onSuccess={(scheduleId) => {
+                toast.success(`Đã tạo lịch phỏng vấn AI thành công (Mã đợt: #${scheduleId})!`);
+                setScheduleCandidate(null);
+                void loadWorkspaceData();
+              }}
+            />
+          )}
+
+          {/* Drawer Phiếu Đánh Giá Phỏng Vấn AI & Xếp Hạng Ứng Viên (Module AI-02) */}
+          <EvaluationDossierDrawer
+            sessionId={dossierSessionId}
+            isOpen={dossierSessionId !== null}
+            onClose={() => setDossierSessionId(null)}
+            onRefresh={() => void loadWorkspaceData()}
           />
         </>
       )}

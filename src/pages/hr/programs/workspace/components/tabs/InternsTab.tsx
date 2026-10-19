@@ -26,6 +26,7 @@ export const InternsTab: React.FC<InternsTabProps> = ({
   onEditIntern,
   onAssignMentor,
   onUploadContract,
+  onOpenAiDossier,
 }) => {
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,43 +58,43 @@ export const InternsTab: React.FC<InternsTabProps> = ({
     switch (status) {
       case 'INTERNING':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
             Đang thực tập
           </span>
         );
       case 'APPROVED':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            <CheckCircle2 size={12} />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <CheckCircle2 size={12} className="text-emerald-600" />
             Đã tiếp nhận
           </span>
         );
       case 'COMPLETED':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-            <CheckCircle2 size={12} />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+            <CheckCircle2 size={12} className="text-teal-600" />
             Hoàn thành kỳ
           </span>
         );
       case 'ON_HOLD':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-            <Clock size={12} />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <Clock size={12} className="text-amber-600" />
             Tạm hoãn
           </span>
         );
       case 'TERMINATED':
       case 'REJECTED':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-            <UserX size={12} />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+            <UserX size={12} className="text-rose-600" />
             Đã dừng / Hủy
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
             {status}
           </span>
         );
@@ -124,7 +125,7 @@ export const InternsTab: React.FC<InternsTabProps> = ({
             />
             <input
               type="text"
-              className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-52"
+              className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs w-56"
               placeholder="Tìm tên, mã TTS, trường..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -147,7 +148,7 @@ export const InternsTab: React.FC<InternsTabProps> = ({
 
           {/* Status Filter */}
           <select
-            className="py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="py-1.5 px-3 text-xs rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -259,17 +260,17 @@ export const InternsTab: React.FC<InternsTabProps> = ({
 
                     {/* Cột Mã TTS */}
                     <td className="font-tabular">
-                      <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                      <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
                         {intern.internCode || `--`}
                       </span>
                     </td>
 
                     {/* Cột Trường ĐH */}
                     <td>
-                      <div className="font-medium text-slate-800 dark:text-slate-200">
+                      <div className="font-semibold text-slate-800 text-xs">
                         {intern.university || 'Chưa cập nhật'}
                       </div>
-                      <div className="text-xs text-slate-500">{intern.major || 'Chưa rõ'}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{intern.major || 'Chưa rõ'}</div>
                     </td>
 
                     {/* Cột Trạng thái */}
@@ -279,16 +280,16 @@ export const InternsTab: React.FC<InternsTabProps> = ({
                     <td>
                       {intern.mentorName ? (
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
+                          <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
                             {intern.mentorName.charAt(0)}
                           </div>
                           <div>
-                            <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                            <div className="text-xs font-semibold text-slate-800">
                               {intern.mentorName}
                             </div>
                             <button
                               type="button"
-                              className="text-[11px] text-indigo-600 hover:underline inline-block"
+                              className="text-[11px] text-indigo-600 hover:underline inline-block font-medium"
                               onClick={() => onAssignMentor(intern)}
                             >
                               Đổi Mentor
@@ -298,10 +299,10 @@ export const InternsTab: React.FC<InternsTabProps> = ({
                       ) : (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800 transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-md border border-amber-200 shadow-2xs transition-colors"
                           onClick={() => onAssignMentor(intern)}
                         >
-                          <UserPlus size={12} />
+                          <UserPlus size={12} className="text-amber-600" />
                           <span>Gán Mentor</span>
                         </button>
                       )}
@@ -331,6 +332,24 @@ export const InternsTab: React.FC<InternsTabProps> = ({
                         >
                           <FileText size={15} aria-hidden="true" />
                         </button>
+
+                        {/* Xem Phiếu Đánh Giá Phỏng Vấn AI (Module AI-02) */}
+                        {onOpenAiDossier && (
+                          <button
+                            type="button"
+                            className={styles.actionIconBtn}
+                            onClick={() => onOpenAiDossier(intern)}
+                            title="Xem Phiếu Đánh Giá Phỏng Vấn AI & Xếp Hạng Ứng Viên"
+                            aria-label={`Phiếu đánh giá AI cho ${intern.fullName}`}
+                            style={{
+                              color: '#8b5cf6',
+                              background: 'rgba(139, 92, 246, 0.08)',
+                              borderColor: 'rgba(139, 92, 246, 0.25)',
+                            }}
+                          >
+                            <Sparkles size={15} aria-hidden="true" />
+                          </button>
+                        )}
 
                         {/* Sửa thông tin */}
                         <button
