@@ -10,6 +10,8 @@ import {
   Info,
   UserPlus,
   UserCheck,
+  Send,
+  ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -510,7 +512,7 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
                           ) : (
                             <span
                               className={styles.candidateTagNew}
-                              title="Ứng viên mới hoàn toàn, hệ thống sẽ tự động tạo tài khoản"
+                              title="Ứng viên mới • Nhận liên kết Onboarding bảo mật qua email khi duyệt để tự tạo mật khẩu"
                             >
                               <UserPlus size={12} />
                               <span>Mới</span>
@@ -534,38 +536,83 @@ export const ExcelImportTab: React.FC<ExcelImportTabProps> = ({
             </div>
           )}
 
-          {/* 4.4. Tùy chọn trạng thái phê duyệt */}
+          {/* 4.4. Tùy chọn trạng thái phê duyệt & Cơ chế Onboarding (TM-100 v3.0) */}
           {!hasErrors && !isQuotaExceeded && (
             <div className={styles.modeSelector}>
-              <span className={styles.modeTitle}>Tùy chọn trạng thái tiếp nhận vào chương trình:</span>
-              <div className={styles.modeOptions}>
-                <label className={styles.modeOptionLabel}>
-                  <input
-                    type="radio"
-                    name="importStatus"
-                    value="APPROVED"
-                    checked={state.status === 'APPROVED'}
-                    onChange={() => setState((prev) => ({ ...prev, status: 'APPROVED' }))}
-                  />
-                  <span>
-                    <strong>Tiếp nhận chính thức ngay (APPROVED)</strong>
-                    <span className={styles.modeDescription}> — Tự động cập nhật chỉ tiêu kỳ thực tập</span>
-                  </span>
-                </label>
+              <div className={styles.modeHeaderGroup}>
+                <span className={styles.modeTitle}>
+                  <Send size={15} className="text-indigo-600" aria-hidden="true" />
+                  Quy trình tiếp nhận &amp; Cấp quyền truy cập hệ thống:
+                </span>
+              </div>
 
-                <label className={styles.modeOptionLabel}>
-                  <input
-                    type="radio"
-                    name="importStatus"
-                    value="PENDING"
-                    checked={state.status === 'PENDING'}
-                    onChange={() => setState((prev) => ({ ...prev, status: 'PENDING' }))}
-                  />
-                  <span>
-                    <strong>Lưu vào danh sách chờ xét duyệt (PENDING)</strong>
-                    <span className={styles.modeDescription}> — Phê duyệt thủ công từng ứng viên sau</span>
-                  </span>
-                </label>
+              <div className={styles.modeCardsGrid}>
+                {/* Card 1: APPROVED */}
+                <div
+                  className={`${styles.modeCard} ${state.status === 'APPROVED' ? styles.modeCardActive : ''}`}
+                  onClick={() => setState((prev) => ({ ...prev, status: 'APPROVED' }))}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      setState((prev) => ({ ...prev, status: 'APPROVED' }));
+                    }
+                  }}
+                >
+                  <div className={styles.modeCardHeader}>
+                    <div className={styles.modeCardLabel}>
+                      <input
+                        type="radio"
+                        name="importStatus"
+                        value="APPROVED"
+                        checked={state.status === 'APPROVED'}
+                        onChange={() => setState((prev) => ({ ...prev, status: 'APPROVED' }))}
+                        aria-label="Tiếp nhận chính thức ngay (APPROVED)"
+                      />
+                      <span>Tiếp nhận chính thức ngay (APPROVED)</span>
+                    </div>
+                    <span className="badge badge-success text-xs font-semibold flex items-center gap-1">
+                      <ShieldCheck size={12} aria-hidden="true" />
+                      Tự động Onboarding
+                    </span>
+                  </div>
+                  <p className={styles.modeCardDesc}>
+                    Cập nhật chỉ tiêu kỳ thực tập ngay lập tức. Hệ thống tự động gửi email chúc mừng kèm liên kết Onboarding bảo mật (hạn 7 ngày) để sinh viên tự tạo mật khẩu đăng nhập an toàn.
+                  </p>
+                </div>
+
+                {/* Card 2: PENDING */}
+                <div
+                  className={`${styles.modeCard} ${state.status === 'PENDING' ? styles.modeCardActive : ''}`}
+                  onClick={() => setState((prev) => ({ ...prev, status: 'PENDING' }))}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      setState((prev) => ({ ...prev, status: 'PENDING' }));
+                    }
+                  }}
+                >
+                  <div className={styles.modeCardHeader}>
+                    <div className={styles.modeCardLabel}>
+                      <input
+                        type="radio"
+                        name="importStatus"
+                        value="PENDING"
+                        checked={state.status === 'PENDING'}
+                        onChange={() => setState((prev) => ({ ...prev, status: 'PENDING' }))}
+                        aria-label="Lưu vào danh sách chờ xét duyệt (PENDING)"
+                      />
+                      <span>Chờ xét duyệt hồ sơ (PENDING)</span>
+                    </div>
+                    <span className="badge badge-warning text-xs font-semibold">
+                      Sàng lọc &amp; AI
+                    </span>
+                  </div>
+                  <p className={styles.modeCardDesc}>
+                    Chưa tạo tài khoản hoặc gửi email. Danh sách chuyển vào tab "Đơn chờ tiếp nhận" để HR sử dụng AI Screening thẩm định độ phù hợp trước khi phê duyệt và cấp quyền.
+                  </p>
+                </div>
               </div>
             </div>
           )}

@@ -11,6 +11,7 @@ import {
   Clock,
   Sparkles,
   Filter,
+  School,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -43,8 +44,21 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
     errorMessage: null,
   });
 
-  // State 3: ID ứng viên đang thực hiện thao tác duyệt
-  const [actionInternId, setActionInternId] = useState<number | null>(null);
+  // State 3: Thao tác & Bộ lọc nguồn hồ sơ (Gom nhóm tuân thủ Rule 14 <= 4 state)
+  const [filterAndAction, setFilterAndAction] = useState<{
+    sourceFilter: 'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT';
+    actionInternId: number | null;
+  }>({
+    sourceFilter: 'ALL',
+    actionInternId: null,
+  });
+
+  const actionInternId = filterAndAction.actionInternId;
+  const setActionInternId = (id: number | null) =>
+    setFilterAndAction((prev) => ({ ...prev, actionInternId: id }));
+  const sourceFilter = filterAndAction.sourceFilter;
+  const setSourceFilter = (val: 'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT') =>
+    setFilterAndAction((prev) => ({ ...prev, sourceFilter: val }));
 
   // State 4: Trạng thái Modal từ chối ứng viên
   const [rejectionDialog, setRejectionDialog] = useState<RejectionDialogState>({
@@ -112,11 +126,16 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   const maxCount = Number(program.maxInterns || 0);
   const isFull = maxCount > 0 && currentCount >= maxCount;
 
-  // Lọc ứng viên theo tiêu chí điểm số AI
-  const filteredApplicants = useMemo(
-    () => aiScreening.filterApplicants(applicants),
-    [applicants, aiScreening.filterApplicants]
-  );
+  // Lọc ứng viên theo tiêu chí điểm số AI và nguồn hồ sơ (CandidateType)
+  const filteredApplicants = useMemo(() => {
+    const aiFiltered = aiScreening.filterApplicants(applicants);
+    if (sourceFilter === 'ALL') {
+      return aiFiltered;
+    }
+    return aiFiltered.filter(
+      (item) => (item.candidateType || 'UNIVERSITY') === sourceFilter
+    );
+  }, [applicants, aiScreening.filterApplicants, sourceFilter]);
 
   const displayedIds = useMemo(
     () => filteredApplicants.map((item) => item.id),
@@ -284,6 +303,21 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
 
           <div className={styles.aiToolbarRight}>
             <Filter size={14} className="text-slate-400" aria-hidden="true" />
+            {/* Lọc nguồn ứng viên (TM-100 v3.0 - Frontend Design) */}
+            <select
+              className={styles.aiSelectFilter}
+              value={sourceFilter}
+              onChange={(e) =>
+                setSourceFilter(e.target.value as 'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT')
+              }
+              aria-label="Lọc nguồn ứng viên"
+            >
+              <option value="ALL">Tất cả nguồn hồ sơ</option>
+              <option value="UNIVERSITY">🏫 Trường liên kết</option>
+              <option value="FREE_APPLICANT">🌟 Ứng viên tự do</option>
+            </select>
+
+            {/* Lọc điểm số AI */}
             <select
               className={styles.aiSelectFilter}
               value={aiScreening.aiScoreFilter}
@@ -415,7 +449,26 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                           {initials}
                         </div>
                         <div>
-                          <div className={styles.internName}>{intern.fullName}</div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={styles.internName}>{intern.fullName}</span>
+                            {intern.candidateType === 'FREE_APPLICANT' ? (
+                              <span
+                                className={styles.candidateSourceBadgeFree}
+                                title="Ứng viên nộp hồ sơ tự do"
+                              >
+                                <Sparkles size={11} aria-hidden="true" />
+                                Ứng viên tự do
+                              </span>
+                            ) : (
+                              <span
+                                className={styles.candidateSourceBadgeUniversity}
+                                title="Sinh viên thuộc trường đại học liên kết"
+                              >
+                                <School size={11} aria-hidden="true" />
+                                Trường liên kết
+                              </span>
+                            )}
+                          </div>
                           <div className={styles.internEmail}>
                             {intern.email} • {intern.phone}
                           </div>

@@ -631,3 +631,32 @@
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
+
+/* Candidate Source Badges (TM-100 v3.0 - Frontend Design) */
+.candidateSourceBadgeUniversity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: rgba(79, 70, 229, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.candidateSourceBadgeFree {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: rgba(14, 165, 233, 0.08);
+  color: #0284c7;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

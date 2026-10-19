@@ -10,6 +10,8 @@ import {
   Clock,
   UserX,
   RefreshCw,
+  School,
+  Sparkles,
 } from 'lucide-react';
 import { Button, Skeleton } from '../../../../../../components/common';
 import type { InternsTabProps } from '../../types/ProgramWorkspace.types';
@@ -28,6 +30,7 @@ export const InternsTab: React.FC<InternsTabProps> = ({
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [sourceFilter, setSourceFilter] = useState<'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT'>('ALL');
 
   // Lọc danh sách TTS nội bộ trong kỳ
   const filteredInterns = useMemo(() => {
@@ -42,9 +45,12 @@ export const InternsTab: React.FC<InternsTabProps> = ({
       const matchStatus =
         statusFilter === 'ALL' || intern.status === statusFilter;
 
-      return matchSearch && matchStatus;
+      const matchSource =
+        sourceFilter === 'ALL' || (intern.candidateType || 'UNIVERSITY') === sourceFilter;
+
+      return matchSearch && matchStatus && matchSource;
     });
-  }, [interns, searchTerm, statusFilter]);
+  }, [interns, searchTerm, statusFilter, sourceFilter]);
 
   // Trạng thái badge cho Intern
   const renderStatusBadge = (status: string) => {
@@ -124,6 +130,20 @@ export const InternsTab: React.FC<InternsTabProps> = ({
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+
+          {/* Source Filter (TM-100 v3.0) */}
+          <select
+            className="py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            value={sourceFilter}
+            onChange={(e) =>
+              setSourceFilter(e.target.value as 'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT')
+            }
+            aria-label="Lọc theo nguồn hồ sơ"
+          >
+            <option value="ALL">Tất cả nguồn hồ sơ</option>
+            <option value="UNIVERSITY">🏫 Trường liên kết</option>
+            <option value="FREE_APPLICANT">🌟 Ứng viên tự do</option>
+          </select>
 
           {/* Status Filter */}
           <select
@@ -212,7 +232,26 @@ export const InternsTab: React.FC<InternsTabProps> = ({
                           {initials}
                         </div>
                         <div>
-                          <div className={styles.internName}>{intern.fullName}</div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={styles.internName}>{intern.fullName}</span>
+                            {intern.candidateType === 'FREE_APPLICANT' ? (
+                              <span
+                                className={styles.candidateSourceBadgeFree}
+                                title="Ứng viên nộp hồ sơ tự do"
+                              >
+                                <Sparkles size={11} aria-hidden="true" />
+                                Ứng viên tự do
+                              </span>
+                            ) : (
+                              <span
+                                className={styles.candidateSourceBadgeUniversity}
+                                title="Sinh viên thuộc trường đại học liên kết"
+                              >
+                                <School size={11} aria-hidden="true" />
+                                Trường liên kết
+                              </span>
+                            )}
+                          </div>
                           <div className={styles.internEmail}>{intern.email} • {intern.phone}</div>
                         </div>
                       </div>
