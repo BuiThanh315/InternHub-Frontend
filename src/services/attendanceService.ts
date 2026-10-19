@@ -172,6 +172,16 @@ export const attendanceService = {
   },
 
   /**
+   * Thực tập sinh gửi giải trình / khiếu nại chấm công khi bị lỗi GPS hoặc pending
+   */
+  async appealAttendance(
+    attendanceId: number | string,
+    data: { reason: string; evidenceUrl?: string },
+    signal?: AbortSignal
+  ): Promise<AttendanceRecordResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.APPEAL(attendanceId), data, {
+      signal,
+    });
    * Lấy danh sách bảng tổng hợp chuyên cần của các TTS (phân trang 0-indexed - TM-26)
    */
   async getInternDiligenceReports(
@@ -186,6 +196,18 @@ export const attendanceService = {
   },
 
   /**
+   * Mentor / HR xác nhận giờ ra thực tế cho ca quên check-out
+   */
+  async confirmForgottenCheckout(
+    attendanceId: number | string,
+    data: { actualCheckOutTime: string; confirmationNote?: string },
+    signal?: AbortSignal
+  ): Promise<AttendanceRecordResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.CONFIRM_CHECKOUT(attendanceId), data, {
+      signal,
+    });
+    return response.data.data;
+  },
    * Lấy chi tiết bảng công và các ngày nghỉ phép của 1 TTS trong tháng (TM-26)
    */
   async getInternAttendanceDetailReport(

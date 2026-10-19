@@ -9,12 +9,15 @@ import {
   AlertCircle,
   Send,
   Zap,
+  Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, Skeleton } from '../../../components/common';
 import { useAiJob } from '../../../contexts/AiJobContext';
 import { aiService } from '../../../services/aiService';
+import { aiInterviewService } from '../../../services/aiInterviewService';
+import { CreateInterviewScheduleModal } from './CreateInterviewScheduleModal';
 import { formatDateTime } from '../../../utils/formatters';
 import type { ScreeningResultDto } from '../../../types';
 import type { AiScreeningDossierTabProps } from './AiScreeningDossierTab.types';
@@ -44,10 +47,30 @@ export const AiScreeningDossierTab: React.FC<AiScreeningDossierTabProps> = ({
 }) => {
   const { startJob, completedVersion } = useAiJob();
 
-  // Rule 14: Tối đa 3 state cho sub-component
+  // Rule 14: Tối đa 3 state cho sub-component + state modal thao tác
   const [data, setData] = useState<ScreeningResultDto | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState<boolean>(false);
+  const [hasExistingSession, setHasExistingSession] = useState<boolean>(false);
+
+  const checkExistingInterview = useCallback(async () => {
+    try {
+      const session = await aiInterviewService.getCandidateInterviewSession({
+        candidateId: intern.id,
+        email: intern.email,
+      });
+      if (session && session.sessionId) {
+        setHasExistingSession(true);
+      }
+    } catch {
+      // Ignored
+    }
+  }, [intern.id, intern.email]);
+
+  useEffect(() => {
+    checkExistingInterview();
+  }, [checkExistingInterview]);
 
   const fetchEvaluation = useCallback(async () => {
     try {
@@ -182,6 +205,45 @@ export const AiScreeningDossierTab: React.FC<AiScreeningDossierTabProps> = ({
         </div>
       </section>
 
+      {/* CẦU NỐI E2E: Thanh Hành Động Lên Lịch & Mời Phỏng Vấn AI (Nổi bật, độc lập) */}
+      <div className="bg-white border-2 border-indigo-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+            <Video size={18} />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">
+              Buồng Phỏng Vấn AI (AI Interview Virtual Room)
+            </div>
+            <div className="text-xs text-slate-500">
+              {hasExistingSession
+                ? 'Ứng viên này đã được cấp phòng phỏng vấn trực tuyến. Bạn có thể xem kết quả ở tab bên cạnh.'
+                : 'Mời ứng viên làm bài thi phỏng vấn kỹ thuật trực tuyến với AI Grader tự động.'}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {hasExistingSession ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-purple-100 text-purple-800 border border-purple-200">
+              <CheckCircle size={14} className="text-purple-600" />
+              Đã Lên Lịch Phỏng Vấn AI
+            </span>
+          ) : (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => setIsInviteModalOpen(true)}
+              leftIcon={<Video size={15} />}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm px-3.5 py-1.5"
+            >
+              Lên Lịch & Mời Phỏng Vấn AI
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* 2. Comparative Dossier (Điểm mạnh vs Điểm cần lưu ý) */}
       <section className={styles.dossierGrid} aria-label="Bảng đối chiếu điểm mạnh và điểm lưu ý">
         {/* Cột Điểm mạnh */}
@@ -274,6 +336,27 @@ export const AiScreeningDossierTab: React.FC<AiScreeningDossierTabProps> = ({
             </Button>
           )}
         </aside>
+      )}
+
+      {/* Modal Lên Lịch & Mời Phỏng Vấn AI Trực Tiếp Cho Ứng Viên Này */}
+      {isInviteModalOpen && (
+        <CreateInterviewScheduleModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          onSuccess={() => {
+            setIsInviteModalOpen(false);
+            setHasExistingSession(true);
+            toast.success(`Đã tạo lịch và gửi liên kết buồng thi AI tới email: ${intern.email}`);
+          }}
+          programId={intern.programId || undefined}
+          initialCandidates={[
+            {
+              candidateId: intern.id,
+              fullName: intern.fullName,
+              email: intern.email,
+            },
+          ]}
+        />
       )}
     </div>
   );

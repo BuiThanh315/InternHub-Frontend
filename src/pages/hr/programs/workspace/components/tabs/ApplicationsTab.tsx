@@ -34,6 +34,8 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   program,
   onEnrollSuccess,
   onViewInternDetail,
+  onOpenCreateSchedule,
+  onOpenAiDossier,
 }) => {
   // Rule 14: Tối đa 3 - 4 state trong 1 component (Gom nhóm dữ liệu nhất quán)
   // State 1: Danh sách ứng viên
@@ -511,6 +513,44 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                         >
                           <MessageSquareQuote size={15} className="text-indigo-600" aria-hidden="true" />
                         </button>
+
+                        {/* Mời phỏng vấn AI trực tuyến */}
+                        {onOpenCreateSchedule && (
+                          <button
+                            type="button"
+                            className={styles.actionIconBtn}
+                            onClick={() =>
+                              onOpenCreateSchedule({
+                                candidateId: intern.id,
+                                email: intern.email || '',
+                                fullName: intern.fullName || 'Ứng viên',
+                              })
+                            }
+                            title="Tạo lịch & mời phỏng vấn AI cho ứng viên này"
+                            aria-label={`Tạo lịch phỏng vấn AI cho ${intern.fullName}`}
+                            style={{ color: '#6366f1' }}
+                          >
+                            <Calendar size={15} aria-hidden="true" />
+                          </button>
+                        )}
+
+                        {/* Xem Phiếu Đánh Giá Phỏng Vấn AI (Module AI-02) */}
+                        {onOpenAiDossier && (
+                          <button
+                            type="button"
+                            className={styles.actionIconBtn}
+                            onClick={() => onOpenAiDossier(intern)}
+                            title="Xem Phiếu Đánh Giá Phỏng Vấn AI & Xếp Hạng Ứng Viên"
+                            aria-label={`Phiếu đánh giá AI cho ${intern.fullName}`}
+                            style={{
+                              color: '#8b5cf6',
+                              background: 'rgba(139, 92, 246, 0.08)',
+                              borderColor: 'rgba(139, 92, 246, 0.25)',
+                            }}
+                          >
+                            <Sparkles size={15} aria-hidden="true" />
+                          </button>
+                        )}
 
                         {/* Tiếp nhận */}
                         <button

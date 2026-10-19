@@ -40,6 +40,9 @@ export interface UseInternWeeklyReportReturn {
   metrics: {
     totalWeeks: number;
     submittedCount: number;
+    reviewedCount: number;
+    totalProcessedCount: number;
+    completionRate: number;
     draftCount: number;
     averageScore: number | null;
   };
@@ -380,13 +383,21 @@ export const useInternWeeklyReport = (): UseInternWeeklyReportReturn => {
     return currentTimelineItem.isEditable && currentTimelineItem.status !== 'REVIEWED';
   }, [currentTimelineItem]);
 
-  // Thống kê Metrics
+  // Thống kê Metrics chuẩn hóa đồng bộ giữa Thực tập sinh và Quản lý / Nhà trường
   const metrics = useMemo(() => {
     const totalWeeks = timeline.length;
-    const submittedCount = timeline.filter(
-      (t) => t.status === 'SUBMITTED' || t.status === 'REVIEWED'
-    ).length;
+    // Báo cáo đã nộp đang chờ Mentor thẩm định
+    const submittedCount = timeline.filter((t) => t.status === 'SUBMITTED').length;
+    // Báo cáo đã được Mentor hoàn tất chấm điểm
+    const reviewedCount = timeline.filter((t) => t.status === 'REVIEWED').length;
+    // Tổng số tuần đã nộp hoặc đã được duyệt
+    const totalProcessedCount = submittedCount + reviewedCount;
+    // Đang lưu nháp
     const draftCount = timeline.filter((t) => t.status === 'DRAFT').length;
+
+    // Tỷ lệ hoàn thành tiến độ báo cáo (%) theo tiêu chuẩn thống kê quản lý
+    const completionRate =
+      totalWeeks > 0 ? Math.round((reviewedCount / totalWeeks) * 100) : 0;
 
     const scoredItems = timeline.filter((t) => t.score !== null && t.score !== undefined);
     const averageScore =
@@ -399,7 +410,15 @@ export const useInternWeeklyReport = (): UseInternWeeklyReportReturn => {
           )
         : null;
 
-    return { totalWeeks, submittedCount, draftCount, averageScore };
+    return {
+      totalWeeks,
+      submittedCount,
+      reviewedCount,
+      totalProcessedCount,
+      completionRate,
+      draftCount,
+      averageScore,
+    };
   }, [timeline]);
 
   return {

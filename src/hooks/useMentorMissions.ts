@@ -471,10 +471,14 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
     }
   };
 
-  // Cập nhật trạng thái nhanh (Quick transition)
+  // Cập nhật trạng thái nhanh (Quick transition với Optimistic Locking version check)
   const updateItemStatus = async (itemId: number, status: MissionItemStatus): Promise<boolean> => {
     try {
-      // Optimistic update an toàn với extractAllItems
+      const allItems = activeBoardDetail ? extractAllItems(activeBoardDetail) : [];
+      const currentItem = allItems.find((i) => i.id === itemId);
+      const currentVersion = currentItem?.version;
+
+      // Optimistic update giao diện
       if (activeBoardDetail) {
         setActiveBoardDetail((prev) => {
           if (!prev) return prev;
@@ -490,7 +494,7 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
         });
       }
 
-      await missionService.updateItemStatus(itemId, { status });
+      await missionService.updateItemStatus(itemId, { status, version: currentVersion });
       const statusLabels: Record<MissionItemStatus, string> = {
         TODO: 'Chưa làm',
         IN_PROGRESS: 'Đang làm',
@@ -506,7 +510,11 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
       }
       return true;
     } catch (err: any) {
-      toast.error(err.message || 'Lỗi khi cập nhật trạng thái');
+      if (err?.response?.status === 409 || err?.status === 409 || err?.message?.includes('đồng thời')) {
+        toast.error('Xung đột phiên bản: Nhiệm vụ này vừa được người khác cập nhật! Hệ thống đã tải lại dữ liệu mới nhất.');
+      } else {
+        toast.error(err.message || 'Lỗi khi cập nhật trạng thái');
+      }
       if (activeBoardId) {
         await loadBoardDetail(activeBoardId);
       }

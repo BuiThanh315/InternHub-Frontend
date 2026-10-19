@@ -32,6 +32,7 @@ export interface MissionItemResponse {
   submissionUrl?: string | null;
   completionNote?: string | null;
   submittedAt?: string | null;
+  version?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -113,6 +114,7 @@ export interface UpdateMissionItemRequest {
 
 export interface UpdateItemStatusRequest {
   status: MissionItemStatus;
+  version?: number;
 }
 
 export interface InternKanbanBoardResponse {
@@ -129,6 +131,7 @@ export interface UpdateKanbanStatusRequest {
   status: MissionItemStatus;
   submissionUrl?: string | null;
   completionNote?: string | null;
+  version?: number;
 }
 
 export interface InternMissionFilterParams {

@@ -29,5 +29,7 @@ export const INTERN_ENDPOINTS = {
   // TM-22: Mentor Xem Báo Cáo Tuần & Đánh Giá
   MENTOR_WEEKLY_REPORT_REVIEW: (internCode: string, weekNumber: number) => `/api/mentors/my-interns/${internCode}/weekly-reports/${weekNumber}`,
   MENTOR_REQUEST_REPORT_REVISION: (internCode: string, weekNumber: number) => `/api/mentors/my-interns/${internCode}/weekly-reports/${weekNumber}/request-revision`,
+  MENTOR_REPORT_AI_EVALUATION: (reportId: number) => `/api/v1/mentor/weekly-reports/${reportId}/ai-evaluation`,
+  MENTOR_REPORT_AI_EVALUATE: (reportId: number) => `/api/v1/mentor/weekly-reports/${reportId}/ai-evaluate`,
 } as const;
 

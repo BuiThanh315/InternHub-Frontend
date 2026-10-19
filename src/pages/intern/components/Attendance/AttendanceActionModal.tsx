@@ -74,6 +74,8 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
   // Toạ độ văn phòng mục tiêu (ưu tiên toạ độ động từ backend nếu có)
   const targetLat = officeLatitude ?? DEFAULT_OFFICE_LAT;
   const targetLon = officeLongitude ?? DEFAULT_OFFICE_LON;
+  // Bán kính cho phép (nếu props chưa đồng bộ kịp, fallback bán kính linh hoạt 50m tránh khóa nhầm khi ngồi trong khuôn viên)
+  const effectiveAllowedRadius = allowedRadiusMeters && allowedRadiusMeters > 0 ? allowedRadiusMeters : 50.0;
 
   // Tính khoảng cách ước tính tới văn phòng tại máy khách
   const clientDistance = useMemo(() => {
@@ -86,7 +88,7 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
     );
   }, [coords, targetLat, targetLon]);
 
-  const isWithinRadius = clientDistance !== null && clientDistance <= allowedRadiusMeters;
+  const isWithinRadius = clientDistance !== null && clientDistance <= effectiveAllowedRadius;
 
   const previousTokenRef = useRef<string | null>(null);
   const fallbackPollTimerRef = useRef<any>(null);
@@ -489,7 +491,7 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
                   <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 1 }} />
                   <div>
                     <strong>Toạ độ hợp lệ!</strong> Bạn đang cách {currentOfficeName}{' '}
-                    <strong>{effectiveDistance}m</strong> (nằm trong bán kính cho phép {allowedRadiusMeters}m).
+                    <strong>{effectiveDistance}m</strong> (nằm trong bán kính cho phép {effectiveAllowedRadius}m).
                   </div>
                 </div>
               ) : (
@@ -497,7 +499,7 @@ export const AttendanceActionModal: React.FC<AttendanceActionModalProps> = ({
                   <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
                   <div>
                     <strong>Ngoài phạm vi cho phép:</strong> Bạn đang cách {currentOfficeName}{' '}
-                    <strong>{effectiveDistance}m</strong> (vượt quá bán kính {allowedRadiusMeters}m). Vui lòng di chuyển vào trong toà nhà để điểm danh.
+                    <strong>{effectiveDistance}m</strong> (vượt quá bán kính {effectiveAllowedRadius}m). Vui lòng di chuyển vào trong toà nhà để điểm danh.
                   </div>
                 </div>
               )}

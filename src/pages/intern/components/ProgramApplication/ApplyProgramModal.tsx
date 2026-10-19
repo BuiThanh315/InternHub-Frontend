@@ -130,8 +130,14 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
     }
   };
 
+  const isSubmittingRef = useRef(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSubmittingRef.current || isSubmitting) {
+      return;
+    }
 
     if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim()) {
       toast.error('Vui lòng điền đầy đủ Họ và tên, Email và Số điện thoại.');
@@ -143,6 +149,7 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
     }
 
     try {
+      isSubmittingRef.current = true;
       setIsSubmitting(true);
 
       const requestPayload: ApplyInternRequest = {
@@ -165,6 +172,7 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
 
       const result = await internService.applyOnline(requestPayload);
 
+      let cvUploadFailed = false;
       // Upload file CV đính kèm nếu có
       if (cvFile && result.internCode) {
         try {
@@ -172,20 +180,24 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
           if (cvDoc) {
             internService.saveLocalDocument(result.internCode, cvDoc);
           }
-        } catch (uploadErr) {
+        } catch (uploadErr: any) {
+          cvUploadFailed = true;
           console.error('Lỗi tải tệp CV:', uploadErr);
-          toast.warning('Hồ sơ đã được lưu, tuy nhiên tải tệp CV gặp sự cố. Bạn có thể bổ sung tại Dashboard.');
+          toast.error(uploadErr?.message || 'Tải tệp CV thất bại. Vui lòng bổ sung CV tại Dashboard để hoàn tất hồ sơ ứng tuyển!');
         }
       }
 
       setSubmittedInternCode(result.internCode);
       onSuccess(result.internCode, program);
-      toast.success(`Nộp hồ sơ ứng tuyển thành công vào chương trình ${program.name}!`);
+      if (!cvUploadFailed) {
+        toast.success(`Nộp hồ sơ ứng tuyển thành công vào chương trình ${program.name}!`);
+      }
     } catch (err: any) {
       console.error('Lỗi nộp hồ sơ:', err);
       toast.error(err.message || 'Không thể gửi hồ sơ. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 

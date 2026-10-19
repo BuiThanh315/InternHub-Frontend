@@ -10,6 +10,7 @@ import {
   Clock,
   UserX,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 import { Button, Skeleton } from '../../../../../../components/common';
 import type { InternsTabProps } from '../../types/ProgramWorkspace.types';
@@ -24,6 +25,7 @@ export const InternsTab: React.FC<InternsTabProps> = ({
   onEditIntern,
   onAssignMentor,
   onUploadContract,
+  onOpenAiDossier,
 }) => {
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -292,6 +294,24 @@ export const InternsTab: React.FC<InternsTabProps> = ({
                         >
                           <FileText size={15} aria-hidden="true" />
                         </button>
+
+                        {/* Xem Phiếu Đánh Giá Phỏng Vấn AI (Module AI-02) */}
+                        {onOpenAiDossier && (
+                          <button
+                            type="button"
+                            className={styles.actionIconBtn}
+                            onClick={() => onOpenAiDossier(intern)}
+                            title="Xem Phiếu Đánh Giá Phỏng Vấn AI & Xếp Hạng Ứng Viên"
+                            aria-label={`Phiếu đánh giá AI cho ${intern.fullName}`}
+                            style={{
+                              color: '#8b5cf6',
+                              background: 'rgba(139, 92, 246, 0.08)',
+                              borderColor: 'rgba(139, 92, 246, 0.25)',
+                            }}
+                          >
+                            <Sparkles size={15} aria-hidden="true" />
+                          </button>
+                        )}
 
                         {/* Sửa thông tin */}
                         <button

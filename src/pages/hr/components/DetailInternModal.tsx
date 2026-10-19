@@ -23,11 +23,12 @@ import { internService } from '../../../services/internService';
 import { contractService } from '../../../services/contractService';
 import { formatFileSize, formatDateTime, formatPhoneNumber, formatDate, formatCurrency, getContractStatusLabel } from '../../../utils/formatters';
 import { AiScreeningDossierTab } from './AiScreeningDossierTab';
+import { AiInterviewEvaluationTab } from './AiInterviewEvaluationTab';
 
 interface DetailInternModalProps {
   intern: InternProfile | null;
   documents: DocumentResponse[];
-  initialTab?: 'profile' | 'history' | 'ai-screening';
+  initialTab?: 'profile' | 'history' | 'ai-screening' | 'ai-interview';
   onClose: () => void;
   onOpenEdit: (intern: InternProfile) => void;
   onOpenUpload: (intern: InternProfile) => void;
@@ -74,7 +75,7 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
     list: [],
     loading: false,
   });
-  const [activeTab, setActiveTab] = useState<'profile' | 'history' | 'ai-screening'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'profile' | 'history' | 'ai-screening' | 'ai-interview'>(initialTab);
   const [mentorHistory, setMentorHistory] = useState<MentorAssignmentResponse[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -431,6 +432,26 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
             <Sparkles size={15} />
             <span>Đánh Giá Tuyển Dụng AI</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('ai-interview')}
+            style={{
+              padding: '0.6rem 1rem',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'ai-interview' ? '2px solid #8b5cf6' : '2px solid transparent',
+              color: activeTab === 'ai-interview' ? '#8b5cf6' : 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <Sparkles size={15} style={{ color: '#8b5cf6' }} />
+            <span style={{ fontWeight: 700 }}>Kết Quả Phỏng Vấn AI</span>
+          </button>
         </div>
 
         {activeTab === 'profile' ? (
@@ -735,6 +756,8 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
               </div>
             )}
           </div>
+        ) : activeTab === 'ai-interview' ? (
+          <AiInterviewEvaluationTab intern={intern} />
         ) : (
           <AiScreeningDossierTab
             intern={intern}
