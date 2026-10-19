@@ -17,9 +17,11 @@ import {
   CalendarCheck,
   CalendarCheck2,
   CalendarOff,
+  BarChart3,
   WalletCards,
   LifeBuoy,
   X,
+
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -144,7 +146,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['HR'],
     },
     {
+      to: ROUTES.HR.ATTENDANCE_REPORTS,
+      label: 'Báo Cáo Chuyên Cần',
+      icon: BarChart3,
+      requiredPermission: 'INTERN_VIEW_ALL',
+      section: 'Quản Trị Nhân Sự',
+      allowedRoles: ['HR', 'ADMIN'],
+    },
+    {
       to: ROUTES.HR.EVALUATIONS,
+
       label: 'Đánh Giá Cuối Kỳ',
       icon: Award,
       requiredPermission: 'INTERN_APPROVE',
@@ -233,8 +244,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       section: 'Người Hướng Dẫn',
       allowedRoles: ['MENTOR'],
     },
+    {
+      to: ROUTES.HR.ATTENDANCE_REPORTS,
+      label: 'Báo Cáo Chuyên Cần',
+      icon: BarChart3,
+      requiredPermission: 'INTERN_VIEW_OWN',
+      section: 'Người Hướng Dẫn',
+      allowedRoles: ['MENTOR'],
+    },
 
     // 4. Phân hệ Thực Tập Sinh (CHỈ INTERN & USER)
+
     {
       to: ROUTES.INTERN.DASHBOARD,
       label: 'Tiến Độ Thực Tập',

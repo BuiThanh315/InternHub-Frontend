@@ -10,4 +10,11 @@ export const ATTENDANCE_ENDPOINTS = {
   MY_HISTORY: '/api/v1/attendances/my-history',
   APPEAL: (id: number | string) => `/api/v1/attendances/${id}/appeal`,
   CONFIRM_CHECKOUT: (id: number | string) => `/api/v1/attendances/${id}/confirm-checkout`,
+  REPORTS: {
+    SUMMARY: '/api/v1/attendances/reports/summary',
+    INTERNS: '/api/v1/attendances/reports/interns',
+    INTERN_DETAILS: (internId: number | string) => `/api/v1/attendances/reports/interns/${internId}/details`,
+    EXPORT: '/api/v1/attendances/reports/export',
+  },
 } as const;
+
