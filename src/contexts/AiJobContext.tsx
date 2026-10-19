@@ -7,7 +7,7 @@ interface AiJobContextType {
   activeJob: BatchJobStatusResponse | null;
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
-  startJob: (programId: number, internIds: number[]) => Promise<string>;
+  startJob: (programId: number, internIds: number[], forceReevaluate?: boolean) => Promise<string>;
   dismissJob: () => void;
   completedVersion: number;
 }
@@ -58,9 +58,9 @@ export const AiJobProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [stopPolling]);
 
-  const startJob = useCallback(async (programId: number, internIds: number[]): Promise<string> => {
+  const startJob = useCallback(async (programId: number, internIds: number[], forceReevaluate: boolean = false): Promise<string> => {
     stopPolling();
-    const req: BatchScreeningRequest = { programId, internIds, forceReevaluate: false };
+    const req: BatchScreeningRequest = { programId, internIds, forceReevaluate };
     const created = await aiService.startBatchScreening(req);
 
     const initialJob: BatchJobStatusResponse = {

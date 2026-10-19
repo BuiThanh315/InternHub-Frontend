@@ -90,9 +90,40 @@ export const internService = {
   },
 
   // === LẤY HỒ SƠ THỰC TẬP SINH ĐANG ĐĂNG NHẬP REALTIME TỪ BACKEND ===
-  async getMyProfile(signal?: AbortSignal): Promise<InternProfile> {
-    const response = await apiClient.get(API_ENDPOINTS.INTERN.MY_PROFILE, { signal });
+  async getMyProfile(programId?: number | null, signal?: AbortSignal): Promise<InternProfile> {
+    const params = programId ? { programId } : undefined;
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MY_PROFILE, { params, signal });
     return response.data?.data;
+  },
+
+  // === LẤY TẤT CẢ CÁC KỲ THỰC TẬP MÀ USER ĐÃ ĐĂNG KÝ (MULTI-PROGRAM SUPPORT) ===
+  async getMyProfiles(signal?: AbortSignal): Promise<InternProfile[]> {
+    const response = await apiClient.get(API_ENDPOINTS.INTERN.MY_PROFILES, { signal });
+    return response.data?.data || [];
+  },
+
+  // Quản lý programId đang active của user
+  getActiveProgramId(userId?: number | string): number | null {
+    try {
+      const key = userId ? `internhub_active_program_${userId}` : 'internhub_active_program_guest';
+      const stored = localStorage.getItem(key);
+      return stored ? Number(stored) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  setActiveProgramId(userId: number | string | undefined, programId: number | null): void {
+    try {
+      const key = userId ? `internhub_active_program_${userId}` : 'internhub_active_program_guest';
+      if (programId) {
+        localStorage.setItem(key, String(programId));
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch (e) {
+      console.warn('Lỗi lưu active program id:', e);
+    }
   },
 
   // === CÁC HÀM HỖ TRỢ LƯU TRỮ VÀ TRUY VẤN HỒ SƠ DỰ PHÒNG ===

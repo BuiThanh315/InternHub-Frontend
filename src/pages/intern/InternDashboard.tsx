@@ -1,100 +1,66 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { Skeleton } from '../../components/common';
-import { internService } from '../../services/internService';
-import { attendanceService } from '../../services/attendanceService';
 import { documentService } from '../../services/documentService';
+import { internService } from '../../services/internService';
 import { useAuth } from '../../contexts/AuthContext';
-import { ROUTES } from '../../constants/routes';
-import type { InternProfile, DocumentResponse, DocumentType } from '../../types';
-import { InternStepper } from './components/InternStepper';
-import { InternProfileCard } from './components/InternProfileCard';
-import { InternScheduleWidget } from './components/InternScheduleWidget';
-import { InternAiInterviewWidget } from './components/InternAiInterviewWidget';
-import { InternDocumentList } from './components/InternDocumentList';
-import { InternUploadForm } from './components/InternUploadForm';
+import { useInternProgram } from '../../contexts/InternProgramContext';
+import type { DocumentResponse, DocumentType } from '../../types';
 import { InternEmptyState } from './components/InternEmptyState';
+import { MyProgramsHub } from './components/MyProgramsHub';
 import {
-  InternAttendanceWidget,
-  AttendanceActionModal,
-} from './components/Attendance';
-import type { AttendanceActionType } from './components/Attendance';
-import { useAttendanceToday } from './hooks/useAttendanceToday';
+  WorkspaceHeader,
+  ApplicationProgressWorkspace,
+  ActiveProductionWorkspace,
+} from './components/Workspaces';
 import styles from './InternDashboard.module.css';
 
 export const InternDashboard: React.FC = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<InternProfile | null>(null);
-  const [documents, setDocuments] = useState<DocumentResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [modalAction, setModalAction] = useState<AttendanceActionType | null>(null);
-
   const {
-    todayData,
-    loading: attendanceLoading,
-    refetch: refetchAttendance,
-  } = useAttendanceToday();
+    profiles,
+    activeProfile,
+    isLoading,
+    error: programError,
+    selectProgram,
+    clearActiveProgram,
+    refreshProfiles,
+  } = useInternProgram();
 
-  const loadInternData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setErrorMessage(null);
+  const [documents, setDocuments] = useState<DocumentResponse[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-      // 1. Gọi trực tiếp API getMyProfile từ Backend (xác thực qua JWT của user đang đăng nhập)
-      const currentProfile = await internService.getMyProfile();
-      setProfile(currentProfile);
-
-      // 2. Lấy danh sách tài liệu realtime từ database
-      if (currentProfile?.internCode) {
-        try {
-          const remoteDocs = await documentService.getDocumentsByInternCode(currentProfile.internCode);
-          setDocuments(remoteDocs);
-        } catch (docErr) {
-          console.warn('Không thể tải tài liệu từ server, sử dụng tài liệu cục bộ:', docErr);
-          const localDocs = internService.getLocalDocuments(currentProfile.internCode);
-          setDocuments(localDocs);
-        }
-      } else {
-        setDocuments([]);
-      }
-    } catch (err: any) {
-      console.error('Lỗi tải dữ liệu Intern Dashboard:', err);
-      // Fallback an toàn nếu chưa liên kết hoặc offline
-      const fallback = internService.getLocalProfile(user?.userId);
-      if (fallback) {
-        setProfile(fallback);
-        if (fallback.internCode) {
-          setDocuments(internService.getLocalDocuments(fallback.internCode));
-        }
-      } else {
-        setErrorMessage(err.response?.data?.message || err.message || 'Không thể tải dữ liệu hồ sơ thực tập sinh');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
+  // Tải tài liệu tương ứng với hồ sơ/kỳ thực tập đang active
   useEffect(() => {
-    loadInternData();
-  }, [loadInternData]);
+    if (activeProfile?.internCode) {
+      documentService
+        .getDocumentsByInternCode(activeProfile.internCode)
+        .then(setDocuments)
+        .catch((err) => {
+          console.warn('Lỗi lấy tài liệu từ máy chủ, nạp dữ liệu cục bộ:', err);
+          const localDocs = internService.getLocalDocuments(activeProfile.internCode);
+          setDocuments(localDocs);
+        });
+    } else {
+      setDocuments([]);
+    }
+  }, [activeProfile?.internCode]);
 
   const handleUploadDocument = async (file: File, type: DocumentType) => {
-    if (!profile?.internCode) {
+    if (!activeProfile?.internCode) {
       toast.warning('Hồ sơ của bạn chưa có mã thực tập sinh để tải lên tài liệu.');
       return;
     }
     setIsUploading(true);
     try {
-      const newDoc = await documentService.uploadDocument(profile.internCode, file, type);
-      internService.saveLocalDocument(profile.internCode, newDoc);
+      const newDoc = await documentService.uploadDocument(activeProfile.internCode, file, type);
+      internService.saveLocalDocument(activeProfile.internCode, newDoc);
       setDocuments((prev) => [newDoc, ...prev]);
       toast.success('Đã tải tài liệu lên thành công!');
+      // Làm mới danh sách để cập nhật cờ hasCv nếu vừa tải CV
+      refreshProfiles();
     } catch (err: any) {
       toast.error(err.message || 'Tải tài liệu thất bại');
     } finally {
@@ -102,59 +68,14 @@ export const InternDashboard: React.FC = () => {
     }
   };
 
-  const handleQuickCheckOut = async () => {
-    try {
-      let lat: number | undefined;
-      let lon: number | undefined;
-      let acc: number | undefined;
-
-      if (navigator.geolocation) {
-        try {
-          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 4000,
-              enableHighAccuracy: true,
-            });
-          });
-          lat = pos.coords.latitude;
-          lon = pos.coords.longitude;
-          acc = pos.coords.accuracy;
-        } catch {
-          // GPS optional
-        }
-      }
-
-      // Generate or retrieve device fingerprint
-      let fp = localStorage.getItem('internhub_device_fingerprint');
-      if (!fp) {
-        fp = 'dev_' + Math.random().toString(36).substring(2, 12) + '_' + Date.now().toString(36);
-        localStorage.setItem('internhub_device_fingerprint', fp);
-      }
-
-      await attendanceService.quickCheckOut({
-        deviceFingerprint: fp,
-        latitude: lat,
-        longitude: lon,
-        accuracyMeters: acc,
-        notes: 'Tan ca nhanh qua Mobile Dashboard',
-      });
-
-      toast.success('Tan ca thành công! Chúc bạn buổi tối vui vẻ.');
-      refetchAttendance();
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Không thể thực hiện tan ca nhanh.';
-      toast.error(msg);
-    }
-  };
-
   return (
     <div className="animate-fade-in">
       <Header
         title="Không Gian Thực Tập Sinh (Intern Portal)"
-        subtitle="Theo dõi lộ trình thực tập, tra cứu kết quả thẩm định hồ sơ và nộp tài liệu trực tuyến"
+        subtitle="Quản lý đồng thời các kỳ thực tập, theo dõi tiến trình phê duyệt hồ sơ và thực thi nhiệm vụ hàng ngày"
       />
 
-      {loading ? (
+      {isLoading ? (
         <div className={styles.skeletonContainer}>
           <Skeleton variant="rectangular" height="90px" />
           <div className={styles.contentGrid}>
@@ -168,7 +89,7 @@ export const InternDashboard: React.FC = () => {
         </div>
       ) : (
         <div className={styles.dashboardContainer}>
-          {errorMessage && (
+          {programError && (
             <div
               style={{
                 backgroundColor: 'rgba(239, 68, 68, 0.15)',
@@ -184,53 +105,44 @@ export const InternDashboard: React.FC = () => {
               }}
             >
               <AlertCircle size={18} />
-              <span>{errorMessage}</span>
+              <span>{programError}</span>
             </div>
           )}
 
-          {!profile ? (
-            <InternEmptyState userName={user?.fullName || user?.username} />
+          {/* Trường hợp 1: Chưa chọn kỳ thực tập nào -> Hiển thị Hub Thẻ Kỳ Thực Tập */}
+          {!activeProfile ? (
+            profiles.length === 0 ? (
+              <InternEmptyState userName={user?.fullName || user?.username} />
+            ) : (
+              <MyProgramsHub profiles={profiles} onSelectProgram={selectProgram} />
+            )
           ) : (
+            /* Trường hợp 2: Đã chọn 1 kỳ thực tập -> Mở Workspace tương ứng */
             <>
-              {/* TM-25: Điểm danh & Chấm công GPS hàng ngày */}
-              <InternAttendanceWidget
-                todayData={todayData}
-                loading={attendanceLoading}
-                onCheckInClick={() => setModalAction('CHECK_IN')}
-                onCheckOutClick={() => setModalAction('CHECK_OUT')}
-                onQuickCheckOut={handleQuickCheckOut}
-                onViewHistoryClick={() => navigate(ROUTES.INTERN.ATTENDANCE)}
+              <WorkspaceHeader
+                activeProfile={activeProfile}
+                allProfiles={profiles}
+                onBackToHub={clearActiveProgram}
+                onSwitchProgram={selectProgram}
               />
 
-              {/* Lộ trình thực tập */}
-              <InternStepper status={profile.status} />
-
-              {/* Thông tin cá nhân & Mentor */}
-              <InternProfileCard profile={profile} />
-
-              {/* TM-17: Kế hoạch & Lịch thực tập cá nhân */}
-              <InternScheduleWidget profile={profile} />
-
-              {/* Lịch Phỏng Vấn AI Trực Tuyến */}
-              <InternAiInterviewWidget />
-
-              {/* Danh sách tài liệu & Form nộp tài liệu */}
-              <div className={styles.contentGrid}>
-                <InternDocumentList documents={documents} />
-                <InternUploadForm onUpload={handleUploadDocument} isUploading={isUploading} />
-              </div>
-
-              {/* Modal Check-in / Check-out 3 khối */}
-              {modalAction && (
-                <AttendanceActionModal
-                  actionType={modalAction}
-                  isOpen={Boolean(modalAction)}
-                  onClose={() => setModalAction(null)}
-                  onSuccess={refetchAttendance}
-                  officeName={todayData?.officeName}
-                  allowedRadiusMeters={todayData?.allowedRadiusMeters}
-                  officeLatitude={todayData?.officeLatitude}
-                  officeLongitude={todayData?.officeLongitude}
+              {activeProfile.status === 'INTERNING' ? (
+                /* Mode A: Active Production Workspace (Điểm danh GPS, Kanban, Báo cáo tuần) */
+                <ActiveProductionWorkspace
+                  profile={activeProfile}
+                  documents={documents}
+                  onUploadDocument={handleUploadDocument}
+                  isUploading={isUploading}
+                  onRefresh={refreshProfiles}
+                />
+              ) : (
+                /* Mode B: Application Progress Workspace (Lộ trình Stepper, CV, Phỏng vấn AI, Hợp đồng) */
+                <ApplicationProgressWorkspace
+                  profile={activeProfile}
+                  documents={documents}
+                  onUploadDocument={handleUploadDocument}
+                  isUploading={isUploading}
+                  onRefresh={refreshProfiles}
                 />
               )}
             </>

@@ -1,8 +1,9 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useSearchParams, Outlet } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
+import { InternProgramProvider } from '../contexts/InternProgramContext';
 import { ROUTES, getValidatedRedirectRoute } from '../constants/routes';
 
 // Lỗi 32 [P2] (PERF-02): Code Splitting & Lazy Loading các trang quản trị, dashboard và module nặng
@@ -40,6 +41,12 @@ const OnboardingActivationPage = lazy(() => import('../pages/public/OnboardingAc
 const CandidateInterviewVerifyPage = lazy(() => import('../pages/public/CandidateInterviewVerifyPage').then(m => ({ default: m.CandidateInterviewVerifyPage })));
 const CandidateInterviewRoomPage = lazy(() => import('../pages/public/CandidateInterviewRoomPage').then(m => ({ default: m.CandidateInterviewRoomPage })));
 const CandidateInterviewCompletionPage = lazy(() => import('../pages/public/CandidateInterviewCompletionPage').then(m => ({ default: m.CandidateInterviewCompletionPage })));
+
+const InternLayoutRoute: React.FC = () => (
+  <InternProgramProvider>
+    <Outlet />
+  </InternProgramProvider>
+);
 
 const SuspenseLoading: React.FC = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -145,19 +152,21 @@ export const AppRoutes: React.FC = () => {
 
           {/* Intern Dedicated Area */}
           <Route element={<ProtectedRoute allowedRoles={['INTERN', 'USER', 'ADMIN']} />}>
-            <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
-            <Route path={ROUTES.INTERN.MISSIONS} element={<InternMissionPage />} />
-            <Route path={ROUTES.INTERN.WEEKLY_REPORTS} element={<InternWeeklyReportPage />} />
-            <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
-            <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
-            <Route path={ROUTES.INTERN.CONTRACT_SIGNING} element={<InternContractSigningHub />} />
-            <Route path={ROUTES.INTERN.ALLOWANCES} element={<InternAllowanceHistoryPage />} />
-            <Route path={ROUTES.INTERN.SUPPORT_REQUESTS} element={<InternSupportRequestPage />} />
-            <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
-            <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
-            <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />
-            <Route path={ROUTES.INTERN.QUIZZES} element={<InternQuizListPage />} />
-            <Route path="/intern/quizzes/submissions/:submissionId" element={<InternQuizResultPage />} />
+            <Route element={<InternLayoutRoute />}>
+              <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
+              <Route path={ROUTES.INTERN.MISSIONS} element={<InternMissionPage />} />
+              <Route path={ROUTES.INTERN.WEEKLY_REPORTS} element={<InternWeeklyReportPage />} />
+              <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
+              <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
+              <Route path={ROUTES.INTERN.CONTRACT_SIGNING} element={<InternContractSigningHub />} />
+              <Route path={ROUTES.INTERN.ALLOWANCES} element={<InternAllowanceHistoryPage />} />
+              <Route path={ROUTES.INTERN.SUPPORT_REQUESTS} element={<InternSupportRequestPage />} />
+              <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
+              <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
+              <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />
+              <Route path={ROUTES.INTERN.QUIZZES} element={<InternQuizListPage />} />
+              <Route path="/intern/quizzes/submissions/:submissionId" element={<InternQuizResultPage />} />
+            </Route>
           </Route>
 
           {/* Universal Profile Route */}

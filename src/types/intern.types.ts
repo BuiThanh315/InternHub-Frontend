@@ -51,6 +51,8 @@ export interface InternProfile {
   mentorReassignmentReason?: string | null;
   groupId?: number | null;
   groupName?: string | null;
+  hasCv?: boolean;
+  cvDocumentId?: number | null;
   createdAt: string;
   updatedAt: string;
 }

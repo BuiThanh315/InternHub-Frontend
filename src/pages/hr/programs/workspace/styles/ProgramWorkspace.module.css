@@ -660,3 +660,41 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
+/* Placeholder for hidden checkbox (TM-103 CV requirement) */
+.checkboxPlaceholder {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+}
+
+/* CV Document Status Badges */
+.cvBadgeSuccess {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-full);
+  background-color: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cvBadgeWarning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-full);
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

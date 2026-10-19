@@ -212,17 +212,20 @@
 .uploadIcon {
   color: var(--primary);
   margin-bottom: 0.25rem;
+  pointer-events: none;
 }
 
 .uploadTitle {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-main);
+  pointer-events: none;
 }
 
 .uploadHint {
   font-size: 0.75rem;
   color: var(--text-muted);
+  pointer-events: none;
 }
 
 .filePreview {

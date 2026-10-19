@@ -258,7 +258,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     {
       to: ROUTES.INTERN.DASHBOARD,
-      label: 'Tiến Độ Thực Tập',
+      label: 'Kỳ Thực Tập Của Tôi',
       icon: LayoutDashboard,
       requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',

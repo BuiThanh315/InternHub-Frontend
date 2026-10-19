@@ -43,7 +43,10 @@ export const useAiScreening = (programId: number) => {
 
   // Chọn tất cả hoặc bỏ chọn tất cả
   const toggleSelectAll = useCallback((allIds: number[]) => {
-    setSelectedIds((prev) => (prev.length === allIds.length ? [] : [...allIds]));
+    setSelectedIds((prev) => {
+      const isAllContained = allIds.length > 0 && allIds.every((id) => prev.includes(id));
+      return isAllContained ? [] : [...allIds];
+    });
   }, []);
 
   // Xóa danh sách đã chọn

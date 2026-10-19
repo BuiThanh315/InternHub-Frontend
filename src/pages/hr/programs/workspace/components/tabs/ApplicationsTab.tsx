@@ -13,6 +13,7 @@ import {
   Filter,
   School,
   MessageSquareQuote,
+  FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -144,14 +145,16 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
     );
   }, [applicants, aiScreening.filterApplicants, sourceFilter]);
 
-  const displayedIds = useMemo(
-    () => filteredApplicants.map((item) => item.id),
+  // Danh sách ứng viên trong danh sách hiển thị đã hoàn thiện CV (đủ điều kiện thẩm định AI)
+  const eligibleForAiIds = useMemo(
+    () => filteredApplicants.filter((item) => Boolean(item.hasCv)).map((item) => item.id),
     [filteredApplicants]
   );
 
+  // Chỉ đánh dấu chọn tất cả khi toàn bộ ứng viên ĐÃ CÓ CV được chọn
   const isAllSelected =
-    displayedIds.length > 0 &&
-    displayedIds.every((id) => aiScreening.isSelected(id));
+    eligibleForAiIds.length > 0 &&
+    eligibleForAiIds.every((id) => aiScreening.isSelected(id));
 
   // Tiếp nhận ứng viên vào kỳ
   const handleApprove = async (intern: InternProfile) => {
@@ -268,15 +271,29 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
       {applicants.length > 0 && (
         <div className={styles.aiToolbar} role="toolbar" aria-label="Thanh công cụ đánh giá AI">
           <div className={styles.aiToolbarLeft}>
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label
+              className={`flex items-center gap-2 text-sm font-medium ${
+                eligibleForAiIds.length === 0
+                  ? 'text-slate-400 cursor-not-allowed'
+                  : 'text-slate-700 dark:text-slate-300 cursor-pointer'
+              }`}
+              title={
+                eligibleForAiIds.length === 0
+                  ? 'Không có ứng viên nào đã cập nhật CV để chọn thẩm định AI'
+                  : 'Chọn tất cả ứng viên đã hoàn thành CV'
+              }
+            >
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 checked={isAllSelected}
-                onChange={() => aiScreening.toggleSelectAll(displayedIds)}
-                aria-label="Chọn tất cả ứng viên đang hiển thị"
+                disabled={eligibleForAiIds.length === 0}
+                onChange={() => aiScreening.toggleSelectAll(eligibleForAiIds)}
+                aria-label="Chọn tất cả ứng viên đã cập nhật CV"
               />
-              <span>Chọn tất cả</span>
+              <span>
+                Chọn tất cả có CV ({eligibleForAiIds.length}/{filteredApplicants.length})
+              </span>
             </label>
 
             {aiScreening.selectedIds.length > 0 && (
@@ -300,11 +317,16 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => void aiScreening.triggerBatch(displayedIds)}
-              disabled={displayedIds.length === 0 || aiScreening.isSubmitting}
+              onClick={() => void aiScreening.triggerBatch(eligibleForAiIds)}
+              disabled={eligibleForAiIds.length === 0 || aiScreening.isSubmitting}
               leftIcon={<Sparkles size={14} />}
+              title={
+                eligibleForAiIds.length === 0
+                  ? 'Chưa có ứng viên nào cập nhật file CV'
+                  : 'Quét AI tự động cho toàn bộ ứng viên đã có CV'
+              }
             >
-              Quét AI toàn bộ ({displayedIds.length})
+              Quét AI toàn bộ có CV ({eligibleForAiIds.length})
             </Button>
           </div>
 
@@ -411,7 +433,19 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
             <thead>
               <tr>
                 <th style={{ width: '40px', textAlign: 'center' }}>
-                  <span className="sr-only">Chọn dòng</span>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                    checked={isAllSelected}
+                    disabled={eligibleForAiIds.length === 0}
+                    onChange={() => aiScreening.toggleSelectAll(eligibleForAiIds)}
+                    title={
+                      eligibleForAiIds.length === 0
+                        ? 'Không có ứng viên nào có CV để thẩm định'
+                        : 'Chọn tất cả ứng viên đã nộp CV'
+                    }
+                    aria-label="Chọn tất cả ứng viên có CV"
+                  />
                 </th>
                 <th>Ứng Viên</th>
                 <th>Trường & Chuyên Ngành</th>
@@ -438,15 +472,23 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                     key={intern.id}
                     className={isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/20' : ''}
                   >
-                    {/* Checkbox chọn hàng */}
+                    {/* Checkbox chọn hàng: Ẩn với TTS chưa hoàn thành CV */}
                     <td style={{ textAlign: 'center' }}>
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                        checked={isSelected}
-                        onChange={() => aiScreening.toggleSelect(intern.id)}
-                        aria-label={`Chọn ứng viên ${intern.fullName}`}
-                      />
+                      {intern.hasCv ? (
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          checked={isSelected}
+                          onChange={() => aiScreening.toggleSelect(intern.id)}
+                          aria-label={`Chọn ứng viên ${intern.fullName}`}
+                        />
+                      ) : (
+                        <span
+                          className={styles.checkboxPlaceholder}
+                          title="TTS chưa cập nhật CV - Không thể chọn thẩm định AI"
+                          aria-hidden="true"
+                        />
+                      )}
                     </td>
 
                     {/* Cột Ứng viên */}
@@ -473,6 +515,23 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                               >
                                 <School size={11} aria-hidden="true" />
                                 Trường liên kết
+                              </span>
+                            )}
+                            {intern.hasCv ? (
+                              <span
+                                className={styles.cvBadgeSuccess}
+                                title="Hồ sơ đã có file CV đính kèm"
+                              >
+                                <FileText size={10} aria-hidden="true" />
+                                Đã nộp CV
+                              </span>
+                            ) : (
+                              <span
+                                className={styles.cvBadgeWarning}
+                                title="TTS chưa cập nhật CV. Cần bổ sung CV để AI có thể đánh giá."
+                              >
+                                <AlertCircle size={10} aria-hidden="true" />
+                                Chưa có CV
                               </span>
                             )}
                           </div>
@@ -533,10 +592,19 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                             type="button"
                             className={styles.actionIconBtn}
                             onClick={() => void aiScreening.triggerBatch([intern.id])}
-                            title="Thẩm định hồ sơ bằng AI ngay"
+                            disabled={!intern.hasCv || aiScreening.isSubmitting}
+                            title={
+                              intern.hasCv
+                                ? 'Thẩm định hồ sơ bằng AI ngay'
+                                : 'TTS chưa cập nhật CV. Cần tải lên CV để thẩm định AI.'
+                            }
                             aria-label={`Thẩm định AI cho ${intern.fullName}`}
+                            style={!intern.hasCv ? { opacity: 0.35, cursor: 'not-allowed' } : undefined}
                           >
-                            <Sparkles size={13} className="text-indigo-600" />
+                            <Sparkles
+                              size={13}
+                              className={intern.hasCv ? 'text-indigo-600' : 'text-slate-400'}
+                            />
                           </button>
                         )}
                       </div>

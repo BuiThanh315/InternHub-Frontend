@@ -18,6 +18,8 @@
 | **v1.1** | 2026-09-25 | Senior Frontend AI Pair-Programmer | `TM-10` | Tái cấu trúc UX/UI Wizard 2 Bước | Chuyển đổi Form Đăng ký sang quy trình Stepper Wizard 2 bước (Bước 1: Thiết lập tài khoản & đo độ mạnh mật khẩu; Bước 2: Điền thông tin cá nhân liên kết) giúp giảm tải nhận thức và tối ưu hóa trải nghiệm người dùng trên cả Mobile và Desktop. |
 | **v1.2** | 2026-09-25 | Senior Frontend AI Pair-Programmer | `TM-10` | Tái cấu trúc Luồng Nộp Hồ Sơ Chuyên Sâu | Chuyển form nộp hồ sơ từ Landing Page sang route chuyên trách `/intern/apply` (`InternApplyPage`) với thông tin cá nhân điền sẵn từ tài khoản; nâng cấp `InternDashboard` với `InternEmptyState` (Onboarding Hero) khi intern chưa nộp hồ sơ; thay form Landing Page bằng Vị trí tuyển dụng và CTA thông minh. |
 | **v1.4** | 2026-09-29 | Senior Frontend AI Pair-Programmer | `TM-10` | Nâng cấp Xác thực Email OTP & Kích hoạt Tài khoản | 1. **Đồng bộ Backend v1.4**: Tài khoản mới đăng ký ở trạng thái `PENDING_ACTIVATION`, chặn đăng nhập khi chưa kích hoạt.<br>2. **Modal Kích Hoạt & OtpInput 6 ô**: Thiết kế cụm 6 ô nhập OTP độc lập (`OtpInput.tsx`), hỗ trợ dán clipboard, phím điều hướng, rung khi lỗi.<br>3. **Đếm ngược thời gian**: Quản lý hạn OTP 15 phút và cooldown nút gửi lại 60s.<br>4. **Xử lý Brute-force 5 lần**: Hiển thị số lần thử còn lại và khóa mã khi vượt ngưỡng.<br>5. **Liên kết thông minh từ LoginModal**: Bắt lỗi 401 unactivated để mở modal kích hoạt với username điền sẵn. |
+| **v1.5** | 2026-10-19 | Senior Frontend AI Pair-Programmer | `TM-10 / TM-103` | Nâng cấp UX Tải lên CV & Khắc phục Dropzone | 1. **Khắc phục đính kèm CV (`ApplyProgramModal.tsx`)**: Tách biệt sự kiện click dropzone với ref `fileInputRef.current.click()`, tránh bug nhấp chuột không mở hộp thoại file hoặc reload state ngoài ý muốn.<br>2. **Trực quan hóa tài liệu đính kèm**: Bổ sung thẻ đính kèm tệp màu xanh lá (`CheckCircle2`), hiển thị tên tệp, dung lượng tính theo MB, nút "Đổi tệp" và nút "Xóa tệp" tiện lợi.<br>3. **Đồng bộ trạng thái**: Khớp trường `hasCv` với backend để mở khóa ngay tính năng thẩm định hồ sơ AI sau khi ứng viên hoàn tất nộp CV. |
+| **v1.6** | 2026-10-19 | Senior Frontend AI Pair-Programmer & User | `TM-10 / Multi-Program` | Trung Tâm Đa Kỳ Thực Tập & Không Gian Làm Việc Động | 1. **Quản lý trạng thái đa kỳ thực tập**: Xây dựng `InternProgramContext` quản lý danh sách kỳ thực tập (`profiles`), kỳ thực tập đang chọn (`selectedProfile`), đồng bộ URL Query Parameter `?programId=` và fallback 2 lớp an toàn (gọi `GET /api/interns/my-profiles`, nếu lỗi tự động fallback sang `getMyProfile()`).<br>2. **Sảnh chọn kỳ thực tập (`MyProgramsHub`)**: Hiển thị dạng deck thẻ độc bản chuẩn Glassmorphism; nạp đầy đủ mã TTS, mã chương trình, trường ĐH, chuyên ngành, vị trí, phòng ban, thời gian đào tạo, mentor phụ trách, lý do từ chối nếu có.<br>3. **Kiểm tra kép trạng thái CV (Dual-check)**: Kết hợp cờ `hasCv` từ profile và kiểm tra tài liệu `documentService.getDocumentsByInternId`, hiển thị badge xanh `✓ Đã tải lên` hoặc cảnh báo cam `! Chưa nộp CV`.<br>4. **Không gian làm việc động (Dynamic Workspaces)**: Phân tách `ApplicationProgressWorkspace` (cho hồ sơ `PENDING`/`UNDER_REVIEW`/`REJECTED`) và `ActiveProductionWorkspace` (cho `APPROVED`/`INTERNING`/`COMPLETED`/`GRADUATED`) kèm `WorkspaceHeader` điều hướng linh hoạt.<br>5. **Trải nghiệm đăng nhập**: Khi Intern đăng nhập, hệ thống luôn mở `MyProgramsHub` để thực tập sinh chủ động chọn kỳ thực tập thay vì tự động forward thẳng vào 1 kỳ duy nhất. |
 
 ---
 
@@ -460,6 +462,13 @@ Dưới đây là checklist chi tiết từng đầu việc để theo dõi ti�
 - [ ] **T-6.9:** Nâng cấp `LoginModal.tsx`: Bắt lỗi 401 unactivated, hiển thị Alert màu cam kèm CTA "Kích hoạt ngay" mở `AccountActivationModal`.
 - [ ] **T-6.10:** Cập nhật `LandingPage.tsx`: Quản lý state mở/đóng `AccountActivationModal` và hỗ trợ URL query `?activate=true`.
 
+### Phase 7: Trung Tâm Đa Kỳ Thực Tập & Không Gian Làm Việc Động (v1.6)
+- [x] **T-7.1:** Xây dựng `InternProgramContext.tsx` quản lý danh sách `profiles`, nạp danh sách từ `GET /api/interns/my-profiles`, fallback sang `getMyProfile()`, đồng bộ `?programId=` trên URL.
+- [x] **T-7.2:** Thiết kế sàn tuyển dụng/chọn kỳ thực tập `MyProgramsHub.tsx` & `MyProgramsHub.module.css` dạng card deck hiển thị đầy đủ thông tin kỳ thực tập, trạng thái CV kép và lý do từ chối.
+- [x] **T-7.3:** Xây dựng `WorkspaceHeader.tsx` hỗ trợ chuyển đổi linh hoạt giữa Hub và Không gian làm việc.
+- [x] **T-7.4:** Tách biệt `ApplicationProgressWorkspace.tsx` (cho hồ sơ nộp đơn) và `ActiveProductionWorkspace.tsx` (cho TTS chính thức).
+- [x] **T-7.5:** Cập nhật `InternDashboard.tsx` và `Sidebar.tsx`: Mặc định đăng nhập luôn vào Hub, bấm thẻ kỳ thực tập mới mở Workspace.
+
 ---
 
 ## 11. Acceptance Criteria Checklist (Tiêu Chí Nghiệm Thu)
@@ -485,4 +494,10 @@ Dưới đây là checklist chi tiết từng đầu việc để theo dõi ti�
 - [ ] **AC-19 (v1.4):** Bấm "Gửi lại mã kích hoạt" gọi `POST /api/auth/resend-activation`, kích hoạt Cooldown đếm ngược 60 giây và khóa nút bấm.
 - [ ] **AC-20 (v1.4):** Nhập đúng mã OTP chuyển tài khoản sang `ACTIVE`, hiển thị Toast chúc mừng và mở `LoginModal` với Username điền sẵn.
 - [ ] **AC-21 (v1.4):** Đăng nhập với tài khoản chưa kích hoạt hiển thị Alert màu cam tại `LoginModal` kèm nút mở thẳng `AccountActivationModal`.
+- [x] **AC-22 (v1.6):** Ứng viên tham gia nhiều kỳ thực tập có thể xem toàn bộ các kỳ thực tập của mình tại `MyProgramsHub` dưới dạng thẻ trực quan.
+- [x] **AC-23 (v1.6):** Mỗi thẻ kỳ thực tập hiển thị đầy đủ thông tin: Mã TTS, Mã chương trình, Chuyên ngành, Trường ĐH, Vị trí, Phòng ban, Thời gian, Mentor, Badge CV và Lý do từ chối (nếu có).
+- [x] **AC-24 (v1.6):** Bấm "Vào không gian làm việc" điều hướng đến đúng Workspace tương ứng với trạng thái của hồ sơ (Application Progress hoặc Production Workspace).
+- [x] **AC-25 (v1.6):** Khi chuyển đổi hoặc mở tab khác, tham số `?programId=` được đồng bộ mượt mà trên URL.
+- [x] **AC-26 (v1.6):** Khi đăng nhập, tài khoản TTS luôn vào màn hình Hub danh sách kỳ thực tập thay vì tự động mở 1 chương trình.
+
 
