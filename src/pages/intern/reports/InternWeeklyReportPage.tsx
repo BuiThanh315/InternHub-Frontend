@@ -101,11 +101,23 @@ const InternWeeklyReportContent: React.FC = () => {
 
         <div className={styles.metricCard}>
           <div className={`${styles.metricIconWrapper} ${styles.iconSubmitted}`}>
+            <Clock size={22} />
+          </div>
+          <div className={styles.metricInfo}>
+            <span className={styles.metricLabel}>Đã nộp (Chờ duyệt)</span>
+            <span className={styles.metricValue}>{metrics.submittedCount}</span>
+          </div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={`${styles.metricIconWrapper} ${styles.iconWeeks}`}>
             <CheckCircle2 size={22} />
           </div>
           <div className={styles.metricInfo}>
-            <span className={styles.metricLabel}>Báo cáo đã nộp</span>
-            <span className={styles.metricValue}>{metrics.submittedCount}</span>
+            <span className={styles.metricLabel}>Đã hoàn tất duyệt điểm</span>
+            <span className={styles.metricValue}>
+              {metrics.reviewedCount} ({metrics.completionRate}%)
+            </span>
           </div>
         </div>
 

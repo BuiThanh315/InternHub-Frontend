@@ -1,0 +1,342 @@
+.card {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.headerTitleBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sparkleIcon {
+  color: #8b5cf6;
+}
+
+.headerTitle {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #4338ca;
+}
+
+.modelTag {
+  font-size: 0.72rem;
+  background: rgba(139, 92, 246, 0.15);
+  color: #6d28d9;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.regenBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #6366f1;
+  background: transparent;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.regenBtn:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: #6366f1;
+}
+
+.summaryList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.summaryItem {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 4px solid transparent;
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.itemText {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #374151;
+  margin: 0;
+}
+
+.progressItem {
+  background: rgba(16, 185, 129, 0.08);
+  border-left-color: #10b981;
+}
+
+.progressItem .itemHeader {
+  color: #065f46;
+}
+
+.riskItem {
+  background: rgba(245, 158, 11, 0.08);
+  border-left-color: #f59e0b;
+}
+
+.riskItem .itemHeader {
+  color: #92400e;
+}
+
+.adviceItem {
+  background: rgba(59, 130, 246, 0.08);
+  border-left-color: #3b82f6;
+}
+
+.adviceItem .itemHeader {
+  color: #1e40af;
+}
+
+.kanbanBox {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.kanbanHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.kanbanTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.kanbanDetails {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 6px 0 0 0;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.badgeSuccess {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badgeWarning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badgeDanger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badgeNeutral {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.actionBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scorePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.scorePill {
+  font-size: 0.78rem;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.scorePill strong {
+  color: #f59e0b;
+}
+
+.avgPill {
+  font-size: 0.8rem;
+  background: #ede9fe;
+  color: #5b21b6;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid #ddd6fe;
+}
+
+.applyBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
+  transition: all 0.2s ease;
+}
+
+.applyBtn:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Un-evaluated State */
+.unEvaluatedCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #fbfbfe 0%, #f5f3ff 100%);
+  border: 1px dashed #c4b5fd;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.unEvaluatedContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.unEvaluatedIconBox {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(139, 92, 246, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.unEvaluatedTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #4338ca;
+  margin: 0 0 2px 0;
+}
+
+.unEvaluatedDesc {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  max-width: 480px;
+}
+
+.triggerBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
+  transition: all 0.2s ease;
+}
+
+.triggerBtn:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+}
+
+/* Loading State */
+.loadingCard {
+  background: #fbfbfe;
+  border: 1px solid #e0e7ff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.pulseHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6366f1;
+  margin-bottom: 12px;
+}
+
+.spinIcon {
+  animation: spin 2s linear infinite;
+}
+
+.skeletonLine {
+  height: 12px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

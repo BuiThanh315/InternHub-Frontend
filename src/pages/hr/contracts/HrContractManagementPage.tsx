@@ -11,6 +11,7 @@ import {
   Send,
   PlusCircle,
   Ban,
+  RotateCcw,
   MessageSquare,
   RefreshCw,
   FolderGit2,
@@ -197,6 +198,18 @@ export const HrContractManagementPage: React.FC = () => {
       toast.success(`Đã gửi email nhắc nhở ký tới ${internName || 'ứng viên'}!`);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Không thể gửi email nhắc nhở.');
+    }
+  };
+
+  const handleRevokeContract = async (contractId: number, internName?: string) => {
+    const confirmReason = window.prompt(`Xác nhận THU HỒI hợp đồng của ${internName || 'thực tập sinh'}?\nNhập lý do thu hồi:`);
+    if (confirmReason === null) return;
+    try {
+      await dynamicContractService.withdrawContract(contractId, confirmReason.trim() || 'HR thu hồi hợp đồng');
+      toast.success('Hợp đồng đã được thu hồi thành công.');
+      fetchContracts();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không thể thu hồi hợp đồng.');
     }
   };
 
@@ -547,6 +560,18 @@ export const HrContractManagementPage: React.FC = () => {
                             title="Gửi email nhắc nhở thực tập sinh ký hợp đồng"
                           >
                             <Send size={15} />
+                          </button>
+                        )}
+
+                        {/* Thu hồi hợp đồng đã gửi */}
+                        {(contract.status === 'PENDING_SIGNATURE' || contract.status === 'PENDING_INTERN_FEEDBACK') && (
+                          <button
+                            type="button"
+                            className={`${styles.actionBtn} ${styles.terminateBtn}`}
+                            onClick={() => handleRevokeContract(contract.id, contract.internFullName)}
+                            title="Thu hồi hợp đồng đã phát hành (Chống ứng viên ký nhầm)"
+                          >
+                            <RotateCcw size={15} />
                           </button>
                         )}
 

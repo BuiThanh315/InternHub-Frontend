@@ -8,4 +8,6 @@ export const ATTENDANCE_ENDPOINTS = {
   CHECK_OUT: '/api/v1/attendances/check-out',
   CHECK_OUT_QUICK: '/api/v1/attendances/check-out/quick',
   MY_HISTORY: '/api/v1/attendances/my-history',
+  APPEAL: (id: number | string) => `/api/v1/attendances/${id}/appeal`,
+  CONFIRM_CHECKOUT: (id: number | string) => `/api/v1/attendances/${id}/confirm-checkout`,
 } as const;

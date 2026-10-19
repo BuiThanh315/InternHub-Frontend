@@ -6,6 +6,9 @@ import type { WeeklyAssessment, CreateWeeklyAssessmentPayload } from '../../../t
 import { useMentorWeeklyReview } from '../hooks/useMentorWeeklyReview';
 import { MentorWeeklyReportInspectionView } from './MentorWeeklyReportInspectionView';
 import { MentorRequestRevisionModal } from './MentorRequestRevisionModal';
+import { MentorWeeklyReportAiInsightCard } from './MentorWeeklyReportAiInsightCard/MentorWeeklyReportAiInsightCard';
+import { assessmentService } from '../../../services/assessmentService';
+import type { WeeklyReportAiEvaluation } from '../../../types/assessment.types';
 import styles from './MentorWeeklyEvaluationHub.module.css';
 
 interface MentorWeeklyEvaluationHubProps {
@@ -76,6 +79,57 @@ export const MentorWeeklyEvaluationHub: React.FC<MentorWeeklyEvaluationHubProps>
   const [feedback, setFeedback] = useState<string>('');
   const [nextWeekGoals, setNextWeekGoals] = useState<string>('');
   const [isRevisionModalOpen, setIsRevisionModalOpen] = useState<boolean>(false);
+
+  // AI-04 State
+  const [aiEvaluation, setAiEvaluation] = useState<WeeklyReportAiEvaluation | null>(null);
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+
+  // Tải kết quả AI khi có report
+  useEffect(() => {
+    if (reviewData?.report?.id) {
+      assessmentService.getWeeklyReportAiEvaluation(reviewData.report.id)
+        .then(setAiEvaluation)
+        .catch(() => setAiEvaluation(null));
+    } else {
+      setAiEvaluation(null);
+    }
+  }, [reviewData?.report?.id]);
+
+  const handleTriggerAiEvaluation = async () => {
+    if (!reviewData?.report?.id) {
+      toast.error('Chưa có báo cáo tuần được nộp để phân tích.');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const result = await assessmentService.triggerWeeklyReportAiEvaluation(reviewData.report.id);
+      setAiEvaluation(result);
+      toast.success('AI đã phân tích và tóm tắt báo cáo tuần thành công!');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Lỗi khi gọi AI phân tích báo cáo.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleApplyAiSuggestions = (suggested: {
+    technicalScore: number;
+    attitudeScore: number;
+    teamworkScore: number;
+    productivityScore: number;
+    feedback: string;
+    nextWeekGoals: string;
+  }) => {
+    setScores({
+      technicalScore: suggested.technicalScore,
+      attitudeScore: suggested.attitudeScore,
+      teamworkScore: suggested.teamworkScore,
+      productivityScore: suggested.productivityScore,
+    });
+    setFeedback(suggested.feedback);
+    setNextWeekGoals(suggested.nextWeekGoals);
+    toast.success('Đã áp dụng toàn bộ điểm và nhận xét gợi ý từ AI vào Form!');
+  };
 
   // 3. Đồng bộ form khi dữ liệu reviewData nạp thành công
   useEffect(() => {
@@ -215,6 +269,14 @@ export const MentorWeeklyEvaluationHub: React.FC<MentorWeeklyEvaluationHubProps>
 
         {/* PANEL PHẢI: FORM CHẤM ĐIỂM & NHẬN XÉT CỦA MENTOR */}
         <div className={styles.rightEvaluationColumn}>
+          {/* AI-04: Card Trợ Lý AI Tóm Tắt & Đối Soát Báo Cáo */}
+          <MentorWeeklyReportAiInsightCard
+            evaluation={aiEvaluation}
+            loading={aiLoading}
+            onEvaluate={handleTriggerAiEvaluation}
+            onApplySuggestions={handleApplyAiSuggestions}
+          />
+
           {/* 4 Tiêu chí Rubrics & Thẻ Điểm TB */}
           <div className={styles.rubricsBox}>
             <div className={styles.rubricsList}>
@@ -253,19 +315,6 @@ export const MentorWeeklyEvaluationHub: React.FC<MentorWeeklyEvaluationHubProps>
                   {tpl.label}
                 </button>
               ))}
-            </div>
-
-            {/* AI Assistant Coming Soon */}
-            <div className={styles.aiBadgeContainer}>
-              <button
-                type="button"
-                disabled
-                className={styles.aiBtnDisabled}
-                title="Tính năng AI đang trong quá trình thử nghiệm"
-              >
-                <Sparkles size={14} /> Gợi ý AI
-              </button>
-              <span className={styles.comingSoonBadge}>COMING SOON</span>
             </div>
           </div>
 

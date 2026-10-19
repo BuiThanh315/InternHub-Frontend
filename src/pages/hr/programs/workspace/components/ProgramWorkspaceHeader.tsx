@@ -27,6 +27,7 @@ export const ProgramWorkspaceHeader: React.FC<ProgramWorkspaceHeaderProps> = ({
   onToggleRecruitment,
   isTogglingRecruitment = false,
   onOpenInterviewQuestions,
+  onOpenCreateSchedule,
 }) => {
   const currentCount = Number(program.currentInterns || internsCount || 0);
   const maxCount = Number(program.maxInterns || 0);
@@ -129,6 +130,23 @@ export const ProgramWorkspaceHeader: React.FC<ProgramWorkspaceHeaderProps> = ({
               >
                 <Sparkles size={15} className="text-indigo-600" aria-hidden="true" />
                 <span>Câu Hỏi Phỏng Vấn</span>
+              </button>
+            )}
+
+            {onOpenCreateSchedule && (
+              <button
+                type="button"
+                className={styles.btnAction}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%)',
+                  borderColor: 'rgba(99, 102, 241, 0.3)',
+                  color: '#818cf8',
+                }}
+                onClick={onOpenCreateSchedule}
+                title="Lên lịch và gửi link phòng phỏng vấn AI cho ứng viên"
+              >
+                <Calendar size={15} aria-hidden="true" />
+                <span>Lịch Phỏng Vấn AI</span>
               </button>
             )}
 

@@ -127,4 +127,32 @@ export const attendanceService = {
     });
     return response.data.data;
   },
+
+  /**
+   * Thực tập sinh gửi giải trình / khiếu nại chấm công khi bị lỗi GPS hoặc pending
+   */
+  async appealAttendance(
+    attendanceId: number | string,
+    data: { reason: string; evidenceUrl?: string },
+    signal?: AbortSignal
+  ): Promise<AttendanceRecordResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.APPEAL(attendanceId), data, {
+      signal,
+    });
+    return response.data.data;
+  },
+
+  /**
+   * Mentor / HR xác nhận giờ ra thực tế cho ca quên check-out
+   */
+  async confirmForgottenCheckout(
+    attendanceId: number | string,
+    data: { actualCheckOutTime: string; confirmationNote?: string },
+    signal?: AbortSignal
+  ): Promise<AttendanceRecordResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.CONFIRM_CHECKOUT(attendanceId), data, {
+      signal,
+    });
+    return response.data.data;
+  },
 };

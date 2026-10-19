@@ -186,6 +186,14 @@ export const authService = {
       localStorage.removeItem('intern_profile_latest');
       localStorage.removeItem('intern_documents_latest');
       sessionStorage.removeItem('intended_program_id');
+
+      // Lỗi 29 [P1] (AUTH-03): Phát tín hiệu đồng bộ đăng xuất giữa các Tab trình duyệt
+      try {
+        localStorage.setItem('internhub_logout_event', String(Date.now()));
+        setTimeout(() => localStorage.removeItem('internhub_logout_event'), 1000);
+      } catch (e) {
+        console.debug('Không thể broadcast logout event qua storage:', e);
+      }
     }
   },
 };

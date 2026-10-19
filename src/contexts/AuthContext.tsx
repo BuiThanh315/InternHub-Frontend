@@ -84,6 +84,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     void restoreSession();
+
+    // Lỗi 29 [P1] (AUTH-03): Tự động đồng bộ trạng thái đăng xuất khi tab khác phát sự kiện logout
+    const handleStorageEvent = (event: StorageEvent) => {
+      if (event.key === 'internhub_logout_event' && event.newValue) {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageEvent);
+    return () => {
+      window.removeEventListener('storage', handleStorageEvent);
+    };
   }, []);
 
   const login = async (username: string, password: string, rememberMe = false): Promise<AuthUser> => {

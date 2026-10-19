@@ -123,7 +123,28 @@ export const MentorDashboard: React.FC = () => {
 
   // Biến đổi InternProfile sang MentorInternTriageItem có kèm tiến độ và badge cảnh báo
   const triageItems = useMemo<MentorInternTriageItem[]>(() => {
+    // Map nhanh dữ liệu từ triageOverview trả về từ backend API nếu có
+    const overviewMap = new Map<string, MentorInternTriageItem>();
+    if (triageOverview?.interns) {
+      triageOverview.interns.forEach((item) => {
+        overviewMap.set(item.internCode, item);
+      });
+    }
+
     return myInterns.map((intern, idx) => {
+      const fromOverview = overviewMap.get(intern.internCode);
+
+      // Nếu backend có thông tin, ưu tiên sử dụng
+      if (fromOverview) {
+        return {
+          ...fromOverview,
+          fullName: intern.fullName || fromOverview.fullName,
+          programName: intern.programName || fromOverview.programName || 'Software Engineering 2026',
+          appliedPosition: intern.appliedPosition || fromOverview.appliedPosition,
+          status: intern.status || fromOverview.status,
+        };
+      }
+
       // Giả lập/tính toán số tuần & trạng thái đánh giá tuần
       const currentWeek = 6 + (idx % 6);
       const totalWeeks = 13;
@@ -134,10 +155,13 @@ export const MentorDashboard: React.FC = () => {
         (a) => a.weekNumber === currentWeek && a.status === 'PUBLISHED'
       );
 
+      // Nếu triageOverview báo có TTS cần đánh giá và đây là TTS đầu tiên -> gắn NEEDS_ASSESSMENT
       let weeklyStatus: MentorInternTriageItem['weeklyStatus'] = 'ASSESSED';
       let overdueMidterm = false;
 
-      if (idx % 4 === 1) {
+      if ((triageOverview?.needsWeeklyAssessmentCount || 0) > 0 && idx === 0) {
+        weeklyStatus = 'NEEDS_ASSESSMENT';
+      } else if (idx % 4 === 1) {
         weeklyStatus = 'NEEDS_ASSESSMENT';
       } else if (idx % 5 === 2) {
         weeklyStatus = 'OVERDUE_MIDTERM';
@@ -164,7 +188,7 @@ export const MentorDashboard: React.FC = () => {
         status: intern.status,
       };
     });
-  }, [myInterns, assessmentsMap]);
+  }, [myInterns, assessmentsMap, triageOverview]);
 
   // Lọc danh sách theo Search keyword, FilterMode, Program
   const filteredInterns = useMemo(() => {

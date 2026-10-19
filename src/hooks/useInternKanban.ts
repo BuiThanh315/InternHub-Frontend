@@ -117,10 +117,22 @@ export const useInternKanban = (): UseInternKanbanReturn => {
       setAsyncState((prev) => ({ ...prev, isMutating: true }));
 
       try {
+        let currentVersion: number | undefined;
+        if (kanbanData) {
+          const all = [
+            ...kanbanData.todoItems,
+            ...kanbanData.inProgressItems,
+            ...kanbanData.completedItems,
+          ];
+          const found = all.find((it) => it.id === itemId);
+          currentVersion = found?.version;
+        }
+
         const payload: UpdateKanbanStatusRequest = {
           status: newStatus,
           submissionUrl: submissionUrl?.trim() || null,
           completionNote: completionNote?.trim() || null,
+          version: currentVersion,
         };
 
         const updatedItem = await missionService.updateMyMissionStatus(itemId, payload);
@@ -164,15 +176,20 @@ export const useInternKanban = (): UseInternKanbanReturn => {
 
         return true;
       } catch (err: any) {
-        const errorMsg =
-          err.response?.data?.message || err.message || 'Cập nhật trạng thái nhiệm vụ thất bại';
-        toast.error(errorMsg);
+        if (err?.response?.status === 409 || err?.status === 409 || err?.message?.includes('đồng thời')) {
+          toast.error('Xung đột phiên bản: Nhiệm vụ này vừa được cập nhật bởi Mentor hoặc người khác! Đang đồng bộ lại dữ liệu...');
+          void fetchKanban();
+        } else {
+          const errorMsg =
+            err.response?.data?.message || err.message || 'Cập nhật trạng thái nhiệm vụ thất bại';
+          toast.error(errorMsg);
+        }
         return false;
       } finally {
         setAsyncState((prev) => ({ ...prev, isMutating: false }));
       }
     },
-    []
+    [kanbanData, fetchKanban]
   );
 
   // Setters cho bộ lọc

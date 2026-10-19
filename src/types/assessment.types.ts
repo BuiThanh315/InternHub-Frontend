@@ -80,6 +80,10 @@ export interface InternEvaluation {
   submittedAt?: string;
   approvedAt?: string;
   approvedBy?: string;
+  lateCount?: number;
+  earlyLeaveCount?: number;
+  absentCount?: number;
+  totalWorkingHours?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -132,4 +136,37 @@ export interface HrEvaluationSummaryItem {
   hrApprovedAt?: string;
   internshipResult?: 'PASSED' | 'EXCELLENT' | 'FAILED';
   internStatus?: string;
+}
+
+export interface WeeklyReportAiEvaluation {
+  id: number;
+  reportId: number;
+  internCode: string;
+  weekNumber: number;
+  version: number;
+  isActive: boolean;
+  progressSummary: string;
+  blockersAndRisks: string;
+  mentorActionAdvice: string;
+  kanbanAlignment: {
+    status: 'MATCHED' | 'PARTIAL_MISMATCH' | 'UNVERIFIED_TASKS' | 'NO_TASKS_ASSIGNED';
+    score: number;
+    details?: string;
+  };
+  suggestedAssessment: {
+    technicalScore: number;
+    attitudeScore: number;
+    teamworkScore: number;
+    productivityScore: number;
+    averageScore: number;
+    feedback: string;
+    nextWeekGoals?: string;
+  };
+  metadata: {
+    modelName: string;
+    promptVersion: string;
+    executionTimeMs?: number;
+    requestedBy: string;
+    createdAt: string;
+  };
 }

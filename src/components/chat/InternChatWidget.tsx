@@ -6,7 +6,8 @@ import styles from './InternChatWidget.module.css';
 
 export const InternChatWidget: React.FC = () => {
   const { role, hasPermission } = useAuth();
-  const canUseChat = role === 'USER' || hasPermission('AI_CHAT_USE');
+  // Trợ lý ảo FAQ này CHỈ dành riêng cho Thực Tập Sinh (USER / INTERN), tuyệt đối không hiển thị ở giao diện Quản Trị Viên (ADMIN / HR)
+  const canUseChat = role === 'USER' && (role === 'USER' || hasPermission('AI_CHAT_USE'));
 
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string>(() => {

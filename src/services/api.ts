@@ -45,10 +45,10 @@ export const apiClient = axios.create({
   withCredentials: true, // BẮT BUỘC: Cho phép gửi và nhận Cookie HttpOnly
 });
 
-// 3. Request interceptor gắn Bearer Token từ In-Memory RAM
+// 3. Request interceptor gắn Bearer Token từ In-Memory RAM (Không ghi đè nếu caller đã chủ động truyền Authorization header)
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (inMemoryAccessToken && config.headers) {
+    if (inMemoryAccessToken && config.headers && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${inMemoryAccessToken}`;
     }
     return config;
