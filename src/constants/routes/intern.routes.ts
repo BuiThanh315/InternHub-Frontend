@@ -11,4 +11,5 @@ export const INTERN_ROUTES = {
   CONTRACT_SIGNING: '/intern/contract-signing',
   ALLOWANCES: '/intern/allowances',
   SUPPORT_REQUESTS: '/intern/support-requests',
+  QUIZZES: '/intern/quizzes',
 } as const;

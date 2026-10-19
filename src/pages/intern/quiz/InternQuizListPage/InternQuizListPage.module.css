@@ -1,0 +1,378 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* Page Header */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.titleWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.iconWrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--primary-light, rgba(99, 102, 241, 0.1));
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.pageSubtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Bento Metrics Row */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.metricCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.metricIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metricTotal {
+  background: var(--info-light, rgba(59, 130, 246, 0.1));
+  color: var(--info, #3b82f6);
+}
+
+.metricCompleted {
+  background: var(--success-light, rgba(16, 185, 129, 0.1));
+  color: var(--success, #10b981);
+}
+
+.metricScore {
+  background: var(--warning-light, rgba(245, 158, 11, 0.1));
+  color: var(--warning, #f59e0b);
+}
+
+.metricInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.metricValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.metricLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Filter Card */
+.filterCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.searchBox {
+  flex: 1;
+  min-width: 260px;
+  max-width: 420px;
+}
+
+.filterTabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filterTabBtn {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.825rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-main);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filterTabBtn:hover {
+  border-color: var(--primary);
+  color: var(--text-main);
+}
+
+.filterTabActive {
+  background: var(--primary-light, rgba(99, 102, 241, 0.1));
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Assignments Grid */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.quizCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.quizCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light, rgba(99, 102, 241, 0.4));
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.725rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statusAssigned {
+  background: var(--info-light, rgba(59, 130, 246, 0.1));
+  color: var(--info, #3b82f6);
+  border: 1px solid var(--info-border, rgba(59, 130, 246, 0.25));
+}
+
+.statusInProgress {
+  background: var(--warning-light, rgba(245, 158, 11, 0.1));
+  color: var(--warning, #f59e0b);
+  border: 1px solid var(--warning-border, rgba(245, 158, 11, 0.25));
+  animation: pulseLight 2s infinite ease-in-out;
+}
+
+@keyframes pulseLight {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.statusCompleted {
+  background: var(--success-light, rgba(16, 185, 129, 0.1));
+  color: var(--success, #10b981);
+  border: 1px solid var(--success-border, rgba(16, 185, 129, 0.25));
+}
+
+.statusExpired {
+  background: var(--danger-light, rgba(239, 68, 68, 0.1));
+  color: var(--danger, #ef4444);
+  border: 1px solid var(--danger-border, rgba(239, 68, 68, 0.25));
+}
+
+.programTag {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.quizCardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.quizCardDesc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+}
+
+.detailIcon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.deadlineRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  padding-top: 0.25rem;
+}
+
+.deadlineIcon {
+  color: var(--warning);
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Empty State */
+.emptyCard {
+  background: var(--bg-card);
+  border: 2px dashed var(--border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  padding: 3.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.emptyIconCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary-light, rgba(99, 102, 241, 0.1));
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.emptyDesc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  max-width: 440px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Skeleton */
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.skeletonCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}

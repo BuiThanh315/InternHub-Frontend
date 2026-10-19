@@ -172,7 +172,7 @@ export const InternChatWidget: React.FC = () => {
                   <div className={styles.markdownBody}>
                     <ReactMarkdown
                       components={{
-                        a: ({ href, children }) => (
+                        a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
                           <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#4f46e5', textDecoration: 'underline' }}>
                             {children}
                           </a>

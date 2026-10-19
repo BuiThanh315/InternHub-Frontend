@@ -10,11 +10,17 @@ import {
   Building2,
   Calendar,
   ClipboardCheck,
+  BookOpen,
 } from 'lucide-react';
 import { Button, SearchBar, Select, Skeleton } from '../../../../../components/common';
 import { formatDate } from '../../../../../utils/formatters';
 import { MissionKanbanBoard } from '../MissionKanbanBoard';
-import { MentorInternsAndGroupsTab, MentorAnalyticsTab, MentorWeeklyReportsTab } from './tabs';
+import {
+  MentorInternsAndGroupsTab,
+  MentorAnalyticsTab,
+  MentorWeeklyReportsTab,
+  MentorQuizzesTab,
+} from './tabs';
 import type { MentorProgramWorkspaceProps, WorkspaceTabKey } from './MentorProgramWorkspace.types';
 import styles from './MentorProgramWorkspace.module.css';
 
@@ -301,6 +307,15 @@ export const MentorProgramWorkspace: React.FC<MentorProgramWorkspaceProps> = ({
 
           <button
             type="button"
+            className={`${styles.tabBtn} ${activeTab === 'quizzes' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('quizzes')}
+          >
+            <BookOpen size={15} />
+            <span>Bài Quiz AI</span>
+          </button>
+
+          <button
+            type="button"
             className={`${styles.tabBtn} ${activeTab === 'analytics' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('analytics')}
           >
@@ -334,6 +349,15 @@ export const MentorProgramWorkspace: React.FC<MentorProgramWorkspaceProps> = ({
           activeBoardId={activeBoardId}
           onSelectBoard={onSelectBoard}
           internWorkloadMap={internWorkloadMap}
+        />
+      )}
+
+      {activeTab === 'quizzes' && (
+        <MentorQuizzesTab
+          programId={program.programId ?? program.id ?? 0}
+          programName={program.name}
+          programInterns={programInterns}
+          groups={groups}
         />
       )}
 

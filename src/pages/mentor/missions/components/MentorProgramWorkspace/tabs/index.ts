@@ -4,3 +4,4 @@ export * from './MentorAnalyticsTab';
 export * from './MentorAnalyticsTab.types';
 export * from './MentorWeeklyReportsTab';
 export * from './MentorWeeklyReportsTab.types';
+export * from './MentorQuizzesTab';

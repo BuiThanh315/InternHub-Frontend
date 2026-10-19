@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  BookOpen,
   Bot,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -257,7 +258,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     {
       to: ROUTES.INTERN.DASHBOARD,
-      label: 'Tiến Độ Thực Tập',
+      label: 'Kỳ Thực Tập Của Tôi',
       icon: LayoutDashboard,
       requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',
@@ -307,6 +308,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       to: ROUTES.INTERN.WEEKLY_REPORTS,
       label: 'Báo Cáo Tuần',
       icon: CalendarCheck2,
+      requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
+      section: 'Góc Thực Tập Sinh',
+      allowedRoles: ['INTERN', 'USER'],
+    },
+    {
+      to: ROUTES.INTERN.QUIZZES,
+      label: 'Bài Quiz Ôn Tập',
+      icon: BookOpen,
       requiredPermission: 'INTERN_VIEW_OWN_PROFILE',
       section: 'Góc Thực Tập Sinh',
       allowedRoles: ['INTERN', 'USER'],

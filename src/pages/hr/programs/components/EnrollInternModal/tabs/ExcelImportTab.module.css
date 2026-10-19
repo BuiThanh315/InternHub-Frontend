@@ -449,49 +449,96 @@
   white-space: nowrap;
 }
 
-/* Import Mode Selector */
+/* Import Mode Selector - Decision Cards (TM-100 v3.0) */
 .modeSelector {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  background-color: var(--bg-body);
+  gap: 0.75rem;
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: 0.85rem 1rem;
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+}
+
+.modeHeaderGroup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .modeTitle {
   font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.modeOptions {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.modeOptionLabel {
+  font-weight: 700;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-main);
-  cursor: pointer;
 }
 
-.modeOptionLabel input[type="radio"] {
+.modeCardsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .modeCardsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modeCard {
+  border: 1.5px solid var(--border-default);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+}
+
+.modeCard:hover {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+}
+
+.modeCardActive {
+  border-color: var(--primary);
+  background-color: rgba(79, 70, 229, 0.04);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.modeCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.modeCardLabel {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modeCardLabel input[type="radio"] {
   accent-color: var(--primary);
   width: 15px;
   height: 15px;
   cursor: pointer;
 }
 
-.modeDescription {
+.modeCardDesc {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
 }
 
 /* Action Footer */

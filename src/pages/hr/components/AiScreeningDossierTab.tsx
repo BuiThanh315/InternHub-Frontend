@@ -10,6 +10,7 @@ import {
   Send,
   Zap,
   Video,
+  RotateCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -91,14 +92,14 @@ export const AiScreeningDossierTab: React.FC<AiScreeningDossierTabProps> = ({
   }, [fetchEvaluation, completedVersion]);
 
   // Kích hoạt thẩm định AI trực tiếp cho hồ sơ này
-  const handleTriggerScreening = async () => {
+  const handleTriggerScreening = async (forceReevaluate: boolean = false) => {
     if (!intern.programId) {
       toast.error('Hồ sơ chưa thuộc kỳ thực tập nào để thẩm định.');
       return;
     }
     try {
       setIsLoading(true);
-      await startJob(intern.programId, [intern.id]);
+      await startJob(intern.programId, [intern.id], forceReevaluate);
     } catch (err: any) {
       console.error('Lỗi khởi tạo thẩm định AI:', err);
       toast.error('Không thể kích hoạt thẩm định AI.');
@@ -155,7 +156,7 @@ export const AiScreeningDossierTab: React.FC<AiScreeningDossierTabProps> = ({
         </p>
         <Button
           variant="primary"
-          onClick={handleTriggerScreening}
+          onClick={() => handleTriggerScreening(false)}
           leftIcon={<Sparkles size={16} />}
         >
           Kích Hoạt Thẩm Định AI Ngay
@@ -194,6 +195,17 @@ export const AiScreeningDossierTab: React.FC<AiScreeningDossierTabProps> = ({
                 Bộ nhớ đệm AI
               </span>
             )}
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => handleTriggerScreening(true)}
+              leftIcon={<RotateCw size={12} />}
+              style={{ marginLeft: 'auto', padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
+            >
+              Thẩm Định Lại
+            </Button>
           </div>
 
           <p className={styles.matchSummaryText}>{data.matchSummary}</p>

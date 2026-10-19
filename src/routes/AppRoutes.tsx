@@ -1,36 +1,9 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useSearchParams, Outlet } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { ProtectedRoute } from './ProtectedRoute';
-import { AdminDashboard } from '../pages/admin/AdminDashboard';
-import { AiSettingsPage } from '../pages/admin/AiSettingsPage';
-import { HrDashboard } from '../pages/hr/HrDashboard';
-import { HrProgramManagementPage } from '../pages/hr/programs/HrProgramManagementPage';
-import { ProgramWorkspacePage } from '../pages/hr/programs/workspace';
-import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPage';
-import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
-import { HrEvaluationManagementPage } from '../pages/hr/evaluations/HrEvaluationManagementPage';
-import { HRAttendanceReportPage } from '../pages/hr/attendance-reports';
-import { HrAllowancePage } from '../pages/hr/allowance/HrAllowancePage';
-import { HrSupportRequestsPage } from '../pages/hr/support/HrSupportRequestsPage';
-import { MentorDashboard } from '../pages/mentor/MentorDashboard';
-import { MentorMissionPage } from '../pages/mentor/missions/MentorMissionPage';
-import { InternDashboard } from '../pages/intern/InternDashboard';
-import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
-import { InternMissionPage } from '../pages/intern/missions/InternMissionPage';
-import { InternWeeklyReportPage } from '../pages/intern/reports';
-import { InternAllowanceHistoryPage } from '../pages/intern/allowance/InternAllowanceHistoryPage';
-import { InternSupportRequestPage } from '../pages/intern/support/InternSupportRequestPage';
-import { ProfilePage } from '../pages/profile';
-import { InternApplyPage } from '../pages/intern/InternApplyPage';
-import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
-import { InternAttendanceConfirmPage } from '../pages/intern/InternAttendanceConfirmPage';
-import { InternLeavePage } from '../pages/intern/leave';
-import { MentorLeaveApprovalPage } from '../pages/mentor/leave';
-import { InternContractSigningHub } from '../pages/intern/contract/InternContractSigningHub';
-import { LandingPage } from '../pages/public/LandingPage';
-import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
+import { InternProgramProvider } from '../contexts/InternProgramContext';
 import { ROUTES, getValidatedRedirectRoute } from '../constants/routes';
 
 // Lỗi 32 [P2] (PERF-02): Code Splitting & Lazy Loading các trang quản trị, dashboard và module nặng
@@ -42,6 +15,7 @@ const ProgramWorkspacePage = lazy(() => import('../pages/hr/programs/workspace')
 const HrMentorManagementPage = lazy(() => import('../pages/hr/mentors/HrMentorManagementPage').then(m => ({ default: m.HrMentorManagementPage })));
 const HrContractManagementPage = lazy(() => import('../pages/hr/contracts/HrContractManagementPage').then(m => ({ default: m.HrContractManagementPage })));
 const HrEvaluationManagementPage = lazy(() => import('../pages/hr/evaluations/HrEvaluationManagementPage').then(m => ({ default: m.HrEvaluationManagementPage })));
+const HRAttendanceReportPage = lazy(() => import('../pages/hr/attendance-reports').then(m => ({ default: m.HRAttendanceReportPage })));
 const HrAllowancePage = lazy(() => import('../pages/hr/allowance/HrAllowancePage').then(m => ({ default: m.HrAllowancePage })));
 const HrSupportRequestsPage = lazy(() => import('../pages/hr/support/HrSupportRequestsPage').then(m => ({ default: m.HrSupportRequestsPage })));
 const MentorDashboard = lazy(() => import('../pages/mentor/MentorDashboard').then(m => ({ default: m.MentorDashboard })));
@@ -59,11 +33,20 @@ const InternAttendanceConfirmPage = lazy(() => import('../pages/intern/InternAtt
 const InternLeavePage = lazy(() => import('../pages/intern/leave').then(m => ({ default: m.InternLeavePage })));
 const MentorLeaveApprovalPage = lazy(() => import('../pages/mentor/leave').then(m => ({ default: m.MentorLeaveApprovalPage })));
 const InternContractSigningHub = lazy(() => import('../pages/intern/contract/InternContractSigningHub').then(m => ({ default: m.InternContractSigningHub })));
+const InternQuizListPage = lazy(() => import('../pages/intern/quiz').then(m => ({ default: m.InternQuizListPage })));
+const InternQuizTakingPage = lazy(() => import('../pages/intern/quiz').then(m => ({ default: m.InternQuizTakingPage })));
+const InternQuizResultPage = lazy(() => import('../pages/intern/quiz').then(m => ({ default: m.InternQuizResultPage })));
 const LandingPage = lazy(() => import('../pages/public/LandingPage').then(m => ({ default: m.LandingPage })));
 const OnboardingActivationPage = lazy(() => import('../pages/public/OnboardingActivationPage').then(m => ({ default: m.OnboardingActivationPage })));
 const CandidateInterviewVerifyPage = lazy(() => import('../pages/public/CandidateInterviewVerifyPage').then(m => ({ default: m.CandidateInterviewVerifyPage })));
 const CandidateInterviewRoomPage = lazy(() => import('../pages/public/CandidateInterviewRoomPage').then(m => ({ default: m.CandidateInterviewRoomPage })));
 const CandidateInterviewCompletionPage = lazy(() => import('../pages/public/CandidateInterviewCompletionPage').then(m => ({ default: m.CandidateInterviewCompletionPage })));
+
+const InternLayoutRoute: React.FC = () => (
+  <InternProgramProvider>
+    <Outlet />
+  </InternProgramProvider>
+);
 
 const SuspenseLoading: React.FC = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -120,33 +103,15 @@ export const AppRoutes: React.FC = () => {
         <Route path="/interview/room/:sessionId" element={<CandidateInterviewRoomPage />} />
         <Route path="/interview/complete/:sessionId" element={<CandidateInterviewCompletionPage />} />
 
-
         {/* Chuyển hướng các route auth cũ sang Landing Page (Popup Modal) */}
         <Route path="/login" element={<Navigate to="/?login=true" replace />} />
         <Route path="/register" element={<Navigate to="/?register=true" replace />} />
         <Route path="/activate" element={<Navigate to="/?activate=true" replace />} />
-        {/* Attendance Reports - Phân hệ chuyên cần cho HR, ADMIN và MENTOR (TM-26) */}
-        <Route element={<ProtectedRoute allowedRoles={['HR', 'ADMIN', 'MENTOR']} />}>
-          <Route path={ROUTES.HR.ATTENDANCE_REPORTS} element={<HRAttendanceReportPage />} />
-        </Route>
-
-
-
-        {/* Mentor Area */}
-        <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'HR', 'ADMIN']} />}>
-          <Route path={ROUTES.MENTOR.LEAVE_REQUESTS} element={<MentorLeaveApprovalPage />} />
-        </Route>
-        <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']} />}>
-          <Route path={ROUTES.MENTOR.DASHBOARD} element={<MentorDashboard />} />
-          <Route path={ROUTES.MENTOR.MISSIONS} element={<MentorMissionPage />} />
-          <Route path={ROUTES.MENTOR.INTERNS} element={<MentorDashboard />} />
-          <Route path={ROUTES.MENTOR.DOCUMENTS} element={<MentorDashboard />} />
-        </Route>
 
         {/* Authenticated Dashboard Routes */}
         <Route element={<MainLayout />}>
           {/* Admin Area */}
-            <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
             <Route path={ROUTES.ADMIN.DASHBOARD} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN.USERS} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN.ROLES} element={<AdminDashboard />} />
@@ -169,6 +134,11 @@ export const AppRoutes: React.FC = () => {
             <Route path={ROUTES.HR.REVIEW} element={<HrDashboard />} />
           </Route>
 
+          {/* Attendance Reports - Phân hệ chuyên cần cho HR, ADMIN và MENTOR (TM-26) */}
+          <Route element={<ProtectedRoute allowedRoles={['HR', 'ADMIN', 'MENTOR']} />}>
+            <Route path={ROUTES.HR.ATTENDANCE_REPORTS} element={<HRAttendanceReportPage />} />
+          </Route>
+
           {/* Mentor Area */}
           <Route element={<ProtectedRoute allowedRoles={['MENTOR', 'HR', 'ADMIN']} />}>
             <Route path={ROUTES.MENTOR.LEAVE_REQUESTS} element={<MentorLeaveApprovalPage />} />
@@ -182,17 +152,21 @@ export const AppRoutes: React.FC = () => {
 
           {/* Intern Dedicated Area */}
           <Route element={<ProtectedRoute allowedRoles={['INTERN', 'USER', 'ADMIN']} />}>
-            <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
-            <Route path={ROUTES.INTERN.MISSIONS} element={<InternMissionPage />} />
-            <Route path={ROUTES.INTERN.WEEKLY_REPORTS} element={<InternWeeklyReportPage />} />
-            <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
-            <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
-            <Route path={ROUTES.INTERN.CONTRACT_SIGNING} element={<InternContractSigningHub />} />
-            <Route path={ROUTES.INTERN.ALLOWANCES} element={<InternAllowanceHistoryPage />} />
-            <Route path={ROUTES.INTERN.SUPPORT_REQUESTS} element={<InternSupportRequestPage />} />
-            <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
-            <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
-            <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />
+            <Route element={<InternLayoutRoute />}>
+              <Route path={ROUTES.INTERN.DASHBOARD} element={<InternDashboard />} />
+              <Route path={ROUTES.INTERN.MISSIONS} element={<InternMissionPage />} />
+              <Route path={ROUTES.INTERN.WEEKLY_REPORTS} element={<InternWeeklyReportPage />} />
+              <Route path={ROUTES.INTERN.APPLY} element={<InternApplyPage />} />
+              <Route path={ROUTES.INTERN.DOCUMENTS} element={<InternDocumentsPage />} />
+              <Route path={ROUTES.INTERN.CONTRACT_SIGNING} element={<InternContractSigningHub />} />
+              <Route path={ROUTES.INTERN.ALLOWANCES} element={<InternAllowanceHistoryPage />} />
+              <Route path={ROUTES.INTERN.SUPPORT_REQUESTS} element={<InternSupportRequestPage />} />
+              <Route path={ROUTES.INTERN.PROFILE} element={<Navigate to={ROUTES.PROFILE} replace />} />
+              <Route path={ROUTES.INTERN.ATTENDANCE} element={<InternAttendancePage />} />
+              <Route path={ROUTES.INTERN.LEAVE_REQUESTS} element={<InternLeavePage />} />
+              <Route path={ROUTES.INTERN.QUIZZES} element={<InternQuizListPage />} />
+              <Route path="/intern/quizzes/submissions/:submissionId" element={<InternQuizResultPage />} />
+            </Route>
           </Route>
 
           {/* Universal Profile Route */}
@@ -206,6 +180,14 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.INTERN.ATTENDANCE_CONFIRM}
           element={<InternAttendanceConfirmPage />}
         />
+
+        {/* Route Phòng Thi Focus Exam Room - Toàn màn hình độc lập */}
+        <Route element={<ProtectedRoute allowedRoles={['INTERN', 'USER', 'ADMIN']} />}>
+          <Route
+            path="/intern/quizzes/:assignmentId/take"
+            element={<InternQuizTakingPage />}
+          />
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to={ROUTES.ROOT} replace />} />
