@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { apiClient, getInMemoryAccessToken } from './api';
 import { API_ENDPOINTS } from '../constants/endpoints';
 import type {
   BatchScreeningRequest,
@@ -73,6 +73,39 @@ export interface AiKeyVaultItem {
   createdAt?: string;
 }
 
+export interface PromptTemplateData {
+  id: number;
+  templateCode: string;
+  templateName: string;
+  featureGroup: string;
+  promptType: string;
+  version: number;
+  templateContent: string;
+  description?: string;
+  availableVariables: string[];
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UpsertPromptTemplatePayload {
+  templateName: string;
+  templateContent: string;
+  description?: string;
+  availableVariables?: string[];
+  createNewVersion?: boolean;
+}
+
+export interface PreviewPromptTemplatePayload {
+  templateContent: string;
+  sampleVariables?: Record<string, unknown>;
+}
+
+export interface PreviewPromptTemplateResponse {
+  resolvedPrompt: string;
+  detectedVariables: string[];
+}
+
 export interface AddKeyVaultPayload {
   keyName: string;
   provider?: string;
@@ -126,6 +159,123 @@ export const aiService = {
       { timeout: 60000 }
     );
     return res.data.data;
+  },
+
+  /**
+   * Gọi SSE Streaming Chat (AI-17) - Nhận text từng chunk theo thời gian thực
+   */
+  streamChat: async (
+    sessionId: string,
+    message: string,
+    callbacks: {
+      onChunk: (chunk: string) => void;
+      onDone?: () => void;
+      onError?: (err: Error) => void;
+    },
+    signal?: AbortSignal
+  ): Promise<void> => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+    const url = `${API_BASE_URL}/api/ai/chat/stream`;
+
+    let token = getInMemoryAccessToken();
+    if (!token) {
+      try {
+        const { authService } = await import('./authService');
+        token = await authService.refreshToken();
+      } catch (e) {
+        console.warn('Không thể tự động khôi phục access token:', e);
+      }
+    }
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ sessionId, message }),
+        signal,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        let detailedMsg = `Lỗi kết nối AI (${response.status}): ${response.statusText}`;
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed && parsed.message) {
+            detailedMsg = parsed.message;
+          }
+        } catch {
+          if (errorText && errorText.length < 150) {
+            detailedMsg = errorText;
+          }
+        }
+        throw new Error(detailedMsg);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Trình duyệt không hỗ trợ đọc Stream phản hồi.');
+      }
+
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        // Giữ lại phần chưa hoàn tất của dòng cuối cùng
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith(':')) continue; // bỏ qua heartbeat/comment
+
+          if (trimmed.startsWith('data:')) {
+            const dataStr = trimmed.slice(5).trim();
+            if (dataStr === '[DONE]') {
+              callbacks.onDone?.();
+              return;
+            }
+            try {
+              // Parse JSON nếu backend gửi format { chunk: '...' } hoặc parse thô
+              let chunkText = dataStr;
+              try {
+                const parsed = JSON.parse(dataStr);
+                if (typeof parsed === 'string') {
+                  chunkText = parsed;
+                } else if (parsed && typeof parsed.chunk === 'string') {
+                  chunkText = parsed.chunk;
+                } else if (parsed && typeof parsed.text === 'string') {
+                  chunkText = parsed.text;
+                }
+              } catch {
+                // Giữ nguyên text thuần
+              }
+              callbacks.onChunk(chunkText);
+            } catch (parseErr: any) {
+              console.warn('Lỗi xử lý SSE chunk:', parseErr);
+            }
+          }
+        }
+      }
+
+      callbacks.onDone?.();
+    } catch (err: any) {
+      if (err.name === 'AbortError') return;
+      callbacks.onError?.(err instanceof Error ? err : new Error(String(err)));
+      throw err;
+    }
   },
 
   getQuickPrompts: async () => {
@@ -254,5 +404,109 @@ export const aiService = {
    */
   async deleteVaultKey(id: number | string, signal?: AbortSignal): Promise<void> {
     await apiClient.delete(API_ENDPOINTS.AI.VAULT_DETAIL(id), { signal });
+  },
+
+  /**
+   * Ghim hoặc bỏ ghim ứng viên tiềm năng (AI-18)
+   */
+  async toggleCandidateBookmark(
+    programId: number | string,
+    internId: number | string,
+    notes?: string,
+    signal?: AbortSignal
+  ): Promise<boolean> {
+    const response = await apiClient.post(
+      API_ENDPOINTS.AI.BOOKMARK_TOGGLE,
+      { programId, internId, notes },
+      { signal }
+    );
+    return response.data?.data ?? false;
+  },
+
+  /**
+   * Lấy danh sách ID các ứng viên đã được ghim trong một kỳ thực tập (AI-18)
+   */
+  async getBookmarkedInternIds(
+    programId: number | string,
+    signal?: AbortSignal
+  ): Promise<number[]> {
+    try {
+      const response = await apiClient.get(
+        API_ENDPOINTS.AI.BOOKMARKS_BY_PROGRAM(programId),
+        { signal }
+      );
+      return response.data?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Lấy toàn bộ danh sách Prompt Templates và các phiên bản đã lưu (AI-19)
+   */
+  async getPromptTemplates(featureGroup?: string, signal?: AbortSignal): Promise<PromptTemplateData[]> {
+    const response = await apiClient.get(API_ENDPOINTS.AI.PROMPT_TEMPLATES, {
+      params: featureGroup ? { featureGroup } : undefined,
+      signal,
+    });
+    return response.data?.data || [];
+  },
+
+  /**
+   * Lấy lịch sử các phiên bản của một Prompt Template (AI-19 Version History)
+   */
+  async getPromptTemplateVersions(code: string, signal?: AbortSignal): Promise<PromptTemplateData[]> {
+    const response = await apiClient.get(
+      API_ENDPOINTS.AI.PROMPT_TEMPLATE_DETAIL(code) + '/versions',
+      { signal }
+    );
+    return response.data?.data || [];
+  },
+
+  /**
+   * Cập nhật / tạo mới phiên bản Prompt Template (AI-19)
+   */
+  async updatePromptTemplate(
+    code: string,
+    payload: UpsertPromptTemplatePayload,
+    signal?: AbortSignal
+  ): Promise<PromptTemplateData> {
+    const response = await apiClient.put(
+      API_ENDPOINTS.AI.PROMPT_TEMPLATE_DETAIL(code),
+      payload,
+      { signal }
+    );
+    return response.data?.data;
+  },
+
+  /**
+   * Kích hoạt phiên bản lịch sử của một Prompt Template (AI-19 Rollback)
+   */
+  async activatePromptTemplateVersion(
+    code: string,
+    version: number,
+    signal?: AbortSignal
+  ): Promise<PromptTemplateData> {
+    const response = await apiClient.post(
+      API_ENDPOINTS.AI.PROMPT_TEMPLATE_ACTIVATE(code, version),
+      {},
+      { signal }
+    );
+    return response.data?.data;
+  },
+
+  /**
+   * Thử nghiệm giải phóng biến và xem trước kết quả Prompt (AI-19 Dry-run Preview)
+   */
+  async previewPromptTemplate(
+    payload: PreviewPromptTemplatePayload,
+    signal?: AbortSignal
+  ): Promise<PreviewPromptTemplateResponse> {
+    const response = await apiClient.post(
+      API_ENDPOINTS.AI.PROMPT_TEMPLATE_PREVIEW,
+      payload,
+      { signal }
+    );
+    return response.data?.data;
   },
 };

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Modal, Button } from '../../../../../components/common';
+import { AiSteppedProgressSkeleton } from '../../../../../components/ai/AiSteppedProgressSkeleton';
 import { aiInterviewService } from '../../../../../services/aiInterviewService';
 import type {
   InterviewQuestionSet,
@@ -483,7 +484,33 @@ export const InterviewQuestionModal: React.FC<InterviewQuestionModalProps> = ({
         )}
 
         {/* Danh Sách Các Câu Hỏi */}
-        {isLoading ? (
+        {isGenerating ? (
+          <AiSteppedProgressSkeleton
+            title="AI Đang Phân Tích & Sinh Bộ Câu Hỏi Phỏng Vấn"
+            steps={[
+              {
+                id: 1,
+                title: 'Bước 1: Trích xuất JD & Đánh giá năng lực ứng viên',
+                description: 'Bóc tách các yêu cầu chuyên môn, điểm thiếu hụt từ CV & bài test...',
+                durationMs: 3000,
+              },
+              {
+                id: 2,
+                title: 'Bước 2: Xây dựng câu hỏi chất vấn theo 3 nhóm cốt lõi',
+                description: 'Sinh các câu hỏi Nền tảng, Đào sâu dự án và Văn hóa phù hợp...',
+                durationMs: 4500,
+              },
+              {
+                id: 3,
+                title: 'Bước 3: Tổng hợp tiêu chuẩn câu trả lời mong đợi & Tiêu chí chấm',
+                description: 'Thiết lập thang điểm, gợi ý phỏng vấn viên và chốt bộ câu hỏi...',
+                durationMs: 4000,
+              },
+            ]}
+            estimatedSeconds={15}
+            className="my-4"
+          />
+        ) : isLoading ? (
           <div className="py-12 text-center text-slate-500 text-sm">
             <RefreshCw size={24} className="animate-spin mx-auto text-indigo-600 mb-2" />
             Đang tải dữ liệu bộ câu hỏi...

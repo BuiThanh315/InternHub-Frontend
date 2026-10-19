@@ -5,6 +5,8 @@ import {
   type FeatureProfileData,
   type TestProfileResult,
   type AiKeyVaultItem,
+  type PromptTemplateData,
+  type PreviewPromptTemplateResponse,
 } from '../../services/aiService';
 import styles from './AiSettingsPage.module.css';
 
@@ -15,6 +17,25 @@ export const AiSettingsPage: React.FC = () => {
   const [testingProfile, setTestingProfile] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
+
+  // Master Tab State ('PROFILES' | 'VAULT' | 'PROMPTS')
+  const [masterTab, setMasterTab] = useState<'PROFILES' | 'VAULT' | 'PROMPTS'>('PROFILES');
+
+  // AI-19: Prompt Management Engine & Versioning State
+  const [promptTemplates, setPromptTemplates] = useState<PromptTemplateData[]>([]);
+  const [loadingPrompts, setLoadingPrompts] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<PromptTemplateData | null>(null);
+  const [promptCategoryFilter, setPromptCategoryFilter] = useState<string>('ALL');
+  const [editingContent, setEditingContent] = useState<string>('');
+  const [editingTemplateName, setEditingTemplateName] = useState<string>('');
+  const [editingDescription, setEditingDescription] = useState<string>('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateVersions, setTemplateVersions] = useState<PromptTemplateData[]>([]);
+  const [selectedVersionNum, setSelectedVersionNum] = useState<number>(1);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewResult, setPreviewResult] = useState<PreviewPromptTemplateResponse | null>(null);
+  const [previewSampleVars, setPreviewSampleVars] = useState<Record<string, string>>({});
 
   // Tab Profile state
   const [selectedFeatureKey, setSelectedFeatureKey] = useState<string>('CHATBOT');
@@ -149,9 +170,117 @@ export const AiSettingsPage: React.FC = () => {
     }
   };
 
+  const fetchPromptTemplates = async (group?: string) => {
+    try {
+      setLoadingPrompts(true);
+      const data = await aiService.getPromptTemplates(group && group !== 'ALL' ? group : undefined);
+      setPromptTemplates(data);
+      if (data.length > 0) {
+        if (!selectedTemplate || !data.some((t) => t.templateCode === selectedTemplate.templateCode)) {
+          handleSelectPromptTemplate(data[0]);
+        }
+      }
+    } catch (err: any) {
+      console.error('[AiSettingsPage] Lỗi lấy danh sách Prompt Templates:', err);
+    } finally {
+      setLoadingPrompts(false);
+    }
+  };
+
+  const handleSelectPromptTemplate = async (template: PromptTemplateData) => {
+    setSelectedTemplate(template);
+    setEditingContent(template.templateContent || '');
+    setEditingTemplateName(template.templateName || '');
+    setEditingDescription(template.description || '');
+    setSelectedVersionNum(template.version || 1);
+    // Initialize sample variables
+    const initialVars: Record<string, string> = {};
+    if (template.availableVariables) {
+      template.availableVariables.forEach((v) => {
+        initialVars[v] = `[${v}_test_value]`;
+      });
+    }
+    setPreviewSampleVars(initialVars);
+
+    // Fetch version history
+    try {
+      const versions = await aiService.getPromptTemplateVersions(template.templateCode);
+      setTemplateVersions(versions);
+    } catch (err: any) {
+      console.warn('[AiSettingsPage] Không thể tải lịch sử phiên bản:', err);
+      setTemplateVersions([template]);
+    }
+  };
+
+  const handleSavePromptTemplate = async () => {
+    if (!selectedTemplate) return;
+    setSavingTemplate(true);
+    setErrorBanner(null);
+    setSuccessBanner(null);
+    try {
+      const updated = await aiService.updatePromptTemplate(selectedTemplate.templateCode, {
+        templateName: editingTemplateName.trim() || selectedTemplate.templateName,
+        templateContent: editingContent,
+        description: editingDescription.trim(),
+        availableVariables: selectedTemplate.availableVariables,
+        createNewVersion: true,
+      });
+      setSuccessBanner(`Đã lưu phiên bản v${updated.version} cho mẫu prompt "${updated.templateName}" thành công.`);
+      await fetchPromptTemplates(promptCategoryFilter);
+      handleSelectPromptTemplate(updated);
+    } catch (err: any) {
+      console.error('[AiSettingsPage] Lỗi cập nhật Prompt Template:', err);
+      setErrorBanner(err.response?.data?.message || err.message || 'Lỗi khi cập nhật template.');
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const handleRollbackVersion = async (targetVersion: number) => {
+    if (!selectedTemplate) return;
+    if (targetVersion === selectedTemplate.version) return;
+    setSavingTemplate(true);
+    setErrorBanner(null);
+    setSuccessBanner(null);
+    try {
+      const activated = await aiService.activatePromptTemplateVersion(selectedTemplate.templateCode, targetVersion);
+      setSuccessBanner(`Đã kích hoạt trở lại phiên bản v${activated.version} cho "${activated.templateName}".`);
+      await fetchPromptTemplates(promptCategoryFilter);
+      handleSelectPromptTemplate(activated);
+    } catch (err: any) {
+      console.error('[AiSettingsPage] Lỗi rollback phiên bản:', err);
+      setErrorBanner(err.response?.data?.message || err.message || 'Lỗi khi khôi phục phiên bản.');
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const handleOpenPreviewModal = async () => {
+    if (!selectedTemplate) return;
+    setPreviewModalOpen(true);
+    setPreviewLoading(true);
+    try {
+      const res = await aiService.previewPromptTemplate({
+        templateContent: editingContent,
+        sampleVariables: previewSampleVars,
+      });
+      setPreviewResult(res);
+    } catch (err: any) {
+      console.error('[AiSettingsPage] Lỗi preview prompt:', err);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleInsertVariable = (varName: string) => {
+    const placeholder = `{{${varName}}}`;
+    setEditingContent((prev) => prev + placeholder);
+  };
+
   useEffect(() => {
     fetchConfig();
     fetchVaultKeys();
+    fetchPromptTemplates();
   }, []);
 
   const handleSelectTab = (fKey: string) => {
@@ -357,12 +486,41 @@ export const AiSettingsPage: React.FC = () => {
         </div>
       )}
 
+      {/* THANH ĐIỀU HƯỚNG TẦNG CAO (MASTER TABS) */}
+      <div className={styles.masterTabsContainer}>
+        <button
+          type="button"
+          className={`${styles.masterTabBtn} ${masterTab === 'PROFILES' ? styles.masterTabBtnActive : ''}`}
+          onClick={() => setMasterTab('PROFILES')}
+        >
+          <span>🎯</span>
+          <span>Cấu Hình Nghiệp Vụ</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.masterTabBtn} ${masterTab === 'VAULT' ? styles.masterTabBtnActive : ''}`}
+          onClick={() => setMasterTab('VAULT')}
+        >
+          <span>🔐</span>
+          <span>Kho Khóa Kết Nối</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.masterTabBtn} ${masterTab === 'PROMPTS' ? styles.masterTabBtnActive : ''}`}
+          onClick={() => setMasterTab('PROMPTS')}
+        >
+          <span>📜</span>
+          <span>Mẫu Chỉ Dẫn Nghiệp Vụ</span>
+        </button>
+      </div>
+
       {/* KHỐI 1: KHO KHÓA API ĐA NGUỒN (AI-10 MULTI-KEY VAULT) */}
+      {masterTab === 'VAULT' && (
       <div className={styles.card} style={{ marginBottom: '24px' }}>
         <div className={styles.cardTitle} style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
           <div className={styles.cardTitleText}>
-            <span>🛡️</span>
-            <span>Kho Khóa API Dự Phòng & Phân Tải Tự Động (Key Vault)</span>
+            <span>🔐</span>
+            <span>Kho Khóa Kết Nối & Tự Động Phân Tải</span>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
@@ -546,6 +704,7 @@ export const AiSettingsPage: React.FC = () => {
           </div>
         )}
       </div>
+      )}
 
       {/* MODAL SỬA CẤU HÌNH KHÓA (AI-10 UX HARDENED) */}
       {editingKey && (
@@ -728,6 +887,8 @@ export const AiSettingsPage: React.FC = () => {
       )}
 
       {/* KHỐI 2: TAB BAR 4 FEATURE PROFILES VỚI STATUS DOTS */}
+      {masterTab === 'PROFILES' && (
+      <>
       <div className={styles.tabsContainer}>
         {multiConfig?.profiles.map((p) => {
           const isSelected = p.featureKey === selectedFeatureKey;
@@ -856,71 +1017,86 @@ export const AiSettingsPage: React.FC = () => {
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  <span>Giới hạn độ dài văn bản phản hồi</span>
+                  <span>Giới hạn phản hồi</span>
                   <span className={styles.labelSubText}>Tokens</span>
                 </label>
-                <input
-                  type="number"
-                  className={styles.input}
-                  value={currentProfile.maxTokens}
-                  min={128}
-                  max={8192}
-                  step={128}
-                  onChange={(e) =>
-                    setCurrentProfile({
-                      ...currentProfile,
-                      maxTokens: parseInt(e.target.value, 10) || 1024,
-                    })
-                  }
-                  required
-                />
-                <div className={styles.helpText}>Độ dài tối đa của phản hồi trả về (thông thường từ 1024 đến 4096 tokens).</div>
+                <div className={styles.inputWithAffix}>
+                  <input
+                    type="number"
+                    className={styles.input}
+                    value={currentProfile.maxTokens}
+                    min={128}
+                    max={8192}
+                    step={128}
+                    onChange={(e) =>
+                      setCurrentProfile({
+                        ...currentProfile,
+                        maxTokens: parseInt(e.target.value, 10) || 1024,
+                      })
+                    }
+                    required
+                  />
+                  <span className={styles.inputAffix}>Tokens</span>
+                </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.label}>
-                  <span>Giới hạn tần suất gọi</span>
-                  <span className={styles.labelSubText}>Lượt / Phút</span>
-                </label>
-                <input
-                  type="number"
-                  className={styles.input}
-                  value={currentProfile.rateLimitPerMinute ?? 20}
-                  min={1}
-                  max={600}
-                  step={1}
-                  onChange={(e) =>
-                    setCurrentProfile({
-                      ...currentProfile,
-                      rateLimitPerMinute: parseInt(e.target.value, 10) || 1,
-                    })
-                  }
-                  required
-                />
-                <div className={styles.helpText}>Giới hạn số request tối đa trong 1 phút trên mỗi người dùng / IP.</div>
-              </div>
+              {/* KHỐI KIỂM SOÁT LƯU LƯỢNG & HẠN MỨC (AI-12 UI REFINED) */}
+              <div className={styles.quotaSectionCard}>
+                <div className={styles.quotaHeader}>
+                  <div className={styles.quotaHeaderTitle}>
+                    <span>🛡️</span>
+                    <span>Kiểm Soát Tải & Hạn Mức Tiêu Thụ</span>
+                  </div>
+                  <span className={styles.quotaHeaderSubtitle}>Token Bucket Guard (Fail-Closed)</span>
+                </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.label}>
-                  <span>Hạn ngạch tiêu thụ hàng ngày</span>
-                  <span className={styles.labelSubText}>Lượt / Ngày</span>
-                </label>
-                <input
-                  type="number"
-                  className={styles.input}
-                  value={currentProfile.dailyQuota ?? 200}
-                  min={1}
-                  max={5000}
-                  step={5}
-                  onChange={(e) =>
-                    setCurrentProfile({
-                      ...currentProfile,
-                      dailyQuota: parseInt(e.target.value, 10) || 1,
-                    })
-                  }
-                  required
-                />
-                <div className={styles.helpText}>Hạn mức tổng số lượt gọi được cấp phép trong 24 giờ cho tính năng này.</div>
+                <div className={styles.quotaInputsRow}>
+                  <div className={styles.compactInputGroup}>
+                    <label className={styles.compactInputLabel}>Tần suất tối đa</label>
+                    <div className={styles.inputWithAffix}>
+                      <input
+                        type="number"
+                        className={styles.input}
+                        value={currentProfile.rateLimitPerMinute ?? 20}
+                        min={1}
+                        max={600}
+                        step={1}
+                        onChange={(e) =>
+                          setCurrentProfile({
+                            ...currentProfile,
+                            rateLimitPerMinute: parseInt(e.target.value, 10) || 1,
+                          })
+                        }
+                        required
+                      />
+                      <span className={styles.inputAffix}>Lượt / phút</span>
+                    </div>
+                    <span className={styles.fieldHint}>Áp dụng cho mỗi User ID hoặc IP</span>
+                  </div>
+
+                  <div className={styles.compactInputGroup}>
+                    <label className={styles.compactInputLabel}>Hạn ngạch ngày</label>
+                    <div className={styles.inputWithAffix}>
+                      <input
+                        type="number"
+                        className={styles.input}
+                        value={currentProfile.dailyQuota ?? 200}
+                        min={1}
+                        max={5000}
+                        step={5}
+                        onChange={(e) =>
+                          setCurrentProfile({
+                            ...currentProfile,
+                            dailyQuota: parseInt(e.target.value, 10) || 1,
+                          })
+                        }
+                        required
+                      />
+                      <span className={styles.inputAffix}>Lượt / ngày</span>
+                    </div>
+                    <span className={styles.fieldHint}>Reset vào 00:00 hàng ngày</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1114,15 +1290,290 @@ export const AiSettingsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className={`${styles.terminalBody} ${!testResult.success ? styles.terminalBodyError : ''}`}>
-                  {testResult.success ? (
-                    testResult.output
-                  ) : (
-                    `[LỖI PHẢN HỒI]: ${testResult.errorMessage || 'Không nhận được dữ liệu hợp lệ từ mô hình.'}`
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* KHỐI 3: QUẢN TRỊ PROMPT TEMPLATES & PHIÊN BẢN (AI-19) */}
+      {masterTab === 'PROMPTS' && (
+        <div className={styles.promptWorkbench}>
+          {/* Sidebar danh sách templates */}
+          <div className={styles.promptSidebar}>
+            <div className={styles.promptListHeader}>
+              <div className={styles.promptListTitle}>
+                <span>📚 Bộ Mẫu Chỉ Dẫn</span>
+                <span className={styles.promptListCountBadge}>{promptTemplates.length} mẫu</span>
+              </div>
+              <select
+                className={styles.promptFilterSelect}
+                value={promptCategoryFilter}
+                onChange={(e) => {
+                  setPromptCategoryFilter(e.target.value);
+                  fetchPromptTemplates(e.target.value);
+                }}
+              >
+                <option value="ALL">Tất cả nghiệp vụ</option>
+                <option value="INTERVIEW">Khảo Thí & Phỏng Vấn</option>
+                <option value="SCREENING">Thẩm Định & Sàng Lọc CV</option>
+                <option value="REPORT">Đánh Giá Báo Cáo Tuần</option>
+                <option value="CHATBOT">Trợ Lý Giải Đáp FAQ</option>
+              </select>
+            </div>
+
+            <div className={styles.promptCardsList}>
+              {loadingPrompts && <div style={{ fontSize: '13px', color: '#64748b' }}>Đang tải danh sách mẫu...</div>}
+              {!loadingPrompts && promptTemplates.length === 0 && (
+                <div style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>Không tìm thấy mẫu nào.</div>
+              )}
+              {promptTemplates.map((t) => {
+                const isSelected = selectedTemplate?.templateCode === t.templateCode;
+                const badgeClass =
+                  t.featureGroup === 'INTERVIEW'
+                    ? styles.badgeInterview
+                    : t.featureGroup === 'SCREENING'
+                    ? styles.badgeScreening
+                    : t.featureGroup === 'REPORT'
+                    ? styles.badgeReport
+                    : styles.badgeChat;
+
+                const friendlyGroupName =
+                  t.featureGroup === 'INTERVIEW'
+                    ? 'Phỏng Vấn'
+                    : t.featureGroup === 'SCREENING'
+                    ? 'Sàng Lọc CV'
+                    : t.featureGroup === 'REPORT'
+                    ? 'Báo Cáo'
+                    : 'Trợ Lý';
+
+                const friendlyName = t.templateName
+                  .replace(/System Instruction:\s*/gi, 'Chỉ dẫn hệ thống: ')
+                  .replace(/User Prompt:\s*/gi, 'Khung dữ liệu: ')
+                  .replace(/Prompt\s*/gi, 'Mẫu ');
+
+                return (
+                  <div
+                    key={t.templateCode}
+                    className={`${styles.promptCardItem} ${isSelected ? styles.promptCardItemActive : ''}`}
+                    onClick={() => handleSelectPromptTemplate(t)}
+                  >
+                    <div className={styles.promptCardHeader}>
+                      <span className={styles.promptCardName}>{friendlyName}</span>
+                      <span className={`${styles.promptGroupBadge} ${badgeClass}`}>
+                        {friendlyGroupName}
+                      </span>
+                    </div>
+                    <div className={styles.promptCardMeta}>
+                      <span>Phiên bản: <strong>v{t.version}</strong></span>
+                      <span>•</span>
+                      <span>{t.availableVariables?.length || 0} trường dữ liệu</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Editor & Quản lý phiên bản chi tiết */}
+          {selectedTemplate ? (
+            <div className={styles.promptEditorPane}>
+              <div className={styles.promptEditorHeader}>
+                <div className={styles.promptHeaderTitleGroup}>
+                  <h2 className={styles.promptHeaderTitle}>
+                    {selectedTemplate.templateName
+                      .replace(/System Instruction:\s*/gi, 'Chỉ dẫn: ')
+                      .replace(/User Prompt:\s*/gi, 'Khung dữ liệu: ')}
+                  </h2>
+                  <p className={styles.promptHeaderDesc}>
+                    {selectedTemplate.description || 'Chỉnh sửa nội dung chỉ dẫn nghiệp vụ để chuẩn hóa phong cách và tiêu chuẩn phân tích của AI.'}
+                  </p>
+                </div>
+
+                <div className={styles.promptVersionBar}>
+                  <span className={styles.versionBadge}>✓ Đang áp dụng: v{selectedTemplate.version}</span>
+                  <label style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>Lịch sử:</label>
+                  <select
+                    className={styles.versionSelect}
+                    value={selectedVersionNum}
+                    onChange={(e) => {
+                      const vNum = Number(e.target.value);
+                      setSelectedVersionNum(vNum);
+                      const found = templateVersions.find((tv) => tv.version === vNum);
+                      if (found) {
+                        setEditingContent(found.templateContent || '');
+                      }
+                    }}
+                  >
+                    {templateVersions.map((v) => (
+                      <option key={v.version} value={v.version}>
+                        Bản v{v.version} {v.isActive ? '(Hiện tại)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedVersionNum !== selectedTemplate.version && (
+                    <button
+                      type="button"
+                      className={styles.btnSecondary}
+                      style={{ fontSize: '11.5px', padding: '4px 10px' }}
+                      onClick={() => handleRollbackVersion(selectedVersionNum)}
+                      disabled={savingTemplate}
+                    >
+                      Khôi phục bản v{selectedVersionNum}
+                    </button>
                   )}
                 </div>
               </div>
-            )}
+
+              {/* Dải Chips Biến Số Nội Suy */}
+              <div className={styles.variablesShelf}>
+                <span className={styles.variablesShelfLabel}>
+                  <span>⚡</span>
+                  <span>Trường dữ liệu tự động điền (Bấm vào để chèn nội dung vào văn bản):</span>
+                </span>
+                <div className={styles.variablesChipsList}>
+                  {selectedTemplate.availableVariables?.map((v) => {
+                    const cleanVar = v.replace(/^\{\{?/, '').replace(/\}\}?$/, '');
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        className={styles.varChipBtn}
+                        onClick={() => handleInsertVariable(cleanVar)}
+                        title={`Chèn trường {{${cleanVar}}}`}
+                      >
+                        + {cleanVar}
+                      </button>
+                    );
+                  })}
+                  {(!selectedTemplate.availableVariables || selectedTemplate.availableVariables.length === 0) && (
+                    <span style={{ fontSize: '12.5px', color: '#94a3b8', fontStyle: 'italic' }}>
+                      Chỉ dẫn này áp dụng cố định cho toàn bộ luồng, không yêu cầu điền dữ liệu động.
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Soạn thảo chỉ dẫn */}
+              <div className={styles.promptEditorWrapper}>
+                <textarea
+                  className={styles.promptTextarea}
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                  placeholder="Nhập nội dung chỉ dẫn nghiệp vụ dành cho Trợ lý Trí tuệ Nhân tạo..."
+                  rows={14}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className={styles.promptActionBar}>
+                <button
+                  type="button"
+                  className={styles.previewBtn}
+                  onClick={handleOpenPreviewModal}
+                >
+                  <span>👁️</span>
+                  <span>Xem Trước Mẫu Thử Nghiệm</span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.saveTemplateBtn}
+                  onClick={handleSavePromptTemplate}
+                  disabled={savingTemplate}
+                >
+                  <span>✓</span>
+                  <span>{savingTemplate ? 'Đang cập nhật...' : `Lưu & Xuất Bản Bản Mới (v${selectedTemplate.version + 1})`}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+              Vui lòng chọn một mẫu chỉ dẫn từ danh sách bên trái.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL DRY-RUN PREVIEW (AI-19) */}
+      {previewModalOpen && (
+        <div className={styles.vaultModalOverlay}>
+          <div className={styles.vaultModalCard} style={{ maxWidth: '720px' }}>
+            <div className={styles.vaultModalHeader}>
+              <div className={styles.vaultModalIcon}>👁️</div>
+              <div>
+                <h3 className={styles.vaultModalTitle}>Xem Trước Chỉ Dẫn Khi Điền Dữ Liệu</h3>
+                <p className={styles.vaultModalSubtitle}>
+                  Kiểm tra cách các trường thông tin tự động thay thế trước khi lưu thành bản phát hành chính thức.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.vaultModalBody}>
+              {selectedTemplate?.availableVariables && selectedTemplate.availableVariables.length > 0 && (
+                <div>
+                  <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+                    Dữ liệu giả lập mẫu:
+                  </h4>
+                  <div className={styles.variablesTestGrid}>
+                    {selectedTemplate.availableVariables.map((rawV) => {
+                      const v = rawV.replace(/^\{\{?/, '').replace(/\}\}?$/, '');
+                      return (
+                        <div key={v} className={styles.compactInputGroup}>
+                          <label className={styles.compactInputLabel}>{v}</label>
+                          <input
+                            type="text"
+                            className={styles.input}
+                            value={previewSampleVars[v] || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setPreviewSampleVars((prev) => ({ ...prev, [v]: val }));
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.btnSecondary}
+                    style={{ fontSize: '12px', padding: '6px 14px', marginBottom: '14px' }}
+                    onClick={async () => {
+                      setPreviewLoading(true);
+                      try {
+                        const res = await aiService.previewPromptTemplate({
+                          templateContent: editingContent,
+                          sampleVariables: previewSampleVars,
+                        });
+                        setPreviewResult(res);
+                      } finally {
+                        setPreviewLoading(false);
+                      }
+                    }}
+                  >
+                    🔄 Cập Nhật Xem Thử
+                  </button>
+                </div>
+              )}
+
+              <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+                Nội dung hoàn chỉnh Trợ lý Trí tuệ Nhân tạo sẽ nhận được:
+              </h4>
+              <div className={styles.modalPreviewContent}>
+                {previewLoading ? 'Đang tổng hợp dữ liệu...' : previewResult?.resolvedPrompt || editingContent}
+              </div>
+            </div>
+
+            <div className={styles.vaultModalActions}>
+              <button
+                type="button"
+                className={styles.vaultModalCancelBtn}
+                onClick={() => setPreviewModalOpen(false)}
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1131,3 +1582,4 @@ export const AiSettingsPage: React.FC = () => {
 };
 
 export default AiSettingsPage;
+

@@ -182,6 +182,10 @@ export const attendanceService = {
     const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.APPEAL(attendanceId), data, {
       signal,
     });
+    return response.data.data;
+  },
+
+  /**
    * Lấy danh sách bảng tổng hợp chuyên cần của các TTS (phân trang 0-indexed - TM-26)
    */
   async getInternDiligenceReports(
@@ -208,6 +212,8 @@ export const attendanceService = {
     });
     return response.data.data;
   },
+
+  /**
    * Lấy chi tiết bảng công và các ngày nghỉ phép của 1 TTS trong tháng (TM-26)
    */
   async getInternAttendanceDetailReport(

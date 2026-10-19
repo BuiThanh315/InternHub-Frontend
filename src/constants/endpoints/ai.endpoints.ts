@@ -45,5 +45,14 @@ export const AI_ENDPOINTS = {
   VAULT: '/api/v1/ai/admin/vault',
   VAULT_TEST: (id: number | string) => `/api/v1/ai/admin/vault/${id}/test`,
   VAULT_DETAIL: (id: number | string) => `/api/v1/ai/admin/vault/${id}`,
+  // Module AI-18: Bookmark & History
+  BOOKMARK_TOGGLE: '/api/ai/screening/bookmarks/toggle',
+  BOOKMARKS_BY_PROGRAM: (programId: number | string) => `/api/ai/screening/bookmarks/programs/${programId}`,
+  // Module AI-19: Prompt Management Engine & Versioning
+  PROMPT_TEMPLATES: '/api/v1/ai/admin/prompt-templates',
+  PROMPT_TEMPLATE_DETAIL: (code: string) => `/api/v1/ai/admin/prompt-templates/${code}`,
+  PROMPT_TEMPLATE_ACTIVATE: (code: string, version: number | string) =>
+    `/api/v1/ai/admin/prompt-templates/${code}/versions/${version}/activate`,
+  PROMPT_TEMPLATE_PREVIEW: '/api/v1/ai/admin/prompt-templates/preview',
 } as const;
 

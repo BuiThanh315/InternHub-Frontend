@@ -2,34 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { ProtectedRoute } from './ProtectedRoute';
-import { AdminDashboard } from '../pages/admin/AdminDashboard';
-import { AiSettingsPage } from '../pages/admin/AiSettingsPage';
-import { HrDashboard } from '../pages/hr/HrDashboard';
-import { HrProgramManagementPage } from '../pages/hr/programs/HrProgramManagementPage';
-import { ProgramWorkspacePage } from '../pages/hr/programs/workspace';
-import { HrMentorManagementPage } from '../pages/hr/mentors/HrMentorManagementPage';
-import { HrContractManagementPage } from '../pages/hr/contracts/HrContractManagementPage';
-import { HrEvaluationManagementPage } from '../pages/hr/evaluations/HrEvaluationManagementPage';
 import { HRAttendanceReportPage } from '../pages/hr/attendance-reports';
-import { HrAllowancePage } from '../pages/hr/allowance/HrAllowancePage';
-import { HrSupportRequestsPage } from '../pages/hr/support/HrSupportRequestsPage';
-import { MentorDashboard } from '../pages/mentor/MentorDashboard';
-import { MentorMissionPage } from '../pages/mentor/missions/MentorMissionPage';
-import { InternDashboard } from '../pages/intern/InternDashboard';
-import { InternDocumentsPage } from '../pages/intern/InternDocumentsPage';
-import { InternMissionPage } from '../pages/intern/missions/InternMissionPage';
-import { InternWeeklyReportPage } from '../pages/intern/reports';
-import { InternAllowanceHistoryPage } from '../pages/intern/allowance/InternAllowanceHistoryPage';
-import { InternSupportRequestPage } from '../pages/intern/support/InternSupportRequestPage';
-import { ProfilePage } from '../pages/profile';
-import { InternApplyPage } from '../pages/intern/InternApplyPage';
-import { InternAttendancePage } from '../pages/intern/InternAttendancePage';
-import { InternAttendanceConfirmPage } from '../pages/intern/InternAttendanceConfirmPage';
-import { InternLeavePage } from '../pages/intern/leave';
-import { MentorLeaveApprovalPage } from '../pages/mentor/leave';
-import { InternContractSigningHub } from '../pages/intern/contract/InternContractSigningHub';
-import { LandingPage } from '../pages/public/LandingPage';
-import { OnboardingActivationPage } from '../pages/public/OnboardingActivationPage';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES, getValidatedRedirectRoute } from '../constants/routes';
 
@@ -146,7 +119,7 @@ export const AppRoutes: React.FC = () => {
         {/* Authenticated Dashboard Routes */}
         <Route element={<MainLayout />}>
           {/* Admin Area */}
-            <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
             <Route path={ROUTES.ADMIN.DASHBOARD} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN.USERS} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN.ROLES} element={<AdminDashboard />} />

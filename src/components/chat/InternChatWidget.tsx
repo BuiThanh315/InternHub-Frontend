@@ -6,8 +6,9 @@ import styles from './InternChatWidget.module.css';
 
 export const InternChatWidget: React.FC = () => {
   const { role, hasPermission } = useAuth();
-  // Trợ lý ảo FAQ này CHỈ dành riêng cho Thực Tập Sinh (USER / INTERN), tuyệt đối không hiển thị ở giao diện Quản Trị Viên (ADMIN / HR)
-  const canUseChat = role === 'USER' && (role === 'USER' || hasPermission('AI_CHAT_USE'));
+  // Trợ lý ảo FAQ này dành riêng cho Thực Tập Sinh (INTERN / USER)
+  const isInternRole = role === 'INTERN' || role === 'USER';
+  const canUseChat = isInternRole && (isInternRole || hasPermission('AI_CHAT_USE'));
 
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string>(() => {
@@ -67,24 +68,71 @@ export const InternChatWidget: React.FC = () => {
     if (!textToSend) setInputMsg('');
     setIsLoading(true);
 
+    const botMsgId = crypto.randomUUID();
+    const botMsgTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Tạo sẵn message placeholder rỗng cho bot
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: botMsgId,
+        sender: 'assistant',
+        text: '',
+        timestamp: botMsgTimestamp,
+      },
+    ]);
+
     try {
-      const res = await aiService.chat(sessionId, text);
-      const assistantMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        sender: 'assistant',
-        text: res.reply || 'Cảm ơn bạn. Nếu cần hỗ trợ thêm, hãy nhắn tiếp nhé!',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      let accumulatedText = '';
+
+      await aiService.streamChat(
+        sessionId,
+        text,
+        {
+          onChunk: (chunk: string) => {
+            accumulatedText += chunk;
+            setMessages((prev) =>
+              prev.map((m) => (m.id === botMsgId ? { ...m, text: accumulatedText } : m))
+            );
+          },
+          onDone: () => {
+            setIsLoading(false);
+          },
+          onError: (err: Error) => {
+            console.error('Lỗi stream chat:', err);
+            const errorMsgText = err.message || 'Trợ lý ảo tạm thời gặp sự cố. Vui lòng thử lại sau.';
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === botMsgId
+                  ? { ...m, text: accumulatedText ? accumulatedText : errorMsgText }
+                  : m
+              )
+            );
+            setIsLoading(false);
+          },
+        }
+      );
     } catch (err: any) {
-      const errorMsgText = err.message || err.response?.data?.message || 'Trợ lý ảo tạm thời gặp sự cố. Vui lòng thử lại sau.';
-      const errorMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        sender: 'assistant',
-        text: errorMsgText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      console.warn('Stream chat thất bại, kích hoạt cơ chế fallback sang Chat thông thường...', err);
+      try {
+        const responseData = await aiService.chat(sessionId, text);
+        if (responseData && responseData.reply) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === botMsgId ? { ...m, text: responseData.reply } : m
+            )
+          );
+        } else {
+          throw err;
+        }
+      } catch (fallbackErr: any) {
+        const errorMsgText = fallbackErr.message || fallbackErr.response?.data?.message || 'Trợ lý ảo tạm thời gặp sự cố. Vui lòng thử lại sau.';
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === botMsgId ? { ...m, text: m.text ? m.text : errorMsgText } : m
+          )
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -192,7 +240,7 @@ export const InternChatWidget: React.FC = () => {
               </div>
             ))}
 
-            {isLoading && (
+            {isLoading && (!messages[messages.length - 1] || messages[messages.length - 1].sender !== 'assistant' || !messages[messages.length - 1].text) && (
               <div className={styles.typingIndicator}>
                 <span>🤖 AI đang soạn câu trả lời...</span>
               </div>
