@@ -177,6 +177,8 @@ export const AiSettingsPage: React.FC = () => {
         modelName: currentProfile.modelName,
         temperature: currentProfile.temperature,
         maxTokens: currentProfile.maxTokens,
+        rateLimitPerMinute: currentProfile.rateLimitPerMinute ?? 20,
+        dailyQuota: currentProfile.dailyQuota ?? 200,
         systemInstruction: currentProfile.systemInstruction,
         quickPrompts: currentProfile.quickPrompts,
         isActive: currentProfile.isActive,
@@ -873,6 +875,52 @@ export const AiSettingsPage: React.FC = () => {
                   required
                 />
                 <div className={styles.helpText}>Độ dài tối đa của phản hồi trả về (thông thường từ 1024 đến 4096 tokens).</div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  <span>Giới hạn tần suất gọi</span>
+                  <span className={styles.labelSubText}>Lượt / Phút</span>
+                </label>
+                <input
+                  type="number"
+                  className={styles.input}
+                  value={currentProfile.rateLimitPerMinute ?? 20}
+                  min={1}
+                  max={600}
+                  step={1}
+                  onChange={(e) =>
+                    setCurrentProfile({
+                      ...currentProfile,
+                      rateLimitPerMinute: parseInt(e.target.value, 10) || 1,
+                    })
+                  }
+                  required
+                />
+                <div className={styles.helpText}>Giới hạn số request tối đa trong 1 phút trên mỗi người dùng / IP.</div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  <span>Hạn ngạch tiêu thụ hàng ngày</span>
+                  <span className={styles.labelSubText}>Lượt / Ngày</span>
+                </label>
+                <input
+                  type="number"
+                  className={styles.input}
+                  value={currentProfile.dailyQuota ?? 200}
+                  min={1}
+                  max={5000}
+                  step={5}
+                  onChange={(e) =>
+                    setCurrentProfile({
+                      ...currentProfile,
+                      dailyQuota: parseInt(e.target.value, 10) || 1,
+                    })
+                  }
+                  required
+                />
+                <div className={styles.helpText}>Hạn mức tổng số lượt gọi được cấp phép trong 24 giờ cho tính năng này.</div>
               </div>
             </div>
 

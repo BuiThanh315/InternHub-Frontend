@@ -43,6 +43,8 @@ export interface FeatureProfileData {
   modelName: string;
   temperature: number;
   maxTokens: number;
+  rateLimitPerMinute?: number;
+  dailyQuota?: number;
   systemInstruction?: string;
   quickPrompts?: string[];
   isActive: boolean;
@@ -87,6 +89,8 @@ export interface UpdateFeatureProfilePayload {
   modelName: string;
   temperature: number;
   maxTokens: number;
+  rateLimitPerMinute?: number;
+  dailyQuota?: number;
   systemInstruction?: string;
   quickPrompts?: string[];
   isActive: boolean;
