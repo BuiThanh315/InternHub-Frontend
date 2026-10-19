@@ -310,13 +310,14 @@ export const AiSettingsPage: React.FC = () => {
         dailyQuota: currentProfile.dailyQuota ?? 200,
         systemInstruction: currentProfile.systemInstruction,
         quickPrompts: currentProfile.quickPrompts,
-        isActive: currentProfile.isActive,
+        isActive: currentProfile.isActive ?? true,
       });
       setSuccessBanner(`Đã lưu thiết lập cho tính năng "${getCleanFeatureName(currentProfile.featureKey, currentProfile.featureName)}" thành công.`);
       await fetchConfig();
     } catch (err: any) {
       console.error('[AiSettingsPage] Lỗi lưu feature profile:', err);
-      setErrorBanner(err.message || 'Không thể cập nhật cấu hình tính năng.');
+      const msg = err.response?.data?.message || err.message || 'Không thể cập nhật cấu hình tính năng.';
+      setErrorBanner(msg);
     } finally {
       setSavingProfile(false);
     }
