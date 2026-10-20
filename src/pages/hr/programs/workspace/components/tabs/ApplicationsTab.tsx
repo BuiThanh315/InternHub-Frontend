@@ -13,17 +13,22 @@ import {
   Filter,
   School,
   MessageSquareQuote,
+  Bookmark,
+  Scale,
   FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, Skeleton, Modal } from '../../../../../../components/common';
+import { AiSteppedProgressSkeleton } from '../../../../../../components/ai/AiSteppedProgressSkeleton';
 import { useAiScreening, type AiFilterOption } from '../../../../../../hooks';
 import { internService } from '../../../../../../services/internService';
+import { aiService } from '../../../../../../services/aiService';
 import { formatDate } from '../../../../../../utils/formatters';
 import type { InternProfile, ScreeningResultDto } from '../../../../../../types';
 import type { ApplicationsTabProps } from '../../types/ProgramWorkspace.types';
 import { InterviewQuestionModal } from '../InterviewQuestionModal';
+import { CvComparisonModal } from '../CvComparisonModal';
 import styles from '../../styles/ProgramWorkspace.module.css';
 
 interface RejectionDialogState {
@@ -75,8 +80,64 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   // State 5: Modal sinh câu hỏi phỏng vấn theo ứng viên
   const [interviewModalIntern, setInterviewModalIntern] = useState<InternProfile | null>(null);
 
+  // AI-18 State: Bookmark và So sánh CV song song
+  const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
+  const [showOnlyBookmarked, setShowOnlyBookmarked] = useState<boolean>(false);
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState<boolean>(false);
+
   // Custom Hook quản lý AI Screening hàng loạt & bộ lọc
   const aiScreening = useAiScreening(program.id);
+
+  // Nạp danh sách ứng viên đã Bookmark từ server
+  const fetchBookmarks = useCallback(async () => {
+    try {
+      const ids = await aiService.getBookmarkedInternIds(program.id);
+      setBookmarkedIds(ids || []);
+    } catch (err) {
+      console.error('Lỗi khi nạp danh sách bookmark:', err);
+    }
+  }, [program.id]);
+
+  useEffect(() => {
+    void fetchBookmarks();
+  }, [fetchBookmarks]);
+
+  const handleToggleBookmark = async (internId: number) => {
+    const isCurrentlyBookmarked = bookmarkedIds.includes(internId);
+    // Optimistic UI update
+    setBookmarkedIds((prev) =>
+      isCurrentlyBookmarked ? prev.filter((id) => id !== internId) : [...prev, internId]
+    );
+
+    try {
+      const isBookmarkedNow = await aiService.toggleCandidateBookmark(program.id, internId);
+      if (isBookmarkedNow) {
+        toast.success('Đã ghim ứng viên vào danh sách ưu tiên');
+      } else {
+        toast.info('Đã bỏ ghim ứng viên');
+      }
+    } catch (err: any) {
+      // Revert on error
+      setBookmarkedIds((prev) =>
+        isCurrentlyBookmarked ? [...prev, internId] : prev.filter((id) => id !== internId)
+      );
+      toast.error('Không thể cập nhật trạng thái ghim: ' + (err.message || 'Lỗi server'));
+    }
+  };
+
+  const handleToggleCompare = (internId: number) => {
+    setCompareIds((prev) => {
+      if (prev.includes(internId)) {
+        return prev.filter((id) => id !== internId);
+      }
+      if (prev.length >= 2) {
+        toast.warning('Chỉ có thể so sánh tối đa 2 ứng viên cùng lúc. Hãy bỏ chọn 1 ứng viên trước.');
+        return prev;
+      }
+      return [...prev, internId];
+    });
+  };
 
   const fetchApplicants = useCallback(async () => {
     try {
@@ -134,6 +195,14 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   const maxCount = Number(program.maxInterns || 0);
   const isFull = maxCount > 0 && currentCount >= maxCount;
 
+  // Lọc ứng viên theo tiêu chí điểm số AI và bộ lọc Bookmark
+  const filteredApplicants = useMemo(() => {
+    let result = aiScreening.filterApplicants(applicants);
+    if (showOnlyBookmarked) {
+      result = result.filter((item) => bookmarkedIds.includes(item.id));
+    }
+    return result;
+  }, [applicants, aiScreening.filterApplicants, showOnlyBookmarked, bookmarkedIds]);
   // Lọc ứng viên theo tiêu chí điểm số AI và nguồn hồ sơ (CandidateType)
   const filteredApplicants = useMemo(() => {
     const aiFiltered = aiScreening.filterApplicants(applicants);
@@ -328,9 +397,36 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
             >
               Quét AI toàn bộ có CV ({eligibleForAiIds.length})
             </Button>
+
+            {/* AI-18: Nút mở Modal So sánh 2 CV */}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsComparisonModalOpen(true)}
+              disabled={compareIds.length !== 2}
+              leftIcon={<Scale size={14} />}
+              title={
+                compareIds.length === 2
+                  ? 'Bấm để mở bảng đối soát so sánh song song 2 hồ sơ'
+                  : 'Hãy tick chọn đúng 2 ứng viên trong bảng để so sánh'
+              }
+            >
+              So sánh 2 CV ({compareIds.length}/2)
+            </Button>
           </div>
 
           <div className={styles.aiToolbarRight}>
+            {/* AI-18: Bộ lọc nhanh hồ sơ Đã Ghim (Bookmark) */}
+            <button
+              type="button"
+              className={`${styles.bookmarkFilterBtn} ${showOnlyBookmarked ? styles.bookmarkFilterActive : ''}`}
+              onClick={() => setShowOnlyBookmarked((prev) => !prev)}
+              title="Chỉ hiển thị các ứng viên đã được ghim ưu tiên"
+            >
+              <Bookmark size={14} fill={showOnlyBookmarked ? 'currentColor' : 'none'} />
+              <span>Đã ghim ({bookmarkedIds.length})</span>
+            </button>
+
             <Filter size={14} className="text-slate-400" aria-hidden="true" />
             {/* Lọc nguồn ứng viên (TM-100 v3.0 - Frontend Design) */}
             <select
@@ -360,6 +456,36 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
               <option value="UNRATED">Chưa quét AI</option>
             </select>
           </div>
+        </div>
+      )}
+
+      {/* AI Batch Screening Progress Skeleton (AI-17) */}
+      {(aiScreening.isSubmitting || (aiScreening.activeJob && aiScreening.activeJob.status === 'PROCESSING')) && (
+        <div className="py-2">
+          <AiSteppedProgressSkeleton
+            title={`AI Đang Thẩm Định Hồ Sơ Hàng Loạt (${aiScreening.activeJob?.processedCount || 0}/${aiScreening.activeJob?.totalCount || aiScreening.selectedIds.length || 0} hoàn tất)`}
+            estimatedSeconds={Math.max(10, (aiScreening.activeJob?.totalCount || 1) * 6)}
+            steps={[
+              {
+                id: 1,
+                title: 'Bước 1: Bóc tách văn bản CV & Khử định danh PII',
+                description: 'Trích xuất học vấn, kinh nghiệm, kỹ năng & ẩn thông tin liên hệ nhạy cảm...',
+                durationMs: 4000,
+              },
+              {
+                id: 2,
+                title: 'Bước 2: Đối chiếu kỹ năng & Yêu cầu vị trí thực tập',
+                description: 'Đánh giá mức độ phù hợp kỹ năng cứng/mềm, tìm kiếm điểm khuyết & cảnh báo rủi ro...',
+                durationMs: 6000,
+              },
+              {
+                id: 3,
+                title: 'Bước 3: Tổng hợp điểm số & Sinh bộ câu hỏi phỏng vấn gợi ý',
+                description: 'Chấm điểm tổng quan (% Match), gợi ý câu hỏi chất vấn & lưu trữ hồ sơ thẩm định...',
+                durationMs: 5000,
+              },
+            ]}
+          />
         </div>
       )}
 
@@ -613,6 +739,60 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                     {/* Cột Thao tác */}
                     <td style={{ textAlign: 'right' }}>
                       <div className="flex items-center justify-end gap-1.5">
+                        {/* Ghim ứng viên tiềm năng (AI-18 Bookmark) */}
+                        <button
+                          type="button"
+                          className={styles.actionIconBtn}
+                          onClick={() => void handleToggleBookmark(intern.id)}
+                          title={
+                            bookmarkedIds.includes(intern.id)
+                              ? 'Bỏ ghim ứng viên khỏi danh sách ưu tiên'
+                              : 'Ghim ứng viên tiềm năng'
+                          }
+                          aria-label={`Ghim ứng viên ${intern.fullName}`}
+                          style={{
+                            color: bookmarkedIds.includes(intern.id) ? '#d97706' : undefined,
+                            background: bookmarkedIds.includes(intern.id)
+                              ? 'rgba(245, 158, 11, 0.12)'
+                              : undefined,
+                            borderColor: bookmarkedIds.includes(intern.id)
+                              ? 'rgba(245, 158, 11, 0.3)'
+                              : undefined,
+                          }}
+                        >
+                          <Bookmark
+                            size={15}
+                            fill={bookmarkedIds.includes(intern.id) ? 'currentColor' : 'none'}
+                            aria-hidden="true"
+                          />
+                        </button>
+
+                        {/* Chọn để so sánh CV song song (AI-18 Comparison) */}
+                        <button
+                          type="button"
+                          className={styles.actionIconBtn}
+                          onClick={() => handleToggleCompare(intern.id)}
+                          title={
+                            compareIds.includes(intern.id)
+                              ? 'Bỏ chọn so sánh'
+                              : compareIds.length >= 2
+                              ? 'Đã chọn tối đa 2 ứng viên'
+                              : 'Chọn để so sánh với ứng viên khác'
+                          }
+                          aria-label={`So sánh CV của ${intern.fullName}`}
+                          style={{
+                            color: compareIds.includes(intern.id) ? '#6366f1' : undefined,
+                            background: compareIds.includes(intern.id)
+                              ? 'rgba(99, 102, 241, 0.12)'
+                              : undefined,
+                            borderColor: compareIds.includes(intern.id)
+                              ? 'rgba(99, 102, 241, 0.4)'
+                              : undefined,
+                          }}
+                        >
+                          <Scale size={15} aria-hidden="true" />
+                        </button>
+
                         {/* Xem chi tiết */}
                         <button
                           type="button"
@@ -781,6 +961,29 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
           internName={interviewModalIntern.fullName}
         />
       )}
+
+      {/* AI-18: Modal Đối soát & So sánh song song 2 CV */}
+      {isComparisonModalOpen && compareIds.length === 2 && (() => {
+        const internA = applicants.find((a) => a.id === compareIds[0]);
+        const internB = applicants.find((a) => a.id === compareIds[1]);
+        if (!internA || !internB) return null;
+
+        const evalA = aiScreening.evaluationsMap[internA.id] || null;
+        const evalB = aiScreening.evaluationsMap[internB.id] || null;
+
+        return (
+          <CvComparisonModal
+            isOpen={isComparisonModalOpen}
+            onClose={() => setIsComparisonModalOpen(false)}
+            candidateA={{ intern: internA, evaluation: evalA }}
+            candidateB={{ intern: internB, evaluation: evalB }}
+            bookmarkedIds={bookmarkedIds}
+            onToggleBookmark={(internId) => void handleToggleBookmark(internId)}
+            onOpenScheduleModal={onOpenCreateSchedule}
+            onViewInternDetail={onViewInternDetail}
+          />
+        );
+      })()}
     </div>
   );
 };

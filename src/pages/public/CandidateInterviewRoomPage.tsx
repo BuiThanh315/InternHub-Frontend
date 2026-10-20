@@ -669,11 +669,31 @@ export const CandidateInterviewRoomPage: React.FC = () => {
         {/* Cột trái: Tiến độ & Danh sách câu hỏi */}
         <div className={styles.sidebarCard}>
           <div className={styles.sidebarTitle}>
-            <span>Danh Sách Câu Hỏi</span>
-            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-              {sessionData?.questions?.filter((q) => q.questionStatus === 'COMPLETED').length || 0}/
-              {sessionData?.totalQuestions || 1} Đã nộp
+            <span>Tiến Độ Phỏng Vấn</span>
+            <span className={styles.progressPercentBadge}>
+              {Math.round(
+                ((sessionData?.questions?.filter((q) => q.questionStatus === 'COMPLETED').length || 0) /
+                  (sessionData?.totalQuestions || 1)) *
+                  100
+              )}%
             </span>
+          </div>
+
+          {/* Thanh Tiến Độ Tỷ Lệ Hoàn Thành Nổi Bật */}
+          <div className={styles.stepperProgressBarContainer}>
+            <div
+              className={styles.stepperProgressBarFill}
+              style={{
+                width: `${Math.round(
+                  ((sessionData?.questions?.filter((q) => q.questionStatus === 'COMPLETED').length || 0) /
+                    (sessionData?.totalQuestions || 1)) *
+                    100
+                )}%`,
+              }}
+            />
+          </div>
+          <div className={styles.stepperSummaryText}>
+            <span>Đã hoàn thành {sessionData?.questions?.filter((q) => q.questionStatus === 'COMPLETED').length || 0}/{sessionData?.totalQuestions || 1} câu hỏi</span>
           </div>
 
           <div className={styles.questionListGrid}>
@@ -692,12 +712,17 @@ export const CandidateInterviewRoomPage: React.FC = () => {
                   onClick={() => canClick && navigateToQuestion(idx)}
                   title={canClick ? `Bấm để chuyển sang Câu ${idx + 1}` : undefined}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span>{isCompleted ? '✅' : isActive ? '✍️' : '⏳'}</span>
-                    <span>Câu {idx + 1}</span>
+                  <div className={styles.stepItemLeft}>
+                    <div className={styles.stepIndexBadge}>
+                      {isCompleted ? '✓' : idx + 1}
+                    </div>
+                    <div className={styles.stepInfoText}>
+                      <span className={styles.stepLabel}>Câu {idx + 1}</span>
+                      <span className={styles.stepCategorySubtitle}>{formatCategory(q.category)}</span>
+                    </div>
                   </div>
-                  <span style={{ fontSize: '0.72rem', textTransform: 'capitalize' }}>
-                    {isCompleted ? 'Đã xong' : isActive ? 'Đang làm' : 'Chờ mở'}
+                  <span className={styles.stepStatusBadge}>
+                    {isCompleted ? 'Đã nộp' : isActive ? 'Đang làm' : 'Chờ mở'}
                   </span>
                 </div>
               );
@@ -722,21 +747,26 @@ export const CandidateInterviewRoomPage: React.FC = () => {
             </div>
           )}
 
-          {/* STT Live Preview Card (Chuẩn Mục 7.3 của Spec) */}
+          {/* STT Live Preview Card (Chuẩn Mục 7.3 của Spec - Nâng cấp Dynamic Waveform) */}
           {showSttPreview && (
-            <div className={styles.sttPreviewCard}>
+            <div className={`${styles.sttPreviewCard} ${isRecording ? styles.sttPreviewActive : ''}`}>
               <div className={styles.sttHeader}>
                 <div className={styles.sttLiveStatus}>
                   {isRecording && (
-                    <div className={styles.audioWave}>
-                      <div className={styles.audioWaveBar} />
-                      <div className={styles.audioWaveBar} />
-                      <div className={styles.audioWaveBar} />
-                      <div className={styles.audioWaveBar} />
-                      <div className={styles.audioWaveBar} />
+                    <div className={styles.dynamicAudioWave}>
+                      <span className={styles.waveBar} style={{ '--bar-h': '8px', '--anim-d': '0.1s' } as any} />
+                      <span className={styles.waveBar} style={{ '--bar-h': '18px', '--anim-d': '0.25s' } as any} />
+                      <span className={styles.waveBar} style={{ '--bar-h': '26px', '--anim-d': '0.15s' } as any} />
+                      <span className={styles.waveBar} style={{ '--bar-h': '14px', '--anim-d': '0.35s' } as any} />
+                      <span className={styles.waveBar} style={{ '--bar-h': '28px', '--anim-d': '0.2s' } as any} />
+                      <span className={styles.waveBar} style={{ '--bar-h': '20px', '--anim-d': '0.3s' } as any} />
+                      <span className={styles.waveBar} style={{ '--bar-h': '12px', '--anim-d': '0.12s' } as any} />
+                      <span className={styles.waveBar} style={{ '--bar-h': '6px', '--anim-d': '0.4s' } as any} />
                     </div>
                   )}
-                  <span>{isRecording ? '🎙️ Đang nghe giọng nói của bạn...' : '⏸️ Đã tạm dừng ghi âm'}</span>
+                  <span className={styles.sttLiveStatusLabel}>
+                    {isRecording ? 'Đang nhận diện giọng nói...' : 'Đã tạm dừng thu âm'}
+                  </span>
                 </div>
 
                 <div className={styles.sttActions}>

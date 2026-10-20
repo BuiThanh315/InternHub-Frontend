@@ -152,7 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: BarChart3,
       requiredPermission: 'INTERN_VIEW_ALL',
       section: 'Quản Trị Nhân Sự',
-      allowedRoles: ['HR', 'ADMIN'],
+      allowedRoles: ['HR'],
     },
     {
       to: ROUTES.HR.EVALUATIONS,
