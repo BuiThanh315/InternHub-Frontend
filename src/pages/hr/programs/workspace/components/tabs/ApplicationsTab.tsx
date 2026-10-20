@@ -195,24 +195,19 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   const maxCount = Number(program.maxInterns || 0);
   const isFull = maxCount > 0 && currentCount >= maxCount;
 
-  // Lọc ứng viên theo tiêu chí điểm số AI và bộ lọc Bookmark
+  // Lọc ứng viên theo tiêu chí điểm số AI, bộ lọc Bookmark và nguồn hồ sơ (CandidateType)
   const filteredApplicants = useMemo(() => {
     let result = aiScreening.filterApplicants(applicants);
     if (showOnlyBookmarked) {
       result = result.filter((item) => bookmarkedIds.includes(item.id));
     }
-    return result;
-  }, [applicants, aiScreening.filterApplicants, showOnlyBookmarked, bookmarkedIds]);
-  // Lọc ứng viên theo tiêu chí điểm số AI và nguồn hồ sơ (CandidateType)
-  const filteredApplicants = useMemo(() => {
-    const aiFiltered = aiScreening.filterApplicants(applicants);
-    if (sourceFilter === 'ALL') {
-      return aiFiltered;
+    if (sourceFilter !== 'ALL') {
+      result = result.filter(
+        (item) => (item.candidateType || 'UNIVERSITY') === sourceFilter
+      );
     }
-    return aiFiltered.filter(
-      (item) => (item.candidateType || 'UNIVERSITY') === sourceFilter
-    );
-  }, [applicants, aiScreening.filterApplicants, sourceFilter]);
+    return result;
+  }, [applicants, aiScreening.filterApplicants, showOnlyBookmarked, bookmarkedIds, sourceFilter]);
 
   // Danh sách ứng viên trong danh sách hiển thị đã hoàn thiện CV (đủ điều kiện thẩm định AI)
   const eligibleForAiIds = useMemo(

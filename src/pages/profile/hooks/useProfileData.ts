@@ -44,7 +44,7 @@ export const useProfileData = (): UseProfileDataReturn => {
       // 2. Nếu là TTS (INTERN / USER), tải thêm InternProfile
       const isIntern = role === 'INTERN' || role === 'USER';
       const internPromise = isIntern
-        ? internService.getMyProfile(controller.signal).catch((err) => {
+        ? internService.getMyProfile(null, controller.signal).catch((err) => {
             console.warn('Lỗi nạp getMyProfile:', err);
             // Fallback sang local profile nếu có
             return internService.getLocalProfile(user?.userId);

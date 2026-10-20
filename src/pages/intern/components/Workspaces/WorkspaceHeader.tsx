@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Briefcase, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Briefcase } from 'lucide-react';
 import type { InternProfile } from '../../../../types';
 import styles from './Workspaces.module.css';
 
