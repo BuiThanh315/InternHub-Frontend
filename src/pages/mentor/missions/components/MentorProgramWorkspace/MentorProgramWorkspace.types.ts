@@ -9,7 +9,7 @@ import type {
 } from '../../../../../types';
 import type { InternGroup } from '../../../../../types/group.types';
 
-export type WorkspaceTabKey = 'kanban' | 'interns' | 'reviews' | 'analytics';
+export type WorkspaceTabKey = 'kanban' | 'interns' | 'reviews' | 'quizzes' | 'analytics';
 
 export interface MentorProgramWorkspaceProps {
   program: MentorProgramResponse;

@@ -10,6 +10,7 @@ import { ATTENDANCE_ENDPOINTS } from './attendance.endpoints';
 import { MISSION_ENDPOINTS } from './mission.endpoints';
 import { LEAVE_ENDPOINTS } from './leave.endpoints';
 import { AI_ENDPOINTS } from './ai.endpoints';
+import { QUIZ_ENDPOINTS } from './quiz.endpoints';
 
 export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
@@ -24,6 +25,7 @@ export const API_ENDPOINTS = {
   MISSION: MISSION_ENDPOINTS,
   LEAVE: LEAVE_ENDPOINTS,
   AI: AI_ENDPOINTS,
+  QUIZ: QUIZ_ENDPOINTS,
 } as const;
 
 export * from './auth.endpoints';
@@ -38,5 +40,6 @@ export * from './attendance.endpoints';
 export * from './mission.endpoints';
 export * from './leave.endpoints';
 export * from './ai.endpoints';
+export * from './quiz.endpoints';
 
 

@@ -4,6 +4,7 @@ import { HR_ROUTES } from './hr.routes';
 import { MENTOR_ROUTES } from './mentor.routes';
 import { INTERN_ROUTES } from './intern.routes';
 import { COMMON_ROUTES } from './common.routes';
+import { QUIZ_ROUTES } from './quiz.routes';
 
 export const ROUTES = {
   ROOT: '/',
@@ -14,6 +15,7 @@ export const ROUTES = {
   HR: HR_ROUTES,
   MENTOR: MENTOR_ROUTES,
   INTERN: INTERN_ROUTES,
+  QUIZ: QUIZ_ROUTES,
 } as const;
 
 export * from './auth.routes';
@@ -22,6 +24,7 @@ export * from './hr.routes';
 export * from './mentor.routes';
 export * from './intern.routes';
 export * from './common.routes';
+export * from './quiz.routes';
 
 /**
  * Xác thực và phân giải đường dẫn điều hướng an toàn dựa trên vai trò người dùng (TM-20 / TM-32).

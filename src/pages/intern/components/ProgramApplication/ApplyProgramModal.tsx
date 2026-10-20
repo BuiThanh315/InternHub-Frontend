@@ -47,6 +47,7 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isSubmittingRef = useRef(false);
 
   const [form, setForm] = useState<FormState>({
     fullName: user?.fullName || '',
@@ -68,9 +69,11 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedInternCode, setSubmittedInternCode] = useState<string | null>(null);
 
-  // Pre-fill thông tin tài khoản nếu có
+  const prevIsOpenRef = useRef(false);
+
+  // Pre-fill thông tin tài khoản chỉ khi Modal MỚI ĐƯỢC MỞ
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
       setSubmittedInternCode(null);
       setCvFile(null);
       if (user?.userId) {
@@ -97,7 +100,8 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
         }));
       }
     }
-  }, [isOpen, user, program]);
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, user?.userId, program?.id, program?.startDate]);
 
   if (!isOpen || !program) return null;
 
@@ -107,30 +111,31 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      const file = e.target.files[0];
+    const file = e.target.files?.[0];
+    if (file) {
       if (file.size > 10 * 1024 * 1024) {
         toast.error('Dung lượng tệp CV không được vượt quá 10MB.');
         return;
       }
       setCvFile(file);
+      toast.success(`Đã đính kèm tệp CV: ${file.name}`);
     }
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragOver(false);
-    if (e.dataTransfer.files?.[0]) {
-      const file = e.dataTransfer.files[0];
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
       if (file.size > 10 * 1024 * 1024) {
         toast.error('Dung lượng tệp CV không được vượt quá 10MB.');
         return;
       }
       setCvFile(file);
+      toast.success(`Đã đính kèm tệp CV: ${file.name}`);
     }
   };
-
-  const isSubmittingRef = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -451,46 +456,154 @@ export const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({
                   <span>3. Tệp Hồ Sơ Đính Kèm (CV)</span>
                 </div>
 
+                <input
+                  id="modal-cv-upload"
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                />
+
                 {cvFile ? (
-                  <div className={styles.filePreview}>
-                    <div className={styles.fileInfo}>
-                      <FileText size={20} className={styles.uploadIcon} />
-                      <div>
-                        <div>{cvFile.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {(cvFile.size / (1024 * 1024)).toFixed(2)} MB
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '1rem 1.25rem',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                      border: '1.5px solid rgba(16, 185, 129, 0.4)',
+                      gap: '0.75rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                      <div
+                        style={{
+                          width: '42px',
+                          height: '42px',
+                          borderRadius: '10px',
+                          backgroundColor: 'rgba(16, 185, 129, 0.18)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#059669',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <CheckCircle2 size={24} />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            color: 'var(--text-main, #0f172a)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {cvFile.name}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>
+                            Đã đính kèm tệp CV
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)' }}>
+                            • {(cvFile.size / (1024 * 1024)).toFixed(2)} MB
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className={styles.removeFileBtn}
-                      onClick={() => setCvFile(null)}
-                      aria-label="Xóa tệp"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                            fileInputRef.current.click();
+                          }
+                        }}
+                        style={{
+                          padding: '0.45rem 0.85rem',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border-default, #cbd5e1)',
+                          backgroundColor: 'var(--bg-card, #ffffff)',
+                          color: 'var(--text-main, #334155)',
+                          fontSize: '0.775rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Đổi tệp
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCvFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        aria-label="Xóa tệp"
+                        title="Hủy đính kèm tệp này"
+                        style={{
+                          padding: '0.45rem',
+                          borderRadius: '6px',
+                          border: 'none',
+                          backgroundColor: 'transparent',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <label
-                    htmlFor="modal-cv-upload"
+                  <div
                     className={`${styles.uploadZone} ${isDragOver ? styles.uploadZoneActive : ''}`}
-                    onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                    onDragLeave={() => setIsDragOver(false)}
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDragOver(true);
+                    }}
+                    onDragEnter={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDragOver(true);
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDragOver(false);
+                    }}
                     onDrop={handleDrop}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                          fileInputRef.current.click();
+                        }
+                      }
+                    }}
                   >
                     <UploadCloud size={32} className={styles.uploadIcon} />
                     <div className={styles.uploadTitle}>Kéo thả tệp CV hoặc bấm để chọn tệp</div>
                     <div className={styles.uploadHint}>Hỗ trợ định dạng PDF, DOC, DOCX (Dung lượng tối đa 10MB)</div>
-                    <input
-                      id="modal-cv-upload"
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      style={{ display: 'none' }}
-                      onChange={handleFileChange}
-                    />
-                  </label>
+                  </div>
                 )}
               </div>
 
