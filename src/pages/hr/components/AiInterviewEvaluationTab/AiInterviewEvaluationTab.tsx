@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Sparkles,
   ShieldAlert,
@@ -225,6 +225,31 @@ export const AiInterviewEvaluationTab: React.FC<AiInterviewEvaluationTabProps> =
   const isHigh = effectiveTotal >= 70;
   const isMed = effectiveTotal >= 50 && effectiveTotal < 70;
 
+  // Tính điểm trung bình cộng của từng tiêu chí Rubric trên toàn bộ các câu hỏi đã thẩm định
+  const rubricAverages = useMemo(() => {
+    const answers = dossier.answers || [];
+    if (answers.length === 0) {
+      return { technicalAccuracy: 0, optimization: 0, articulation: 0, edgeCases: 0 };
+    }
+    const totals = answers.reduce(
+      (acc, ans) => {
+        acc.technicalAccuracy += Number(ans.rubric?.technicalAccuracy || 0);
+        acc.optimization += Number(ans.rubric?.optimization || 0);
+        acc.articulation += Number(ans.rubric?.articulation || 0);
+        acc.edgeCases += Number(ans.rubric?.edgeCases || 0);
+        return acc;
+      },
+      { technicalAccuracy: 0, optimization: 0, articulation: 0, edgeCases: 0 }
+    );
+    const count = answers.length;
+    return {
+      technicalAccuracy: Math.round((totals.technicalAccuracy / count) * 10) / 10,
+      optimization: Math.round((totals.optimization / count) * 10) / 10,
+      articulation: Math.round((totals.articulation / count) * 10) / 10,
+      edgeCases: Math.round((totals.edgeCases / count) * 10) / 10,
+    };
+  }, [dossier.answers]);
+
   return (
     <div className={styles.container}>
       {/* Hero Score Section */}
@@ -339,25 +364,25 @@ export const AiInterviewEvaluationTab: React.FC<AiInterviewEvaluationTabProps> =
         <div className={styles.rubricCard}>
           <span className={styles.rubricLabel}>Chính xác kỹ thuật (40%)</span>
           <span className={styles.rubricValue}>
-            {dossier.answers?.[0]?.rubric?.technicalAccuracy ?? 0}/100
+            {rubricAverages.technicalAccuracy}/100
           </span>
         </div>
         <div className={styles.rubricCard}>
           <span className={styles.rubricLabel}>Tối ưu code / KT (30%)</span>
           <span className={styles.rubricValue}>
-            {dossier.answers?.[0]?.rubric?.optimization ?? 0}/100
+            {rubricAverages.optimization}/100
           </span>
         </div>
         <div className={styles.rubricCard}>
           <span className={styles.rubricLabel}>Mạch lạc & Trình bày (20%)</span>
           <span className={styles.rubricValue}>
-            {dossier.answers?.[0]?.rubric?.articulation ?? 0}/100
+            {rubricAverages.articulation}/100
           </span>
         </div>
         <div className={styles.rubricCard}>
           <span className={styles.rubricLabel}>Xử lý Ngoại lệ (10%)</span>
           <span className={styles.rubricValue}>
-            {dossier.answers?.[0]?.rubric?.edgeCases ?? 0}/100
+            {rubricAverages.edgeCases}/100
           </span>
         </div>
       </div>
