@@ -36,6 +36,32 @@ export const AiInterviewEvaluationTab: React.FC<AiInterviewEvaluationTabProps> =
   const [isAssignMentorOpen, setIsAssignMentorOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Tính điểm trung bình cộng của từng tiêu chí Rubric trên toàn bộ các câu hỏi đã thẩm định
+  // (Phải đặt ở đầu component trước mọi lệnh early return để tuân thủ React Rules of Hooks)
+  const rubricAverages = useMemo(() => {
+    const answers = dossier?.answers || [];
+    if (answers.length === 0) {
+      return { technicalAccuracy: 0, optimization: 0, articulation: 0, edgeCases: 0 };
+    }
+    const totals = answers.reduce(
+      (acc, ans) => {
+        acc.technicalAccuracy += Number(ans.rubric?.technicalAccuracy || 0);
+        acc.optimization += Number(ans.rubric?.optimization || 0);
+        acc.articulation += Number(ans.rubric?.articulation || 0);
+        acc.edgeCases += Number(ans.rubric?.edgeCases || 0);
+        return acc;
+      },
+      { technicalAccuracy: 0, optimization: 0, articulation: 0, edgeCases: 0 }
+    );
+    const count = answers.length;
+    return {
+      technicalAccuracy: Math.round((totals.technicalAccuracy / count) * 10) / 10,
+      optimization: Math.round((totals.optimization / count) * 10) / 10,
+      articulation: Math.round((totals.articulation / count) * 10) / 10,
+      edgeCases: Math.round((totals.edgeCases / count) * 10) / 10,
+    };
+  }, [dossier?.answers]);
+
   useEffect(() => {
     setCurrentIntern(intern);
   }, [intern]);
@@ -224,31 +250,6 @@ export const AiInterviewEvaluationTab: React.FC<AiInterviewEvaluationTabProps> =
   const effectiveTotal = dossier.hrFinalTotalScore ?? dossier.totalScore;
   const isHigh = effectiveTotal >= 70;
   const isMed = effectiveTotal >= 50 && effectiveTotal < 70;
-
-  // Tính điểm trung bình cộng của từng tiêu chí Rubric trên toàn bộ các câu hỏi đã thẩm định
-  const rubricAverages = useMemo(() => {
-    const answers = dossier.answers || [];
-    if (answers.length === 0) {
-      return { technicalAccuracy: 0, optimization: 0, articulation: 0, edgeCases: 0 };
-    }
-    const totals = answers.reduce(
-      (acc, ans) => {
-        acc.technicalAccuracy += Number(ans.rubric?.technicalAccuracy || 0);
-        acc.optimization += Number(ans.rubric?.optimization || 0);
-        acc.articulation += Number(ans.rubric?.articulation || 0);
-        acc.edgeCases += Number(ans.rubric?.edgeCases || 0);
-        return acc;
-      },
-      { technicalAccuracy: 0, optimization: 0, articulation: 0, edgeCases: 0 }
-    );
-    const count = answers.length;
-    return {
-      technicalAccuracy: Math.round((totals.technicalAccuracy / count) * 10) / 10,
-      optimization: Math.round((totals.optimization / count) * 10) / 10,
-      articulation: Math.round((totals.articulation / count) * 10) / 10,
-      edgeCases: Math.round((totals.edgeCases / count) * 10) / 10,
-    };
-  }, [dossier.answers]);
 
   return (
     <div className={styles.container}>
