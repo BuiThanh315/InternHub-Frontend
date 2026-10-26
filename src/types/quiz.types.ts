@@ -213,12 +213,14 @@ export interface QuizAssignmentResponse {
   totalQuestions: number;
   totalPoints: number;
   maxAttempts: number;
-  attemptsUsed: number;
+  attemptsUsed?: number;
+  attemptsTaken?: number;
   highestScore?: number | null;
   passed?: boolean | null;
   dueDate: string;
   status: AssignmentStatus;
   missionItemId?: number | null;
+  latestSubmissionId?: number | null;
 }
 
 export interface QuizInternReportDto {
