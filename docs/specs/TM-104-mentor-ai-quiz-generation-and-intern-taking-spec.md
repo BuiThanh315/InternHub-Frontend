@@ -531,6 +531,10 @@ Tuân thủ nghiêm ngặt **Rule 15 (Giới hạn tối đa 3 - 4 State trong 1
   - `InternQuizResultPage.tsx` (Tạo mới: Đối soát kết quả & lời giải chi tiết)
   - `InternQuizResultPage.module.css` (Tạo mới)
   - `components/SubmitConfirmModal/` (Modal xác nhận nộp bài)
+- `src/pages/intern/missions/` (Chỉnh sửa: Hỗ trợ chuyển thẻ Quiz sang cột Hoàn thành trên Kanban của TTS)
+  - `components/InternTaskCard/InternTaskCard.tsx` (Bổ sung nút "Hoàn thành" & "Mở lại làm tiếp" cho task Quiz)
+  - `components/TaskDetailModal/` (Bổ sung nút "Hoàn thành nhiệm vụ" trong modal chi tiết task Quiz)
+  - `InternMissionPage.tsx` (Liên kết callback `onCompleteDirectly` đồng bộ trạng thái `COMPLETED`)
 - `src/App.tsx` (Chỉnh sửa: Đăng ký các routes `/intern/quizzes`, `/intern/quizzes/:assignmentId/take`, `/intern/quizzes/submissions/:submissionId`)
 
 ---
@@ -545,6 +549,7 @@ Tuân thủ nghiêm ngặt **Rule 15 (Giới hạn tối đa 3 - 4 State trong 1
 - [ ] **AC-5 (Chấm điểm All-or-Nothing):** Với câu hỏi nhiều đáp án, nếu chọn thiếu hoặc thừa thì câu đó nhận 0 điểm; chọn đúng và đủ nhận trọn vẹn điểm câu.
 - [ ] **AC-6 (Mở khóa đáp án sau khi nộp):** Sau khi nộp bài thành công, màn hình kết quả hiển thị điểm số, huy hiệu Đạt/Chưa đạt, và mở khóa đầy đủ đáp án đúng kèm lời giải thích chi tiết.
 - [ ] **AC-7 (Chặn làm quá số lần):** Khi TTS đã hết số lượt thi cho phép (`attemptCount >= maxAttempts`), nút làm bài bị khóa và thông báo rõ ràng.
+- [ ] **AC-8 (Đồng bộ & Chuyển cột Kanban cho Quiz):** Sau khi TTS hoàn thành nộp bài Quiz, thẻ nhiệm vụ Kanban tự động chuyển sang cột "Hoàn thiện" (`COMPLETED`) kèm điểm số. TTS cũng có thể chủ động bấm nút "Hoàn thành" trên thẻ hoặc modal chi tiết khi đang ở trạng thái `IN_PROGRESS`.
 
 ### 11.2. Tiêu chí nghiệm thu kỹ thuật & UX/UI (Non-Functional Criteria)
 - [ ] 100% màu sắc dùng CSS Variables từ `src/index.css`, không hardcode mã Hex.
