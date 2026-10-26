@@ -24,7 +24,10 @@ export const quizService = {
     payload: GenerateAiQuizRequest,
     signal?: AbortSignal
   ): Promise<QuizDetailResponse> {
-    const response = await apiClient.post(API_ENDPOINTS.QUIZ.GENERATE_AI, payload, { signal });
+    const response = await apiClient.post(API_ENDPOINTS.QUIZ.GENERATE_AI, payload, {
+      signal,
+      timeout: 60000, // Gemini AI sinh 10 câu hỏi trắc nghiệm nâng cao kèm lời giải thích có thể mất 12-25s
+    });
     return response.data?.data;
   },
 
