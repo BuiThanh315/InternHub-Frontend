@@ -17,6 +17,7 @@
 | **v1.0** | 2026-10-14 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Tạo mới Đặc Tả | Khởi tạo tài liệu đặc tả kỹ thuật Frontend cho tính năng Mentor sử dụng AI tạo bài Quiz từ báo cáo tuần và giao cho TTS/nhóm TTS, đồng bộ thẻ Kanban; xây dựng trải nghiệm làm bài thi tĩnh tâm và đối soát kết quả chi tiết cho thực tập sinh theo quy chuẩn `frontend-design`. |
 | **v1.1** | 2026-10-26 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Tích hợp tạo Quiz vào Modal Giao Việc Kanban | Chuyển đổi luồng tạo đề: Nhúng nút `[✦ Tạo bài kiểm tra ôn tập AI]` vào trực tiếp trong modal `MissionItemModal` (khi giao task Kanban). Bổ sung popup nhập nhanh tham số (Số câu, độ khó, chủ đề bám theo task), tự động đính kèm Quiz vào Task Kanban. Dọn dẹp nút tạo đề lỗi cũ tại `MentorQuizzesTab`. |
 | **v1.2** | 2026-10-26 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Kiến Trúc Đa Luồng Chạy Ngầm Bất Đồng Bộ & Floating Progress Widget tương tự TM-103 | Tách luồng sinh câu hỏi AI sang chạy ngầm không chặn thao tác (Non-blocking Async Job). Khi bấm "Bắt đầu tạo câu hỏi" trong `AiQuizQuickModal`, modal đóng ngay lập tức, kích hoạt `startQuizJob` qua `AiJobContext`. Cửa sổ nổi `FloatingProgressWidget` góc phải dưới màn hình tự động hiển thị tiến độ 4 chặng (25% - 60% - 85% - 100%). Mentor hoàn toàn tự do tiếp tục soạn task Kanban hoặc chuyển trang. Khi hoàn tất, widget cung cấp nút "Đính kèm vào công việc" hoặc tự động liên kết vào task đang soạn thảo. |
+| **v1.3** | 2026-10-26 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Sửa Lỗi Hiển Thị Lượt Thi, Triệt Tiêu Thẻ Trùng Lặp & Chống Auto-Submit Lệch Múi Giờ | 1. Sửa lỗi `InternQuizListPage` hiển thị "Đã hết lượt thi" và "Lần làm: /1": Khai báo cả `attemptsUsed` lẫn `attemptsTaken` kèm toán tử null-coalescing `attemptsCount = a.attemptsUsed ?? a.attemptsTaken ?? 0`, hiển thị chính xác `0/1` và kích hoạt nút `Bắt đầu làm bài`.<br>2. Triệt tiêu lỗi tạo thừa công việc trong `MissionItemModal`: Khi có `attachedQuiz`, modal không gọi `onSubmit(payload)` mà ủy quyền trực tiếp cho `quizService.assignQuiz(..., { createKanbanTask: true })` để Backend tạo đúng duy nhất 1 thẻ bài thi `[Quiz]` kèm link làm bài cho mỗi TTS, đồng thời gọi callback `onRefreshBoard()` để cập nhật Kanban ngay lập tức.<br>3. Khắc phục lỗi tự động nộp bài khi vừa mở phòng thi `InternQuizTakingPage`: Triển khai cơ chế phòng thủ 3 lớp (3-tier fallback) đọc `remainingSeconds` từ máy chủ, parse UTC `Z`, và fallback về thời lượng trọn vẹn của đề thi nếu tính ra $\le 0$ ở lượt thi mới, bảo đảm an toàn 100%. |
 
 ---
 
@@ -283,7 +284,8 @@ Khớp 100% với Backend Java:
   - `SubmitQuizRequest`: `{ answers: Array<{ questionId: number; selectedOptionIds: number[] }> }`
 - Response Interfaces:
   - `QuizDetailResponse`: Thông tin đề thi kèm danh sách câu hỏi và lựa chọn đầy đủ (dành cho Mentor duyệt).
-  - `QuizTakingResponse`: Dữ liệu bài thi gửi cho TTS (**Tuyệt đối không chứa `isCorrect`**).
+  - `QuizTakingResponse`: Dữ liệu bài thi gửi cho TTS (**Tuyệt đối không chứa `isCorrect`**; chứa `remainingSeconds?: number` tính từ máy chủ để đồng bộ timer đếm ngược).
+  - `QuizAssignmentResponse`: Thông tin phân công Quiz cho TTS (chứa cả `attemptsUsed?: number` và `attemptsTaken?: number`, cùng `latestSubmissionId?: number | null`).
   - `QuizResultResponse`: Kết quả điểm số, cờ `passed`, và `answerResults` kèm đáp án đúng và `explanation` (mở khóa sau khi submit).
   - `QuizReportResponse`: Thống kê tổng số giao, số hoàn thành, điểm trung bình, danh sách học viên.
 
@@ -483,6 +485,15 @@ Tuân thủ nghiêm ngặt **Rule 15 (Giới hạn tối đa 3 - 4 State trong 1
    - Khi bài thi đang diễn ra, nếu người dùng click link ra ngoài hoặc đóng tab trình duyệt, hiển thị pop-up cảnh báo: *"Bài thi đang diễn ra! Bạn có chắc chắn muốn rời khỏi trang không?"*.
 4. **Chống gian lận nộp bài đúp (Idempotent Submission):**
    - Nút *"Nộp bài thi"* tự động set `disabled` và hiện spinner loader ngay khi click lần đầu, triệt tiêu nguy cơ gửi 2 request cùng lúc.
+5. **Đồng bộ thời gian đếm ngược & Chống Auto-Submit do lệch múi giờ (Timezone Defense):**
+   - Áp dụng cơ chế phòng thủ 3 lớp (3-tier fallback) trong `InternQuizTakingPage`:
+     1. Ưu tiên đọc `remainingSeconds` tính trực tiếp từ máy chủ (`QuizTakingResponse`).
+     2. Fallback: Parse chuỗi `startedAt` kèm chỉ định múi giờ UTC `Z`.
+     3. Fallback an toàn: Nếu kết quả tính toán $\le 0$ ở lượt thi mới, tự động khôi phục về trọn vẹn thời lượng đề thi (`timeLimitMinutes * 60`).
+   - Triệt tiêu hoàn toàn lỗi tự động nộp bài (auto-submit) khi vừa vào thi.
+6. **Nguyên tắc duy nhất thẻ nhiệm vụ Kanban (Single Kanban Card Principle):**
+   - Trong `MissionItemModal`, khi Mentor giao việc có đính kèm bài Quiz AI (`attachedQuiz`), modal bỏ qua lệnh tạo task thông thường `onSubmit(payload)` mà ủy quyền trực tiếp cho `quizService.assignQuiz(..., { createKanbanTask: true })`.
+   - Backend `QuizKanbanSyncHelper` chỉ tạo duy nhất 1 thẻ nhiệm vụ `[Quiz]` có `submissionUrl` cho mỗi thực tập sinh, đồng thời kích hoạt callback `onRefreshBoard()` để cập nhật bảng Kanban tức thời, loại bỏ triệt để tình trạng sinh thẻ thừa.
 
 ---
 
