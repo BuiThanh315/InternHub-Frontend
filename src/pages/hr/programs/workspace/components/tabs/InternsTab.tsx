@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Users,
   Search,
@@ -8,6 +8,7 @@ import {
   Eye,
   RefreshCw,
   Sparkles,
+  MoreVertical,
 } from 'lucide-react';
 import { Button, Skeleton } from '../../../../../../components/common';
 import type { InternsTabProps } from '../../types/ProgramWorkspace.types';
@@ -29,6 +30,19 @@ export const InternsTab: React.FC<InternsTabProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [sourceFilter, setSourceFilter] = useState<'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT'>('ALL');
+
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Lọc danh sách TTS nội bộ trong kỳ
   const filteredInterns = useMemo(() => {
@@ -316,59 +330,73 @@ export const InternsTab: React.FC<InternsTabProps> = ({
                       )}
                     </td>
 
-                    {/* Cột Thao tác */}
+                    {/* Cột Thao tác Tinh Gọn */}
                     <td style={{ textAlign: 'right' }}>
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* Xem hồ sơ chi tiết */}
                         <button
                           type="button"
-                          className={styles.actionIconBtn}
+                          className="btn btn-sm btn-secondary flex items-center gap-1"
                           onClick={() => onViewDetail(intern, 'profile')}
                           title="Xem chi tiết hồ sơ & lịch sử thực tập"
                           aria-label={`Xem chi tiết ${intern.fullName}`}
                         >
-                          <Eye size={15} aria-hidden="true" />
+                          <Eye size={13} aria-hidden="true" />
+                          <span>Chi Tiết</span>
                         </button>
 
-                        {/* Quản lý hợp đồng */}
-                        <button
-                          type="button"
-                          className={styles.actionIconBtn}
-                          onClick={() => onUploadContract(intern)}
-                          title="Hợp đồng thực tập"
-                          aria-label={`Hợp đồng của ${intern.fullName}`}
+                        <div
+                          className={styles.actionMenuContainer}
+                          ref={openMenuId === intern.id ? menuRef : null}
                         >
-                          <FileText size={15} aria-hidden="true" />
-                        </button>
-
-                        {/* Xem Phiếu Đánh Giá Phỏng Vấn AI (Module AI-02) */}
-                        {onOpenAiDossier && (
                           <button
                             type="button"
-                            className={styles.actionIconBtn}
-                            onClick={() => onOpenAiDossier(intern)}
-                            title="Xem Phiếu Đánh Giá Phỏng Vấn AI & Xếp Hạng Ứng Viên"
-                            aria-label={`Phiếu đánh giá AI cho ${intern.fullName}`}
-                            style={{
-                              color: '#8b5cf6',
-                              background: 'rgba(139, 92, 246, 0.08)',
-                              borderColor: 'rgba(139, 92, 246, 0.25)',
-                            }}
+                            className={styles.moreBtn}
+                            onClick={() => setOpenMenuId(openMenuId === intern.id ? null : intern.id)}
+                            title="Tác vụ khác"
+                            aria-label="Tác vụ khác"
                           >
-                            <Sparkles size={15} aria-hidden="true" />
+                            <MoreVertical size={14} />
                           </button>
-                        )}
 
-                        {/* Sửa thông tin */}
-                        <button
-                          type="button"
-                          className={styles.actionIconBtn}
-                          onClick={() => onEditIntern(intern)}
-                          title="Chỉnh sửa thông tin hồ sơ"
-                          aria-label={`Chỉnh sửa ${intern.fullName}`}
-                        >
-                          <Edit3 size={15} aria-hidden="true" />
-                        </button>
+                          {openMenuId === intern.id && (
+                            <div className={styles.actionDropdownMenu}>
+                              <button
+                                type="button"
+                                className={styles.actionMenuItem}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onUploadContract(intern);
+                                }}
+                              >
+                                <FileText size={14} /> Hợp đồng thực tập
+                              </button>
+
+                              {onOpenAiDossier && (
+                                <button
+                                  type="button"
+                                  className={styles.actionMenuItem}
+                                  onClick={() => {
+                                    setOpenMenuId(null);
+                                    onOpenAiDossier(intern);
+                                  }}
+                                >
+                                  <Sparkles size={14} style={{ color: '#8b5cf6' }} /> Phiếu đánh giá AI
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                className={styles.actionMenuItem}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onEditIntern(intern);
+                                }}
+                              >
+                                <Edit3 size={14} /> Sửa thông tin
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>

@@ -34,9 +34,10 @@
 
 .table {
   width: 100%;
+  min-width: 1100px;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 13.5px;
+  font-size: 13px;
   text-align: left;
 }
 
@@ -44,7 +45,7 @@
   background-color: var(--bg-surface, rgba(0, 0, 0, 0.02));
   color: var(--text-secondary);
   font-weight: 600;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-default);
   white-space: nowrap;
   font-size: 0.8125rem;
@@ -61,11 +62,20 @@
 }
 
 .td {
-  padding: 10px 14px;
+  padding: 7px 12px;
   border-bottom: 1px solid var(--border-default);
   color: var(--text-main);
   vertical-align: middle;
   white-space: nowrap;
+}
+
+.colDept {
+  max-width: 220px;
+  min-width: 170px;
+}
+
+.colStatus {
+  min-width: 135px;
 }
 
 /* Sticky Columns (Rule 34) */
@@ -88,6 +98,8 @@
   z-index: 2;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.03);
   text-align: right;
+  width: 80px;
+  min-width: 80px;
 }
 
 .tr:hover .stickyRight {
@@ -107,44 +119,48 @@
 .userCell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .userName {
   font-weight: 600;
   color: var(--text-main);
+  font-size: 13px;
 }
 
 .userEmail {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-muted);
 }
 
 .deptCell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  max-width: 220px;
 }
 
 .deptName {
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12.5px;
 }
 
 .progTitle {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mentorTag {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--primary);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 3px;
 }
-
 
 .workDaysCell {
   display: flex;
@@ -164,7 +180,7 @@
 
 .rateCell {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .rateHigh {
@@ -180,14 +196,23 @@
 }
 
 /* Status Badges */
+.statusCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 130px;
+}
+
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 5px;
+  padding: 2px 8px;
   border-radius: 9999px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
+  width: fit-content;
+  white-space: nowrap;
 }
 
 .statusExcellent {
@@ -211,9 +236,9 @@
 }
 
 .warningNotesText {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--danger);
-  max-width: 200px;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
