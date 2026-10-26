@@ -90,12 +90,18 @@ export const InternQuizTakingPage: React.FC = () => {
           }
         }
 
-        // Calculate initial remaining seconds from startedAt + timeLimitMinutes
-        const startTime = new Date(data.startedAt).getTime();
-        const durationMs = data.timeLimitMinutes * 60 * 1000;
-        const expiresAtMs = startTime + durationMs;
-        const diffSeconds = Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
-        setTimeLeft(diffSeconds);
+        // Calculate initial remaining seconds (3-tier fallback against timezone/format mismatch)
+        let initialTime = data.remainingSeconds;
+        if (initialTime === undefined || initialTime === null) {
+          const rawStart = data.startedAt?.endsWith('Z') || data.startedAt?.includes('+') ? data.startedAt : `${data.startedAt}Z`;
+          const startTime = new Date(rawStart).getTime();
+          const durationMs = (data.timeLimitMinutes || 20) * 60 * 1000;
+          initialTime = Math.max(0, Math.floor((startTime + durationMs - Date.now()) / 1000));
+        }
+        if (initialTime <= 0 && data.timeLimitMinutes > 0) {
+          initialTime = data.timeLimitMinutes * 60;
+        }
+        setTimeLeft(initialTime);
       } catch (err: any) {
         if (!isMounted) return;
         setError(err?.message || 'Không thể bắt đầu làm bài thi Quiz');

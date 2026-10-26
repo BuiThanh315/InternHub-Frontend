@@ -311,6 +311,7 @@ export const MentorMissionPage: React.FC = () => {
           }))
         }
         onSubmit={handleItemSubmit}
+        onRefreshBoard={refreshAll}
         programInterns={programInterns}
         groups={groups}
         internWorkloadMap={internWorkloadMap}

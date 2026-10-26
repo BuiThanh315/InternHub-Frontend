@@ -166,6 +166,7 @@ export interface QuizTakingResponse {
   attemptNumber: number;
   maxAttempts: number;
   startedAt: string;
+  remainingSeconds?: number;
   questions: QuizTakingQuestionResponse[];
 }
 

@@ -18,6 +18,7 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  onRefreshBoard,
   programInterns,
   groups = [],
   internWorkloadMap = {},
@@ -214,27 +215,45 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
       assigneeInternIds: formData.assigneeInternIds,
     };
 
+    // Nhánh 1: CÓ Quiz đính kèm -> Trực tiếp giao Quiz & đồng bộ Kanban từ Backend
+    // KHÔNG gọi onSubmit(payload) để tránh sinh thêm 1 thẻ rác không có link làm bài!
+    if (attachedQuiz && payload.assigneeInternIds && payload.assigneeInternIds.length > 0) {
+      try {
+        const assignPromises = payload.assigneeInternIds.map((internId) =>
+          quizService.assignQuiz(attachedQuiz.id, {
+            targetType: 'INDIVIDUAL',
+            targetId: internId,
+            dueDate: payload.dueDate || todayString,
+            createKanbanTask: true,
+          })
+        );
+        await Promise.all(assignPromises);
+        toast.success(`Đã giao bài kiểm tra "${attachedQuiz.title}" và tạo thẻ bài thi trên Kanban!`);
+        onRefreshBoard?.();
+
+        if (keepOpen && !editingItem) {
+          setFormData({
+            title: '',
+            description: '',
+            priority: 'MEDIUM',
+            dueDate: '',
+            assigneeInternIds: [],
+          });
+          setFieldErrors({});
+          setAttachedQuiz(null);
+        } else {
+          onClose();
+        }
+      } catch (assignErr: any) {
+        console.error('Lỗi khi phân phối bài kiểm tra đính kèm:', assignErr);
+        toast.error(assignErr?.message || 'Chưa thể phân phối bài Quiz đính kèm.');
+      }
+      return;
+    }
+
+    // Nhánh 2: Công việc thông thường (không có Quiz)
     const success = await onSubmit(payload);
     if (success) {
-      // Nếu có bài Quiz AI đính kèm, tự động giao cho các TTS phụ trách
-      if (attachedQuiz && payload.assigneeInternIds && payload.assigneeInternIds.length > 0) {
-        try {
-          const assignPromises = payload.assigneeInternIds.map((internId) =>
-            quizService.assignQuiz(attachedQuiz.id, {
-              targetType: 'INDIVIDUAL',
-              targetId: internId,
-              dueDate: payload.dueDate || todayString,
-              createKanbanTask: true,
-            })
-          );
-          await Promise.all(assignPromises);
-          toast.success(`Đã tự động phân phối bài kiểm tra "${attachedQuiz.title}" và tạo thẻ bài thi trên Kanban của TTS!`);
-        } catch (assignErr) {
-          console.error('Lỗi khi phân phối bài kiểm tra đính kèm:', assignErr);
-          toast.error('Giao việc thành công nhưng chưa thể phân phối bài Quiz đính kèm.');
-        }
-      }
-
       if (keepOpen && !editingItem) {
         // Reset form để tiếp tục tạo công việc khác
         setFormData({
