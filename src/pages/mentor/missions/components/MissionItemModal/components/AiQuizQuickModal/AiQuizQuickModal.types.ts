@@ -1,4 +1,4 @@
-import type { QuizDetailResponse, QuizDifficulty } from '../../../../../../types/quiz.types';
+import type { QuizDetailResponse, QuizDifficulty } from '../../../../../../../types/quiz.types';
 
 export interface AiQuizQuickModalProps {
   isOpen: boolean;

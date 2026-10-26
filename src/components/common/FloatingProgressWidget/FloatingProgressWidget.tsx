@@ -1,4 +1,5 @@
 import React from 'react';
+import { toast } from 'sonner';
 import {
   Sparkles,
   Maximize2,
@@ -10,6 +11,7 @@ import {
   ArrowRight,
   User,
   Briefcase,
+  BookOpen,
 } from 'lucide-react';
 
 import { Button } from '../Button/Button';
@@ -37,23 +39,37 @@ const QUESTION_STAGES = [
   { step: 4, percent: 100, label: 'Hoàn tất & Sẵn sàng phỏng vấn' },
 ];
 
+const QUIZ_STAGES = [
+  { step: 1, percent: 25, label: 'Phân tích chủ đề & cấu trúc bài kiểm tra' },
+  { step: 2, percent: 60, label: 'Gemini AI biên soạn câu hỏi & giải thích đáp án' },
+  { step: 3, percent: 85, label: 'Chuẩn hóa dữ liệu & lưu trữ bài Quiz' },
+  { step: 4, percent: 100, label: 'Hoàn tất & sẵn sàng ôn tập' },
+];
+
 export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
   className,
   onViewResults,
 }) => {
-  const { activeJob, isExpanded, setIsExpanded, dismissJob, openQuestionModal } = useAiJob();
+  const { activeJob, isExpanded, setIsExpanded, dismissJob, openQuestionModal, consumeCompletedQuiz } = useAiJob();
 
   if (!activeJob) {
     return null;
   }
 
   const isInterviewJob = activeJob.jobType === 'INTERVIEW_QUESTIONS';
+  const isQuizJob = activeJob.jobType === 'QUIZ';
   const isCompleted = activeJob.status === 'COMPLETED';
   const isFailed = activeJob.status === 'FAILED';
   const isProcessing = activeJob.status === 'PROCESSING';
 
   // Pill Title & Subtitle
-  const pillTitle = isInterviewJob
+  const pillTitle = isQuizJob
+    ? isCompleted
+      ? 'Bài Quiz hoàn tất'
+      : isFailed
+      ? 'Lỗi tạo Quiz'
+      : 'Đang tạo Quiz AI'
+    : isInterviewJob
     ? isCompleted
       ? 'Bộ câu hỏi hoàn tất'
       : isFailed
@@ -65,12 +81,20 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
     ? 'AI gặp sự cố'
     : 'Đang thẩm định AI';
 
-  const pillSubtitle = isInterviewJob
+  const pillSubtitle = isQuizJob
+    ? `${activeJob.percent}% · ${activeJob.currentStage || activeJob.quizTopic || 'Đang tạo'}`
+    : isInterviewJob
     ? `${activeJob.percent}% · ${activeJob.currentStage || (activeJob.internName ? activeJob.internName : (activeJob.programName || 'Đang tạo'))}`
     : `${activeJob.percent}% (${activeJob.processedCount || 0}/${activeJob.totalCount || 0} ứng viên)`;
 
   // Expanded Status Label
-  const progressStatusLabel = isInterviewJob
+  const progressStatusLabel = isQuizJob
+    ? isCompleted
+      ? 'Đã hoàn tất tạo bài kiểm tra'
+      : isFailed
+      ? 'Đã dừng do lỗi'
+      : activeJob.currentStage || 'Đang tạo bài Quiz với Gemini AI...'
+    : isInterviewJob
     ? isCompleted
       ? 'Đã hoàn tất sinh bộ câu hỏi'
       : isFailed
@@ -89,7 +113,7 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
     return (
       <section
         className={`${styles.widgetContainer} ${className || ''}`}
-        aria-label={isInterviewJob ? 'Tiến trình sinh câu hỏi phỏng vấn AI' : 'Tiến trình thẩm định hồ sơ AI'}
+        aria-label={isQuizJob ? 'Tiến trình tạo bài Quiz AI' : isInterviewJob ? 'Tiến trình sinh câu hỏi phỏng vấn AI' : 'Tiến trình thẩm định hồ sơ AI'}
       >
         <div className={styles.collapsedPill}>
           <button
@@ -153,7 +177,9 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
     <section
       className={`${styles.widgetContainer} ${className || ''}`}
       aria-label={
-        isInterviewJob
+        isQuizJob
+          ? 'Tiến trình tạo bài Quiz AI chi tiết'
+          : isInterviewJob
           ? 'Tiến trình sinh câu hỏi phỏng vấn AI chi tiết'
           : 'Tiến trình thẩm định hồ sơ AI chi tiết'
       }
@@ -164,7 +190,7 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
           <div className={styles.headerTitleWrapper}>
             <Sparkles size={16} className={styles.headerIcon} aria-hidden="true" />
             <h4 className={styles.headerTitle}>
-              {isInterviewJob ? 'Tiến Trình Sinh Câu Hỏi AI' : 'Tiến Trình Thẩm Định AI'}
+              {isQuizJob ? 'Tiến Trình Tạo Bài Quiz AI' : isInterviewJob ? 'Tiến Trình Sinh Câu Hỏi AI' : 'Tiến Trình Thẩm Định AI'}
             </h4>
           </div>
 
@@ -192,6 +218,20 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
 
         {/* Card Body */}
         <div className={styles.cardBody}>
+          {/* Scope Badge for Quiz Job */}
+          {isQuizJob && (
+            <div className={styles.scopeBadge}>
+              <BookOpen size={11} />
+              <span>Chủ đề: {activeJob.quizTopic || 'Quiz AI'}</span>
+              {activeJob.difficulty && (
+                <span style={{ marginLeft: '0.5rem', opacity: 0.7 }}>
+                  · {activeJob.difficulty === 'HARD' ? 'Nâng cao' : activeJob.difficulty === 'EASY' ? 'Cơ bản' : 'Vận dụng'}
+                  {activeJob.questionCount ? ` · ${activeJob.questionCount} câu` : ''}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Scope Badge for Interview Job */}
           {isInterviewJob && (
             <div className={styles.scopeBadge}>
@@ -232,13 +272,48 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
             </div>
 
             <div className={styles.progressSubtitle}>
-              {isInterviewJob
+              {isQuizJob
+                ? `Bài kiểm tra: ${activeJob.quizTopic || 'Ôn tập kiến thức'}`
+                : isInterviewJob
                 ? activeJob.targetRole
                   ? `Vị trí chuyên môn: ${activeJob.targetRole}`
                   : `Phạm vi: ${activeJob.programName || 'Chương trình tuyển dụng'}`
                 : `Đã xử lý ${activeJob.processedCount || 0} trên tổng số ${activeJob.totalCount || 0} hồ sơ`}
             </div>
           </div>
+
+          {/* Stepped Stages Checklist for Quiz Job */}
+          {isQuizJob && (
+            <div className={styles.stagesList}>
+              {QUIZ_STAGES.map((st) => {
+                const isStageDone = activeJob.percent >= st.percent;
+                const isStageCurrent =
+                  !isStageDone && activeJob.percent >= st.percent - 35;
+
+                return (
+                  <div
+                    key={st.step}
+                    className={`${styles.stageItem} ${
+                      isStageDone
+                        ? styles.stageItemDone
+                        : isStageCurrent
+                        ? styles.stageItemCurrent
+                        : styles.stageItemPending
+                    }`}
+                  >
+                    {isStageDone ? (
+                      <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                    ) : isStageCurrent ? (
+                      <Sparkles size={13} className="text-indigo-500 animate-spin shrink-0" />
+                    ) : (
+                      <div className="w-3 h-3 rounded-full border border-slate-300 dark:border-slate-600 shrink-0" />
+                    )}
+                    <span>{st.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Stepped Stages Checklist for Interview Question Job */}
           {isInterviewJob && (
@@ -295,7 +370,25 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
           {/* Completion Action */}
           {isCompleted && (
             <div className="pt-1">
-              {isInterviewJob ? (
+              {isQuizJob ? (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  fullWidth
+                  onClick={() => {
+                    consumeCompletedQuiz();
+                    toast.info('Bài Quiz đã sẵn sàng! Hãy mở form giao việc để đính kèm.', {
+                      description: `Quiz "${activeJob.quizTopic || 'Ôn tập'}" có thể được đính kèm khi tạo công việc.`,
+                    });
+                    setIsExpanded(false);
+                    dismissJob();
+                  }}
+                  leftIcon={<BookOpen size={14} />}
+                  rightIcon={<ArrowRight size={14} />}
+                >
+                  ✦ Bài Quiz Đã Sẵn Sàng
+                </Button>
+              ) : isInterviewJob ? (
                 <Button
                   variant="primary"
                   size="sm"
@@ -350,7 +443,11 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
         {/* Card Footer */}
         <div className={styles.cardFooter}>
           <span className={styles.footerNote}>
-            {isInterviewJob
+            {isQuizJob
+              ? isProcessing
+                ? 'Mentor có thể tiếp tục giao việc, Quiz tạo ngầm.'
+                : 'Bài kiểm tra đã được lưu vào hệ thống.'
+              : isInterviewJob
               ? isProcessing
                 ? 'HR có thể tự do thao tác, đa luồng xử lý ngầm.'
                 : 'Bộ câu hỏi đã được lưu vào hệ thống.'

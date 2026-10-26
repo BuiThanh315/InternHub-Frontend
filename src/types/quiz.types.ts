@@ -243,3 +243,20 @@ export interface QuizReportResponse {
   averageScore: number;
   internReports: QuizInternReportDto[];
 }
+
+export interface QuizGenerationJobResponse {
+  jobId: string;
+  programId: number;
+  topic?: string;
+  difficulty?: string;
+  questionCount?: number;
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'NOT_FOUND';
+  percent: number;
+  currentStage?: string;
+  quizId?: number;
+  result?: QuizDetailResponse;
+  errorMessage?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

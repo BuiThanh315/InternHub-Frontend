@@ -16,6 +16,7 @@
 | :---: | :---: | :---: | :---: | :---: | :--- |
 | **v1.0** | 2026-10-14 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Tạo mới Đặc Tả | Khởi tạo tài liệu đặc tả kỹ thuật Frontend cho tính năng Mentor sử dụng AI tạo bài Quiz từ báo cáo tuần và giao cho TTS/nhóm TTS, đồng bộ thẻ Kanban; xây dựng trải nghiệm làm bài thi tĩnh tâm và đối soát kết quả chi tiết cho thực tập sinh theo quy chuẩn `frontend-design`. |
 | **v1.1** | 2026-10-26 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Tích hợp tạo Quiz vào Modal Giao Việc Kanban | Chuyển đổi luồng tạo đề: Nhúng nút `[✦ Tạo bài kiểm tra ôn tập AI]` vào trực tiếp trong modal `MissionItemModal` (khi giao task Kanban). Bổ sung popup nhập nhanh tham số (Số câu, độ khó, chủ đề bám theo task), tự động đính kèm Quiz vào Task Kanban. Dọn dẹp nút tạo đề lỗi cũ tại `MentorQuizzesTab`. |
+| **v1.2** | 2026-10-26 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Kiến Trúc Đa Luồng Chạy Ngầm Bất Đồng Bộ & Floating Progress Widget tương tự TM-103 | Tách luồng sinh câu hỏi AI sang chạy ngầm không chặn thao tác (Non-blocking Async Job). Khi bấm "Bắt đầu tạo câu hỏi" trong `AiQuizQuickModal`, modal đóng ngay lập tức, kích hoạt `startQuizJob` qua `AiJobContext`. Cửa sổ nổi `FloatingProgressWidget` góc phải dưới màn hình tự động hiển thị tiến độ 4 chặng (25% - 60% - 85% - 100%). Mentor hoàn toàn tự do tiếp tục soạn task Kanban hoặc chuyển trang. Khi hoàn tất, widget cung cấp nút "Đính kèm vào công việc" hoặc tự động liên kết vào task đang soạn thảo. |
 
 ---
 
@@ -82,6 +83,9 @@
 5. **Layouts & Workspace hiện hữu:**
    - [`MentorProgramWorkspace.tsx`](file:///d:/codegym_final_project/InternHub-Frontend/src/pages/mentor/missions/components/MentorProgramWorkspace/MentorProgramWorkspace.tsx): Tích hợp Tab thứ 4 `quizzes` vào hệ thống tab hiện tại.
    - [`MentorWeeklyReportsTab.tsx`](file:///d:/codegym_final_project/InternHub-Frontend/src/pages/mentor/missions/components/MentorProgramWorkspace/tabs/MentorWeeklyReportsTab.tsx): Thêm nút thao tác nhanh *"Tạo Quiz từ báo cáo này"*.
+6. **Hạ Tầng Tác Vụ Ngầm & Cửa Sổ Tiến Độ Nổi (Async Background & Floating Widget tương tự TM-103):**
+   - [`AiJobContext.tsx`](file:///d:/codegym_final_project/InternHub-Frontend/src/contexts/AiJobContext.tsx): Context toàn cục quản lý đa luồng chạy ngầm, mở rộng thêm kiểu tác vụ `jobType: 'QUIZ'`. Tự động polling ngầm trạng thái mỗi 2000ms mà không làm gián đoạn thao tác người dùng.
+   - [`FloatingProgressWidget.tsx`](file:///d:/codegym_final_project/InternHub-Frontend/src/components/common/FloatingProgressWidget/FloatingProgressWidget.tsx): Tái sử dụng 100% cửa sổ nổi đa năng góc phải dưới màn hình (hỗ trợ cả dạng Collapsed Pill và Expanded Card) để hiển thị tiến độ 4 chặng của bài Quiz AI kèm nút bấm thao tác nhanh.
 
 ### 3.2. Các thành phần tạo mới theo chuẩn Domain-Driven Modular:
 1. `src/constants/endpoints/quiz.endpoints.ts`: Khai báo tập trung URL endpoints Quiz của cả Mentor và Intern.

@@ -2,11 +2,13 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { toast } from 'sonner';
 import { aiService } from '../services/aiService';
 import { aiInterviewService } from '../services/aiInterviewService';
+import { quizService } from '../services/quizService';
 import type { BatchJobStatusResponse, BatchScreeningRequest, ScreeningResultDto } from '../types';
 import type { GenerateInterviewQuestionsPayload } from '../types/aiInterview.types';
+import type { QuizDetailResponse, GenerateAiQuizRequest, QuizDifficulty } from '../types/quiz.types';
 import { InterviewQuestionModal } from '../pages/hr/programs/workspace/components/InterviewQuestionModal';
 
-export type AiJobType = 'SCREENING' | 'INTERVIEW_QUESTIONS';
+export type AiJobType = 'SCREENING' | 'INTERVIEW_QUESTIONS' | 'QUIZ';
 
 export interface ActiveAiJob {
   jobType: AiJobType;
@@ -31,6 +33,13 @@ export interface ActiveAiJob {
   questionSetId?: number | null;
   result?: any;
   errorMessage?: string | null;
+
+  // Quiz fields
+  quizTopic?: string;
+  difficulty?: QuizDifficulty;
+  questionCount?: number;
+  quizId?: number | null;
+  quizResult?: QuizDetailResponse;
 }
 
 export interface ViewingQuestionModalState {
@@ -57,6 +66,17 @@ interface AiJobContextType {
     includeScreeningDossier?: boolean;
     customRequirements?: string;
   }) => Promise<string>;
+  startQuizJob: (params: {
+    programId: number;
+    topic: string;
+    questionCount: number;
+    difficulty: QuizDifficulty;
+    groupId?: number;
+    weekNumber?: number;
+    onCompleted?: (quiz: QuizDetailResponse) => void;
+  }) => Promise<string>;
+  latestCompletedQuiz: QuizDetailResponse | null;
+  consumeCompletedQuiz: () => QuizDetailResponse | null;
   dismissJob: () => void;
   completedVersion: number;
   viewingQuestionModal: ViewingQuestionModalState | null;
@@ -71,6 +91,7 @@ export const AiJobProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [completedVersion, setCompletedVersion] = useState<number>(0);
   const [viewingQuestionModal, setViewingQuestionModal] = useState<ViewingQuestionModalState | null>(null);
+  const [latestCompletedQuiz, setLatestCompletedQuiz] = useState<QuizDetailResponse | null>(null);
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const stopPolling = useCallback(() => {
@@ -263,10 +284,123 @@ export const AiJobProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [pollQuestionJobStatus, stopPolling]
   );
 
+  // Polling cho Quiz Generation Job
+  const pollQuizJobStatus = useCallback(
+    async (jobId: string, onCompletedCallback?: (quiz: QuizDetailResponse) => void) => {
+      try {
+        const statusRes = await quizService.getQuizJobStatus(jobId);
+        setActiveJob((prev) => {
+          if (!prev || prev.jobId !== jobId) return prev;
+          return {
+            ...prev,
+            status: statusRes.status,
+            percent: statusRes.percent,
+            currentStage: statusRes.currentStage,
+            quizId: statusRes.quizId,
+            quizResult: statusRes.result,
+            result: statusRes.result,
+            errorMessage: statusRes.errorMessage,
+            updatedAt: statusRes.updatedAt,
+          };
+        });
+
+        if (statusRes.status === 'COMPLETED') {
+          stopPolling();
+          setCompletedVersion((prev) => prev + 1);
+          if (statusRes.result) {
+            setLatestCompletedQuiz(statusRes.result);
+            if (onCompletedCallback) {
+              onCompletedCallback(statusRes.result);
+            }
+          }
+          toast.success('AI đã hoàn tất tạo bài kiểm tra ôn tập!', {
+            description: `Bài Quiz "${statusRes.result?.title || 'Ôn tập'}" đã sẵn sàng để đính kèm.`,
+          });
+        } else if (statusRes.status === 'FAILED') {
+          stopPolling();
+          toast.error('Quá trình sinh bài Quiz bằng AI gặp sự cố.', {
+            description: statusRes.errorMessage || 'Vui lòng kiểm tra lại cấu hình hoặc thử lại sau.',
+          });
+        } else {
+          pollingTimerRef.current = setTimeout(() => {
+            void pollQuizJobStatus(jobId, onCompletedCallback);
+          }, 2000);
+        }
+      } catch (err: any) {
+        console.error('Lỗi khi polling trạng thái sinh Quiz AI:', err);
+        pollingTimerRef.current = setTimeout(() => {
+          void pollQuizJobStatus(jobId, onCompletedCallback);
+        }, 3000);
+      }
+    },
+    [stopPolling]
+  );
+
+  // Kích hoạt Quiz Generation Job (Non-blocking)
+  const startQuizJob = useCallback(
+    async (params: {
+      programId: number;
+      topic: string;
+      questionCount: number;
+      difficulty: QuizDifficulty;
+      groupId?: number;
+      weekNumber?: number;
+      onCompleted?: (quiz: QuizDetailResponse) => void;
+    }): Promise<string> => {
+      stopPolling();
+      const payload: GenerateAiQuizRequest = {
+        programId: params.programId,
+        topic: params.topic,
+        questionCount: params.questionCount,
+        difficulty: params.difficulty,
+        groupId: params.groupId,
+        weekNumber: params.weekNumber,
+      };
+
+      const created = await quizService.generateAiQuizAsync(payload);
+
+      const initialJob: ActiveAiJob = {
+        jobType: 'QUIZ',
+        jobId: created.jobId,
+        programId: params.programId,
+        quizTopic: params.topic,
+        difficulty: params.difficulty,
+        questionCount: params.questionCount,
+        status: 'PROCESSING',
+        percent: 0,
+        currentStage: created.currentStage || 'Đang khởi tạo tiến trình sinh bài Quiz AI...',
+        quizId: created.quizId,
+        createdAt: created.createdAt || new Date().toISOString(),
+        updatedAt: created.updatedAt || new Date().toISOString(),
+      };
+
+      setActiveJob(initialJob);
+      setIsExpanded(true);
+
+      toast.info(`Bắt đầu sinh bài kiểm tra AI: "${params.topic}"`, {
+        description: 'Tiến trình đang chạy ngầm, bạn có thể tiếp tục thực hiện giao việc!',
+      });
+
+      pollingTimerRef.current = setTimeout(() => {
+        void pollQuizJobStatus(created.jobId, params.onCompleted);
+      }, 1500);
+
+      return created.jobId;
+    },
+    [pollQuizJobStatus, stopPolling]
+  );
+
+  const consumeCompletedQuiz = useCallback(() => {
+    const q = latestCompletedQuiz;
+    setLatestCompletedQuiz(null);
+    return q;
+  }, [latestCompletedQuiz]);
+
   const dismissJob = useCallback(() => {
     stopPolling();
     setActiveJob(null);
     setIsExpanded(false);
+    setLatestCompletedQuiz(null);
   }, [stopPolling]);
 
   const openQuestionModal = useCallback((params?: Partial<ViewingQuestionModalState>) => {
@@ -301,6 +435,9 @@ export const AiJobProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsExpanded,
       startJob,
       startQuestionJob,
+      startQuizJob,
+      latestCompletedQuiz,
+      consumeCompletedQuiz,
       dismissJob,
       completedVersion,
       viewingQuestionModal,
@@ -312,6 +449,9 @@ export const AiJobProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isExpanded,
       startJob,
       startQuestionJob,
+      startQuizJob,
+      latestCompletedQuiz,
+      consumeCompletedQuiz,
       dismissJob,
       completedVersion,
       viewingQuestionModal,

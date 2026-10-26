@@ -23,10 +23,11 @@ export const useAiScreening = (programId: number) => {
 
   // Cập nhật kết quả realtime từ activeJob khi có kết quả mới
   useEffect(() => {
-    if (activeJob?.results && activeJob.results.length > 0) {
+    const results = activeJob?.results;
+    if (results && results.length > 0) {
       setEvaluationsMap((prev) => {
         const next = { ...prev };
-        activeJob.results.forEach((res) => {
+        results.forEach((res) => {
           next[res.internId] = res;
         });
         return next;

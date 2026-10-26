@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Modal, Input, Select, Button } from '../../../../../components/common';
 import { getAvatarUrl } from '../../../../../utils/avatar';
 import { quizService } from '../../../../../services/quizService';
+import { useAiJob } from '../../../../../contexts/AiJobContext';
 import type { QuizDetailResponse } from '../../../../../types/quiz.types';
 import type {
   MissionItemModalProps,
@@ -52,6 +53,20 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
   // Phân hệ AI Quiz Ôn Tập Kiến Thức TM-104
   const [attachedQuiz, setAttachedQuiz] = useState<QuizDetailResponse | null>(null);
   const [isAiQuizModalOpen, setIsAiQuizModalOpen] = useState(false);
+  const { latestCompletedQuiz, consumeCompletedQuiz } = useAiJob();
+
+  // Auto-attach quiz khi tiến trình ngầm hoàn tất
+  useEffect(() => {
+    if (isOpen && latestCompletedQuiz && !attachedQuiz) {
+      const quiz = consumeCompletedQuiz();
+      if (quiz) {
+        setAttachedQuiz(quiz);
+        toast.success(`Bài Quiz "${quiz.title}" đã sẵn sàng và tự động đính kèm!`, {
+          description: 'Nhấn "Giao Việc Cho TTS" để hoàn tất.',
+        });
+      }
+    }
+  }, [isOpen, latestCompletedQuiz, attachedQuiz, consumeCompletedQuiz]);
 
   const todayString = useMemo(() => {
     const now = new Date();
@@ -202,7 +217,7 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
     const success = await onSubmit(payload);
     if (success) {
       // Nếu có bài Quiz AI đính kèm, tự động giao cho các TTS phụ trách
-      if (attachedQuiz && payload.assigneeInternIds.length > 0) {
+      if (attachedQuiz && payload.assigneeInternIds && payload.assigneeInternIds.length > 0) {
         try {
           const assignPromises = payload.assigneeInternIds.map((internId) =>
             quizService.assignQuiz(attachedQuiz.id, {
