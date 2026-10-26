@@ -1,11 +1,11 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+  max-width: 100%;
+  padding: 0.5rem 0 2rem 0;
+  box-sizing: border-box;
 }
 
 /* Back Link */

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { apiClient } from '../../services/api';
+import styles from './OnboardingActivationPage.module.css';
 
 export const OnboardingActivationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -106,10 +107,10 @@ export const OnboardingActivationPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)' }}>
+      <div className={styles.container}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.5rem' }}>InternHub</div>
-          <p style={{ color: 'var(--text-muted)' }}>Đang xác thực liên kết onboarding...</p>
+          <div className={styles.brandTitle}>InternHub</div>
+          <p className={styles.cardSubtitle}>Đang xác thực liên kết onboarding...</p>
         </div>
       </div>
     );
@@ -117,22 +118,22 @@ export const OnboardingActivationPage: React.FC = () => {
 
   if (!isValid) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)', padding: '1rem' }}>
-        <div style={{ maxWidth: '440px', width: '100%', background: 'var(--bg-card)', borderRadius: '12px', padding: '2rem', boxShadow: 'var(--shadow-md)', textAlign: 'center', border: '1px solid var(--border-default)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+      <div className={styles.container}>
+        <div className={styles.centerCard}>
+          <div className={styles.iconCircleDanger}>
             <AlertCircle size={28} />
           </div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.75rem' }}>Liên kết không khả dụng hoặc đã hết hạn</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+          <h3 className={styles.cardTitle}>Liên kết không khả dụng hoặc đã hết hạn</h3>
+          <p className={styles.cardSubtitle} style={{ marginBottom: '1.5rem' }}>
             {errorMessage}
           </p>
 
           {/* Form yêu cầu cấp lại link kích hoạt */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem', marginBottom: '1.25rem', textAlign: 'left' }}>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
+          <div className={styles.resendSection}>
+            <h4 className={styles.resendTitle}>
               Yêu cầu gửi lại liên kết kích hoạt
             </h4>
-            <p style={{ fontSize: '0.825rem', color: '#64748b', marginBottom: '0.75rem' }}>
+            <p className={styles.resendDesc}>
               Nhập email bạn đã ứng tuyển để nhận ngay đường link kích hoạt mới:
             </p>
             <form onSubmit={handleResendActivation} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -142,46 +143,27 @@ export const OnboardingActivationPage: React.FC = () => {
                 value={resendEmail}
                 onChange={(e) => setResendEmail(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '0.625rem 0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid var(--border-default)',
-                  background: 'var(--bg-card)',
-                  color: 'var(--text-main)',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className={styles.resendInput}
               />
               <button
                 type="submit"
                 disabled={resendLoading}
-                style={{
-                  padding: '0.625rem',
-                  borderRadius: '6px',
-                  background: 'var(--primary)',
-                  color: '#fff',
-                  border: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  cursor: resendLoading ? 'not-allowed' : 'pointer',
-                  opacity: resendLoading ? 0.7 : 1,
-                }}
+                className={styles.submitBtn}
               >
                 {resendLoading ? 'Đang gửi...' : 'Gửi lại liên kết vào email'}
               </button>
             </form>
             {resendStatus && (
-              <p style={{ marginTop: '0.5rem', fontSize: '0.825rem', color: 'var(--primary)', lineHeight: 1.4 }}>
+              <p className={styles.resendStatus}>
                 {resendStatus}
               </p>
             )}
           </div>
 
           <button
+            type="button"
             onClick={() => navigate('/login')}
-            style={{ width: '100%', padding: '0.625rem', borderRadius: '6px', background: 'var(--bg-body)', color: 'var(--text-main)', border: '1px solid var(--border-default)', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}
+            className={styles.backBtn}
           >
             Quay lại trang Đăng nhập
           </button>
@@ -194,21 +176,23 @@ export const OnboardingActivationPage: React.FC = () => {
 
   if (isSuccess) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)', padding: '1rem' }}>
-        <div style={{ maxWidth: '440px', width: '100%', background: 'var(--bg-card)', borderRadius: '12px', padding: '2rem', boxShadow: 'var(--shadow-md)', textAlign: 'center', border: '1px solid var(--border-default)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--success-bg)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+      <div className={styles.container}>
+        <div className={styles.centerCard}>
+          <div className={styles.iconCircleSuccess}>
             <CheckCircle2 size={28} />
           </div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.75rem' }}>Kích hoạt thành công! 🎉</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+          <h3 className={styles.cardTitle}>Kích hoạt thành công! 🎉</h3>
+          <p className={styles.cardSubtitle} style={{ marginBottom: '1.5rem' }}>
             Mật khẩu cho tài khoản <strong>{candidateInfo?.email}</strong> đã được thiết lập.{' '}
             {isMentor
               ? 'Chào mừng bạn đến với đội ngũ Người Hướng Dẫn Kỹ Thuật (Mentor) tại InternHub!'
               : 'Chào mừng bạn gia nhập chương trình thực tập!'}
           </p>
           <button
+            type="button"
             onClick={() => navigate('/login')}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'var(--primary)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            className={styles.submitBtn}
+            style={{ width: '100%' }}
           >
             Đăng nhập vào hệ thống <ArrowRight size={18} />
           </button>
@@ -218,68 +202,68 @@ export const OnboardingActivationPage: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)', padding: '1rem' }}>
-      <div style={{ maxWidth: '440px', width: '100%', background: 'var(--bg-card)', borderRadius: '12px', padding: '2rem', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-default)' }}>
+    <div className={styles.container}>
+      <div className={styles.card}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.25rem' }}>InternHub</div>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-main)', margin: '0 0 0.5rem' }}>
+          <div className={styles.brandTitle}>InternHub</div>
+          <h3 className={styles.cardTitle}>
             {isMentor ? 'Thiết Lập Tài Khoản Mentor' : 'Thiết Lập Tài Khoản Onboarding'}
           </h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
+          <p className={styles.cardSubtitle}>
             Xin chào <strong>{candidateInfo?.fullName}</strong>! Vui lòng thiết lập mật khẩu để hoàn tất bước{' '}
             {isMentor ? 'gia nhập đội ngũ Mentor.' : 'tiếp nhận.'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.35rem' }}>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>
               Email tài khoản
             </label>
             <input
               type="text"
               value={candidateInfo?.email || ''}
               disabled
-              style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '6px', border: '1px solid var(--border-default)', background: 'var(--bg-body)', color: 'var(--text-muted)', fontSize: '0.875rem' }}
+              className={styles.inputDisabled}
             />
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.35rem' }}>
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>
               Mật khẩu mới (tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt)
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className={styles.inputWrapper}>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                style={{ width: '100%', padding: '0.65rem 0.85rem 0.65rem 2.2rem', borderRadius: '6px', border: '1px solid var(--border-default)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '0.875rem' }}
+                className={styles.inputWithIcon}
               />
-              <Lock size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Lock size={16} className={styles.inputIcon} />
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.35rem' }}>
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>
               Xác nhận mật khẩu mới
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className={styles.inputWrapper}>
               <input
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                style={{ width: '100%', padding: '0.65rem 0.85rem 0.65rem 2.2rem', borderRadius: '6px', border: '1px solid var(--border-default)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '0.875rem' }}
+                className={styles.inputWithIcon}
               />
-              <ShieldCheck size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <ShieldCheck size={16} className={styles.inputIcon} />
             </div>
           </div>
 
           {passwordError && (
-            <div style={{ fontSize: '0.8rem', color: 'var(--danger)', fontWeight: 500 }}>
+            <div className={styles.errorText}>
               {passwordError}
             </div>
           )}
@@ -287,22 +271,7 @@ export const OnboardingActivationPage: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            style={{
-              marginTop: '0.5rem',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              background: 'var(--primary)',
-              color: '#fff',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              boxShadow: 'var(--shadow-sm)',
-            }}
+            className={styles.submitBtn}
           >
             {isSubmitting ? 'Đang kích hoạt...' : 'Hoàn tất kích hoạt'} <ArrowRight size={18} />
           </button>

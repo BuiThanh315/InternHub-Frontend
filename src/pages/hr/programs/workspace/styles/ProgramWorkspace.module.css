@@ -1,7 +1,8 @@
 /* Program Workspace - Enterprise Design System Stylesheet */
 
 .workspaceContainer {
-  padding-bottom: 4rem;
+  padding-bottom: 2rem;
+  width: 100%;
   animation: fadeIn 0.25s ease-out;
 }
 
@@ -23,7 +24,7 @@
   gap: 0.5rem;
   font-size: 0.875rem;
   color: var(--text-muted);
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .breadcrumbLink {
@@ -54,11 +55,13 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
-  padding: 1.75rem 2rem;
+  padding: 1rem 1.5rem;
   box-shadow: var(--shadow-sm);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .headerTopRow {
@@ -714,7 +717,7 @@
   padding: 0.12rem 0.45rem;
   border-radius: var(--radius-full);
   background-color: rgba(16, 185, 129, 0.08);
-  color: #059669;
+  color: var(--success);
   border: 1px solid rgba(16, 185, 129, 0.25);
   font-size: 0.6875rem;
   font-weight: 600;
@@ -728,9 +731,83 @@
   padding: 0.12rem 0.45rem;
   border-radius: var(--radius-full);
   background-color: rgba(245, 158, 11, 0.08);
-  color: #d97706;
+  color: var(--warning);
   border: 1px solid rgba(245, 158, 11, 0.25);
   font-size: 0.6875rem;
   font-weight: 600;
   white-space: nowrap;
+}
+
+/* Consolidated Action Dropdown Menu */
+.actionMenuContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.moreBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.moreBtn:hover {
+  background: var(--bg-body);
+  color: var(--primary);
+  border-color: var(--border-focus);
+}
+
+.actionDropdownMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 50;
+  min-width: 210px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.actionMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-main);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background var(--transition-fast);
+}
+
+.actionMenuItem:hover {
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.actionMenuItemDanger {
+  color: var(--danger);
+}
+
+.actionMenuItemDanger:hover {
+  background-color: var(--danger-bg);
+  color: var(--danger);
 }
