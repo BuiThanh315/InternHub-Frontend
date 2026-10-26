@@ -290,6 +290,7 @@ const InternMissionContent: React.FC = () => {
         onClose={() => setSelectedDetailItem(null)}
         onStartProgress={(item) => handleDirectStatusChange(item.id, 'IN_PROGRESS')}
         onOpenSubmission={(item) => handleOpenSubmissionModal(item)}
+        onCompleteDirectly={(item) => handleDirectStatusChange(item.id, 'COMPLETED')}
         onReopen={(item) => handleDirectStatusChange(item.id, 'IN_PROGRESS')}
       />
 

@@ -175,36 +175,70 @@ export const InternTaskCard: React.FC<InternTaskCardProps> = ({
         {/* If it's a Quiz Task: Provide direct Quiz actions */}
         {isQuizTask ? (
           item.status !== 'COMPLETED' ? (
-            <button
-              type="button"
-              className={`${styles.actionBtn} ${styles.actionBtnTakeQuiz}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (item.status === 'TODO') {
-                  onStatusChange(item.id, 'IN_PROGRESS');
-                }
-                navigate(getQuizTakeUrl());
-              }}
-              disabled={isMutating}
-              title="Bắt đầu làm bài thi trắc nghiệm trực tuyến"
-            >
-              <Sparkles size={13} />
-              <span>Làm bài Quiz</span>
-              <ArrowRight size={13} />
-            </button>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnTakeQuiz}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (item.status === 'TODO') {
+                    onStatusChange(item.id, 'IN_PROGRESS');
+                  }
+                  navigate(getQuizTakeUrl());
+                }}
+                disabled={isMutating}
+                title="Bắt đầu làm bài thi trắc nghiệm trực tuyến"
+              >
+                <Sparkles size={13} />
+                <span>Làm bài Quiz</span>
+                <ArrowRight size={13} />
+              </button>
+
+              {item.status === 'IN_PROGRESS' && (
+                <button
+                  type="button"
+                  className={`${styles.actionBtn} ${styles.actionBtnComplete}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStatusChange(item.id, 'COMPLETED');
+                  }}
+                  disabled={isMutating}
+                  title="Chuyển sang cột Hoàn thành"
+                >
+                  <CheckCircle2 size={13} />
+                  <span>Hoàn thành</span>
+                </button>
+              )}
+            </div>
           ) : (
-            <button
-              type="button"
-              className={`${styles.actionBtn} ${styles.actionBtnViewResult}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(item.submissionUrl || '/intern/quizzes');
-              }}
-              title="Xem lại kết quả & điểm số bài thi"
-            >
-              <Award size={13} />
-              <span>Xem kết quả</span>
-            </button>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnViewResult}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(item.submissionUrl || '/intern/quizzes');
+                }}
+                title="Xem lại kết quả & điểm số bài thi"
+              >
+                <Award size={13} />
+                <span>Xem kết quả</span>
+              </button>
+
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStatusChange(item.id, 'IN_PROGRESS');
+                }}
+                disabled={isMutating}
+                title="Mở lại công việc để chỉnh sửa hoặc làm tiếp"
+              >
+                <RotateCcw size={13} />
+                <span>Mở lại làm tiếp</span>
+              </button>
+            </div>
           )
         ) : (
           /* Standard Transition Buttons for Regular Tasks */
