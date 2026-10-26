@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Users,
-  UserCheck,
-  ShieldCheck,
-  GraduationCap,
   Activity,
   AlertTriangle,
   ArrowRight,
@@ -58,17 +55,20 @@ export const AdminAnalyticsHub: React.FC<AdminAnalyticsHubProps> = ({ users }) =
     fetchAuditData();
   }, [fetchAuditData]);
 
-  // Thống kê người dùng theo vai trò
+  // Thống kê người dùng theo vai trò (hỗ trợ cả ADMIN/Admin, MENTOR/Mentor,...)
   const totalUsers = users.length;
-  const adminCount = users.filter((u) => u.role === 'ADMIN').length;
-  const hrCount = users.filter((u) => u.role === 'HR').length;
-  const mentorCount = users.filter((u) => u.role === 'MENTOR').length;
-  const internCount = users.filter((u) => u.role === 'INTERN' || !['ADMIN', 'HR', 'MENTOR'].includes(u.role)).length;
+  const adminCount = users.filter((u) => u.role?.toUpperCase() === 'ADMIN').length;
+  const hrCount = users.filter((u) => u.role?.toUpperCase() === 'HR').length;
+  const mentorCount = users.filter((u) => u.role?.toUpperCase() === 'MENTOR').length;
+  const internCount = users.filter((u) => {
+    const r = u.role?.toUpperCase();
+    return r === 'INTERN' || !['ADMIN', 'HR', 'MENTOR'].includes(r || '');
+  }).length;
 
   const activeUsers = users.filter((u) => u.status === 'ACTIVE' || (u as any).active === true).length;
   const inactiveUsers = totalUsers - activeUsers;
 
-  // Tỷ lệ phần trăm
+  // Tỷ lệ phần trăm chính xác (tổng các phần chiếm đúng tỷ lệ hoặc 0% nếu count = 0)
   const hrPercent = totalUsers ? Math.round((hrCount / totalUsers) * 100) : 0;
   const mentorPercent = totalUsers ? Math.round((mentorCount / totalUsers) * 100) : 0;
   const internPercent = totalUsers ? Math.round((internCount / totalUsers) * 100) : 0;
@@ -160,26 +160,34 @@ export const AdminAnalyticsHub: React.FC<AdminAnalyticsHubProps> = ({ users }) =
 
           <div className={styles.barStackWrapper}>
             <div className={styles.barStack}>
-              <div
-                className={styles.barIntern}
-                style={{ width: `${internPercent || 25}%` }}
-                title={`Thực tập sinh: ${internCount} (${internPercent}%)`}
-              />
-              <div
-                className={styles.barMentor}
-                style={{ width: `${mentorPercent || 25}%` }}
-                title={`Mentor: ${mentorCount} (${mentorPercent}%)`}
-              />
-              <div
-                className={styles.barHr}
-                style={{ width: `${hrPercent || 25}%` }}
-                title={`Nhân sự HR: ${hrCount} (${hrPercent}%)`}
-              />
-              <div
-                className={styles.barAdmin}
-                style={{ width: `${adminPercent || 25}%` }}
-                title={`Quản trị viên: ${adminCount} (${adminPercent}%)`}
-              />
+              {internPercent > 0 && (
+                <div
+                  className={styles.barIntern}
+                  style={{ width: `${internPercent}%` }}
+                  title={`Thực tập sinh: ${internCount} (${internPercent}%)`}
+                />
+              )}
+              {mentorPercent > 0 && (
+                <div
+                  className={styles.barMentor}
+                  style={{ width: `${mentorPercent}%` }}
+                  title={`Mentor: ${mentorCount} (${mentorPercent}%)`}
+                />
+              )}
+              {hrPercent > 0 && (
+                <div
+                  className={styles.barHr}
+                  style={{ width: `${hrPercent}%` }}
+                  title={`Nhân sự HR: ${hrCount} (${hrPercent}%)`}
+                />
+              )}
+              {adminPercent > 0 && (
+                <div
+                  className={styles.barAdmin}
+                  style={{ width: `${adminPercent}%` }}
+                  title={`Quản trị viên: ${adminCount} (${adminPercent}%)`}
+                />
+              )}
             </div>
 
             <div className={styles.legendGrid}>
@@ -262,7 +270,7 @@ export const AdminAnalyticsHub: React.FC<AdminAnalyticsHubProps> = ({ users }) =
                     />
                     <div className={styles.feedMain}>
                       <div className={styles.feedActionLine}>
-                        <span className={styles.feedActor}>{log.actorUsername || 'Hệ thống'}</span>
+                        <span className={styles.feedActor}>{log.username || 'Hệ thống'}</span>
                         <span className={styles.feedAction}>{log.action || 'THỰC THI'}</span>
                         <span className={styles.feedModuleBadge}>{log.module || 'SYSTEM'}</span>
                       </div>

@@ -25,8 +25,8 @@ export const AdminDashboard: React.FC = () => {
   // Tải danh sách người dùng cho Analytics Hub
   const loadUsers = useCallback(async () => {
     try {
-      const res = await userService.getUsers({ page: 0, size: 100 });
-      setUsers(res.items || res.content || []);
+      const data = await userService.getAllUsers();
+      setUsers(data || []);
     } catch (err) {
       console.error('Không thể tải danh sách người dùng:', err);
     }

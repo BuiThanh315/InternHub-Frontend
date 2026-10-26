@@ -8,7 +8,6 @@ import {
   Filter,
   Bookmark,
   Scale,
-  FileText,
   Radio,
 } from 'lucide-react';
 import { toast } from 'sonner';

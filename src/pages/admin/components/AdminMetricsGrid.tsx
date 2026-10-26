@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, UserCheck, ShieldCheck, Clock, Server, Activity, RefreshCw } from 'lucide-react';
+import { Server, Activity, RefreshCw } from 'lucide-react';
 
 import { apiClient } from '../../../services/api';
-import type { User } from '../../../types';
 import styles from './AdminMetricsGrid.module.css';
-
-interface AdminMetricsGridProps {
-  users: User[];
-}
 
 interface ServiceStatus {
   id: string;
