@@ -14,7 +14,6 @@ import {
   Loader2,
   Save,
   Lock,
-  Plus,
   Search,
   Check,
   X,
@@ -76,6 +75,10 @@ const NEW_FEATURE_PERMISSIONS = [
   'MEETING_SCHEDULE_VIEW_OWN',
   'PROGRAM_IMPORT_EXCEL',
   'CONTRACT_TEMPLATE_MANAGE',
+  'AI_CHAT_USE',
+  'AI_CONFIG_MANAGE',
+  'AI_INTERVIEW_MANAGE',
+  'AI_REPORT_ASSISTANT_USE',
 ];
 
 export const AdminRoleTab: React.FC = () => {
@@ -394,6 +397,8 @@ export const AdminRoleTab: React.FC = () => {
         return <Video size={18} className={styles.moduleIcon} />;
       case 'EVALUATION':
         return <Award size={18} className={styles.moduleIcon} />;
+      case 'AI':
+        return <Sparkles size={18} className={styles.moduleIcon} style={{ color: '#8b5cf6' }} />;
       case 'SYSTEM':
       default:
         return <Layers size={18} className={styles.moduleIcon} />;
@@ -442,23 +447,6 @@ export const AdminRoleTab: React.FC = () => {
           <p className={styles.subHeading}>
             Gạt trực tiếp các Switch Toggle để cấp hoặc thu hồi quyền hạn theo từng phân hệ nghiệp vụ. Toàn bộ Route & Menu Sidebar tự động thích ứng theo cơ chế Permission-First.
           </p>
-        </div>
-
-        <div className={styles.headerActions}>
-          <div
-            className={styles.disabledAddBtnWrapper}
-            title="Tính năng tạo vai trò tùy chỉnh sẽ được mở rộng ở phiên bản sau"
-          >
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
-              disabled
-              style={{ opacity: 0.65, cursor: 'not-allowed' }}
-            >
-              <Plus size={16} /> Tạo Vai Trò Mới
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -709,7 +697,11 @@ export const AdminRoleTab: React.FC = () => {
                         </div>
                         <div>
                           <div className={styles.moduleTitleRow}>
-                            <h4 className={styles.moduleName}>{group.moduleName}</h4>
+                            <h4 className={styles.moduleName}>
+                              {group.module === 'AI' && group.moduleName === 'AI'
+                                ? 'Trợ Lý Trí Tuệ Nhân Tạo & Phỏng Vấn (AI)'
+                                : group.moduleName}
+                            </h4>
                             <span className={styles.moduleTag}>{group.module}</span>
                           </div>
                           <p className={styles.moduleDesc}>

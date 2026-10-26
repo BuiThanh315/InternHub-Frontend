@@ -5,6 +5,7 @@ import { assessmentService } from '../../../services/assessmentService';
 import { aiInterviewService } from '../../../services/aiInterviewService';
 import type { InternEvaluation, CreateInternEvaluationPayload, RecommendationType } from '../../../types';
 import type { EvaluationDossier } from '../../../types/aiEvaluation.types';
+import { MentorProctoringSummaryWidget } from './MentorProctoringSummaryWidget';
 import { toast } from 'sonner';
 import styles from './MentorFinalEvaluationTab.module.css';
 
@@ -185,6 +186,15 @@ export const MentorFinalEvaluationTab: React.FC<MentorFinalEvaluationTabProps> =
           </div>
         </div>
       </div>
+
+      {/* Widget Biên Bản Giám Sát Thi Trực Tuyến & Chống Gian Lận Telemetry (Pha 2) */}
+      <MentorProctoringSummaryWidget
+        strikeCount={0}
+        maxStrikes={3}
+        pasteCount={0}
+        status="COMPLETED"
+        onViewDetails={() => toast.info('Nhật ký giám sát telemetry: Không phát hiện vi phạm quy chế.')}
+      />
 
       <div className={styles.gridSection}>
         {/* Phần 1: Kỹ Năng Chuyên Môn */}

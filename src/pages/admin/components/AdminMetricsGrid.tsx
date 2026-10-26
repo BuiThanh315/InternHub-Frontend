@@ -25,15 +25,14 @@ const INITIAL_SERVICES: ServiceStatus[] = [
   { id: 'identity', name: 'Identity & Access Service', port: '8081', role: 'Xác thực & Quản lý User', status: 'CHECKING' },
   { id: 'intern', name: 'Intern & Program Service', port: '8082', role: 'Hồ sơ TTS & Tài liệu', status: 'CHECKING' },
   { id: 'reporting', name: 'Reporting & Integration Service', port: '8083', role: 'Sao lưu & Nhật ký kiểm toán', status: 'CHECKING' },
+  { id: 'ai', name: 'AI Intelligence Service', port: '8086', role: 'Gemini LLM & Phỏng vấn AI', status: 'CHECKING' },
   { id: 'notification', name: 'Notification Service', port: '8085', role: 'Thông báo & Đẩy SSE/WebSocket', status: 'CHECKING' },
   { id: 'file', name: 'File Storage Service', port: '8084', role: 'Lưu trữ MinIO S3 & Tải tệp', status: 'CHECKING' },
 ];
 
-export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => {
+export const AdminMetricsGrid: React.FC = () => {
   const [services, setServices] = useState<ServiceStatus[]>(INITIAL_SERVICES);
   const [probing, setProbing] = useState(false);
-
-  const countByRole = (roleName: string) => users.filter((u) => u.role === roleName).length;
 
   const probeServices = useCallback(async () => {
     setProbing(true);
@@ -47,7 +46,6 @@ export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => 
         const latency = Math.round(performance.now() - start);
         return { ok: true, latency };
       } catch (err: any) {
-        // Nếu HTTP status trả về 401 hoặc 403 hoặc 404 có format response thì service vẫn sống
         if (err.response && [200, 401, 403, 404].includes(err.response.status)) {
           const latency = Math.round(performance.now() - start);
           return { ok: true, latency };
@@ -101,21 +99,38 @@ export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => 
       latencyMs: infraOk ? Math.max(gwRes.latency - 8, 3) : undefined,
     };
 
-    // Probe 5: Notification Service
-    const notifRes = await checkEndpoint('/api/notifications?size=1');
-    updated[6] = {
-      ...updated[6],
-      status: notifRes.ok ? 'ONLINE' : 'OFFLINE',
-      latencyMs: notifRes.ok ? notifRes.latency : undefined,
-    };
+    // Probe 5: AI Intelligence Service
+    const aiRes = await checkEndpoint('/api/ai/admin/config');
+    const aiIdx = updated.findIndex((s) => s.id === 'ai');
+    if (aiIdx !== -1) {
+      updated[aiIdx] = {
+        ...updated[aiIdx],
+        status: aiRes.ok ? 'ONLINE' : 'OFFLINE',
+        latencyMs: aiRes.ok ? aiRes.latency : undefined,
+      };
+    }
 
-    // Probe 6: File Storage Service
+    // Probe 6: Notification Service
+    const notifRes = await checkEndpoint('/api/notifications?size=1');
+    const notifIdx = updated.findIndex((s) => s.id === 'notification');
+    if (notifIdx !== -1) {
+      updated[notifIdx] = {
+        ...updated[notifIdx],
+        status: notifRes.ok ? 'ONLINE' : 'OFFLINE',
+        latencyMs: notifRes.ok ? notifRes.latency : undefined,
+      };
+    }
+
+    // Probe 7: File Storage Service
     const fileRes = await checkEndpoint('/api/files/actuator/health');
-    updated[7] = {
-      ...updated[7],
-      status: fileRes.ok ? 'ONLINE' : 'OFFLINE',
-      latencyMs: fileRes.ok ? fileRes.latency : (infraOk ? Math.max(gwRes.latency + 2, 8) : undefined),
-    };
+    const fileIdx = updated.findIndex((s) => s.id === 'file');
+    if (fileIdx !== -1) {
+      updated[fileIdx] = {
+        ...updated[fileIdx],
+        status: fileRes.ok ? 'ONLINE' : 'OFFLINE',
+        latencyMs: fileRes.ok ? fileRes.latency : (infraOk ? Math.max(gwRes.latency + 2, 8) : undefined),
+      };
+    }
 
     setServices(updated);
     setProbing(false);
@@ -129,49 +144,6 @@ export const AdminMetricsGrid: React.FC<AdminMetricsGridProps> = ({ users }) => 
 
   return (
     <div className={styles.metricsContainer}>
-      {/* Metric KPI Cards */}
-      <div className={styles.kpiGrid}>
-        <div className={`card ${styles.kpiCard}`}>
-          <div className={`${styles.iconWrapper} ${styles.iconPrimary}`}>
-            <Users size={24} />
-          </div>
-          <div>
-            <p className={styles.kpiLabel}>Tổng Người Dùng</p>
-            <h3 className={styles.kpiValue}>{users.length}</h3>
-          </div>
-        </div>
-
-        <div className={`card ${styles.kpiCard}`}>
-          <div className={`${styles.iconWrapper} ${styles.iconHr}`}>
-            <UserCheck size={24} />
-          </div>
-          <div>
-            <p className={styles.kpiLabel}>Nhân Sự (HR)</p>
-            <h3 className={styles.kpiValue}>{countByRole('HR')}</h3>
-          </div>
-        </div>
-
-        <div className={`card ${styles.kpiCard}`}>
-          <div className={`${styles.iconWrapper} ${styles.iconMentor}`}>
-            <ShieldCheck size={24} />
-          </div>
-          <div>
-            <p className={styles.kpiLabel}>Người Hướng Dẫn</p>
-            <h3 className={styles.kpiValue}>{countByRole('MENTOR')}</h3>
-          </div>
-        </div>
-
-        <div className={`card ${styles.kpiCard}`}>
-          <div className={`${styles.iconWrapper} ${styles.iconIntern}`}>
-            <Clock size={24} />
-          </div>
-          <div>
-            <p className={styles.kpiLabel}>Thực Tập Sinh</p>
-            <h3 className={styles.kpiValue}>{countByRole('INTERN')}</h3>
-          </div>
-        </div>
-      </div>
-
       {/* Microservices Status Bar (Live Dynamic Monitoring) */}
       <div className={`card ${styles.servicesCard}`}>
         <div className={styles.servicesHeader}>

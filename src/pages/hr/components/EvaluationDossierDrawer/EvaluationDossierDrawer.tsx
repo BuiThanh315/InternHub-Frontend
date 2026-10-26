@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import styles from './EvaluationDossierDrawer.module.css';
 import { aiInterviewService } from '../../../../services/aiInterviewService';
+import { useAiJobTracker } from '../../../../hooks/useAiJobTracker';
 import type { EvaluationDossier, AnswerEvaluationDetail } from '../../../../types/aiEvaluation.types';
 
 interface EvaluationDossierDrawerProps {
@@ -24,6 +26,9 @@ export const EvaluationDossierDrawer: React.FC<EvaluationDossierDrawerProps> = (
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [downloadingPdf, setDownloadingPdf] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activeJobId, setActiveJobId] = useState<string | undefined>(undefined);
+
+  const { currentJob, progress, currentStep, detail, status: jobStatus, isCompleted, resetTracker } = useAiJobTracker(activeJobId);
 
   useEffect(() => {
     if (isOpen && sessionId) {
@@ -110,18 +115,34 @@ export const EvaluationDossierDrawer: React.FC<EvaluationDossierDrawerProps> = (
     }
   };
 
+  // Tự động làm mới phiếu điểm khi tác vụ AI hoàn tất thành công qua WebSocket
+  useEffect(() => {
+    if (isCompleted && sessionId) {
+      void loadDossier(sessionId);
+      if (onRefresh) onRefresh();
+    }
+  }, [isCompleted, sessionId, onRefresh]);
+
   const handleRegrade = async () => {
     if (!dossier) return;
     const reason = window.prompt('Nhập lý do kích hoạt chấm lại bằng AI:');
     if (!reason || !reason.trim()) return;
     try {
       setSubmitting(true);
-      await aiInterviewService.triggerRegrade(dossier.sessionId, { reason: reason.trim() });
-      alert('Đã kích hoạt chấm lại bài thi trong nền. Vui lòng tải lại sau ít phút.');
-      await loadDossier(dossier.sessionId);
-      if (onRefresh) onRefresh();
+      resetTracker();
+      const res = await aiInterviewService.triggerRegrade(dossier.sessionId, { reason: reason.trim() });
+      if (res.jobId) {
+        setActiveJobId(res.jobId);
+        toast.info('Đã khởi chạy tiến trình thẩm định AI ngầm', {
+          description: 'Hệ thống đang phát sóng tiến độ trực tiếp trên màn hình.',
+        });
+      } else {
+        toast.success(res.message || 'Đã tiếp nhận yêu cầu chấm lại.');
+        await loadDossier(dossier.sessionId);
+        if (onRefresh) onRefresh();
+      }
     } catch (err: any) {
-      alert('Lỗi kích hoạt chấm lại: ' + (err.response?.data?.message || err.message));
+      toast.error('Lỗi kích hoạt chấm lại: ' + (err.response?.data?.message || err.message));
     } finally {
       setSubmitting(false);
     }
@@ -167,6 +188,45 @@ export const EvaluationDossierDrawer: React.FC<EvaluationDossierDrawerProps> = (
 
         {/* Body */}
         <div className={styles.drawerBody}>
+          {/* Thanh Tiến Trình AI Realtime Streaming */}
+          {currentJob && jobStatus !== 'COMPLETED' && (
+            <div
+              style={{
+                marginBottom: '1.25rem',
+                padding: '1rem 1.25rem',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+                border: '1px solid #bfdbfe',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6', animation: 'pulse 1.5s infinite' }} />
+                  <strong style={{ fontSize: '0.9rem', color: '#1e3a8a' }}>
+                    {currentStep || 'AI đang xử lý bài thi...'}
+                  </strong>
+                </div>
+                <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#2563eb' }}>{progress}%</span>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    width: `${progress}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
+                    borderRadius: '999px',
+                    transition: 'width 0.4s ease-in-out',
+                  }}
+                />
+              </div>
+              {detail && (
+                <div style={{ fontSize: '0.775rem', color: '#64748b', marginTop: '0.375rem' }}>
+                  {detail}
+                </div>
+              )}
+            </div>
+          )}
           {loading ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
               <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>Đang nạp dữ liệu đánh giá...</div>

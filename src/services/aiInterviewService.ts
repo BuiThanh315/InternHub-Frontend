@@ -352,12 +352,20 @@ export const aiInterviewService = {
   },
 
   /**
-   * Kích hoạt chấm lại bài thi bằng AI (Tạo phiên bản mới)
+   * Kích hoạt chấm lại bài thi bằng AI (Tạo phiên bản mới và chạy ngầm Asynchronous)
    */
   async triggerRegrade(
     sessionId: number | string,
     payload: import('../types/aiEvaluation.types').RegradePayload
-  ): Promise<{ sessionId: number; newVersion: number; message: string }> {
+  ): Promise<{
+    jobId?: string;
+    sessionId: number;
+    newEvaluationId?: number;
+    newVersion: number;
+    status?: string;
+    gradingStatus?: string;
+    message: string;
+  }> {
     const response = await apiClient.post(
       API_ENDPOINTS.AI.EVALUATION_REGRADE(sessionId),
       payload
@@ -394,6 +402,16 @@ export const aiInterviewService = {
       }
       throw err;
     }
+  },
+
+  /**
+   * Giám thị (HR) đình chỉ phiên thi trực tiếp do vi phạm quy chế
+   */
+  async disqualifySession(sessionId: number | string, reason?: string): Promise<{ success: boolean; sessionId: number; message: string }> {
+    const response = await apiClient.post(`/api/v1/ai/interviews/schedules/sessions/${sessionId}/evaluation/disqualify`, {
+      reason: reason || 'Đình chỉ bởi giám thị phòng thi trực tuyến',
+    });
+    return response.data;
   },
 };
 

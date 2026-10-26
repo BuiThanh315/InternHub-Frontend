@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 import { aiInterviewService } from '../../services/aiInterviewService';
 import type {
   CandidateQuestionData,
   CandidateRecoveryStateData,
 } from '../../types/aiInterviewRoom.types';
+import type { ProctoringAlertEvent } from '../../types/proctoring.types';
 import styles from './CandidateInterviewRoomPage.module.css';
 
 export const CandidateInterviewRoomPage: React.FC = () => {
@@ -206,8 +209,52 @@ export const CandidateInterviewRoomPage: React.FC = () => {
     await handleNextQuestion(true);
   };
 
-  // Telemetry Listener: Giám sát khi ứng viên chuyển tab / rời khỏi màn hình làm bài
+  // STOMP WebSocket: Lắng nghe kênh riêng tư của phiên thi (/topic/proctoring/session/{sessionId})
   useEffect(() => {
+    if (!sessionId) return;
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS('/ws'),
+      reconnectDelay: 5000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
+      onConnect: () => {
+        client.subscribe(`/topic/proctoring/session/${sessionId}`, (message) => {
+          try {
+            const event: ProctoringAlertEvent = JSON.parse(message.body);
+            if (event.severity === 'DISQUALIFIED') {
+              setIsTerminated(true);
+              setWarningMessage(
+                event.details || 'Phiên phỏng vấn của bạn đã bị đình chỉ do vi phạm quy chế thi trực tuyến.'
+              );
+              setWarningModalOpen(true);
+              toast.error('Buổi thi đã bị dừng bởi giám thị hoặc vượt quá số lần vi phạm cho phép.');
+            } else if (event.severity === 'CRITICAL' || event.severity === 'WARNING') {
+              setCurrentStrikes(event.strikeCount);
+              setMaxStrikes(event.maxStrikes);
+              setWarningMessage(
+                event.details || `Cảnh báo vi phạm lần ${event.strikeCount}/${event.maxStrikes}. Vui lòng tập trung vào màn hình làm bài!`
+              );
+              setWarningModalOpen(true);
+            }
+          } catch (err) {
+            console.error('Error parsing proctoring STOMP message:', err);
+          }
+        });
+      },
+    });
+
+    client.activate();
+
+    return () => {
+      client.deactivate();
+    };
+  }, [sessionId]);
+
+  // Telemetry Listener: Giám sát khi ứng viên chuyển tab / rời khỏi màn hình làm bài với Debounce 1500ms
+  useEffect(() => {
+    let blurDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     const reportBlurEvent = async (reason: string) => {
       if (isTerminated || loading) return;
       if (isPromptingPermissionRef.current) {
@@ -243,29 +290,48 @@ export const CandidateInterviewRoomPage: React.FC = () => {
       }
     };
 
-    // 1. Chỉ kích hoạt khi tab thực sự bị ẩn (người dùng chuyển sang tab khác hoặc minimize)
+    // 1. Chỉ kích hoạt khi tab thực sự bị ẩn vượt quá 1500ms
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        reportBlurEvent('Ứng viên chuyển tab hoặc ẩn trình duyệt');
+        blurDebounceTimer = setTimeout(() => {
+          reportBlurEvent('Ứng viên chuyển tab hoặc ẩn trình duyệt quá 1.5 giây');
+        }, 1500);
+      } else {
+        if (blurDebounceTimer) {
+          clearTimeout(blurDebounceTimer);
+          blurDebounceTimer = null;
+        }
       }
     };
 
-    // 2. Sự kiện window blur thông thường: Nếu tab vẫn visible và đang yêu cầu quyền micro thì bỏ qua
+    // 2. Window blur thông thường: Nếu tab bị ẩn thì chờ timer 1.5s
     const handleWindowBlur = () => {
-      if (isPromptingPermissionRef.current) {
-        return;
-      }
+      if (isPromptingPermissionRef.current) return;
       if (document.visibilityState === 'hidden') {
-        reportBlurEvent('Cửa sổ mất focus (rời khỏi màn hình)');
+        if (!blurDebounceTimer) {
+          blurDebounceTimer = setTimeout(() => {
+            reportBlurEvent('Cửa sổ mất focus (rời khỏi màn hình) quá 1.5 giây');
+          }, 1500);
+        }
+      }
+    };
+
+    const handleWindowFocus = () => {
+      if (blurDebounceTimer) {
+        clearTimeout(blurDebounceTimer);
+        blurDebounceTimer = null;
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
 
     return () => {
+      if (blurDebounceTimer) clearTimeout(blurDebounceTimer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
     };
   }, [sessionId, sessionToken, isTerminated, loading]);
 

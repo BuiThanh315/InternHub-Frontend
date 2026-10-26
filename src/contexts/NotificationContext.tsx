@@ -134,7 +134,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             const item: NotificationItem = JSON.parse(msg.body);
             setNotifications((prev) => [item, ...prev]);
             setUnreadCount((prev) => prev + 1);
-            queueToast(item.title, item.content);
+
+            // Chỉ bắn toast cho các notification thông thường; với AI_SUCCESS/AI_ERROR đã có useAiJobTracker / FloatingWidget hiển thị
+            if (!item.type || !item.type.startsWith('AI_')) {
+              queueToast(item.title, item.content);
+            }
 
             // Bắn custom event để các widget trên trang (như widget lịch họp) tự động reload tức thì
             window.dispatchEvent(new CustomEvent('internhub:new-notification', { detail: item }));
@@ -167,6 +171,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
           } catch (e) {
             console.error('Lỗi parse security command STOMP frame:', e);
+          }
+        });
+
+        // 2.1 Kênh cá nhân nhận sự kiện tiến trình AI Realtime (/user/queue/ai-jobs)
+        client.subscribe('/user/queue/ai-jobs', (msg) => {
+          try {
+            const aiEvent = JSON.parse(msg.body);
+            window.dispatchEvent(new CustomEvent('internhub:ai-job-event', { detail: aiEvent }));
+          } catch (e) {
+            console.error('Lỗi parse ai-jobs STOMP frame:', e);
           }
         });
 

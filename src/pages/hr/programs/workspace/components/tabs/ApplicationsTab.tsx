@@ -16,6 +16,7 @@ import {
   Bookmark,
   Scale,
   FileText,
+  Radio,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -24,11 +25,13 @@ import { AiSteppedProgressSkeleton } from '../../../../../../components/ai/AiSte
 import { useAiScreening, type AiFilterOption } from '../../../../../../hooks';
 import { internService } from '../../../../../../services/internService';
 import { aiService } from '../../../../../../services/aiService';
+import { aiInterviewService } from '../../../../../../services/aiInterviewService';
 import { formatDate } from '../../../../../../utils/formatters';
 import type { InternProfile, ScreeningResultDto } from '../../../../../../types';
 import type { ApplicationsTabProps } from '../../types/ProgramWorkspace.types';
 import { InterviewQuestionModal } from '../InterviewQuestionModal';
 import { CvComparisonModal } from '../CvComparisonModal';
+import { LiveProctoringModal } from '../LiveProctoringModal';
 import styles from '../../styles/ProgramWorkspace.module.css';
 
 interface RejectionDialogState {
@@ -85,6 +88,28 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   const [showOnlyBookmarked, setShowOnlyBookmarked] = useState<boolean>(false);
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState<boolean>(false);
+
+  // Live Proctoring Room State (Trụ cột 2)
+  const [isLiveProctoringOpen, setIsLiveProctoringOpen] = useState<boolean>(false);
+  const [activeScheduleId, setActiveScheduleId] = useState<number | null>(null);
+
+  // Mở phòng giám sát ca thi trực tuyến với scheduleId thực tế
+  const handleOpenLiveProctoring = async () => {
+    try {
+      // Tìm lịch thi gần nhất thuộc kỳ thực tập này
+      const res = await aiInterviewService.getSchedules({ programId: program.id, size: 1 });
+      const schedules = res?.content || res?.items || (Array.isArray(res) ? res : []);
+      if (schedules.length > 0 && schedules[0].id) {
+        setActiveScheduleId(schedules[0].id);
+      } else {
+        // Fallback sang program.id nếu chưa có schedule riêng
+        setActiveScheduleId(program.id);
+      }
+    } catch {
+      setActiveScheduleId(program.id);
+    }
+    setIsLiveProctoringOpen(true);
+  };
 
   // Custom Hook quản lý AI Screening hàng loạt & bộ lọc
   const aiScreening = useAiScreening(program.id);
@@ -314,6 +339,16 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleOpenLiveProctoring}
+            className="flex items-center gap-1.5 border-rose-500/40 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/60 shadow-sm"
+          >
+            <Radio size={14} className="text-rose-500 animate-pulse" aria-hidden="true" />
+            Giám Sát Phòng Thi (Live)
+          </Button>
+
           <Button
             variant="secondary"
             size="sm"
@@ -979,6 +1014,14 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
           />
         );
       })()}
+
+      {/* Phòng Giám Sát Ca Thi Trực Tuyến Live Proctoring (Pha 2) */}
+      <LiveProctoringModal
+        isOpen={isLiveProctoringOpen}
+        onClose={() => setIsLiveProctoringOpen(false)}
+        scheduleId={activeScheduleId || program.id}
+        scheduleTitle={`Phòng Thi Trực Tuyến - ${program.name}`}
+      />
     </div>
   );
 };
