@@ -3,7 +3,6 @@ import {
   RotateCw,
   UserCheck,
   CheckCircle,
-  ArrowRight,
 } from 'lucide-react';
 import { ErrorBoundary, Button, Pagination, Skeleton, Alert } from '../../../components/common';
 import { useLeaveApproval } from './hooks/useLeaveApproval';
@@ -74,13 +73,13 @@ export const MentorLeaveApprovalPage: React.FC = () => {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Thực Tập Sinh</th>
-                    <th>Loại Nghỉ Phép</th>
-                    <th>Khung Thời Gian</th>
-                    <th>Thời Gian Nghỉ</th>
-                    <th>Số Ngày</th>
-                    <th>Lý Do</th>
-                    <th className={styles.stickyRight}>Thao Tác</th>
+                    <th>Thực tập sinh</th>
+                    <th>Loại nghỉ phép</th>
+                    <th>Khung thời gian</th>
+                    <th>Thời gian nghỉ</th>
+                    <th>Số ngày</th>
+                    <th>Lý do</th>
+                    <th className={styles.stickyRight}>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -115,14 +114,14 @@ export const MentorLeaveApprovalPage: React.FC = () => {
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th>THỰC TẬP SINH</th>
-                      <th>LOẠI NGHỈ PHÉP</th>
-                      <th>KHUNG THỜI GIAN</th>
-                      <th>THỜI GIAN NGHỈ</th>
-                      <th>SỐ CÔNG</th>
-                      <th>LÝ DO XIN NGHỈ</th>
+                      <th>Thực tập sinh</th>
+                      <th>Loại nghỉ phép</th>
+                      <th>Khung thời gian</th>
+                      <th>Thời gian nghỉ</th>
+                      <th>Số công</th>
+                      <th>Lý do xin nghỉ</th>
                       <th className={styles.stickyRight} style={{ textAlign: 'right' }}>
-                        THAO TÁC
+                        Thao tác
                       </th>
                     </tr>
                   </thead>
@@ -132,7 +131,7 @@ export const MentorLeaveApprovalPage: React.FC = () => {
                         <td>
                           <div className={styles.internInfo}>
                             <span className={styles.internName}>{item.internName}</span>
-                            <span className={styles.internCode}>{item.internCode}</span>
+                            <span className={`${styles.internCode} font-tabular`}>{item.internCode}</span>
                           </div>
                         </td>
                         <td>
@@ -141,13 +140,13 @@ export const MentorLeaveApprovalPage: React.FC = () => {
                         <td>{item.durationTypeDescription || item.durationType}</td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                            <span>{formatDate(item.startDate)}</span>
-                            <ArrowRight size={13} style={{ color: 'var(--text-muted)' }} />
-                            <span>{formatDate(item.endDate)}</span>
+                            <span className="font-tabular">{formatDate(item.startDate)}</span>
+                            <span style={{ color: 'var(--text-muted)' }}>–</span>
+                            <span className="font-tabular">{formatDate(item.endDate)}</span>
                           </div>
                         </td>
                         <td>
-                          <span className={styles.daysTag}>
+                          <span className={`${styles.daysTag} font-tabular`}>
                             {item.totalDays?.toFixed(1)} ngày
                           </span>
                         </td>
@@ -164,7 +163,7 @@ export const MentorLeaveApprovalPage: React.FC = () => {
                               onClick={() => openApprovalModal(item)}
                             >
                               <UserCheck size={15} style={{ marginRight: 4 }} />
-                              Xét Duyệt
+                              Xét duyệt
                             </Button>
                           </div>
                         </td>

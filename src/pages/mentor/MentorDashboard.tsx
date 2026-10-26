@@ -6,7 +6,7 @@ import {
   MentorTriageHeader,
   MentorFilterBar,
   MentorInternBentoCard,
-  MentorInternDetailDrawer,
+  MentorInternDetailModal,
   type TriageFilterMode,
 } from './components';
 import { internService } from '../../services/internService';
@@ -350,12 +350,12 @@ export const MentorDashboard: React.FC = () => {
               <thead>
                 <tr>
                   <th>Mã TTS</th>
-                  <th>Họ và Tên</th>
-                  <th>Chương Trình</th>
-                  <th>Tiến Độ Tuần</th>
-                  <th>Trạng Thái Đánh Giá</th>
-                  <th>Điểm Gần Nhất</th>
-                  <th>Thao Tác</th>
+                  <th>Họ và tên</th>
+                  <th>Chương trình</th>
+                  <th>Tiến độ tuần</th>
+                  <th>Trạng thái đánh giá</th>
+                  <th>Điểm gần nhất</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -365,7 +365,7 @@ export const MentorDashboard: React.FC = () => {
                     onClick={() => handleOpenDetail(intern.internCode)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <td className="font-monospace">{intern.internCode}</td>
+                    <td className="font-monospace font-tabular">{intern.internCode}</td>
                     <td style={{ fontWeight: 600 }}>{intern.fullName}</td>
                     <td>{intern.programName}</td>
                     <td>
@@ -375,17 +375,26 @@ export const MentorDashboard: React.FC = () => {
                     </td>
                     <td>
                       {intern.weeklyStatus === 'NEEDS_ASSESSMENT' && (
-                        <span className="badge badge-warning">Chưa đánh giá tuần {intern.currentWeek}</span>
+                        <span className="badge badge-warning">
+                          <span className="status-dot status-dot-warning mr-1" />
+                          Chưa đánh giá tuần {intern.currentWeek}
+                        </span>
                       )}
                       {intern.weeklyStatus === 'OVERDUE_MIDTERM' && (
-                        <span className="badge badge-danger">Quá hạn Midterm</span>
+                        <span className="badge badge-danger">
+                          <span className="status-dot status-dot-danger mr-1" />
+                          Quá hạn Midterm
+                        </span>
                       )}
                       {intern.weeklyStatus === 'ASSESSED' && (
-                        <span className="badge badge-success">Đã đánh giá tuần {intern.currentWeek}</span>
+                        <span className="badge badge-success">
+                          <span className="status-dot status-dot-success mr-1" />
+                          Đã đánh giá tuần {intern.currentWeek}
+                        </span>
                       )}
                     </td>
                     <td>
-                      <strong>{intern.lastAverageScore ? `${intern.lastAverageScore}/5` : '—'}</strong>
+                      <strong className="font-tabular">{intern.lastAverageScore ? `${intern.lastAverageScore}/5` : '—'}</strong>
                     </td>
                     <td>
                       <button
@@ -396,7 +405,7 @@ export const MentorDashboard: React.FC = () => {
                           handleOpenDetail(intern.internCode);
                         }}
                       >
-                        Đánh Giá & Chi Tiết
+                        Đánh giá & chi tiết
                       </button>
                     </td>
                   </tr>
@@ -407,19 +416,21 @@ export const MentorDashboard: React.FC = () => {
         )}
 
         {/* 4. Phân trang theo Quy tắc 10 giá trị (Rule 31: 10 items/trang, tự động ẩn khi <= 10 bản ghi) */}
-        <div className={styles.paginationWrapper}>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            pageSize={PAGE_SIZE}
-            onPageChange={(page) => setCurrentPage(page)}
-          />
-        </div>
+        {totalItems > 10 && totalPages > 1 && (
+          <div className={styles.paginationWrapper}>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={PAGE_SIZE}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        )}
       </div>
 
-      {/* 4. Full-width Slide-over Detail Drawer */}
-      <MentorInternDetailDrawer
+      {/* 4. Centered Modal Detail Modal */}
+      <MentorInternDetailModal
         intern={selectedIntern}
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}

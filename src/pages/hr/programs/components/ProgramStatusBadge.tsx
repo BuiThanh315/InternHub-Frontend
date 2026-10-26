@@ -9,33 +9,33 @@ export const ProgramStatusBadge: React.FC<ProgramStatusBadgeProps> = ({ status }
   const configs: Record<ProgramStatusType, { label: string; bg: string; text: string; border: string }> = {
     PLANNING: {
       label: 'Lên kế hoạch',
-      bg: 'rgba(100, 116, 139, 0.15)',
-      text: '#94a3b8',
-      border: 'rgba(148, 163, 184, 0.3)',
+      bg: 'var(--border-subtle)',
+      text: 'var(--text-muted)',
+      border: 'var(--border-default)',
     },
     OPEN: {
       label: 'Mở nhận hồ sơ',
-      bg: 'rgba(16, 185, 129, 0.15)',
-      text: '#34d399',
-      border: 'rgba(16, 185, 129, 0.3)',
+      bg: 'var(--success-bg)',
+      text: 'var(--success)',
+      border: 'var(--success-border)',
     },
     ONGOING: {
       label: 'Đang diễn ra',
-      bg: 'rgba(59, 130, 246, 0.15)',
-      text: '#60a5fa',
-      border: 'rgba(59, 130, 246, 0.3)',
+      bg: 'var(--info-bg)',
+      text: 'var(--info)',
+      border: 'var(--info-border)',
     },
     COMPLETED: {
       label: 'Đã hoàn thành',
-      bg: 'rgba(139, 92, 246, 0.15)',
-      text: '#a78bfa',
-      border: 'rgba(139, 92, 246, 0.3)',
+      bg: 'var(--primary-light)',
+      text: 'var(--primary)',
+      border: 'var(--border-focus)',
     },
     CANCELLED: {
       label: 'Đã hủy',
-      bg: 'rgba(239, 68, 68, 0.15)',
-      text: '#f87171',
-      border: 'rgba(239, 68, 68, 0.3)',
+      bg: 'var(--danger-bg)',
+      text: 'var(--danger)',
+      border: 'var(--danger-border)',
     },
   };
 

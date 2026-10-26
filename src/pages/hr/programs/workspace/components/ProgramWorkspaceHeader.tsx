@@ -28,6 +28,7 @@ export const ProgramWorkspaceHeader: React.FC<ProgramWorkspaceHeaderProps> = ({
   isTogglingRecruitment = false,
   onOpenInterviewQuestions,
   onOpenCreateSchedule,
+  onManageGroups,
 }) => {
   const currentCount = Number(program.currentInterns || internsCount || 0);
   const maxCount = Number(program.maxInterns || 0);
@@ -120,6 +121,18 @@ export const ProgramWorkspaceHeader: React.FC<ProgramWorkspaceHeaderProps> = ({
               <RefreshCw size={15} aria-hidden="true" />
               <span>Đổi Trạng Thái</span>
             </button>
+
+            {onManageGroups && (
+              <button
+                type="button"
+                className={styles.btnAction}
+                onClick={onManageGroups}
+                title="Quản lý và phân bổ nhóm thực tập"
+              >
+                <Users size={15} aria-hidden="true" />
+                <span>Quản Lý Nhóm</span>
+              </button>
+            )}
 
             {onOpenInterviewQuestions && (
               <button

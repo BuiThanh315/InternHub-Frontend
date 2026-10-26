@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit3, RefreshCw, Trash2, Users, Calendar, ArrowRight, UserPlus, Clock, LayoutDashboard, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Calendar } from 'lucide-react';
 
 import type { ProgramDetailResponse } from '../../../../types';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
@@ -10,11 +10,11 @@ interface ProgramTableProps {
   programs: ProgramDetailResponse[];
   pendingCountsMap?: Record<number, number>;
   userRole?: string;
-  onEdit: (program: ProgramDetailResponse) => void;
-  onChangeStatus: (program: ProgramDetailResponse) => void;
+  onEdit?: (program: ProgramDetailResponse) => void;
+  onChangeStatus?: (program: ProgramDetailResponse) => void;
   onToggleRecruitment: (program: ProgramDetailResponse) => void;
-  onEnrollIntern: (program: ProgramDetailResponse) => void;
-  onDelete: (program: ProgramDetailResponse) => void;
+  onEnrollIntern?: (program: ProgramDetailResponse) => void;
+  onDelete?: (program: ProgramDetailResponse) => void;
   onManageGroups?: (program: ProgramDetailResponse) => void;
   onAssignMentor?: (program: ProgramDetailResponse) => void;
   currentPage: number;
@@ -26,14 +26,8 @@ interface ProgramTableProps {
 export const ProgramTable: React.FC<ProgramTableProps> = ({
   programs,
   pendingCountsMap,
-  userRole,
-  onEdit,
-  onChangeStatus,
   onToggleRecruitment,
   onEnrollIntern,
-  onDelete,
-  onManageGroups,
-  onAssignMentor,
   currentPage,
   totalPages,
   totalElements,
@@ -47,13 +41,13 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
         <table className={styles.table}>
           <thead className={styles.tableHead}>
             <tr>
-              <th className={styles.thCell}>Mã & Tên Chương Trình</th>
-              <th className={styles.thCell}>Phòng Ban</th>
-              <th className={styles.thCell}>Thời Lượng Kỳ Thực Tập</th>
-              <th className={styles.thCell}>Tiếp Nhận & Đơn Chờ</th>
-              <th className={styles.thCell}>Trạng Thái</th>
-              <th className={styles.thCell}>Cổng Nhận Hồ Sơ</th>
-              <th className={styles.thCell} style={{ textAlign: 'center' }}>Thao Tác</th>
+              <th className={styles.thCell}>Mã & tên chương trình</th>
+              <th className={styles.thCell}>Phòng ban</th>
+              <th className={styles.thCell}>Thời lượng</th>
+              <th className={styles.thCell}>Tiếp nhận & đơn chờ</th>
+              <th className={styles.thCell}>Trạng thái</th>
+              <th className={styles.thCell}>Cổng nhận hồ sơ</th>
+              <th className={styles.thCell} style={{ textAlign: 'center' }}>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -71,8 +65,6 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
               programs.map((p) => {
                 const percentage = p.maxInterns > 0 ? Math.min(100, Math.round((p.currentInterns / p.maxInterns) * 100)) : 0;
                 const isFull = p.currentInterns >= p.maxInterns;
-                const canEdit = p.status !== 'CANCELLED';
-                const canDelete = userRole === 'ADMIN' && p.status === 'PLANNING' && p.currentInterns === 0;
                 const isRecruitmentDisabled = p.status === 'COMPLETED' || p.status === 'CANCELLED';
 
                 return (
@@ -104,9 +96,8 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                     {/* Cột 3: Thời lượng */}
                     <td className={`${styles.tdCell} font-tabular`}>
                       <div className={styles.dateRange}>
-                        <Calendar size={14} style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
                         <span>{p.startDate}</span>
-                        <ArrowRight size={12} style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
+                        <span style={{ color: 'var(--text-muted)' }}>–</span>
                         <span>{p.endDate}</span>
                       </div>
                       <div className={styles.durationBadge}>
@@ -125,7 +116,6 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                       >
 
                         <div className={`${styles.slotInfo} font-tabular`}>
-                          <Users size={15} aria-hidden="true" />
                           <span>{p.currentInterns} / {p.maxInterns} TTS</span>
                         </div>
                         <div className={styles.progressBarContainer} role="progressbar" aria-valuenow={p.currentInterns} aria-valuemin={0} aria-valuemax={p.maxInterns}>
@@ -155,19 +145,24 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                               <button
                                 type="button"
                                 className={styles.pendingBadgeBtn}
-                                onClick={() => onEnrollIntern(p)}
+                                onClick={() => {
+                                  if (onEnrollIntern) {
+                                    onEnrollIntern(p);
+                                  } else {
+                                    navigate(`/hr/programs/${p.id}`);
+                                  }
+                                }}
                                 title={`Có ${pendingCount} đơn đang chờ tiếp nhận. Nhấp để duyệt ngay!`}
                                 aria-label={`Có ${pendingCount} đơn chờ duyệt cho kỳ ${p.name}`}
                               >
-                                <Clock size={12} aria-hidden="true" />
+                                <span className="status-dot status-dot-warning" aria-hidden="true" />
                                 <span>{pendingCount} đơn chờ duyệt</span>
-                                <ArrowRight size={11} aria-hidden="true" />
                               </button>
                             );
                           }
                           return (
                             <span className={styles.noPendingBadge}>
-                              <Clock size={11} aria-hidden="true" />
+                              <span className="status-dot status-dot-neutral" aria-hidden="true" />
                               <span>0 đơn chờ</span>
                             </span>
                           );
@@ -213,80 +208,19 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
                       </button>
                     </td>
 
-                    {/* Cột 7: Thao tác */}
+                    {/* Cột 7: Thao tác - Mở Workspace */}
                     <td className={styles.tdCell} style={{ textAlign: 'center' }}>
                       <div className={styles.actionGroup}>
                         <button
                           type="button"
-                          className={`${styles.actionBtn} ${styles.actionBtnWorkspace}`}
+                          className={styles.btnOpenWorkspace}
                           onClick={() => navigate(`/hr/programs/${p.id}`)}
-                          title="Vào Không Gian Làm Việc (Workspace) của kỳ"
-                          aria-label={`Vào Workspace của chương trình ${p.name}`}
+                          title={`Vào Không Gian Làm Việc (Workspace) của kỳ "${p.name}"`}
+                          aria-label={`Vào Không Gian Làm Việc của kỳ ${p.name}`}
                         >
-                          <LayoutDashboard size={15} aria-hidden="true" />
+                          <LayoutDashboard size={14} aria-hidden="true" />
+                          <span>Vào Workspace</span>
                         </button>
-                        <button
-                          type="button"
-                          className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
-                          onClick={() => onEnrollIntern(p)}
-                          title="Tiếp nhận & điều phối thực tập sinh vào kỳ này"
-                          aria-label={`Tiếp nhận thực tập sinh vào chương trình ${p.name}`}
-                        >
-                          <UserPlus size={15} aria-hidden="true" />
-                        </button>
-                        {onManageGroups && (
-                          <button
-                            type="button"
-                            className={styles.actionBtn}
-                            onClick={() => onManageGroups(p)}
-                            title="Quản lý & Chia nhóm thực tập"
-                            aria-label={`Quản lý nhóm thực tập cho chương trình ${p.name}`}
-                          >
-                            <Users size={15} aria-hidden="true" />
-                          </button>
-                        )}
-                        {onAssignMentor && (
-                          <button
-                            type="button"
-                            className={styles.actionBtn}
-                            onClick={() => onAssignMentor(p)}
-                            title="Phân công Mentor cho toàn bộ kỳ này"
-                            aria-label={`Phân công Mentor cho toàn bộ kỳ ${p.name}`}
-                          >
-                            <UserCheck size={15} aria-hidden="true" />
-                          </button>
-                        )}
-                        {canEdit && (
-                          <button
-                            type="button"
-                            className={styles.actionBtn}
-                            onClick={() => onEdit(p)}
-                            title="Chỉnh sửa thông tin chương trình"
-                            aria-label={`Chỉnh sửa chương trình ${p.name}`}
-                          >
-                            <Edit3 size={15} aria-hidden="true" />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className={styles.actionBtn}
-                          onClick={() => onChangeStatus(p)}
-                          title="Chuyển đổi trạng thái kỳ thực tập"
-                          aria-label={`Chuyển trạng thái chương trình ${p.name}`}
-                        >
-                          <RefreshCw size={15} aria-hidden="true" />
-                        </button>
-                        {canDelete && (
-                          <button
-                            type="button"
-                            className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                            onClick={() => onDelete(p)}
-                            title="Xóa chương trình (chỉ dành cho Admin & chưa có ứng viên)"
-                            aria-label={`Xóa chương trình ${p.name}`}
-                          >
-                            <Trash2 size={15} aria-hidden="true" />
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -297,32 +231,34 @@ export const ProgramTable: React.FC<ProgramTableProps> = ({
         </table>
       </div>
 
-      {/* Phân trang */}
-      <div className={styles.pagination}>
-        <span className="font-tabular">
-          Đang hiển thị <strong>{programs.length}</strong> / <strong>{totalElements}</strong> chương trình (Trang {currentPage + 1} / {Math.max(1, totalPages)})
-        </span>
-        <div className={styles.pageBtnGroup}>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            disabled={currentPage <= 0}
-            onClick={() => onPageChange(currentPage - 1)}
-            aria-label="Chuyển đến trang trước"
-          >
-            ← Trang Trước
-          </button>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            disabled={currentPage >= totalPages - 1}
-            onClick={() => onPageChange(currentPage + 1)}
-            aria-label="Chuyển đến trang sau"
-          >
-            Trang Sau →
-          </button>
+      {/* Phân trang tự động ẩn khi <= 10 dòng (Rule 32) */}
+      {totalPages > 1 && totalElements > 10 && (
+        <div className={styles.pagination}>
+          <span className="font-tabular">
+            Đang hiển thị <strong>{programs.length}</strong> / <strong>{totalElements}</strong> chương trình (Trang {currentPage + 1} / {Math.max(1, totalPages)})
+          </span>
+          <div className={styles.pageBtnGroup}>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              disabled={currentPage <= 0}
+              onClick={() => onPageChange(currentPage - 1)}
+              aria-label="Chuyển đến trang trước"
+            >
+              ← Trang Trước
+            </button>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              disabled={currentPage >= totalPages - 1}
+              onClick={() => onPageChange(currentPage + 1)}
+              aria-label="Chuyển đến trang sau"
+            >
+              Trang Sau →
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

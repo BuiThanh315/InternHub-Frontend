@@ -22,6 +22,7 @@ export interface ProgramWorkspaceHeaderProps {
   isTogglingRecruitment?: boolean;
   onOpenInterviewQuestions?: () => void;
   onOpenCreateSchedule?: () => void;
+  onManageGroups?: () => void;
 }
 
 export interface ApplicationsTabProps {
@@ -43,6 +44,7 @@ export interface InternsTabProps {
   onUploadContract: (intern: InternProfile) => void;
   onStatusChange: (intern: InternProfile, newStatus: string) => void;
   onOpenAiDossier?: (intern: InternProfile) => void;
+  onManageGroups?: () => void;
 }
 
 export interface MentorsTabProps {

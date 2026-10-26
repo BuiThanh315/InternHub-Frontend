@@ -19,6 +19,11 @@ export const OnboardingActivationPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Re-send activation states (Moved to top to adhere to React Rules of Hooks)
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
+
   useEffect(() => {
     if (!token) {
       setIsLoading(false);
@@ -84,21 +89,6 @@ export const OnboardingActivationPage: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#4f46e5', marginBottom: '0.5rem' }}>InternHub</div>
-          <p style={{ color: '#64748b' }}>Đang xác thực liên kết onboarding...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const [resendEmail, setResendEmail] = useState('');
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendStatus, setResendStatus] = useState<string | null>(null);
-
   const handleResendActivation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resendEmail.trim()) return;
@@ -114,15 +104,26 @@ export const OnboardingActivationPage: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.5rem' }}>InternHub</div>
+          <p style={{ color: 'var(--text-muted)' }}>Đang xác thực liên kết onboarding...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isValid) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '1rem' }}>
-        <div style={{ maxWidth: '440px', width: '100%', background: '#fff', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)', padding: '1rem' }}>
+        <div style={{ maxWidth: '440px', width: '100%', background: 'var(--bg-card)', borderRadius: '12px', padding: '2rem', boxShadow: 'var(--shadow-md)', textAlign: 'center', border: '1px solid var(--border-default)' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
             <AlertCircle size={28} />
           </div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>Liên kết không khả dụng hoặc đã hết hạn</h3>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.75rem' }}>Liên kết không khả dụng hoặc đã hết hạn</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
             {errorMessage}
           </p>
 
@@ -145,7 +146,9 @@ export const OnboardingActivationPage: React.FC = () => {
                   width: '100%',
                   padding: '0.625rem 0.75rem',
                   borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-default)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-main)',
                   fontSize: '0.875rem',
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -157,7 +160,7 @@ export const OnboardingActivationPage: React.FC = () => {
                 style={{
                   padding: '0.625rem',
                   borderRadius: '6px',
-                  background: '#4f46e5',
+                  background: 'var(--primary)',
                   color: '#fff',
                   border: 'none',
                   fontWeight: 600,
@@ -170,7 +173,7 @@ export const OnboardingActivationPage: React.FC = () => {
               </button>
             </form>
             {resendStatus && (
-              <p style={{ marginTop: '0.5rem', fontSize: '0.825rem', color: '#2563eb', lineHeight: 1.4 }}>
+              <p style={{ marginTop: '0.5rem', fontSize: '0.825rem', color: 'var(--primary)', lineHeight: 1.4 }}>
                 {resendStatus}
               </p>
             )}
@@ -178,7 +181,7 @@ export const OnboardingActivationPage: React.FC = () => {
 
           <button
             onClick={() => navigate('/login')}
-            style={{ width: '100%', padding: '0.625rem', borderRadius: '6px', background: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}
+            style={{ width: '100%', padding: '0.625rem', borderRadius: '6px', background: 'var(--bg-body)', color: 'var(--text-main)', border: '1px solid var(--border-default)', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}
           >
             Quay lại trang Đăng nhập
           </button>
@@ -191,13 +194,13 @@ export const OnboardingActivationPage: React.FC = () => {
 
   if (isSuccess) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '1rem' }}>
-        <div style={{ maxWidth: '440px', width: '100%', background: '#fff', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)', padding: '1rem' }}>
+        <div style={{ maxWidth: '440px', width: '100%', background: 'var(--bg-card)', borderRadius: '12px', padding: '2rem', boxShadow: 'var(--shadow-md)', textAlign: 'center', border: '1px solid var(--border-default)' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--success-bg)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
             <CheckCircle2 size={28} />
           </div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>Kích hoạt thành công! 🎉</h3>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.75rem' }}>Kích hoạt thành công! 🎉</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
             Mật khẩu cho tài khoản <strong>{candidateInfo?.email}</strong> đã được thiết lập.{' '}
             {isMentor
               ? 'Chào mừng bạn đến với đội ngũ Người Hướng Dẫn Kỹ Thuật (Mentor) tại InternHub!'
@@ -205,7 +208,7 @@ export const OnboardingActivationPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/login')}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: '#4f46e5', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'var(--primary)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           >
             Đăng nhập vào hệ thống <ArrowRight size={18} />
           </button>
@@ -215,14 +218,14 @@ export const OnboardingActivationPage: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '1rem' }}>
-      <div style={{ maxWidth: '440px', width: '100%', background: '#fff', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-body)', padding: '1rem' }}>
+      <div style={{ maxWidth: '440px', width: '100%', background: 'var(--bg-card)', borderRadius: '12px', padding: '2rem', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-default)' }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#4f46e5', marginBottom: '0.25rem' }}>InternHub</div>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.25rem' }}>InternHub</div>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-main)', margin: '0 0 0.5rem' }}>
             {isMentor ? 'Thiết Lập Tài Khoản Mentor' : 'Thiết Lập Tài Khoản Onboarding'}
           </h3>
-          <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
             Xin chào <strong>{candidateInfo?.fullName}</strong>! Vui lòng thiết lập mật khẩu để hoàn tất bước{' '}
             {isMentor ? 'gia nhập đội ngũ Mentor.' : 'tiếp nhận.'}
           </p>
@@ -230,19 +233,19 @@ export const OnboardingActivationPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.35rem' }}>
               Email tài khoản
             </label>
             <input
               type="text"
               value={candidateInfo?.email || ''}
               disabled
-              style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f1f5f9', color: '#64748b', fontSize: '0.875rem' }}
+              style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '6px', border: '1px solid var(--border-default)', background: 'var(--bg-body)', color: 'var(--text-muted)', fontSize: '0.875rem' }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.35rem' }}>
               Mật khẩu mới (tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt)
             </label>
             <div style={{ position: 'relative' }}>
@@ -252,14 +255,14 @@ export const OnboardingActivationPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                style={{ width: '100%', padding: '0.65rem 0.85rem 0.65rem 2.2rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.875rem' }}
+                style={{ width: '100%', padding: '0.65rem 0.85rem 0.65rem 2.2rem', borderRadius: '6px', border: '1px solid var(--border-default)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '0.875rem' }}
               />
-              <Lock size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <Lock size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             </div>
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.35rem' }}>
               Xác nhận mật khẩu mới
             </label>
             <div style={{ position: 'relative' }}>
@@ -269,14 +272,14 @@ export const OnboardingActivationPage: React.FC = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                style={{ width: '100%', padding: '0.65rem 0.85rem 0.65rem 2.2rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.875rem' }}
+                style={{ width: '100%', padding: '0.65rem 0.85rem 0.65rem 2.2rem', borderRadius: '6px', border: '1px solid var(--border-default)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '0.875rem' }}
               />
-              <ShieldCheck size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <ShieldCheck size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             </div>
           </div>
 
           {passwordError && (
-            <div style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 500 }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--danger)', fontWeight: 500 }}>
               {passwordError}
             </div>
           )}
@@ -288,7 +291,7 @@ export const OnboardingActivationPage: React.FC = () => {
               marginTop: '0.5rem',
               padding: '0.75rem',
               borderRadius: '8px',
-              background: '#4f46e5',
+              background: 'var(--primary)',
               color: '#fff',
               border: 'none',
               fontWeight: 700,
@@ -298,7 +301,7 @@ export const OnboardingActivationPage: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
-              boxShadow: '0 2px 4px rgba(79, 70, 229, 0.3)',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             {isSubmitting ? 'Đang kích hoạt...' : 'Hoàn tất kích hoạt'} <ArrowRight size={18} />
