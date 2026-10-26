@@ -318,6 +318,7 @@ export const MentorMissionPage: React.FC = () => {
         initialTitle={itemModal.initialTitle}
         editingItem={itemModal.editingItem}
         isLoading={isMutating}
+        programId={selectedProgramId || undefined}
       />
 
       {/* Modal Quản Lý Nhóm Tái Sử Dụng 100% Của HR */}

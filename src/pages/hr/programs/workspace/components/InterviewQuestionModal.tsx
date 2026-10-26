@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { Modal, Button } from '../../../../../components/common';
 import { AiSteppedProgressSkeleton } from '../../../../../components/ai/AiSteppedProgressSkeleton';
 import { aiInterviewService } from '../../../../../services/aiInterviewService';
+import { useAiJob } from '../../../../../contexts/AiJobContext';
 import type {
   InterviewQuestionSet,
   InterviewQuestionItem,
@@ -37,6 +38,7 @@ interface InterviewQuestionModalProps {
   programName: string;
   internId?: number;
   internName?: string;
+  initialSetId?: number;
 }
 
 export const InterviewQuestionModal: React.FC<InterviewQuestionModalProps> = ({
@@ -46,7 +48,9 @@ export const InterviewQuestionModal: React.FC<InterviewQuestionModalProps> = ({
   programName,
   internId,
   internName,
+  initialSetId,
 }) => {
+  const { startQuestionJob } = useAiJob();
   const [activeSet, setActiveSet] = useState<InterviewQuestionSet | null>(null);
   const [existingSets, setExistingSets] = useState<InterviewQuestionSet[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -138,7 +142,21 @@ export const InterviewQuestionModal: React.FC<InterviewQuestionModalProps> = ({
       const params = internId ? { internId } : { programId };
       const sets = await aiInterviewService.getQuestionSets(params);
       setExistingSets(sets);
-      if (sets.length > 0) {
+
+      if (initialSetId) {
+        const found = sets.find((s) => s.id === initialSetId);
+        if (found) {
+          setActiveSet(found);
+        } else {
+          try {
+            const specificSet = await aiInterviewService.getQuestionSetById(initialSetId);
+            setActiveSet(specificSet);
+            setExistingSets((prev) => [specificSet, ...prev.filter((s) => s.id !== initialSetId)]);
+          } catch {
+            if (sets.length > 0) setActiveSet(sets[0]);
+          }
+        }
+      } else if (sets.length > 0) {
         setActiveSet(sets[0]);
       } else {
         setActiveSet(null);
@@ -154,22 +172,22 @@ export const InterviewQuestionModal: React.FC<InterviewQuestionModalProps> = ({
     if (isOpen) {
       void loadExistingSets();
     }
-  }, [isOpen, programId, internId]);
+  }, [isOpen, programId, internId, initialSetId]);
 
-  // Sinh bộ câu hỏi mới bằng AI
+  // Sinh bộ câu hỏi mới bằng AI (Non-blocking async: Đóng modal ngay và mở FloatingProgressWidget)
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
-      toast.info('AI đang phân tích và tạo bộ câu hỏi phỏng vấn... Quá trình có thể mất 15-30 giây.');
-      const newSet = await aiInterviewService.generateQuestions({
+      await startQuestionJob({
         programId,
+        programName,
         internId,
+        internName,
         totalQuestions: preferredCount,
         customRequirements: customReq.trim() || undefined,
       });
-      toast.success('Sinh bộ câu hỏi phỏng vấn thành công!');
-      setActiveSet(newSet);
-      setExistingSets((prev) => [newSet, ...prev]);
+      // Đóng modal ngay lập tức để không block người dùng, widget nổi sẽ tiếp quản tiến trình
+      onClose();
     } catch (err: any) {
       console.error('Lỗi sinh câu hỏi:', err);
       toast.error(err.response?.data?.message || err.message || 'Không thể tạo bộ câu hỏi phỏng vấn.');

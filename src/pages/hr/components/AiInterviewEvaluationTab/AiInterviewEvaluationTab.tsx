@@ -79,7 +79,7 @@ export const AiInterviewEvaluationTab: React.FC<AiInterviewEvaluationTabProps> =
         email: intern.email,
       });
 
-      if (!session || !session.sessionId) {
+      if (!session || !session.sessionId || session.status !== 'COMPLETED') {
         setDossier(null);
         return;
       }

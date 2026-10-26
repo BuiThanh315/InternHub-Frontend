@@ -19,4 +19,5 @@ export interface MissionItemModalProps {
   editingItem?: MissionItemResponse | null;
   defaultStatus?: string;
   isLoading?: boolean;
+  programId?: number;
 }
