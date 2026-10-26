@@ -6,11 +6,7 @@ import {
   FileText,
   Edit3,
   Eye,
-  CheckCircle2,
-  Clock,
-  UserX,
   RefreshCw,
-  School,
   Sparkles,
 } from 'lucide-react';
 import { Button, Skeleton } from '../../../../../../components/common';
@@ -27,6 +23,7 @@ export const InternsTab: React.FC<InternsTabProps> = ({
   onAssignMentor,
   onUploadContract,
   onOpenAiDossier,
+  onManageGroups,
 }) => {
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,43 +55,43 @@ export const InternsTab: React.FC<InternsTabProps> = ({
     switch (status) {
       case 'INTERNING':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+          <span className="badge badge-sky">
+            <span className="status-dot status-dot-info mr-1" />
             Đang thực tập
           </span>
         );
       case 'APPROVED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <CheckCircle2 size={12} className="text-emerald-600" />
+          <span className="badge badge-success">
+            <span className="status-dot status-dot-success mr-1" />
             Đã tiếp nhận
           </span>
         );
       case 'COMPLETED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
-            <CheckCircle2 size={12} className="text-teal-600" />
-            Hoàn thành kỳ
+          <span className="badge badge-neutral">
+            <span className="status-dot status-dot-neutral mr-1" />
+            Hoàn thành
           </span>
         );
       case 'ON_HOLD':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-            <Clock size={12} className="text-amber-600" />
+          <span className="badge badge-warning">
+            <span className="status-dot status-dot-warning mr-1" />
             Tạm hoãn
           </span>
         );
       case 'TERMINATED':
       case 'REJECTED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-            <UserX size={12} className="text-rose-600" />
+          <span className="badge badge-danger">
+            <span className="status-dot status-dot-danger mr-1" />
             Đã dừng / Hủy
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+          <span className="badge badge-slate">
             {status}
           </span>
         );
@@ -159,6 +156,19 @@ export const InternsTab: React.FC<InternsTabProps> = ({
             <option value="ON_HOLD">Tạm hoãn</option>
           </select>
 
+          {onManageGroups && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onManageGroups}
+              className="flex items-center gap-1.5"
+              title="Quản lý & chia nhóm thực tập sinh"
+            >
+              <Users size={14} aria-hidden="true" />
+              Quản Lý & Chia Nhóm
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             size="sm"
@@ -207,12 +217,12 @@ export const InternsTab: React.FC<InternsTabProps> = ({
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Thực Tập Sinh</th>
+                <th>Thực tập sinh</th>
                 <th>Mã TTS</th>
-                <th>Trường Đại Học</th>
-                <th>Trạng Thái</th>
-                <th>Mentor Phụ Trách</th>
-                <th style={{ textAlign: 'right' }}>Thao Tác</th>
+                <th>Trường đại học</th>
+                <th>Trạng thái</th>
+                <th>Mentor phụ trách</th>
+                <th style={{ textAlign: 'right' }}>Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -240,7 +250,6 @@ export const InternsTab: React.FC<InternsTabProps> = ({
                                 className={styles.candidateSourceBadgeFree}
                                 title="Ứng viên nộp hồ sơ tự do"
                               >
-                                <Sparkles size={11} aria-hidden="true" />
                                 Ứng viên tự do
                               </span>
                             ) : (
@@ -248,7 +257,6 @@ export const InternsTab: React.FC<InternsTabProps> = ({
                                 className={styles.candidateSourceBadgeUniversity}
                                 title="Sinh viên thuộc trường đại học liên kết"
                               >
-                                <School size={11} aria-hidden="true" />
                                 Trường liên kết
                               </span>
                             )}

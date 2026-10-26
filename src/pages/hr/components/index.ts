@@ -17,3 +17,4 @@ export * from './HrActiveProgramsGrid';
 export * from './CreateInterviewScheduleModal';
 export * from './EvaluationDossierDrawer';
 export * from './AiInterviewEvaluationTab';
+export * from './ProgramGroupModal';

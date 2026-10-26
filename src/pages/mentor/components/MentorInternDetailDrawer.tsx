@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { X, Sparkles, FileText, User, Eye, Download, Award } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Sparkles, FileText, User, Eye, Download, Award, Calendar, Loader2, Send } from 'lucide-react';
+import { toast } from 'sonner';
 import type { InternProfile, DocumentResponse, WeeklyAssessment, CreateWeeklyAssessmentPayload } from '../../../types';
+import type { CreateMeetingRequest } from '../../../types/meeting.types';
 import { MentorWeeklyEvaluationHub } from './MentorWeeklyEvaluationHub';
 import { MentorFinalEvaluationTab } from './MentorFinalEvaluationTab';
 import { documentService } from '../../../services/documentService';
+import { meetingService } from '../../../services/meetingService';
 import { Button } from '../../../components/common/Button/Button';
-import { CreateMeetingModal } from '../../../components/meeting/CreateMeetingModal';
 import styles from './MentorInternDetailDrawer.module.css';
 
-interface MentorInternDetailDrawerProps {
+export interface MentorInternDetailModalProps {
   intern: InternProfile | null;
   isOpen: boolean;
   onClose: () => void;
@@ -18,7 +20,7 @@ interface MentorInternDetailDrawerProps {
   loading?: boolean;
 }
 
-export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> = ({
+export const MentorInternDetailModal: React.FC<MentorInternDetailModalProps> = ({
   intern,
   isOpen,
   onClose,
@@ -27,61 +29,137 @@ export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> =
   onSaveAssessment,
   loading = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<'evaluation' | 'final' | 'documents' | 'profile'>('evaluation');
-  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'evaluation' | 'final' | 'documents' | 'profile' | 'meeting'>('evaluation');
+
+  // State cho Form Lên lịch họp 1-1 nội tuyến
+  const [meetingTitle, setMeetingTitle] = useState('');
+  const [meetingDesc, setMeetingDesc] = useState('');
+  const [meetingType, setMeetingType] = useState<'ONLINE' | 'OFFLINE'>('ONLINE');
+  const [meetingLocationOrUrl, setMeetingLocationOrUrl] = useState('');
+  const [meetingStartTime, setMeetingStartTime] = useState('');
+  const [meetingEndTime, setMeetingEndTime] = useState('');
+  const [isSubmittingMeeting, setIsSubmittingMeeting] = useState(false);
+
+  // Khóa scroll body & lắng nghe ESC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  // Reset tab khi mở lại
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab('evaluation');
+    }
+  }, [isOpen, intern?.id]);
 
   if (!isOpen || !intern) return null;
 
   const internDocs = documents.filter((d) => d.internCode === intern.internCode);
 
-  return (
-    <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true">
-      <div 
-        className={`${styles.drawer} ${activeTab === 'evaluation' ? styles.drawerWide : ''}`} 
-        onClick={(e) => e.stopPropagation()}
-      >
+  const handleMeetingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!meetingTitle.trim()) {
+      toast.error('Vui lòng nhập tiêu đề cuộc họp.');
+      return;
+    }
+    if (!meetingStartTime) {
+      toast.error('Vui lòng chọn thời gian bắt đầu.');
+      return;
+    }
 
-        {/* Header Drawer */}
-        <div className={styles.drawerHeader}>
+    try {
+      setIsSubmittingMeeting(true);
+      const payload: CreateMeetingRequest = {
+        title: meetingTitle.trim(),
+        description: meetingDesc.trim() || undefined,
+        meetingType,
+        locationOrUrl: meetingLocationOrUrl.trim() || undefined,
+        startTime: new Date(meetingStartTime).toISOString(),
+        endTime: meetingEndTime ? new Date(meetingEndTime).toISOString() : undefined,
+        internProfileId: intern.id,
+      };
+
+      await meetingService.createMeeting(payload);
+      toast.success('Đã lên lịch họp 1-1 thành công!', {
+        description: `Hệ thống đã tự động gửi lời mời họp và thông báo đến ${intern.fullName}.`,
+      });
+
+      // Reset form & chuyển về tab đánh giá
+      setMeetingTitle('');
+      setMeetingDesc('');
+      setMeetingLocationOrUrl('');
+      setMeetingStartTime('');
+      setMeetingEndTime('');
+      setActiveTab('evaluation');
+    } catch (err: any) {
+      console.error('Lỗi tạo lịch họp:', err);
+      toast.error(err.response?.data?.message || 'Không thể tạo lịch họp. Vui lòng thử lại.');
+    } finally {
+      setIsSubmittingMeeting(false);
+    }
+  };
+
+  return (
+    <div
+      className={styles.overlay}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mentor-intern-detail-title"
+      tabIndex={-1}
+    >
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="document"
+      >
+        {/* Header Modal */}
+        <div className={styles.modalHeader}>
           <div className={styles.headerInfo}>
             <div className={styles.avatar}>
               {intern.fullName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h2 className={styles.title}>{intern.fullName}</h2>
+              <h2 id="mentor-intern-detail-title" className={styles.title}>
+                {intern.fullName}
+              </h2>
               <span className={styles.subtitle}>
                 {intern.internCode} • {intern.appliedPosition || 'Thực tập sinh'} • {intern.university}
               </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className={styles.headerActions}>
             <button
               type="button"
-              onClick={() => setIsMeetingModalOpen(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                borderRadius: '8px',
-                border: 'none',
-                background: '#4f46e5',
-                color: '#ffffff',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className={styles.btnScheduleMeeting}
+              onClick={() => setActiveTab('meeting')}
+              title="Lên lịch họp 1-1 với thực tập sinh"
             >
-              📅 Lên Lịch Họp
+              <Calendar size={15} /> Lên Lịch Họp 1-1
             </button>
-            <button 
-              type="button" 
-              className={styles.closeBtn} 
-              onClick={onClose} 
-              aria-label="Đóng bảng chi tiết"
+            <button
+              type="button"
+              className={styles.closeBtn}
+              onClick={onClose}
+              aria-label="Đóng cửa sổ chi tiết"
+              title="Đóng (ESC)"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
@@ -116,10 +194,17 @@ export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> =
           >
             <User size={16} /> Thông Tin Tiếp Nhận
           </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === 'meeting' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('meeting')}
+          >
+            <Calendar size={16} /> Lên Lịch Họp 1-1
+          </button>
         </div>
 
         {/* Tab Content */}
-        <div className={styles.drawerContent}>
+        <div className={styles.modalContent}>
           {activeTab === 'evaluation' && (
             <MentorWeeklyEvaluationHub
               internCode={intern.internCode}
@@ -147,7 +232,7 @@ export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> =
                   {internDocs.map((doc) => (
                     <div key={doc.id} className={styles.docItem}>
                       <div className={styles.docHeader}>
-                        <FileText size={18} color="#6366f1" />
+                        <FileText size={18} color="var(--primary, #6366f1)" />
                         <div>
                           <p className={styles.docName}>{doc.originalFileName || doc.fileName}</p>
                           <span className={styles.docMeta}>
@@ -214,16 +299,135 @@ export const MentorInternDetailDrawer: React.FC<MentorInternDetailDrawerProps> =
               </div>
             </div>
           )}
+
+          {activeTab === 'meeting' && (
+            <div className={styles.meetingSection}>
+              <div className={styles.meetingHeader}>
+                <h3 className={styles.meetingTitle}>
+                  <Calendar size={20} color="var(--primary, #4f46e5)" />
+                  Lên Lịch Họp 1-1 Trực Tiếp Với {intern.fullName}
+                </h3>
+                <p className={styles.meetingDesc}>
+                  Tạo cuộc họp định kỳ hoặc trao đổi tiến độ. Hệ thống sẽ tự động gửi email và thông báo realtime cho thực tập sinh.
+                </p>
+              </div>
+
+              <form onSubmit={handleMeetingSubmit} className={styles.meetingForm}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>
+                    Tiêu đề cuộc họp <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder="VD: Họp định kỳ tuần 3 / Hướng dẫn xử lý vướng mắc..."
+                    value={meetingTitle}
+                    onChange={(e) => setMeetingTitle(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Hình thức họp</label>
+                    <select
+                      className={styles.select}
+                      value={meetingType}
+                      onChange={(e) => setMeetingType(e.target.value as 'ONLINE' | 'OFFLINE')}
+                    >
+                      <option value="ONLINE">Trực tuyến (Google Meet / Zoom)</option>
+                      <option value="OFFLINE">Trực tiếp tại văn phòng</option>
+                    </select>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>
+                      {meetingType === 'ONLINE' ? 'Đường link cuộc họp (URL)' : 'Địa điểm phòng họp'}
+                    </label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder={
+                        meetingType === 'ONLINE'
+                          ? 'https://meet.google.com/...'
+                          : 'Phòng họp Tầng 3, Trụ sở chính...'
+                      }
+                      value={meetingLocationOrUrl}
+                      onChange={(e) => setMeetingLocationOrUrl(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>
+                      Thời gian bắt đầu <span className={styles.required}>*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      className={styles.input}
+                      value={meetingStartTime}
+                      onChange={(e) => setMeetingStartTime(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Thời gian kết thúc</label>
+                    <input
+                      type="datetime-local"
+                      className={styles.input}
+                      value={meetingEndTime}
+                      onChange={(e) => setMeetingEndTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Nội dung / Ghi chú cuộc họp</label>
+                  <textarea
+                    rows={3}
+                    className={styles.textarea}
+                    placeholder="Nêu tóm tắt mục tiêu, chuẩn bị tài liệu hoặc vấn đề cần thảo luận..."
+                    value={meetingDesc}
+                    onChange={(e) => setMeetingDesc(e.target.value)}
+                  />
+                </div>
+
+                <div className={styles.formActions}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setActiveTab('evaluation')}
+                    disabled={isSubmittingMeeting}
+                  >
+                    Hủy Bỏ
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={isSubmittingMeeting}
+                  >
+                    {isSubmittingMeeting ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" /> Đang tạo lịch...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={15} /> Tạo & Gửi Lời Mời Họp
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Modal Lên Lịch Họp Với Thực Tập Sinh */}
-      <CreateMeetingModal
-        isOpen={isMeetingModalOpen}
-        onClose={() => setIsMeetingModalOpen(false)}
-        internProfileId={intern.id}
-        internName={intern.fullName}
-      />
     </div>
   );
 };
+
+// Backward-compatible alias
+export const MentorInternDetailDrawer = MentorInternDetailModal;
+export type MentorInternDetailDrawerProps = MentorInternDetailModalProps;

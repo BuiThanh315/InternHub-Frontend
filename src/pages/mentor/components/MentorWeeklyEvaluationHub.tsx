@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Star, Sparkles, Send, Save, History, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Star, Sparkles, Send, Save, History, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { WeeklyAssessment, CreateWeeklyAssessmentPayload } from '../../../types';
 import { useMentorWeeklyReview } from '../hooks/useMentorWeeklyReview';
 import { MentorWeeklyReportInspectionView } from './MentorWeeklyReportInspectionView';
-import { MentorRequestRevisionModal } from './MentorRequestRevisionModal';
 import { MentorWeeklyReportAiInsightCard } from './MentorWeeklyReportAiInsightCard/MentorWeeklyReportAiInsightCard';
 import { assessmentService } from '../../../services/assessmentService';
 import type { WeeklyReportAiEvaluation } from '../../../types/assessment.types';
@@ -78,7 +77,10 @@ export const MentorWeeklyEvaluationHub: React.FC<MentorWeeklyEvaluationHubProps>
   });
   const [feedback, setFeedback] = useState<string>('');
   const [nextWeekGoals, setNextWeekGoals] = useState<string>('');
-  const [isRevisionModalOpen, setIsRevisionModalOpen] = useState<boolean>(false);
+  const [isRevisionPanelOpen, setIsRevisionPanelOpen] = useState<boolean>(false);
+  const [revisionNote, setRevisionNote] = useState<string>('');
+  const [revisionError, setRevisionError] = useState<string | null>(null);
+  const [revisionSubmitting, setRevisionSubmitting] = useState<boolean>(false);
 
   // AI-04 State
   const [aiEvaluation, setAiEvaluation] = useState<WeeklyReportAiEvaluation | null>(null);
@@ -192,8 +194,31 @@ export const MentorWeeklyEvaluationHub: React.FC<MentorWeeklyEvaluationHubProps>
     }
   };
 
-  const handleRequestRevisionSubmit = async (revisionNote: string) => {
-    await requestRevision(revisionNote);
+  const handleRevisionSubmit = async () => {
+    const trimmed = revisionNote.trim();
+    if (!trimmed) {
+      setRevisionError('Vui lòng nhập lý do và hướng dẫn chỉnh sửa.');
+      return;
+    }
+    if (trimmed.length < 10) {
+      setRevisionError('Lý do yêu cầu làm lại phải có ít nhất 10 ký tự.');
+      return;
+    }
+    if (trimmed.length > 500) {
+      setRevisionError('Lý do không được vượt quá 500 ký tự.');
+      return;
+    }
+    try {
+      setRevisionSubmitting(true);
+      setRevisionError(null);
+      await requestRevision(trimmed);
+      setIsRevisionPanelOpen(false);
+      setRevisionNote('');
+    } catch {
+      // toast in hook
+    } finally {
+      setRevisionSubmitting(false);
+    }
   };
 
   const renderStarSelector = (
@@ -263,7 +288,10 @@ export const MentorWeeklyEvaluationHub: React.FC<MentorWeeklyEvaluationHubProps>
             startDate={reviewData?.startDate}
             endDate={reviewData?.endDate}
             loading={reviewLoading}
-            onRequestRevisionClick={() => setIsRevisionModalOpen(true)}
+            onRequestRevisionClick={() => {
+              setIsRevisionPanelOpen(true);
+              setRevisionError(null);
+            }}
           />
         </div>
 
@@ -350,6 +378,63 @@ export const MentorWeeklyEvaluationHub: React.FC<MentorWeeklyEvaluationHubProps>
             />
           </div>
 
+          {/* Inline Revision Panel (Triệt tiêu Modal-in-Modal) */}
+          {isRevisionPanelOpen && (
+            <div className={styles.inlineRevisionPanel}>
+              <div className={styles.revisionHeader}>
+                <AlertTriangle size={18} className={styles.revisionIcon} />
+                <div>
+                  <h4 className={styles.revisionTitle}>
+                    Yêu Cầu TTS Chỉnh Sửa Lại Báo Cáo Tuần {selectedWeek}
+                  </h4>
+                  <p className={styles.revisionDesc}>
+                    Báo cáo sẽ được chuyển sang trạng thái <strong>Cần chỉnh sửa</strong>. TTS {internName} sẽ nhận thông báo hướng dẫn để nộp lại.
+                  </p>
+                </div>
+              </div>
+
+              <textarea
+                rows={3}
+                className={`${styles.revisionTextarea} ${revisionError ? styles.revisionTextareaError : ''}`}
+                placeholder="Nêu rõ lý do hoặc nội dung cần bổ sung (tối thiểu 10 ký tự)..."
+                value={revisionNote}
+                onChange={(e) => {
+                  setRevisionNote(e.target.value);
+                  if (revisionError) setRevisionError(null);
+                }}
+                maxLength={500}
+                disabled={revisionSubmitting}
+              />
+
+              <div className={styles.revisionMeta}>
+                <span>{revisionError ? <span className={styles.revisionErrorMsg}>{revisionError}</span> : 'Hỗ trợ tối đa 500 ký tự'}</span>
+                <span>{revisionNote.length}/500</span>
+              </div>
+
+              <div className={styles.revisionActions}>
+                <button
+                  type="button"
+                  className={styles.btnRevisionCancel}
+                  onClick={() => {
+                    setIsRevisionPanelOpen(false);
+                    setRevisionError(null);
+                  }}
+                  disabled={revisionSubmitting}
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnRevisionSubmit}
+                  onClick={() => void handleRevisionSubmit()}
+                  disabled={revisionSubmitting}
+                >
+                  <Send size={14} /> {revisionSubmitting ? 'Đang gửi...' : 'Gửi Yêu Cầu Chỉnh Sửa'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className={styles.actionBar}>
             <button
@@ -411,17 +496,6 @@ export const MentorWeeklyEvaluationHub: React.FC<MentorWeeklyEvaluationHubProps>
           </div>
         </div>
       )}
-
-      {/* Modal Yêu Cầu Chỉnh Sửa Báo Cáo */}
-      <MentorRequestRevisionModal
-        isOpen={isRevisionModalOpen}
-        onClose={() => setIsRevisionModalOpen(false)}
-        internName={internName}
-        internCode={internCode}
-        weekNumber={selectedWeek}
-        onSubmit={handleRequestRevisionSubmit}
-        loading={reviewSubmitting}
-      />
     </div>
   );
 };

@@ -4,8 +4,6 @@ import {
   Search,
   AlertTriangle,
   Clock,
-  CheckCircle2,
-  AlertCircle,
   ExternalLink,
   Download,
   Send,
@@ -14,7 +12,6 @@ import {
   RotateCcw,
   MessageSquare,
   RefreshCw,
-  FolderGit2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { contractService, dynamicContractService } from '../../../services/contractService';
@@ -25,6 +22,8 @@ import { ContractExtensionModal } from './components/ContractExtensionModal/Cont
 import { TerminateContractModal } from './components/TerminateContractModal/TerminateContractModal';
 import { ContractBuilderModal } from './components/ContractBuilderModal/ContractBuilderModal';
 import { ContractDocumentViewer } from '../../../components/contract/ContractDocumentViewer';
+import { Modal } from '../../../components/common/Modal/Modal';
+import { Button } from '../../../components/common/Button/Button';
 import styles from './HrContractManagementPage.module.css';
 
 type StatusTab = 'ALL' | 'PENDING' | 'ACTIVE' | 'EXPIRING' | 'FEEDBACK' | 'HISTORY';
@@ -253,49 +252,49 @@ export const HrContractManagementPage: React.FC = () => {
       case 'SIGNED':
         return (
           <span className={`${styles.badge} ${styles.badgeActive}`}>
-            <CheckCircle2 size={12} />
+            <span className="status-dot status-dot-success" />
             {getContractStatusLabel(status)}
           </span>
         );
       case 'PENDING_SIGNATURE':
         return (
           <span className={`${styles.badge} ${styles.badgePending}`}>
-            <Clock size={12} />
+            <span className="status-dot status-dot-info" />
             Chờ TTS ký
           </span>
         );
       case 'PENDING_INTERN_FEEDBACK':
         return (
           <span className={`${styles.badge} ${styles.badgeFeedback}`}>
-            <MessageSquare size={12} />
+            <span className="status-dot status-dot-warning" />
             TTS có thắc mắc
           </span>
         );
       case 'SUPERSEDED':
         return (
           <span className={`${styles.badge} ${styles.badgeSuperseded}`}>
-            <FolderGit2 size={12} />
+            <span className="status-dot status-dot-neutral" />
             Đã gia hạn
           </span>
         );
       case 'TERMINATED':
         return (
           <span className={`${styles.badge} ${styles.badgeTerminated}`}>
-            <Ban size={12} />
+            <span className="status-dot status-dot-danger" />
             Đã chấm dứt
           </span>
         );
       case 'EXPIRED':
         return (
           <span className={`${styles.badge} ${styles.badgeExpired}`}>
-            <Clock size={12} />
+            <span className="status-dot status-dot-neutral" />
             Đã hết hạn
           </span>
         );
       case 'REJECTED_BY_INTERN':
         return (
           <span className={`${styles.badge} ${styles.badgeTerminated}`}>
-            <AlertCircle size={12} />
+            <span className="status-dot status-dot-danger" />
             Từ chối tiếp nhận
           </span>
         );
@@ -440,12 +439,12 @@ export const HrContractManagementPage: React.FC = () => {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={styles.th}>Số HĐ & Loại</th>
-                  <th className={styles.th}>Thực Tập Sinh</th>
-                  <th className={styles.th}>Thời Gian Thực Tập</th>
-                  <th className={styles.th}>Phụ Cấp</th>
-                  <th className={styles.th}>Trạng Thái</th>
-                  <th className={styles.th} style={{ textAlign: 'center' }}>Thao Tác</th>
+                  <th className={styles.th}>Số HĐ & loại</th>
+                  <th className={styles.th}>Thực tập sinh</th>
+                  <th className={styles.th}>Thời gian thực tập</th>
+                  <th className={styles.th}>Phụ cấp</th>
+                  <th className={styles.th}>Trạng thái</th>
+                  <th className={styles.th} style={{ textAlign: 'center' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -453,14 +452,14 @@ export const HrContractManagementPage: React.FC = () => {
                   <tr key={contract.id} className={styles.tr}>
                     <td className={styles.td}>
                       <div className={styles.contractCodeWrap}>
-                        <span className={styles.contractNumber}>{contract.contractNumber}</span>
+                        <span className={`${styles.contractNumber} font-tabular`}>{contract.contractNumber}</span>
                         <div className={styles.typeBadgeRow}>
                           {contract.contractType === 'EXTENSION_APPENDIX' ? (
                             <span className={styles.appendixTag} title={`Phụ lục nối tiếp HĐ: ${contract.parentContractNumber || 'Gốc'}`}>
                               Phụ lục gia hạn
                             </span>
                           ) : (
-                            <span className={styles.officialTag}>HĐ Chính thức</span>
+                            <span className={styles.officialTag}>HĐ chính thức</span>
                           )}
                         </div>
                         <span className={styles.contractTitle}>{contract.contractTitle}</span>
@@ -475,13 +474,13 @@ export const HrContractManagementPage: React.FC = () => {
                     </td>
                     <td className={styles.td}>
                       <div className={styles.dateBlock}>
-                        <span>{formatDate(contract.startDate)}</span>
-                        <span className={styles.dateArrow}>&rarr;</span>
-                        <span>{formatDate(contract.endDate)}</span>
+                        <span className="font-tabular">{formatDate(contract.startDate)}</span>
+                        <span className={styles.dateArrow}>–</span>
+                        <span className="font-tabular">{formatDate(contract.endDate)}</span>
                       </div>
                     </td>
                     <td className={styles.td}>
-                      <span className={styles.allowance}>
+                      <span className={`${styles.allowance} font-tabular`}>
                         {contract.allowanceAmount ? formatCurrency(contract.allowanceAmount) : '—'}
                       </span>
                     </td>
@@ -624,50 +623,46 @@ export const HrContractManagementPage: React.FC = () => {
         onSuccess={handleContractUpdated}
       />
 
-      {/* Drawer xem chi tiết phản hồi thắc mắc */}
+      {/* Modal xem chi tiết phản hồi thắc mắc */}
       {feedbackViewTarget && (
-        <div className={styles.feedbackDrawerOverlay} onClick={() => setFeedbackViewTarget(null)}>
-          <div className={styles.feedbackDrawer} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.drawerHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MessageSquare size={18} className={styles.feedbackIcon} />
-                <h3 className={styles.drawerTitle}>Thắc Mắc Hợp Đồng Của Thực Tập Sinh</h3>
-              </div>
-              <button type="button" className={styles.closeDrawerBtn} onClick={() => setFeedbackViewTarget(null)}>
-                ×
-              </button>
+        <Modal
+          isOpen={true}
+          onClose={() => setFeedbackViewTarget(null)}
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <MessageSquare size={18} className={styles.feedbackIcon} />
+              <span>Thắc Mắc Hợp Đồng Của Thực Tập Sinh</span>
             </div>
-            <div className={styles.drawerBody}>
-              <div className={styles.drawerMeta}>
-                <p>Thực tập sinh: <strong>{feedbackViewTarget.internFullName}</strong> ({feedbackViewTarget.internCode})</p>
-                <p>Hợp đồng: <strong>{feedbackViewTarget.contractNumber}</strong></p>
-              </div>
-              <div className={styles.drawerContentBox}>
-                <label className={styles.contentLabel}>Nội dung phản hồi:</label>
-                <p className={styles.feedbackContentText}>{feedbackViewTarget.feedbackNotes}</p>
-              </div>
-              <div className={styles.drawerActions}>
-                <button
-                  type="button"
-                  className={styles.closeBtnSmall}
-                  onClick={() => setFeedbackViewTarget(null)}
-                >
-                  Đóng
-                </button>
-                <button
-                  type="button"
-                  className={styles.previewBtnSmall}
-                  onClick={() => {
-                    contractService.previewContractFile(feedbackViewTarget.id);
-                  }}
-                >
-                  <ExternalLink size={14} />
-                  Xem Bản Scan Hiện Tại
-                </button>
-              </div>
+          }
+          size="md"
+          footer={
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', width: '100%' }}>
+              <Button variant="outline" onClick={() => setFeedbackViewTarget(null)}>
+                Đóng
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  contractService.previewContractFile(feedbackViewTarget.id);
+                }}
+              >
+                <ExternalLink size={14} style={{ marginRight: '0.25rem' }} />
+                Xem Bản Scan Hiện Tại
+              </Button>
+            </div>
+          }
+        >
+          <div className={styles.drawerBody}>
+            <div className={styles.drawerMeta}>
+              <p>Thực tập sinh: <strong>{feedbackViewTarget.internFullName}</strong> ({feedbackViewTarget.internCode})</p>
+              <p>Hợp đồng: <strong>{feedbackViewTarget.contractNumber}</strong></p>
+            </div>
+            <div className={styles.drawerContentBox}>
+              <label className={styles.contentLabel}>Nội dung phản hồi:</label>
+              <p className={styles.feedbackContentText}>{feedbackViewTarget.feedbackNotes}</p>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Modal Soạn thảo Hợp đồng Điện tử Động */}
@@ -690,39 +685,26 @@ export const HrContractManagementPage: React.FC = () => {
 
       {/* Modal Xem trước Văn bản HTML Canonical của Hợp đồng Động */}
       {previewHtmlTarget && (
-        <div
-          className={styles.feedbackDrawerOverlay}
-          onClick={() => setPreviewHtmlTarget(null)}
-          style={{ zIndex: 1200 }}
+        <Modal
+          isOpen={!!previewHtmlTarget}
+          onClose={() => setPreviewHtmlTarget(null)}
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileSignature size={18} className={styles.feedbackIcon} />
+              <span>{previewHtmlTarget.title}</span>
+            </div>
+          }
+          size="xl"
         >
-          <div
-            className={styles.feedbackDrawer}
-            onClick={(e) => e.stopPropagation()}
-            style={{ width: '850px', maxWidth: '95vw' }}
-          >
-            <div className={styles.drawerHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileSignature size={18} className={styles.feedbackIcon} />
-                <h3 className={styles.drawerTitle}>{previewHtmlTarget.title}</h3>
-              </div>
-              <button
-                type="button"
-                className={styles.closeDrawerBtn}
-                onClick={() => setPreviewHtmlTarget(null)}
-              >
-                ×
-              </button>
-            </div>
-            <div className={styles.drawerBody} style={{ padding: '1rem', overflowY: 'auto' }}>
-              <ContractDocumentViewer
-                canonicalHtml={previewHtmlTarget.html}
-                status="ACTIVE"
-                contractNumber={previewHtmlTarget.contractNumber || previewHtmlTarget.title}
-                revisionNumber={1}
-              />
-            </div>
+          <div style={{ padding: '0.5rem', overflowY: 'auto' }}>
+            <ContractDocumentViewer
+              canonicalHtml={previewHtmlTarget.html}
+              status="ACTIVE"
+              contractNumber={previewHtmlTarget.contractNumber || previewHtmlTarget.title}
+              revisionNumber={1}
+            />
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

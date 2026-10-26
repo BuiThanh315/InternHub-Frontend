@@ -10,8 +10,6 @@ import {
   RefreshCw,
   Award,
   Layers,
-  Phone,
-  Mail,
   UserCheck,
   UserPlus,
   Send,
@@ -443,11 +441,11 @@ export const HrMentorManagementPage: React.FC = () => {
               <thead>
                 <tr>
                   <th>Mentor</th>
-                  <th>Phòng Ban</th>
-                  <th>Liên Hệ</th>
-                  <th style={{ minWidth: '180px' }}>Tải Hướng Dẫn</th>
-                  <th>Trạng Thái</th>
-                  <th style={{ textAlign: 'center' }}>Thao Tác</th>
+                  <th>Phòng ban</th>
+                  <th>Liên hệ</th>
+                  <th style={{ minWidth: '180px' }}>Tải hướng dẫn</th>
+                  <th>Trạng thái</th>
+                  <th style={{ textAlign: 'center' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -464,25 +462,20 @@ export const HrMentorManagementPage: React.FC = () => {
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: #{m.id}</div>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <Building2 size={14} style={{ color: 'var(--primary)' }} />
-                          <span>{m.departmentName || 'Chưa xếp'}</span>
-                        </div>
+                        <div>{m.departmentName || 'Chưa xếp'}</div>
                         {m.departmentCode && (
-                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: '1.25rem' }}>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                             ({m.departmentCode})
                           </span>
                         )}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem' }}>
-                          <Mail size={12} style={{ color: 'var(--text-muted)' }} />
-                          <span>{m.email}</span>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-main)' }}>
+                          {m.email}
                         </div>
                         {m.phone && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            <Phone size={12} />
-                            <span>{m.phone}</span>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {m.phone}
                           </div>
                         )}
                       </td>
@@ -494,13 +487,13 @@ export const HrMentorManagementPage: React.FC = () => {
                             </span>
                           ) : hasInterns ? (
                             <>
-                              <span className={styles.workloadBadgeActive}>
+                              <span className={`${styles.workloadBadgeActive} font-tabular`}>
                                 {m.activeInternCount} TTS
                               </span>
                               <div style={{ display: 'flex', gap: '0.45rem', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                <span>{m.interningCount ?? 0} đang làm</span>
+                                <span className="font-tabular">{m.interningCount ?? 0} đang làm</span>
                                 <span>•</span>
-                                <span>{m.assignedPendingStartCount ?? 0} chờ kỳ</span>
+                                <span className="font-tabular">{m.assignedPendingStartCount ?? 0} chờ kỳ</span>
                               </div>
                             </>
                           ) : (
@@ -517,22 +510,13 @@ export const HrMentorManagementPage: React.FC = () => {
                       </td>
                       <td>
                         {isPending ? (
-                          <span
-                            className="badge"
-                            style={{
-                              backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                              color: '#b45309',
-                              border: '1px solid rgba(245, 158, 11, 0.3)',
-                              padding: '0.2rem 0.55rem',
-                              borderRadius: '999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                            }}
-                          >
+                          <span className="badge badge-warning">
+                            <span className="status-dot status-dot-warning mr-1" />
                             Chờ kích hoạt
                           </span>
                         ) : (
                           <span className={`badge ${m.status === 'ACTIVE' ? 'badge-success' : 'badge-neutral'}`}>
+                            <span className={`status-dot ${m.status === 'ACTIVE' ? 'status-dot-success' : 'status-dot-neutral'} mr-1`} />
                             {m.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm khóa'}
                           </span>
                         )}

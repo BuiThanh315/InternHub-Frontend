@@ -4,10 +4,10 @@ import type { WeeklyAssessment } from '../../../../../../../types';
 import { assessmentService } from '../../../../../../../services/assessmentService';
 import { MentorWeeklyEvaluationHub } from '../../../../../components/MentorWeeklyEvaluationHub';
 import { getAvatarUrl } from '../../../../../../../utils/avatar';
-import type { MentorWeeklyReportDrawerProps } from './MentorWeeklyReportDrawer.types';
+import type { MentorWeeklyReportModalProps, MentorWeeklyReportDrawerProps } from './MentorWeeklyReportDrawer.types';
 import styles from './MentorWeeklyReportDrawer.module.css';
 
-export const MentorWeeklyReportDrawer: React.FC<MentorWeeklyReportDrawerProps> = ({
+export const MentorWeeklyReportModal: React.FC<MentorWeeklyReportModalProps> = ({
   intern,
   isOpen,
   onClose,
@@ -17,7 +17,7 @@ export const MentorWeeklyReportDrawer: React.FC<MentorWeeklyReportDrawerProps> =
   const [historyAssessments, setHistoryAssessments] = useState<WeeklyAssessment[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
 
-  // Tải lịch sử đánh giá các tuần của TTS khi mở Drawer
+  // Tải lịch sử đánh giá các tuần của TTS khi mở Modal
   const loadAssessmentHistory = useCallback(async (code: string) => {
     try {
       setIsLoadingHistory(true);
@@ -38,7 +38,7 @@ export const MentorWeeklyReportDrawer: React.FC<MentorWeeklyReportDrawerProps> =
     }
   }, [isOpen, intern?.internCode, loadAssessmentHistory]);
 
-  // Lắng nghe phím ESC để đóng Drawer & Khóa scroll màn hình
+  // Lắng nghe phím ESC để đóng Modal & Khóa scroll màn hình
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -85,16 +85,16 @@ export const MentorWeeklyReportDrawer: React.FC<MentorWeeklyReportDrawerProps> =
       }}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="weekly-drawer-title"
+      aria-labelledby="weekly-modal-title"
       tabIndex={-1}
     >
       <div
-        className={styles.drawer}
+        className={styles.modal}
         onClick={(e) => e.stopPropagation()}
         role="document"
       >
-        {/* Header Drawer */}
-        <div className={styles.drawerHeader}>
+        {/* Header Modal */}
+        <div className={styles.modalHeader}>
           <div className={styles.headerInfo}>
             <div className={styles.avatar}>
               {avatarSrc ? (
@@ -110,7 +110,7 @@ export const MentorWeeklyReportDrawer: React.FC<MentorWeeklyReportDrawerProps> =
             </div>
 
             <div className={styles.nameGroup}>
-              <h2 id="weekly-drawer-title" className={styles.title}>
+              <h2 id="weekly-modal-title" className={styles.title}>
                 <span>{intern.fullName}</span>
                 <span className={styles.codeBadge}>{intern.internCode}</span>
               </h2>
@@ -145,7 +145,7 @@ export const MentorWeeklyReportDrawer: React.FC<MentorWeeklyReportDrawerProps> =
         </div>
 
         {/* Body: Nhúng trực tiếp Dual-Pane Hub TM-22 */}
-        <div className={styles.drawerBody}>
+        <div className={styles.modalBody}>
           <MentorWeeklyEvaluationHub
             key={`${intern.internCode}-week-${currentWeekNumber}`}
             internCode={intern.internCode}
@@ -161,4 +161,6 @@ export const MentorWeeklyReportDrawer: React.FC<MentorWeeklyReportDrawerProps> =
   );
 };
 
-export default MentorWeeklyReportDrawer;
+// Backward-compatible alias
+export const MentorWeeklyReportDrawer: React.FC<MentorWeeklyReportDrawerProps> = MentorWeeklyReportModal;
+export default MentorWeeklyReportModal;

@@ -404,3 +404,140 @@
   overflow-y: auto;
 }
 
+/* Inline Revision Panel (Eliminates Nested Popups) */
+.inlineRevisionPanel {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.15rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: panelSlideDown 0.2s ease-out;
+}
+
+@keyframes panelSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.revisionHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.revisionIcon {
+  color: var(--warning, #d97706);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.revisionTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--warning, #92400e);
+  margin: 0 0 0.25rem 0;
+}
+
+.revisionDesc {
+  font-size: 0.825rem;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.revisionTextarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-default, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-main, #0f172a);
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.revisionTextarea:focus {
+  outline: none;
+  border-color: var(--warning, #d97706);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.revisionTextareaError {
+  border-color: var(--danger, #ef4444);
+}
+
+.revisionErrorMsg {
+  color: var(--danger, #ef4444);
+  font-size: 0.775rem;
+  font-weight: 500;
+}
+
+.revisionMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.775rem;
+  color: var(--text-muted, #64748b);
+}
+
+.revisionActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.btnRevisionCancel {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-default, #cbd5e1);
+  color: var(--text-main, #475569);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-md, 6px);
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnRevisionCancel:hover:not(:disabled) {
+  background: var(--bg-hover, #f1f5f9);
+}
+
+.btnRevisionSubmit {
+  background: var(--warning, #d97706);
+  border: none;
+  color: #ffffff;
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--radius-md, 6px);
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.btnRevisionSubmit:hover:not(:disabled) {
+  background: #b45309;
+}
+
+.btnRevisionSubmit:disabled,
+.btnRevisionCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
