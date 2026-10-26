@@ -187,6 +187,10 @@ export const AppRoutes: React.FC = () => {
             path="/intern/quizzes/:assignmentId/take"
             element={<InternQuizTakingPage />}
           />
+          <Route
+            path="/intern/quizzes/:assignmentId"
+            element={<InternQuizTakingPage />}
+          />
         </Route>
 
         {/* Fallback */}

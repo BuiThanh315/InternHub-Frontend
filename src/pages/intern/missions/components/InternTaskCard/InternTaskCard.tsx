@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Clock,
   AlertCircle,
@@ -9,6 +10,8 @@ import {
   FolderGit2,
   ExternalLink,
   Info,
+  Sparkles,
+  Award,
 } from 'lucide-react';
 
 import { AssigneeAvatarStack } from '../../../../mentor/missions/components/AssigneeAvatarStack';
@@ -24,6 +27,8 @@ export const InternTaskCard: React.FC<InternTaskCardProps> = ({
   isMutating = false,
   className = '',
 }) => {
+  const navigate = useNavigate();
+
   // Due date status
   const getDueDateStatus = () => {
     if (!item.dueDate) return null;
@@ -71,8 +76,32 @@ export const InternTaskCard: React.FC<InternTaskCardProps> = ({
     COMPLETED: styles.cardCompleted,
   }[item.status];
 
+  // Check if this task is an AI Quiz task
+  const isQuizTask =
+    item.title.startsWith('[Quiz]') ||
+    item.title.toLowerCase().includes('quiz') ||
+    Boolean(item.submissionUrl && item.submissionUrl.includes('/quizzes/'));
+
+  const getQuizTakeUrl = () => {
+    if (item.submissionUrl && item.submissionUrl.includes('/intern/quizzes/')) {
+      if (item.submissionUrl.endsWith('/take')) return item.submissionUrl;
+      return `${item.submissionUrl}/take`;
+    }
+    const match = item.submissionUrl?.match(/\/intern\/quizzes\/(\d+)/);
+    if (match) return `/intern/quizzes/${match[1]}/take`;
+    return '/intern/quizzes';
+  };
+
   return (
-    <div className={`${styles.card} ${cardStatusClass} ${className}`}>
+    <div className={`${styles.card} ${cardStatusClass} ${isQuizTask ? styles.cardQuiz : ''} ${className}`}>
+      {/* Quiz Banner Badge if it's a quiz */}
+      {isQuizTask && (
+        <div className={styles.quizBadge}>
+          <Sparkles size={12} className="text-amber-500 shrink-0" />
+          <span>Bài Kiểm Tra Ôn Tập AI</span>
+        </div>
+      )}
+
       {/* Header: Priority Badge & Deadline */}
       <div className={styles.cardHeader}>
         <span className={`${styles.priorityBadge} ${priorityConfig.class}`}>
@@ -143,58 +172,96 @@ export const InternTaskCard: React.FC<InternTaskCardProps> = ({
           <span>Chi tiết</span>
         </button>
 
-        {/* Transition Buttons */}
-        {item.status === 'TODO' && (
-          <button
-            type="button"
-            className={`${styles.actionBtn} ${styles.actionBtnStart}`}
-            onClick={() => onStatusChange(item.id, 'IN_PROGRESS')}
-            disabled={isMutating}
-            title="Bắt đầu thực hiện nhiệm vụ"
-          >
-            <PlayCircle size={13} />
-            <span>Bắt đầu làm</span>
-            <ArrowRight size={13} />
-          </button>
-        )}
-
-        {item.status === 'IN_PROGRESS' && (
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
+        {/* If it's a Quiz Task: Provide direct Quiz actions */}
+        {isQuizTask ? (
+          item.status !== 'COMPLETED' ? (
             <button
               type="button"
-              className={styles.actionBtn}
-              onClick={() => onStatusChange(item.id, 'TODO')}
+              className={`${styles.actionBtn} ${styles.actionBtnTakeQuiz}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (item.status === 'TODO') {
+                  onStatusChange(item.id, 'IN_PROGRESS');
+                }
+                navigate(getQuizTakeUrl());
+              }}
               disabled={isMutating}
-              title="Lùi lại Chưa làm"
+              title="Bắt đầu làm bài thi trắc nghiệm trực tuyến"
             >
-              <RotateCcw size={12} />
-              <span>Chưa làm</span>
+              <Sparkles size={13} />
+              <span>Làm bài Quiz</span>
+              <ArrowRight size={13} />
             </button>
-
+          ) : (
             <button
               type="button"
-              className={`${styles.actionBtn} ${styles.actionBtnComplete}`}
-              onClick={() => onOpenSubmissionModal(item)}
-              disabled={isMutating}
-              title="Hoàn thành & Nộp bài"
+              className={`${styles.actionBtn} ${styles.actionBtnViewResult}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(item.submissionUrl || '/intern/quizzes');
+              }}
+              title="Xem lại kết quả & điểm số bài thi"
             >
-              <CheckCircle2 size={13} />
-              <span>Hoàn thành</span>
+              <Award size={13} />
+              <span>Xem kết quả</span>
             </button>
-          </div>
-        )}
+          )
+        ) : (
+          /* Standard Transition Buttons for Regular Tasks */
+          <>
+            {item.status === 'TODO' && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnStart}`}
+                onClick={() => onStatusChange(item.id, 'IN_PROGRESS')}
+                disabled={isMutating}
+                title="Bắt đầu thực hiện nhiệm vụ"
+              >
+                <PlayCircle size={13} />
+                <span>Bắt đầu làm</span>
+                <ArrowRight size={13} />
+              </button>
+            )}
 
-        {item.status === 'COMPLETED' && (
-          <button
-            type="button"
-            className={styles.actionBtn}
-            onClick={() => onStatusChange(item.id, 'IN_PROGRESS')}
-            disabled={isMutating}
-            title="Mở lại công việc để chỉnh sửa tiếp"
-          >
-            <RotateCcw size={13} />
-            <span>Mở lại làm tiếp</span>
-          </button>
+            {item.status === 'IN_PROGRESS' && (
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <button
+                  type="button"
+                  className={styles.actionBtn}
+                  onClick={() => onStatusChange(item.id, 'TODO')}
+                  disabled={isMutating}
+                  title="Lùi lại Chưa làm"
+                >
+                  <RotateCcw size={12} />
+                  <span>Chưa làm</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.actionBtn} ${styles.actionBtnComplete}`}
+                  onClick={() => onOpenSubmissionModal(item)}
+                  disabled={isMutating}
+                  title="Hoàn thành & Nộp bài"
+                >
+                  <CheckCircle2 size={13} />
+                  <span>Hoàn thành</span>
+                </button>
+              </div>
+            )}
+
+            {item.status === 'COMPLETED' && (
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={() => onStatusChange(item.id, 'IN_PROGRESS')}
+                disabled={isMutating}
+                title="Mở lại công việc để chỉnh sửa tiếp"
+              >
+                <RotateCcw size={13} />
+                <span>Mở lại làm tiếp</span>
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

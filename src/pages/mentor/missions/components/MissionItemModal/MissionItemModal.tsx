@@ -224,11 +224,11 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
               targetType: 'INDIVIDUAL',
               targetId: internId,
               dueDate: payload.dueDate || todayString,
-              createKanbanTask: false,
+              createKanbanTask: true,
             })
           );
           await Promise.all(assignPromises);
-          toast.success(`Đã tự động đính kèm và phân phối bài kiểm tra "${attachedQuiz.title}" cho thực tập sinh!`);
+          toast.success(`Đã tự động phân phối bài kiểm tra "${attachedQuiz.title}" và tạo thẻ bài thi trên Kanban của TTS!`);
         } catch (assignErr) {
           console.error('Lỗi khi phân phối bài kiểm tra đính kèm:', assignErr);
           toast.error('Giao việc thành công nhưng chưa thể phân phối bài Quiz đính kèm.');

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Clock,
   AlertCircle,
@@ -9,6 +10,8 @@ import {
   PlayCircle,
   Circle,
   FileText,
+  Sparkles,
+  Award,
 } from 'lucide-react';
 
 import { Modal, Button } from '../../../../../components/common';
@@ -24,7 +27,25 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onOpenSubmission,
   onReopen,
 }) => {
+  const navigate = useNavigate();
+
   if (!item) return null;
+
+  // Check if this task is an AI Quiz task
+  const isQuizTask =
+    item.title.startsWith('[Quiz]') ||
+    item.title.toLowerCase().includes('quiz') ||
+    Boolean(item.submissionUrl && item.submissionUrl.includes('/quizzes/'));
+
+  const getQuizTakeUrl = () => {
+    if (item.submissionUrl && item.submissionUrl.includes('/intern/quizzes/')) {
+      if (item.submissionUrl.endsWith('/take')) return item.submissionUrl;
+      return `${item.submissionUrl}/take`;
+    }
+    const match = item.submissionUrl?.match(/\/intern\/quizzes\/(\d+)/);
+    if (match) return `/intern/quizzes/${match[1]}/take`;
+    return '/intern/quizzes';
+  };
 
   // Deadline calculation
   const getDueDateInfo = () => {
@@ -80,41 +101,79 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         Đóng
       </Button>
 
-      {item.status === 'TODO' && onStartProgress && (
-        <Button
-          variant="primary"
-          onClick={() => {
-            onClose();
-            onStartProgress(item);
-          }}
-        >
-          <PlayCircle size={16} /> Bắt đầu làm việc
-        </Button>
-      )}
+      {/* If it is a Quiz Task: Provide direct Quiz action in footer */}
+      {isQuizTask ? (
+        item.status !== 'COMPLETED' ? (
+          <Button
+            variant="primary"
+            style={{
+              background: 'linear-gradient(135deg, var(--primary, #6366f1), #8b5cf6)',
+              borderColor: 'transparent',
+              boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
+              fontWeight: 600,
+            }}
+            onClick={() => {
+              onClose();
+              if (item.status === 'TODO' && onStartProgress) {
+                onStartProgress(item);
+              }
+              navigate(getQuizTakeUrl());
+            }}
+          >
+            <Sparkles size={16} /> Bắt đầu làm bài Quiz ngay
+          </Button>
+        ) : (
+          <Button
+            variant="primary"
+            style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}
+            onClick={() => {
+              onClose();
+              navigate(item.submissionUrl || '/intern/quizzes');
+            }}
+          >
+            <Award size={16} /> Xem kết quả bài thi
+          </Button>
+        )
+      ) : (
+        /* Standard Task Actions */
+        <>
+          {item.status === 'TODO' && onStartProgress && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                onClose();
+                onStartProgress(item);
+              }}
+            >
+              <PlayCircle size={16} /> Bắt đầu làm việc
+            </Button>
+          )}
 
-      {item.status === 'IN_PROGRESS' && onOpenSubmission && (
-        <Button
-          variant="primary"
-          style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}
-          onClick={() => {
-            onClose();
-            onOpenSubmission(item);
-          }}
-        >
-          <CheckCircle2 size={16} /> Hoàn thành & Nộp bài
-        </Button>
-      )}
+          {item.status === 'IN_PROGRESS' && onOpenSubmission && (
+            <Button
+              variant="primary"
+              style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}
+              onClick={() => {
+                onClose();
+                onOpenSubmission(item);
+              }}
+            >
+              <CheckCircle2 size={16} /> Hoàn thành & Nộp bài
+            </Button>
+          )}
 
-      {item.status === 'COMPLETED' && onReopen && (
-        <Button
-          variant="outline"
-          onClick={() => {
-            onClose();
-            onReopen(item);
-          }}
-        >
-          Mở lại công việc
-        </Button>
+          {item.status === 'COMPLETED' && onReopen && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                onClose();
+                onReopen(item);
+              }}
+            >
+              Mở lại công việc
+            </Button>
+          )}
+        </>
       )}
     </div>
   );
@@ -133,6 +192,53 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       size="lg"
     >
       <div className={styles.container}>
+        {/* Quiz Callout Card if this is a quiz task */}
+        {isQuizTask && (
+          <div className={styles.quizCallout}>
+            <div className={styles.quizCalloutHeader}>
+              <div className={styles.quizCalloutIcon}>
+                <Sparkles size={22} className="text-amber-500" />
+              </div>
+              <div className={styles.quizCalloutInfo}>
+                <h4 className={styles.quizCalloutTitle}>
+                  Bài Kiểm Tra Trắc Nghiệm Ôn Tập (AI Synchronized)
+                </h4>
+                <p className={styles.quizCalloutSub}>
+                  Nhiệm vụ này gắn liền với đề thi trực tuyến. Hệ thống sẽ tự động chấm điểm và cập nhật thẻ Kanban sang <strong>Hoàn thành</strong> ngay khi bạn làm bài thi đạt yêu cầu.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.quizCalloutActions}>
+              {item.status !== 'COMPLETED' ? (
+                <Button
+                  variant="primary"
+                  className={styles.takeQuizCtaBtn}
+                  onClick={() => {
+                    onClose();
+                    if (item.status === 'TODO' && onStartProgress) {
+                      onStartProgress(item);
+                    }
+                    navigate(getQuizTakeUrl());
+                  }}
+                >
+                  <Sparkles size={16} /> Vào phòng thi làm bài ngay
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    onClose();
+                    navigate(item.submissionUrl || '/intern/quizzes');
+                  }}
+                >
+                  <Award size={16} /> Xem chi tiết điểm số & kết quả
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Meta Grid */}
         <div className={styles.metaGrid}>
           <div className={styles.metaItem}>
