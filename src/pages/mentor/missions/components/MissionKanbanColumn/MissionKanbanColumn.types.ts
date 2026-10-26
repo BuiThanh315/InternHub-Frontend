@@ -1,9 +1,10 @@
-import type { MissionItemResponse, MissionItemStatus } from '../../../../../types';
+import type { MissionItemResponse, MissionItemStatus, TaskActorPresence } from '../../../../../types';
 
 export interface MissionKanbanColumnProps {
   status: MissionItemStatus;
   title: string;
   items: MissionItemResponse[];
+  presenceMap?: Record<number, TaskActorPresence>;
   onAddNewItem?: () => void;
   onEditItem: (item: MissionItemResponse) => void;
   onDeleteItem: (item: MissionItemResponse) => void;

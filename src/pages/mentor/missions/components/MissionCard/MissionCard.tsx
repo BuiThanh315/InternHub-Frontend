@@ -12,6 +12,7 @@ import styles from './MissionCard.module.css';
 
 export const MissionCard: React.FC<MissionCardProps> = ({
   item,
+  presence,
   onEdit,
   onDelete,
   onStatusChange: _onStatusChange,
@@ -78,6 +79,14 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      {/* Realtime Actor Presence Badge */}
+      {presence && (
+        <div className={styles.actorPresenceBadge} title={presence.actionText}>
+          <span>👤</span>
+          <span>{presence.actorName} {presence.actionText}</span>
+        </div>
+      )}
+
       {/* Header: Priority Badge & Action Buttons */}
       <div className={styles.cardHeader}>
         <span className={`${styles.priorityBadge} ${priorityConfig.class}`}>

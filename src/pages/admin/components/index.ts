@@ -1,4 +1,5 @@
 export * from './AdminMetricsGrid';
+export * from './AdminAnalyticsHub';
 export * from './AdminUserTab';
 export * from './AdminBackupTab';
 export * from './AdminAuditTab';
@@ -7,3 +8,4 @@ export * from './AdminAuditTable';
 export * from './AdminAuditDetailModal';
 export * from './AdminRoleTab';
 export * from './RoleModal';
+

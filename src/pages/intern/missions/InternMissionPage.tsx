@@ -56,6 +56,8 @@ const InternMissionContent: React.FC = () => {
     isLoading,
     isMutating,
     error,
+    presenceMap,
+    isRealtimeConnected,
     refreshKanban,
     updateTaskStatus,
   } = useInternKanban();
@@ -193,6 +195,32 @@ const InternMissionContent: React.FC = () => {
             </Button>
           )}
 
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.3rem 0.6rem',
+              borderRadius: '9999px',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              backgroundColor: isRealtimeConnected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(148, 163, 184, 0.12)',
+              color: isRealtimeConnected ? 'var(--success, #10b981)' : 'var(--text-muted, #94a3b8)',
+              border: `1px solid ${isRealtimeConnected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`,
+            }}
+            title={isRealtimeConnected ? 'Đang đồng bộ trực tiếp qua WebSocket' : 'Đang kết nối lại máy chủ...'}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                backgroundColor: isRealtimeConnected ? '#10b981' : '#94a3b8',
+              }}
+            />
+            <span>{isRealtimeConnected ? 'Live Sync' : 'Offline'}</span>
+          </div>
+
           <Button
             variant="outline"
             size="sm"
@@ -276,6 +304,7 @@ const InternMissionContent: React.FC = () => {
           todoItems={todoItems}
           inProgressItems={inProgressItems}
           completedItems={completedItems}
+          presenceMap={presenceMap}
           onViewDetail={(item) => setSelectedDetailItem(item)}
           onStatusChange={handleDirectStatusChange}
           onOpenSubmissionModal={handleOpenSubmissionModal}

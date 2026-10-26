@@ -8,6 +8,7 @@ export const MissionKanbanColumn: React.FC<MissionKanbanColumnProps> = ({
   status,
   title,
   items,
+  presenceMap,
   onAddNewItem,
   onEditItem,
   onDeleteItem,
@@ -116,6 +117,7 @@ export const MissionKanbanColumn: React.FC<MissionKanbanColumnProps> = ({
             <MissionCard
               key={item.id}
               item={item}
+              presence={presenceMap?.[item.id]}
               onEdit={onEditItem}
               onDelete={onDeleteItem}
               onStatusChange={onStatusChange}

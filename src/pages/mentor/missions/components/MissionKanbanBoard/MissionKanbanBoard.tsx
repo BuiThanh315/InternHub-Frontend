@@ -7,6 +7,7 @@ export const MissionKanbanBoard: React.FC<MissionKanbanBoardProps> = ({
   todoItems,
   inProgressItems,
   completedItems,
+  presenceMap,
   onAddNewItem,
   onEditItem,
   onDeleteItem,
@@ -22,6 +23,7 @@ export const MissionKanbanBoard: React.FC<MissionKanbanBoardProps> = ({
         status="TODO"
         title="Chưa làm"
         items={todoItems}
+        presenceMap={presenceMap}
         onAddNewItem={() => onAddNewItem('TODO')}
         onEditItem={onEditItem}
         onDeleteItem={onDeleteItem}
@@ -35,6 +37,7 @@ export const MissionKanbanBoard: React.FC<MissionKanbanBoardProps> = ({
         status="IN_PROGRESS"
         title="Đang làm"
         items={inProgressItems}
+        presenceMap={presenceMap}
         onAddNewItem={() => onAddNewItem('IN_PROGRESS')}
         onEditItem={onEditItem}
         onDeleteItem={onDeleteItem}
@@ -47,6 +50,7 @@ export const MissionKanbanBoard: React.FC<MissionKanbanBoardProps> = ({
         status="COMPLETED"
         title="Hoàn thiện"
         items={completedItems}
+        presenceMap={presenceMap}
         onAddNewItem={() => onAddNewItem('COMPLETED')}
         onEditItem={onEditItem}
         onDeleteItem={onDeleteItem}

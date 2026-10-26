@@ -9,6 +9,7 @@ export const InternKanbanColumn: React.FC<InternKanbanColumnProps> = ({
   status,
   title,
   items,
+  presenceMap,
   onViewDetail,
   onStatusChange,
   onOpenSubmissionModal,
@@ -48,6 +49,7 @@ export const InternKanbanColumn: React.FC<InternKanbanColumnProps> = ({
             <InternTaskCard
               key={item.id}
               item={item}
+              presence={presenceMap?.[item.id]}
               onViewDetail={onViewDetail}
               onStatusChange={onStatusChange}
               onOpenSubmissionModal={onOpenSubmissionModal}

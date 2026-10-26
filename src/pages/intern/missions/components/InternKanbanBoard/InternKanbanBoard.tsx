@@ -7,6 +7,7 @@ export const InternKanbanBoard: React.FC<InternKanbanBoardProps> = ({
   todoItems,
   inProgressItems,
   completedItems,
+  presenceMap,
   onViewDetail,
   onStatusChange,
   onOpenSubmissionModal,
@@ -20,6 +21,7 @@ export const InternKanbanBoard: React.FC<InternKanbanBoardProps> = ({
         status="TODO"
         title="Chưa làm"
         items={todoItems}
+        presenceMap={presenceMap}
         onViewDetail={onViewDetail}
         onStatusChange={onStatusChange}
         onOpenSubmissionModal={onOpenSubmissionModal}
@@ -31,6 +33,7 @@ export const InternKanbanBoard: React.FC<InternKanbanBoardProps> = ({
         status="IN_PROGRESS"
         title="Đang làm"
         items={inProgressItems}
+        presenceMap={presenceMap}
         onViewDetail={onViewDetail}
         onStatusChange={onStatusChange}
         onOpenSubmissionModal={onOpenSubmissionModal}
@@ -42,6 +45,7 @@ export const InternKanbanBoard: React.FC<InternKanbanBoardProps> = ({
         status="COMPLETED"
         title="Hoàn thiện"
         items={completedItems}
+        presenceMap={presenceMap}
         onViewDetail={onViewDetail}
         onStatusChange={onStatusChange}
         onOpenSubmissionModal={onOpenSubmissionModal}

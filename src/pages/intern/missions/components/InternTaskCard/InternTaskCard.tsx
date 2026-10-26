@@ -18,6 +18,7 @@ import styles from './InternTaskCard.module.css';
 
 export const InternTaskCard: React.FC<InternTaskCardProps> = ({
   item,
+  presence,
   onViewDetail,
   onStatusChange,
   onOpenSubmissionModal,
@@ -73,6 +74,14 @@ export const InternTaskCard: React.FC<InternTaskCardProps> = ({
 
   return (
     <div className={`${styles.card} ${cardStatusClass} ${className}`}>
+      {/* Realtime Actor Presence Badge */}
+      {presence && (
+        <div className={styles.actorPresenceBadge} title={presence.actionText}>
+          <span>👤</span>
+          <span>{presence.actorName} {presence.actionText}</span>
+        </div>
+      )}
+
       {/* Header: Priority Badge & Deadline */}
       <div className={styles.cardHeader}>
         <span className={`${styles.priorityBadge} ${priorityConfig.class}`}>

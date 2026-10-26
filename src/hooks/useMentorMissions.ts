@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { missionService } from '../services/missionService';
 import { groupService } from '../services/groupService';
+import { useMissionKanbanSync } from './useMissionKanbanSync';
 import type {
   MentorProgramResponse,
   AssigneeResponse,
@@ -15,6 +16,8 @@ import type {
   UpdateMissionBoardRequest,
   CreateMissionItemRequest,
   UpdateMissionItemRequest,
+  TaskActorPresence,
+  MissionItemSyncEvent,
 } from '../types';
 import type { InternGroup, BatchGroupItem } from '../types/group.types';
 
@@ -61,6 +64,10 @@ export interface UseMentorMissionsReturn {
   isLoadingBoard: boolean;
   isMutating: boolean;
   error: string | null;
+
+  // Realtime Sync Presence
+  presenceMap: Record<number, TaskActorPresence>;
+  isRealtimeConnected: boolean;
 
   // Actions
   refreshAll: () => Promise<void>;
@@ -222,6 +229,46 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
       setIsLoadingBoard(false);
     }
   }, [extractAllItems]);
+
+  // Xử lý sự kiện đồng bộ Kanban thời gian thực từ STOMP WebSocket
+  const handleBoardItemSyncEvent = useCallback((event: MissionItemSyncEvent) => {
+    setActiveBoardDetail((prev) => {
+      if (!prev) return prev;
+      const currentItems = extractAllItems(prev);
+      const target = currentItems.find((i) => i.id === event.itemId);
+
+      if (!target) {
+        // Nếu là item mới chưa có trong board detail -> load lại ngầm
+        if (activeBoardId) void loadBoardDetail(activeBoardId);
+        return prev;
+      }
+
+      const newStatus = event.newStatus || target.status;
+      const updatedItem: MissionItemResponse = {
+        ...target,
+        status: newStatus,
+        version: event.version !== undefined ? event.version : (target.version || 0) + 1,
+        title: event.title || target.title,
+        submissionUrl: event.submissionUrl !== undefined ? event.submissionUrl : target.submissionUrl,
+        completionNote: event.completionNote !== undefined ? event.completionNote : target.completionNote,
+      };
+
+      const updatedItems = currentItems.map((i) => (i.id === event.itemId ? updatedItem : i));
+      return {
+        ...prev,
+        items: updatedItems,
+        todoItems: updatedItems.filter((i) => i.status === 'TODO'),
+        inProgressItems: updatedItems.filter((i) => i.status === 'IN_PROGRESS'),
+        completedItems: updatedItems.filter((i) => i.status === 'COMPLETED'),
+      };
+    });
+  }, [extractAllItems, activeBoardId, loadBoardDetail]);
+
+  // Hook STOMP Realtime
+  const { isConnected: isRealtimeConnected, presenceMap } = useMissionKanbanSync({
+    boardId: activeBoardId,
+    onItemStatusChanged: handleBoardItemSyncEvent,
+  });
 
   useEffect(() => {
     if (!activeBoardId) {
@@ -574,6 +621,8 @@ export const useMentorMissions = (): UseMentorMissionsReturn => {
     isLoadingBoard,
     isMutating,
     error,
+    presenceMap,
+    isRealtimeConnected,
     refreshAll,
     createBoard,
     updateBoard,

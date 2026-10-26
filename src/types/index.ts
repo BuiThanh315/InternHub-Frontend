@@ -16,3 +16,4 @@ export * from './leave.types';
 export * from './ai.types';
 export * from './quiz.types';
 export * from './group.types';
+export * from './missionSync.types';
