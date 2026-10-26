@@ -68,6 +68,11 @@
   --radius-full: 9999px;
   --transition-fast: 0.15s ease;
   --transition-normal: 0.25s ease;
+
+  /* Table Grid & Densities */
+  --table-cell-py: 0.625rem;
+  --table-cell-px: 1rem;
+  --status-dot-size: 6px;
 }
 
 /* Dark mode overrides */
@@ -372,7 +377,7 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.875rem;
+  font-size: 0.84375rem;
 }
 
 .modern-table th {
@@ -380,16 +385,16 @@
   color: var(--text-secondary);
   font-weight: 600;
   padding: 0.75rem 1rem;
-  text-transform: uppercase;
-  font-size: 0.725rem;
-  letter-spacing: 0.05em;
+  font-size: 0.8125rem;
+  letter-spacing: 0;
   border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
 }
 
 .modern-table td {
-  padding: 0.875rem 1rem;
+  padding: var(--table-cell-py) var(--table-cell-px);
   color: var(--text-main);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-default);
   vertical-align: middle;
 }
 
@@ -407,7 +412,64 @@
 }
 
 .modern-table tbody tr:hover {
-  background-color: rgba(79, 70, 229, 0.02);
+  background-color: rgba(79, 70, 229, 0.025);
+}
+
+/* Status Dot Indicators (Enterprise Clean Table Badge) */
+.status-dot {
+  width: var(--status-dot-size, 6px);
+  height: var(--status-dot-size, 6px);
+  border-radius: var(--radius-full);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot-success {
+  background-color: var(--success);
+  box-shadow: 0 0 0 2px var(--success-border);
+}
+
+.status-dot-warning {
+  background-color: var(--warning);
+  box-shadow: 0 0 0 2px var(--warning-border);
+}
+
+.status-dot-danger {
+  background-color: var(--danger);
+  box-shadow: 0 0 0 2px var(--danger-border);
+}
+
+.status-dot-info {
+  background-color: var(--info);
+  box-shadow: 0 0 0 2px var(--info-border);
+}
+
+.status-dot-neutral {
+  background-color: var(--text-muted);
+  box-shadow: 0 0 0 2px var(--border-default);
+}
+
+/* Sticky Columns for Wide Tables */
+.table-sticky-left {
+  position: sticky;
+  left: 0;
+  background-color: var(--bg-surface);
+  z-index: 2;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.03);
+}
+
+.table-sticky-right {
+  position: sticky;
+  right: 0;
+  background-color: var(--bg-surface);
+  z-index: 2;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.03);
+  text-align: right;
+}
+
+tbody tr:hover .table-sticky-left,
+tbody tr:hover .table-sticky-right {
+  background-color: var(--bg-hover);
 }
 
 /* Animations */

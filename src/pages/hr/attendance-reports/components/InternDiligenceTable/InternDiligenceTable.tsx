@@ -45,12 +45,12 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
             <thead>
               <tr>
                 <th className={`${styles.th} ${styles.stickyLeft}`}>Mã TTS</th>
-                <th className={styles.th}>Họ và Tên</th>
-                <th className={styles.th}>Phòng ban / Chương trình</th>
+                <th className={styles.th}>Họ và tên</th>
+                <th className={styles.th}>Phòng ban & chương trình</th>
                 <th className={styles.th}>Ngày công</th>
-                <th className={styles.th}>Đi muộn / Về sớm</th>
+                <th className={styles.th}>Đi muộn / về sớm</th>
                 <th className={styles.th}>Nghỉ phép</th>
-                <th className={styles.th}>Vắng K.phép</th>
+                <th className={styles.th}>Vắng không phép</th>
                 <th className={styles.th}>Tỷ lệ</th>
                 <th className={styles.th}>Xếp loại</th>
                 <th className={`${styles.th} ${styles.stickyRight}`}>Thao tác</th>
@@ -161,13 +161,13 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
           <thead>
             <tr>
               <th className={`${styles.th} ${styles.stickyLeft}`}>Mã TTS</th>
-              <th className={styles.th}>Họ và Tên</th>
-              <th className={styles.th}>Phòng ban • Chương trình</th>
+              <th className={styles.th}>Họ và tên</th>
+              <th className={styles.th}>Phòng ban & chương trình</th>
               <th className={styles.th}>Ngày công</th>
-              <th className={styles.th}>Đi muộn / Về sớm</th>
+              <th className={styles.th}>Đi muộn / về sớm</th>
               <th className={styles.th}>Nghỉ phép</th>
-              <th className={styles.th}>Vắng K.phép</th>
-              <th className={styles.th}>Tỷ lệ (%)</th>
+              <th className={styles.th}>Vắng không phép</th>
+              <th className={styles.th}>Tỷ lệ</th>
               <th className={styles.th}>Xếp loại</th>
               <th className={`${styles.th} ${styles.stickyRight}`}>Thao tác</th>
             </tr>
@@ -177,7 +177,7 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
               <tr key={item.internId} className={styles.tr}>
                 {/* Cột 1: Mã TTS (Sticky Left) */}
                 <td className={`${styles.td} ${styles.stickyLeft}`}>
-                  <span className={styles.codeBadge}>{item.internCode}</span>
+                  <span className={`${styles.codeBadge} font-tabular`}>{item.internCode}</span>
                 </td>
 
                 {/* Cột 2: Họ và Tên */}
@@ -204,33 +204,33 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
                 {/* Cột 4: Ngày công */}
                 <td className={styles.td}>
                   <div className={styles.workDaysCell}>
-                    <span className={styles.actualDays}>{item.actualWorkDays.toFixed(1)}</span>
-                    <span className={styles.expectedDays}>/ {item.expectedWorkDays}</span>
+                    <span className={`${styles.actualDays} font-tabular`}>{item.actualWorkDays.toFixed(1)}</span>
+                    <span className={`${styles.expectedDays} font-tabular`}>/ {item.expectedWorkDays}</span>
                   </div>
                 </td>
 
                 {/* Cột 5: Đi muộn / Về sớm */}
                 <td className={styles.td}>
                   <span>
-                    {item.lateCount} muộn • {item.earlyLeaveCount} sớm
+                    <span className="font-tabular">{item.lateCount}</span> muộn • <span className="font-tabular">{item.earlyLeaveCount}</span> sớm
                   </span>
                 </td>
 
                 {/* Cột 6: Nghỉ phép */}
                 <td className={styles.td}>
-                  <span>{item.approvedLeaveDays.toFixed(1)} ngày</span>
+                  <span className="font-tabular">{item.approvedLeaveDays.toFixed(1)} ngày</span>
                 </td>
 
                 {/* Cột 7: Vắng K.phép */}
                 <td className={styles.td}>
-                  <span style={{ color: item.unexcusedAbsenceDays > 0 ? 'var(--danger)' : 'inherit', fontWeight: item.unexcusedAbsenceDays > 0 ? 600 : 400 }}>
+                  <span className="font-tabular" style={{ color: item.unexcusedAbsenceDays > 0 ? 'var(--danger)' : 'inherit', fontWeight: item.unexcusedAbsenceDays > 0 ? 600 : 400 }}>
                     {item.unexcusedAbsenceDays.toFixed(1)} ngày
                   </span>
                 </td>
 
                 {/* Cột 8: Tỷ lệ chuyên cần */}
                 <td className={styles.td}>
-                  <span className={`${styles.rateCell} ${getRateClass(item.diligenceRate)}`}>
+                  <span className={`${styles.rateCell} ${getRateClass(item.diligenceRate)} font-tabular`}>
                     {item.diligenceRate.toFixed(1)}%
                   </span>
                 </td>

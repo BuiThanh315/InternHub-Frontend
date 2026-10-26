@@ -3,9 +3,6 @@ import {
   CalendarX,
   AlertCircle,
   RefreshCw,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -77,14 +74,14 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
       case 'ON_TIME':
         return (
           <span className={`${styles.statusBadge} ${styles.badgeOnTime}`}>
-            <CheckCircle2 size={12} />
+            <span className="status-dot status-dot-success mr-1" />
             {getAttendanceStatusLabel(status)}
           </span>
         );
       case 'LATE':
         return (
           <span className={`${styles.statusBadge} ${styles.badgeLate}`}>
-            <AlertTriangle size={12} />
+            <span className="status-dot status-dot-warning mr-1" />
             {getAttendanceStatusLabel(status)}
           </span>
         );
@@ -92,13 +89,14 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
       case 'LATE_AND_EARLY_LEAVE':
         return (
           <span className={`${styles.statusBadge} ${styles.badgeEarlyLeave}`}>
-            <Clock size={12} />
+            <span className="status-dot status-dot-danger mr-1" />
             {getAttendanceStatusLabel(status)}
           </span>
         );
       default:
         return (
           <span className={`${styles.statusBadge} ${styles.badgeAbsent}`}>
+            <span className="status-dot status-dot-neutral mr-1" />
             {getAttendanceStatusLabel(status)}
           </span>
         );
@@ -113,12 +111,12 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.stickyColumn}>Ngày Làm Việc</th>
-                <th>Giờ Check-in</th>
-                <th>Giờ Check-out</th>
-                <th>Tổng Giờ Làm</th>
-                <th>Trạng Thái</th>
-                <th>Ghi Chú</th>
+                <th className={styles.stickyColumn}>Ngày làm việc</th>
+                <th>Giờ check-in</th>
+                <th>Giờ check-out</th>
+                <th>Tổng giờ làm</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
               </tr>
             </thead>
             <tbody>
@@ -204,14 +202,14 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
         <table className={styles.table}>
           <thead>
             <tr>
-              <th className={styles.stickyColumn}>Ngày Làm Việc</th>
-              <th>Giờ Check-in</th>
-              <th>Giờ Check-out</th>
-              <th>Tổng Giờ Làm</th>
-              <th>Trạng Thái</th>
-              <th>Kiểm Duyệt</th>
-              <th>Ghi Chú</th>
-              <th>Thao Tác</th>
+              <th className={styles.stickyColumn}>Ngày làm việc</th>
+              <th>Giờ check-in</th>
+              <th>Giờ check-out</th>
+              <th>Tổng giờ làm</th>
+              <th>Trạng thái</th>
+              <th>Kiểm duyệt</th>
+              <th>Ghi chú</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -220,12 +218,12 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
               return (
               <tr key={record.id || record.workDate}>
                 <td className={styles.stickyColumn}>
-                  <strong>{formatDate(record.workDate)}</strong>
+                  <strong className="font-tabular">{formatDate(record.workDate)}</strong>
                 </td>
                 <td>
-                  <div>{formatTime(record.checkInTime, false)}</div>
+                  <div className="font-tabular">{formatTime(record.checkInTime, false)}</div>
                   {record.checkInDistance !== undefined && record.checkInDistance !== null && (
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    <div className="font-tabular" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                       {record.checkInDistance}m
                     </div>
                   )}
@@ -233,9 +231,9 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
                 <td>
                   {record.checkOutTime ? (
                     <div>
-                      <div>{formatTime(record.checkOutTime, false)}</div>
+                      <div className="font-tabular">{formatTime(record.checkOutTime, false)}</div>
                       {record.checkOutDistance !== undefined && record.checkOutDistance !== null && (
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        <div className="font-tabular" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                           {record.checkOutDistance}m
                         </div>
                       )}
@@ -244,7 +242,7 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
                     '—'
                   )}
                 </td>
-                <td>
+                <td className="font-tabular">
                   {record.totalWorkingHours !== null &&
                   record.totalWorkingHours !== undefined
                     ? `${record.totalWorkingHours.toFixed(2)} h`
@@ -254,12 +252,12 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
                 <td>
                   {record.reviewStatus === 'PENDING_REVIEW' ? (
                     <span className={`${styles.statusBadge} ${styles.badgeReviewPending}`}>
-                      <AlertTriangle size={11} />
+                      <span className="status-dot status-dot-warning mr-1" />
                       Chờ duyệt
                     </span>
                   ) : (
                     <span className={`${styles.statusBadge} ${styles.badgeReviewApproved}`}>
-                      <CheckCircle2 size={11} />
+                      <span className="status-dot status-dot-success mr-1" />
                       Đã duyệt
                     </span>
                   )}
@@ -410,11 +408,11 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
         <div className={styles.paginationBar}>
           <span>
             Hiển thị{' '}
-            <strong>
+            <strong className="font-tabular">
               {(currentPage - 1) * PAGE_SIZE + 1} -{' '}
               {Math.min(currentPage * PAGE_SIZE, totalItems)}
             </strong>{' '}
-            trong tổng số <strong>{totalItems}</strong> ngày công
+            trong tổng số <strong className="font-tabular">{totalItems}</strong> ngày công
           </span>
 
           <div className={styles.pageButtonGroup}>
@@ -429,7 +427,7 @@ export const AttendanceHistoryTable: React.FC<AttendanceHistoryTableProps> = ({
               <span>Trước</span>
             </button>
             <span>
-              Trang {currentPage} / {totalPages}
+              Trang <span className="font-tabular">{currentPage}</span> / <span className="font-tabular">{totalPages}</span>
             </span>
             <button
               type="button"

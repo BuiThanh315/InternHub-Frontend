@@ -3,11 +3,6 @@ import {
   CalendarOff,
   Eye,
   Trash2,
-  ArrowRight,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
   Plus,
   RotateCcw,
 } from 'lucide-react';
@@ -22,28 +17,28 @@ const getStatusBadge = (status: LeaveStatus, desc: string) => {
     case 'PENDING':
       return (
         <span className={`${styles.badge} ${styles.badgePending}`}>
-          <Clock size={12} />
+          <span className="status-dot status-dot-warning mr-1" />
           {desc || 'Chờ xét duyệt'}
         </span>
       );
     case 'APPROVED':
       return (
         <span className={`${styles.badge} ${styles.badgeApproved}`}>
-          <CheckCircle2 size={12} />
+          <span className="status-dot status-dot-success mr-1" />
           {desc || 'Đã phê duyệt'}
         </span>
       );
     case 'REJECTED':
       return (
         <span className={`${styles.badge} ${styles.badgeRejected}`}>
-          <XCircle size={12} />
+          <span className="status-dot status-dot-danger mr-1" />
           {desc || 'Bị từ chối'}
         </span>
       );
     case 'CANCELLED':
       return (
         <span className={`${styles.badge} ${styles.badgeCancelled}`}>
-          <AlertCircle size={12} />
+          <span className="status-dot status-dot-neutral mr-1" />
           {desc || 'Đã hủy bỏ'}
         </span>
       );
@@ -159,14 +154,14 @@ export const LeaveRequestTable: React.FC<LeaveRequestTableProps> = ({
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>MÃ ĐƠN</th>
-              <th>LOẠI NGHỈ PHÉP</th>
-              <th>KHUNG THỜI GIAN</th>
-              <th>THỜI GIAN NGHỈ</th>
-              <th>SỐ CÔNG</th>
-              <th>TRẠNG THÁI</th>
+              <th>Mã đơn</th>
+              <th>Loại nghỉ phép</th>
+              <th>Khung thời gian</th>
+              <th>Thời gian nghỉ</th>
+              <th>Số công</th>
+              <th>Trạng thái</th>
               <th className={styles.stickyRight} style={{ textAlign: 'right' }}>
-                THAO TÁC
+                Thao tác
               </th>
             </tr>
           </thead>
@@ -175,20 +170,20 @@ export const LeaveRequestTable: React.FC<LeaveRequestTableProps> = ({
               const isPending = item.status === 'PENDING';
               return (
                 <tr key={item.id}>
-                  <td className={styles.codeCell}>#LR-{item.id}</td>
+                  <td className={`${styles.codeCell} font-tabular`}>#LR-{item.id}</td>
                   <td>
                     <strong>{item.leaveTypeDescription || item.leaveType}</strong>
                   </td>
                   <td>{item.durationTypeDescription || item.durationType}</td>
                   <td>
                     <div className={styles.dateRange}>
-                      <span>{formatDate(item.startDate)}</span>
-                      <ArrowRight size={13} className={styles.arrowIcon} />
-                      <span>{formatDate(item.endDate)}</span>
+                      <span className="font-tabular">{formatDate(item.startDate)}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>–</span>
+                      <span className="font-tabular">{formatDate(item.endDate)}</span>
                     </div>
                   </td>
                   <td>
-                    <span className={styles.daysTag}>
+                    <span className={`${styles.daysTag} font-tabular`}>
                       {item.totalDays?.toFixed(1)} ngày
                     </span>
                   </td>
@@ -240,7 +235,7 @@ export const LeaveRequestTable: React.FC<LeaveRequestTableProps> = ({
         {requests.map((item) => (
           <div key={item.id} className={styles.mobileCard}>
             <div className={styles.mobileCardHeader}>
-              <span className={styles.codeCell}>#LR-{item.id}</span>
+              <span className={`${styles.codeCell} font-tabular`}>#LR-{item.id}</span>
               {getStatusBadge(item.status, item.statusDescription)}
             </div>
             <div className={styles.mobileCardRow}>
@@ -254,12 +249,12 @@ export const LeaveRequestTable: React.FC<LeaveRequestTableProps> = ({
             <div className={styles.mobileCardRow}>
               <span className={styles.mobileCardLabel}>Thời gian:</span>
               <span>
-                {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                <span className="font-tabular">{formatDate(item.startDate)}</span> <span style={{ color: 'var(--text-muted)' }}>–</span> <span className="font-tabular">{formatDate(item.endDate)}</span>
               </span>
             </div>
             <div className={styles.mobileCardRow}>
               <span className={styles.mobileCardLabel}>Số ngày công:</span>
-              <span className={styles.daysTag}>
+              <span className={`${styles.daysTag} font-tabular`}>
                 {item.totalDays?.toFixed(1)} ngày
               </span>
             </div>

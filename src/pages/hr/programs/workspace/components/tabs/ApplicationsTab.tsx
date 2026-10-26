@@ -1,21 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Inbox,
-  UserCheck,
-  UserX,
-  Eye,
-  GraduationCap,
-  Calendar,
   AlertCircle,
   RefreshCw,
   Clock,
   Sparkles,
   Filter,
-  School,
-  MessageSquareQuote,
   Bookmark,
   Scale,
-  FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,6 +21,7 @@ import type { InternProfile, ScreeningResultDto } from '../../../../../../types'
 import type { ApplicationsTabProps } from '../../types/ProgramWorkspace.types';
 import { InterviewQuestionModal } from '../InterviewQuestionModal';
 import { CvComparisonModal } from '../CvComparisonModal';
+import { CandidateWorkspaceModal } from '../CandidateWorkspaceModal';
 import styles from '../../styles/ProgramWorkspace.module.css';
 
 interface RejectionDialogState {
@@ -42,7 +35,7 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   onEnrollSuccess,
   onViewInternDetail,
   onOpenCreateSchedule,
-  onOpenAiDossier,
+  onOpenAiDossier: _onOpenAiDossier,
 }) => {
   // Rule 14: Tối đa 3 - 4 state trong 1 component (Gom nhóm dữ liệu nhất quán)
   // State 1: Danh sách ứng viên
@@ -54,21 +47,8 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
     errorMessage: null,
   });
 
-  // State 3: Thao tác & Bộ lọc nguồn hồ sơ (Gom nhóm tuân thủ Rule 14 <= 4 state)
-  const [filterAndAction, setFilterAndAction] = useState<{
-    sourceFilter: 'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT';
-    actionInternId: number | null;
-  }>({
-    sourceFilter: 'ALL',
-    actionInternId: null,
-  });
-
-  const actionInternId = filterAndAction.actionInternId;
-  const setActionInternId = (id: number | null) =>
-    setFilterAndAction((prev) => ({ ...prev, actionInternId: id }));
-  const sourceFilter = filterAndAction.sourceFilter;
-  const setSourceFilter = (val: 'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT') =>
-    setFilterAndAction((prev) => ({ ...prev, sourceFilter: val }));
+  // State 3: Bộ lọc nguồn hồ sơ (Gom nhóm tuân thủ Rule 14 <= 4 state)
+  const [sourceFilter, setSourceFilter] = useState<'ALL' | 'UNIVERSITY' | 'FREE_APPLICANT'>('ALL');
 
   // State 4: Trạng thái Modal từ chối ứng viên
   const [rejectionDialog, setRejectionDialog] = useState<RejectionDialogState>({
@@ -85,6 +65,10 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
   const [showOnlyBookmarked, setShowOnlyBookmarked] = useState<boolean>(false);
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState<boolean>(false);
+
+  // Candidate Workspace Drawer State
+  const [selectedCandidate, setSelectedCandidate] = useState<InternProfile | null>(null);
+  const [workspaceInitialTab, setWorkspaceInitialTab] = useState<'profile' | 'screening' | 'interview'>('profile');
 
   // Custom Hook quản lý AI Screening hàng loạt & bộ lọc
   const aiScreening = useAiScreening(program.id);
@@ -228,19 +212,19 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
     }
 
     try {
-      setActionInternId(intern.id);
       await internService.submitDecision(intern.id, {
         decision: 'APPROVED',
         programId: program.id,
       });
       toast.success(`Đã tiếp nhận thành công ứng viên "${intern.fullName}" vào kỳ thực tập!`);
       setApplicants((prev) => prev.filter((item) => item.id !== intern.id));
+      if (selectedCandidate?.id === intern.id) {
+        setSelectedCandidate(null);
+      }
       onEnrollSuccess();
     } catch (err: any) {
       console.error('Lỗi tiếp nhận:', err);
       toast.error(err.response?.data?.message || 'Không thể tiếp nhận ứng viên.');
-    } finally {
-      setActionInternId(null);
     }
   };
 
@@ -260,6 +244,9 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
       });
       toast.success(`Đã từ chối đơn đăng ký của "${rejectionDialog.intern.fullName}".`);
       setApplicants((prev) => prev.filter((item) => item.id !== rejectionDialog.intern?.id));
+      if (selectedCandidate?.id === rejectionDialog.intern?.id) {
+        setSelectedCandidate(null);
+      }
       setRejectionDialog({ intern: null, reason: '', isSubmitting: false });
       onEnrollSuccess();
     } catch (err: any) {
@@ -272,28 +259,33 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
 
   const renderAiBadge = (evaluation?: ScreeningResultDto) => {
     if (!evaluation) {
-      return <span className="badge badge-neutral">-- Chưa quét</span>;
+      return (
+        <span className="badge badge-neutral flex items-center gap-1.5 font-tabular">
+          <span className="status-dot status-dot-neutral" />
+          -- Chưa quét
+        </span>
+      );
     }
     const score = evaluation.overallScore;
     if (score >= 75) {
       return (
-        <span className="badge badge-success flex items-center gap-1 font-tabular">
-          <Sparkles size={11} aria-hidden="true" />
+        <span className="badge badge-success flex items-center gap-1.5 font-tabular">
+          <span className="status-dot status-dot-success" />
           {score}% · Phù hợp
         </span>
       );
     }
     if (score >= 50) {
       return (
-        <span className="badge badge-warning flex items-center gap-1 font-tabular">
-          <Sparkles size={11} aria-hidden="true" />
+        <span className="badge badge-warning flex items-center gap-1.5 font-tabular">
+          <span className="status-dot status-dot-warning" />
           {score}% · Cân nhắc
         </span>
       );
     }
     return (
-      <span className="badge badge-danger flex items-center gap-1 font-tabular">
-        <Sparkles size={11} aria-hidden="true" />
+      <span className="badge badge-danger flex items-center gap-1.5 font-tabular">
+        <span className="status-dot status-dot-danger" />
         {score}% · Chưa đạt
       </span>
     );
@@ -568,17 +560,16 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                     aria-label="Chọn tất cả ứng viên có CV"
                   />
                 </th>
-                <th>Ứng Viên</th>
-                <th>Trường & Chuyên Ngành</th>
+                <th>Ứng viên</th>
+                <th>Trường & chuyên ngành</th>
                 <th>GPA</th>
-                <th>Ngày Nộp Đơn</th>
-                <th>Đánh Giá AI</th>
-                <th style={{ textAlign: 'right' }}>Thao Tác</th>
+                <th>Ngày nộp đơn</th>
+                <th>Đánh giá AI</th>
+                <th style={{ textAlign: 'right' }}>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {filteredApplicants.map((intern) => {
-                const isProcessing = actionInternId === intern.id;
                 const isSelected = aiScreening.isSelected(intern.id);
                 const evaluation = aiScreening.evaluationsMap[intern.id];
                 const initials = (intern.fullName || 'U')
@@ -591,10 +582,16 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                 return (
                   <tr
                     key={intern.id}
-                    className={isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/20' : ''}
+                    className={`${
+                      isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/20' : ''
+                    } hover:bg-slate-50/80 dark:hover:bg-slate-800/40 cursor-pointer transition-colors`}
+                    onClick={() => {
+                      setSelectedCandidate(intern);
+                      setWorkspaceInitialTab('profile');
+                    }}
                   >
                     {/* Checkbox chọn hàng: Ẩn với TTS chưa hoàn thành CV */}
-                    <td style={{ textAlign: 'center' }}>
+                    <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       {intern.hasCv ? (
                         <input
                           type="checkbox"
@@ -626,7 +623,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                                 className={styles.candidateSourceBadgeFree}
                                 title="Ứng viên nộp hồ sơ tự do"
                               >
-                                <Sparkles size={11} aria-hidden="true" />
                                 Ứng viên tự do
                               </span>
                             ) : (
@@ -634,7 +630,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                                 className={styles.candidateSourceBadgeUniversity}
                                 title="Sinh viên thuộc trường đại học liên kết"
                               >
-                                <School size={11} aria-hidden="true" />
                                 Trường liên kết
                               </span>
                             )}
@@ -643,15 +638,13 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                                 className={styles.cvBadgeSuccess}
                                 title="Hồ sơ đã có file CV đính kèm"
                               >
-                                <FileText size={10} aria-hidden="true" />
-                                Đã nộp CV
+                                Có CV
                               </span>
                             ) : (
                               <span
                                 className={styles.cvBadgeWarning}
                                 title="TTS chưa cập nhật CV. Cần bổ sung CV để AI có thể đánh giá."
                               >
-                                <AlertCircle size={10} aria-hidden="true" />
                                 Chưa có CV
                               </span>
                             )}
@@ -665,9 +658,8 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
 
                     {/* Cột Trường & Ngành */}
                     <td>
-                      <div className="flex items-center gap-1.5 font-semibold text-slate-800 text-xs">
-                        <GraduationCap size={14} className="text-slate-400" aria-hidden="true" />
-                        <span>{intern.university || 'Chưa cập nhật'}</span>
+                      <div className="font-semibold text-slate-800 text-xs">
+                        {intern.university || 'Chưa cập nhật'}
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">{intern.major || 'Chưa rõ'}</div>
                     </td>
@@ -678,8 +670,8 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
                         <span
                           className={
                             intern.gpa >= 3.2
-                              ? 'text-emerald-700 font-bold'
-                              : 'text-slate-800 font-semibold'
+                                ? 'text-emerald-700 font-bold'
+                                : 'text-slate-800 font-semibold'
                           }
                         >
                           {intern.gpa.toFixed(2)}
@@ -691,196 +683,40 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
 
                     {/* Cột Ngày nộp */}
                     <td className="font-tabular text-xs text-slate-700 font-medium">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar size={13} className="text-slate-400" aria-hidden="true" />
-                        <span>{formatDate(intern.createdAt)}</span>
-                      </div>
+                      {formatDate(intern.createdAt)}
                     </td>
 
                     {/* Cột Đánh giá AI */}
                     <td>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          className="bg-transparent border-0 p-0 cursor-pointer text-left"
-                          onClick={() => onViewInternDetail(intern)}
-                          title="Bấm để xem chi tiết đối soát năng lực AI"
-                        >
-                          {renderAiBadge(evaluation)}
-                        </button>
-                        {!evaluation && (
-                          <button
-                            type="button"
-                            className={styles.actionIconBtn}
-                            onClick={() => void aiScreening.triggerBatch([intern.id])}
-                            disabled={!intern.hasCv || aiScreening.isSubmitting}
-                            title={
-                              intern.hasCv
-                                ? 'Thẩm định hồ sơ bằng AI ngay'
-                                : 'TTS chưa cập nhật CV. Cần tải lên CV để thẩm định AI.'
-                            }
-                            aria-label={`Thẩm định AI cho ${intern.fullName}`}
-                            style={!intern.hasCv ? { opacity: 0.35, cursor: 'not-allowed' } : undefined}
-                          >
-                            <Sparkles
-                              size={13}
-                              className={intern.hasCv ? 'text-indigo-600' : 'text-slate-400'}
-                            />
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        type="button"
+                        className="bg-transparent border-0 p-0 cursor-pointer text-left"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCandidate(intern);
+                          setWorkspaceInitialTab('screening');
+                        }}
+                        title="Bấm để mở Workspace thẩm định năng lực AI"
+                      >
+                        {renderAiBadge(evaluation)}
+                      </button>
                     </td>
 
                     {/* Cột Thao tác */}
                     <td style={{ textAlign: 'right' }}>
-                      <div className="flex items-center justify-end gap-1.5">
-                        {/* Ghim ứng viên tiềm năng (AI-18 Bookmark) */}
-                        <button
-                          type="button"
-                          className={styles.actionIconBtn}
-                          onClick={() => void handleToggleBookmark(intern.id)}
-                          title={
-                            bookmarkedIds.includes(intern.id)
-                              ? 'Bỏ ghim ứng viên khỏi danh sách ưu tiên'
-                              : 'Ghim ứng viên tiềm năng'
-                          }
-                          aria-label={`Ghim ứng viên ${intern.fullName}`}
-                          style={{
-                            color: bookmarkedIds.includes(intern.id) ? '#d97706' : undefined,
-                            background: bookmarkedIds.includes(intern.id)
-                              ? 'rgba(245, 158, 11, 0.12)'
-                              : undefined,
-                            borderColor: bookmarkedIds.includes(intern.id)
-                              ? 'rgba(245, 158, 11, 0.3)'
-                              : undefined,
-                          }}
-                        >
-                          <Bookmark
-                            size={15}
-                            fill={bookmarkedIds.includes(intern.id) ? 'currentColor' : 'none'}
-                            aria-hidden="true"
-                          />
-                        </button>
-
-                        {/* Chọn để so sánh CV song song (AI-18 Comparison) */}
-                        <button
-                          type="button"
-                          className={styles.actionIconBtn}
-                          onClick={() => handleToggleCompare(intern.id)}
-                          title={
-                            compareIds.includes(intern.id)
-                              ? 'Bỏ chọn so sánh'
-                              : compareIds.length >= 2
-                              ? 'Đã chọn tối đa 2 ứng viên'
-                              : 'Chọn để so sánh với ứng viên khác'
-                          }
-                          aria-label={`So sánh CV của ${intern.fullName}`}
-                          style={{
-                            color: compareIds.includes(intern.id) ? '#6366f1' : undefined,
-                            background: compareIds.includes(intern.id)
-                              ? 'rgba(99, 102, 241, 0.12)'
-                              : undefined,
-                            borderColor: compareIds.includes(intern.id)
-                              ? 'rgba(99, 102, 241, 0.4)'
-                              : undefined,
-                          }}
-                        >
-                          <Scale size={15} aria-hidden="true" />
-                        </button>
-
-                        {/* Xem chi tiết */}
-                        <button
-                          type="button"
-                          className={styles.actionIconBtn}
-                          onClick={() => onViewInternDetail(intern)}
-                          title="Xem chi tiết hồ sơ ứng viên"
-                          aria-label={`Xem chi tiết hồ sơ của ${intern.fullName}`}
-                        >
-                          <Eye size={15} aria-hidden="true" />
-                        </button>
-
-                        {/* Sinh / Xem câu hỏi phỏng vấn AI */}
-                        <button
-                          type="button"
-                          className={styles.actionIconBtn}
-                          onClick={() => setInterviewModalIntern(intern)}
-                          title="Bộ câu hỏi phỏng vấn AI cho ứng viên này"
-                          aria-label={`Bộ câu hỏi phỏng vấn cho ${intern.fullName}`}
-                        >
-                          <MessageSquareQuote size={15} className="text-indigo-600" aria-hidden="true" />
-                        </button>
-
-                        {/* Mời phỏng vấn AI trực tuyến */}
-                        {onOpenCreateSchedule && (
-                          <button
-                            type="button"
-                            className={styles.actionIconBtn}
-                            onClick={() =>
-                              onOpenCreateSchedule({
-                                candidateId: intern.id,
-                                email: intern.email || '',
-                                fullName: intern.fullName || 'Ứng viên',
-                              })
-                            }
-                            title="Tạo lịch & mời phỏng vấn AI cho ứng viên này"
-                            aria-label={`Tạo lịch phỏng vấn AI cho ${intern.fullName}`}
-                            style={{ color: '#6366f1' }}
-                          >
-                            <Calendar size={15} aria-hidden="true" />
-                          </button>
-                        )}
-
-                        {/* Xem Phiếu Đánh Giá Phỏng Vấn AI (Module AI-02) */}
-                        {onOpenAiDossier && (
-                          <button
-                            type="button"
-                            className={styles.actionIconBtn}
-                            onClick={() => onOpenAiDossier(intern)}
-                            title="Xem Phiếu Đánh Giá Phỏng Vấn AI & Xếp Hạng Ứng Viên"
-                            aria-label={`Phiếu đánh giá AI cho ${intern.fullName}`}
-                            style={{
-                              color: '#8b5cf6',
-                              background: 'rgba(139, 92, 246, 0.08)',
-                              borderColor: 'rgba(139, 92, 246, 0.25)',
-                            }}
-                          >
-                            <Sparkles size={15} aria-hidden="true" />
-                          </button>
-                        )}
-
-                        {/* Tiếp nhận */}
-                        <button
-                          type="button"
-                          className={`${styles.actionIconBtn} ${styles.actionIconBtnSuccess}`}
-                          onClick={() => handleApprove(intern)}
-                          disabled={isProcessing || isFull}
-                          title={isFull ? 'Kỳ thực tập đã hết chỉ tiêu' : 'Tiếp nhận ứng viên vào kỳ'}
-                          aria-label={`Tiếp nhận ${intern.fullName} vào kỳ`}
-                        >
-                          <UserCheck size={15} className="text-emerald-600" aria-hidden="true" />
-                        </button>
-
-                        {/* Từ chối */}
-                        <button
-                          type="button"
-                          className={`${styles.actionIconBtn} ${styles.actionIconBtnDanger}`}
-                          onClick={() => {
-                            const defaultReason =
-                              evaluation?.draftRejectionReason ||
-                              'Hồ sơ chưa đạt tiêu chí tuyển sinh của chương trình.';
-                            setRejectionDialog({
-                              intern,
-                              reason: defaultReason,
-                              isSubmitting: false,
-                            });
-                          }}
-                          disabled={isProcessing}
-                          title="Từ chối đơn ứng tuyển"
-                          aria-label={`Từ chối hồ sơ của ${intern.fullName}`}
-                        >
-                          <UserX size={15} className="text-rose-500" aria-hidden="true" />
-                        </button>
-                      </div>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCandidate(intern);
+                          setWorkspaceInitialTab('profile');
+                        }}
+                        className="whitespace-nowrap font-medium"
+                        title={`Mở Workspace xử lý hồ sơ của ${intern.fullName}`}
+                      >
+                        Xử lý hồ sơ
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -979,6 +815,53 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({
           />
         );
       })()}
+
+      {/* Candidate Workspace Modal */}
+      <CandidateWorkspaceModal
+        key={selectedCandidate ? `${selectedCandidate.id}-${workspaceInitialTab}` : 'modal'}
+        candidate={selectedCandidate}
+        isOpen={!!selectedCandidate}
+        onClose={() => setSelectedCandidate(null)}
+        program={program}
+        evaluation={selectedCandidate ? aiScreening.evaluationsMap[selectedCandidate.id] : null}
+        isBookmarked={selectedCandidate ? bookmarkedIds.includes(selectedCandidate.id) : false}
+        onToggleBookmark={(id) => void handleToggleBookmark(id)}
+        isCompared={selectedCandidate ? compareIds.includes(selectedCandidate.id) : false}
+        onToggleCompare={(id) => handleToggleCompare(id)}
+        onApprove={(cand) => {
+          void handleApprove(cand);
+        }}
+        onReject={async (cand, reason) => {
+          const finalReason =
+            reason?.trim() ||
+            aiScreening.evaluationsMap[cand.id]?.draftRejectionReason ||
+            'Hồ sơ chưa đạt tiêu chí tuyển sinh của chương trình.';
+          try {
+            await internService.submitDecision(cand.id, {
+              decision: 'REJECTED',
+              rejectionReason: finalReason,
+            });
+            toast.success(`Đã từ chối đơn đăng ký của "${cand.fullName}".`);
+            setApplicants((prev) => prev.filter((item) => item.id !== cand.id));
+            setSelectedCandidate(null);
+            onEnrollSuccess();
+          } catch (err: any) {
+            console.error('Lỗi từ chối hồ sơ:', err);
+            toast.error(err.response?.data?.message || 'Không thể cập nhật từ chối đơn.');
+          }
+        }}
+        onTriggerAiScreening={async (id) => {
+          await aiScreening.triggerBatch([id]);
+        }}
+        isAiScreeningSubmitting={aiScreening.isSubmitting}
+        onOpenScheduleModal={(cand) => {
+          if (onOpenCreateSchedule) {
+            onOpenCreateSchedule(cand);
+          }
+        }}
+        initialTab={workspaceInitialTab}
+        isFull={isFull}
+      />
     </div>
   );
 };

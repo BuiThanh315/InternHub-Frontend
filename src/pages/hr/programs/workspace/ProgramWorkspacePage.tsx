@@ -22,6 +22,8 @@ import type {
   UpdateProgramRequest,
   ChangeProgramStatusRequest,
 } from '../../../../types';
+import type { InternGroup, BatchGroupItem } from '../../../../types/group.types';
+import { groupService } from '../../../../services/groupService';
 
 import { ProgramWorkspaceHeader } from './components/ProgramWorkspaceHeader';
 import { ApplicationsTab } from './components/tabs/ApplicationsTab';
@@ -30,7 +32,7 @@ import { MentorsTab } from './components/tabs/MentorsTab';
 import { OverviewTab } from './components/tabs/OverviewTab';
 import { InterviewQuestionModal } from './components/InterviewQuestionModal';
 import { CreateInterviewScheduleModal } from '../../components/CreateInterviewScheduleModal';
-import { EvaluationDossierDrawer } from '../../components/EvaluationDossierDrawer';
+import { EvaluationDossierModal } from '../../components/EvaluationDossierDrawer';
 import { aiInterviewService } from '../../../../services/aiInterviewService';
 
 // Tái sử dụng các Modals hiện có từ HR Module
@@ -46,6 +48,7 @@ import {
   AssignMentorModal,
   UploadContractModal,
   UploadDocModal,
+  ProgramGroupModal,
 } from '../../components';
 
 import type { WorkspaceTabId, WorkspaceTabConfig } from './types/ProgramWorkspace.types';
@@ -78,6 +81,11 @@ export const ProgramWorkspacePage: React.FC = () => {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleCandidate, setScheduleCandidate] = useState<{ candidateId?: number; email: string; fullName: string } | null>(null);
 
+  // Modal Quản lý & Chia nhóm thực tập
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+  const [existingGroups, setExistingGroups] = useState<InternGroup[]>([]);
+  const [isGroupLoading, setIsGroupLoading] = useState(false);
+
   // Modal thao tác với Thực tập sinh cá nhân
   const [detailIntern, setDetailIntern] = useState<InternProfile | null>(null);
   const [detailTab, setDetailTab] = useState<'profile' | 'history'>('profile');
@@ -105,6 +113,54 @@ export const ProgramWorkspacePage: React.FC = () => {
     } catch (err: any) {
       console.error('Lỗi khi tra cứu phiên phỏng vấn của ứng viên:', err);
       toast.error('Không thể kiểm tra lịch sử phỏng vấn của ứng viên này.');
+    }
+  };
+
+  // Handlers Quản lý & Chia nhóm
+  const handleOpenManageGroups = async () => {
+    if (!program) return;
+    try {
+      setIsGroupLoading(true);
+      setIsGroupModalOpen(true);
+      const groupsData = await groupService.getGroups(program.id);
+      setExistingGroups(groupsData || []);
+    } catch (err: any) {
+      console.error('Lỗi nạp dữ liệu nhóm:', err);
+      toast.error(err.message || 'Không thể tải danh sách nhóm thực tập');
+    } finally {
+      setIsGroupLoading(false);
+    }
+  };
+
+  const handleBatchApplyGroups = async (batchGroups: BatchGroupItem[]) => {
+    if (!program) return;
+    try {
+      setIsGroupLoading(true);
+      await groupService.batchApplyGroups(program.id, { groups: batchGroups });
+      toast.success('Đã lưu và áp dụng phân bổ nhóm thành công!');
+      const updatedGroups = await groupService.getGroups(program.id);
+      setExistingGroups(updatedGroups || []);
+      void loadWorkspaceData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Lỗi khi áp dụng chia nhóm');
+    } finally {
+      setIsGroupLoading(false);
+    }
+  };
+
+  const handleDisbandGroup = async (groupId: number) => {
+    if (!program) return;
+    try {
+      setIsGroupLoading(true);
+      await groupService.disbandGroup(program.id, groupId);
+      toast.success('Đã giải tán nhóm thành công');
+      const updatedGroups = await groupService.getGroups(program.id);
+      setExistingGroups(updatedGroups || []);
+      void loadWorkspaceData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Lỗi khi giải tán nhóm');
+    } finally {
+      setIsGroupLoading(false);
     }
   };
 
@@ -291,6 +347,7 @@ export const ProgramWorkspacePage: React.FC = () => {
             onOpenStatus={() => setIsStatusModalOpen(true)}
             onOpenInterviewQuestions={() => setIsInterviewModalOpen(true)}
             onOpenCreateSchedule={() => setIsScheduleModalOpen(true)}
+            onManageGroups={handleOpenManageGroups}
             onToggleRecruitment={handleToggleRecruitment}
             isTogglingRecruitment={isTogglingRecruitment}
           />
@@ -362,6 +419,7 @@ export const ProgramWorkspacePage: React.FC = () => {
                 onUploadContract={(intern) => setContractIntern(intern)}
                 onStatusChange={() => void loadWorkspaceData()}
                 onOpenAiDossier={handleOpenAiDossier}
+                onManageGroups={handleOpenManageGroups}
               />
             )}
 
@@ -515,13 +573,28 @@ export const ProgramWorkspacePage: React.FC = () => {
             />
           )}
 
-          {/* Drawer Phiếu Đánh Giá Phỏng Vấn AI & Xếp Hạng Ứng Viên (Module AI-02) */}
-          <EvaluationDossierDrawer
+          {/* Modal Phiếu Đánh Giá Phỏng Vấn AI & Xếp Hạng Ứng Viên (Module AI-02) */}
+          <EvaluationDossierModal
             sessionId={dossierSessionId}
             isOpen={dossierSessionId !== null}
             onClose={() => setDossierSessionId(null)}
             onRefresh={() => void loadWorkspaceData()}
           />
+
+          {/* Modal Quản lý & Chia nhóm thực tập nội bộ Workspace */}
+          {program && isGroupModalOpen && (
+            <ProgramGroupModal
+              programId={program.id}
+              programName={program.name}
+              isOpen={isGroupModalOpen}
+              onClose={() => setIsGroupModalOpen(false)}
+              interns={interns}
+              existingGroups={existingGroups}
+              onBatchApply={handleBatchApplyGroups}
+              onDisbandGroup={handleDisbandGroup}
+              isLoading={isGroupLoading}
+            />
+          )}
         </>
       )}
     </div>

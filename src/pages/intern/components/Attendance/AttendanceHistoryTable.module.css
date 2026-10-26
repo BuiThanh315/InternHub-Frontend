@@ -46,16 +46,14 @@
   background: var(--border-subtle);
   color: var(--text-secondary);
   font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.85rem 1rem;
+  font-size: 0.8125rem;
+  padding: var(--table-cell-py, 0.625rem) var(--table-cell-px, 1rem);
   border-bottom: 1px solid var(--border-default);
   white-space: nowrap;
 }
 
 .table td {
-  padding: 0.85rem 1rem;
+  padding: var(--table-cell-py, 0.625rem) var(--table-cell-px, 1rem);
   border-bottom: 1px solid var(--border-default);
   color: var(--text-main);
   vertical-align: middle;

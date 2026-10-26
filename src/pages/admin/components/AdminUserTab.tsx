@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, Alert, Skeleton, Pagination, ConfirmModal } from '../../../components/common';
@@ -163,13 +163,13 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
         <table className="modern-table">
           <thead>
             <tr>
-              <th>Họ và Tên</th>
-              <th>Email / Số Điện Thoại</th>
-              <th>Phòng Ban / Vị Trí</th>
-              <th>Vai Trò</th>
-              <th>Trạng Thái</th>
-              <th>Ngày Tạo</th>
-              <th>Thao Tác</th>
+              <th>Họ và tên</th>
+              <th>Email / Số điện thoại</th>
+              <th>Phòng ban / Vị trí</th>
+              <th>Vai trò</th>
+              <th>Trạng thái</th>
+              <th>Ngày tạo</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -205,7 +205,7 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
                   </td>
                   <td>
                     <div>{u.email}</div>
-                    <span className={styles.subText}>
+                    <span className={`${styles.subText} font-tabular`}>
                       {u.phone ? formatPhoneNumber(u.phone) : 'Chưa cập nhật'}
                     </span>
                   </td>
@@ -221,15 +221,15 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
                   <td>
                     {u.status === 'ACTIVE' ? (
                       <span className="badge badge-success">
-                        <CheckCircle2 size={12} /> Đang hoạt động
+                        <span className="status-dot status-dot-success mr-1" /> Đang hoạt động
                       </span>
                     ) : (
                       <span className="badge badge-danger">
-                        <XCircle size={12} /> Đã khóa
+                        <span className="status-dot status-dot-danger mr-1" /> Đã khóa
                       </span>
                     )}
                   </td>
-                  <td className={styles.dateText}>
+                  <td className={`${styles.dateText} font-tabular`}>
                     {formatDateTime(u.createdAt)}
                   </td>
                   <td>
@@ -248,15 +248,17 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
         </table>
       </div>
 
-      <div style={{ marginTop: '1rem' }}>
-        <Pagination
-          currentPage={page + 1}
-          totalPages={totalPages}
-          totalItems={filteredUsers.length}
-          pageSize={pageSize}
-          onPageChange={(p) => setPage(p - 1)}
-        />
-      </div>
+      {totalPages > 1 && filteredUsers.length > pageSize && (
+        <div style={{ marginTop: '1rem' }}>
+          <Pagination
+            currentPage={page + 1}
+            totalPages={totalPages}
+            totalItems={filteredUsers.length}
+            pageSize={pageSize}
+            onPageChange={(p) => setPage(p - 1)}
+          />
+        </div>
+      )}
 
       {/* Confirm Lock Modal */}
       {userToLock && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, Edit3, Upload, SearchX, FileSignature, UserCheck, RefreshCw, UserX, History, MoreVertical, Play, CheckCircle2, Ban, RotateCcw, UserMinus } from 'lucide-react';
+import { Eye, Edit3, Upload, SearchX, FileSignature, MoreVertical, Play, CheckCircle2, Ban, RotateCcw, UserMinus } from 'lucide-react';
 import type { InternProfile, InternStatus } from '../../../types';
 import { Skeleton, Pagination } from '../../../components/common';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -69,7 +69,6 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
       case 'APPROVED':
         return 'badge-sky';
       case 'ON_HOLD':
-        return 'badge-neutral';
       case 'COMPLETED':
         return 'badge-neutral';
       case 'REJECTED':
@@ -81,6 +80,23 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
     }
   };
 
+  const getDotClass = (status: InternStatus) => {
+    switch (status) {
+      case 'INTERNING':
+        return 'status-dot-success';
+      case 'APPROVED':
+        return 'status-dot-info';
+      case 'ON_HOLD':
+      case 'COMPLETED':
+        return 'status-dot-neutral';
+      case 'REJECTED':
+      case 'TERMINATED':
+        return 'status-dot-danger';
+      default:
+        return 'status-dot-warning';
+    }
+  };
+
   return (
     <>
       <div className="table-container">
@@ -88,13 +104,13 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
           <thead>
             <tr>
               <th className={styles.colCode}>Mã TTS</th>
-              <th className={styles.colInfo}>Họ và Tên / Liên Hệ</th>
-              <th className={styles.colEdu}>Trường & Chuyên Ngành</th>
-              <th className={styles.colPosition}>Vị Trí & Chương Trình</th>
-              <th className={styles.colStatus}>Trạng Thái</th>
-              <th className={styles.colMentor}>Mentor Phụ Trách</th>
-              <th className={styles.colActions}>Thao Tác Hồ Sơ</th>
-              <th className={styles.colCoordination}>Điều Phối</th>
+              <th className={styles.colInfo}>Họ và tên / Liên hệ</th>
+              <th className={styles.colEdu}>Trường & chuyên ngành</th>
+              <th className={styles.colPosition}>Vị trí & chương trình</th>
+              <th className={styles.colStatus}>Trạng thái</th>
+              <th className={styles.colMentor}>Mentor phụ trách</th>
+              <th className={styles.colActions}>Thao tác hồ sơ</th>
+              <th className={styles.colCoordination}>Điều phối</th>
             </tr>
           </thead>
           <tbody>
@@ -170,54 +186,57 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                   </td>
                   <td className={styles.colStatus}>
                     <span className={`badge ${getBadgeClass(intern.status)}`}>
+                      <span className={`status-dot ${getDotClass(intern.status)}`} style={{ marginRight: '6px' }} />
                       {getInternStatusLabel(intern.status)}
                     </span>
                   </td>
                   <td className={styles.colMentor}>
                     {intern.mentorName ? (
-                      <div className="flex flex-col gap-1 items-start">
+                      <div className={styles.mentorCellWrap}>
                         <button
                           type="button"
                           onClick={() => onViewDetail(intern, 'history')}
-                          className="text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-primary hover:underline text-left cursor-pointer flex items-center gap-1 p-0 bg-transparent border-none"
+                          className={styles.mentorNameBtn}
                           title="Bấm để xem dòng thời gian và lịch sử phân công Mentor"
                         >
-                          <span>{intern.mentorName}</span>
+                          {intern.mentorName}
                         </button>
                         {intern.needsMentorReassignment ? (
-                          <div className="flex items-center gap-1.5">
-                            <span className="badge badge-danger text-[10px] py-0.5 px-1.5 font-medium">
+                          <div className={styles.mentorActionRow}>
+                            <span className="badge badge-danger" style={{ fontSize: '10px', padding: '1px 6px' }}>
                               Cần đổi Mentor
                             </span>
                             <button
                               type="button"
                               onClick={() => onViewDetail(intern, 'history')}
-                              className="text-[11px] text-slate-500 hover:text-primary hover:underline flex items-center gap-0.5 bg-transparent border-none p-0 cursor-pointer"
+                              className={styles.mentorSubLink}
                               title="Xem lịch sử điều chuyển"
                             >
-                              <History size={11} /> Lịch sử
+                              Lịch sử
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5">
+                          <div className={styles.mentorActionRow}>
                             <button
                               type="button"
                               onClick={() => onViewDetail(intern, 'history')}
-                              className="text-[11px] text-slate-500 hover:text-primary hover:underline flex items-center gap-0.5 bg-transparent border-none p-0 cursor-pointer"
+                              className={styles.mentorSubLink}
                               title="Xem lịch sử phân công"
                             >
-                              <History size={11} /> Lịch sử
+                              Lịch sử
                             </button>
-                            <span style={{ color: 'var(--border-default)' }}>•</span>
                             {canAssignMentor && onOpenAssignMentor && (
-                              <button
-                                type="button"
-                                onClick={() => onOpenAssignMentor(intern)}
-                                className="text-[11px] text-primary hover:underline flex items-center gap-0.5 bg-transparent border-none p-0 cursor-pointer"
-                                title="Đổi Mentor hướng dẫn"
-                              >
-                                <RefreshCw size={10} /> Đổi
-                              </button>
+                              <>
+                                <span style={{ color: 'var(--border-default)' }}>•</span>
+                                <button
+                                  type="button"
+                                  onClick={() => onOpenAssignMentor(intern)}
+                                  className={styles.mentorActionLink}
+                                  title="Đổi Mentor hướng dẫn"
+                                >
+                                  Đổi
+                                </button>
+                              </>
                             )}
                             {canAssignMentor && onOpenRevokeMentor && (
                               <>
@@ -225,10 +244,10 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => onOpenRevokeMentor(intern)}
-                                  className="text-[11px] text-rose-500 hover:underline flex items-center gap-0.5 bg-transparent border-none p-0 cursor-pointer"
+                                  className={styles.mentorDangerLink}
                                   title="Thu hồi Mentor"
                                 >
-                                  <UserX size={10} /> Thu hồi
+                                  Thu hồi
                                 </button>
                               </>
                             )}
@@ -237,9 +256,10 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                       </div>
                     ) : !intern.programId || intern.needsReassignment ? (
                       /* Khi chưa có chương trình hoặc đang chờ điều phối lại: Cấm hiện Gán Mentor! */
-                      <div className="flex flex-col gap-1 items-start">
+                      <div className={styles.mentorCellWrap}>
                         <span
-                          className="badge badge-slate text-[10px] py-0.5 px-1.5 font-medium"
+                          className="badge badge-slate"
+                          style={{ fontSize: '10px', padding: '1px 6px' }}
                           title="Thực tập sinh cần được tiếp nhận / xếp vào chương trình trước khi có thể phân công Mentor"
                         >
                           Chưa xếp chương trình
@@ -248,26 +268,26 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenApprove(intern)}
-                            className="text-[11px] text-primary font-medium hover:underline flex items-center gap-0.5"
+                            className={styles.mentorActionLink}
                             title="Tiếp nhận và xếp vào chương trình thực tập"
                           >
-                            Xếp Chương Trình
+                            Xếp chương trình
                           </button>
                         )}
                       </div>
                     ) : (
                       /* Đã có chương trình nhưng chưa có mentor: Mới cho phép Gán Mentor */
-                      <div className="flex flex-col gap-1 items-start">
-                        <span className="badge badge-warning text-[10px] py-0.5 px-1.5 font-medium">
+                      <div className={styles.mentorCellWrap}>
+                        <span className="badge badge-warning" style={{ fontSize: '10px', padding: '1px 6px' }}>
                           Chưa có Mentor
                         </span>
                         {canAssignMentor && onOpenAssignMentor && (intern.status === 'APPROVED' || intern.status === 'INTERNING') && (
                           <button
                             type="button"
                             onClick={() => onOpenAssignMentor(intern)}
-                            className="text-[11px] text-primary font-medium hover:underline flex items-center gap-0.5"
+                            className={styles.mentorActionLink}
                           >
-                            <UserCheck size={11} /> Gán Mentor
+                            Gán Mentor
                           </button>
                         )}
                       </div>
@@ -281,7 +301,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                         className={`btn btn-sm btn-secondary ${styles.actionBtn}`}
                         title="Xem chi tiết & tài liệu"
                       >
-                        <Eye size={13} /> Chi Tiết
+                        <Eye size={13} /> Chi tiết
                       </button>
 
                       {/* Dropdown Menu gom các tác vụ phụ */}
@@ -342,7 +362,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             {canApprove && intern.programId && onOpenRemoveProgram && (
                               <button
                                 type="button"
-                                className={`${styles.actionMenuItem} text-rose-600 hover:text-rose-700`}
+                                className={`${styles.actionMenuItem} ${styles.actionMenuItemDanger}`}
                                 onClick={() => {
                                   setOpenMenuId(null);
                                   onOpenRemoveProgram(intern);
@@ -367,7 +387,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-primary"
                             title="Phê duyệt tiếp nhận hồ sơ (Đặc quyền: INTERN_APPROVE)"
                           >
-                            Tiếp Nhận
+                            Tiếp nhận
                           </button>
                           <button
                             type="button"
@@ -375,7 +395,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-danger"
                             title="Từ chối hồ sơ ứng viên (Đặc quyền: INTERN_APPROVE)"
                           >
-                            Từ Chối
+                            Từ chối
                           </button>
                         </>
                       )}
@@ -387,7 +407,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-success"
                             title="Chuyển sang trạng thái đang thực tập"
                           >
-                            <Play size={11} /> Bắt Đầu TT
+                            <Play size={11} /> Bắt đầu TT
                           </button>
                           <button
                             type="button"
@@ -407,7 +427,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-primary"
                             title="Hoàn thành kỳ thực tập"
                           >
-                            <CheckCircle2 size={11} /> Hoàn Thành
+                            <CheckCircle2 size={11} /> Hoàn thành
                           </button>
                           <button
                             type="button"
@@ -415,7 +435,7 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                             className="btn btn-sm btn-danger"
                             title="Đình chỉ thực tập"
                           >
-                            <Ban size={11} /> Đình Chỉ
+                            <Ban size={11} /> Đình chỉ
                           </button>
                         </>
                       )}
@@ -426,12 +446,12 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
                           className="btn btn-sm btn-secondary"
                           title="Mở lại xem xét hồ sơ"
                         >
-                          <RotateCcw size={11} /> Mở Lại
+                          <RotateCcw size={11} /> Mở lại
                         </button>
                       )}
                       {intern.status === 'COMPLETED' && (
                         <span className={styles.graduatedText}>
-                          ✓ Đã Tốt Nghiệp
+                          ✓ Đã hoàn thành
                         </span>
                       )}
                     </div>
@@ -443,15 +463,17 @@ export const HrInternTable: React.FC<HrInternTableProps> = ({
         </table>
       </div>
 
-      <div style={{ marginTop: '1rem' }}>
-        <Pagination
-          currentPage={page + 1}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          pageSize={10}
-          onPageChange={(newPage) => onPageChange(newPage - 1)}
-        />
-      </div>
+      {totalPages > 1 && totalItems > 10 && (
+        <div style={{ marginTop: '1rem' }}>
+          <Pagination
+            currentPage={page + 1}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={10}
+            onPageChange={(newPage) => onPageChange(newPage - 1)}
+          />
+        </div>
+      )}
     </>
   );
 };

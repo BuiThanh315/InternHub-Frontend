@@ -3,7 +3,7 @@ import { ClipboardCheck, Users, Mail, UserX, ArrowUpRight, Calendar } from 'luci
 import { SearchBar, Select, Button } from '../../../../../../components/common';
 import { getAvatarUrl } from '../../../../../../utils/avatar';
 import type { AssigneeResponse } from '../../../../../../types';
-import { MentorWeeklyReportDrawer } from '../components/MentorWeeklyReportDrawer';
+import { MentorWeeklyReportModal } from '../components/MentorWeeklyReportDrawer';
 import type { MentorWeeklyReportsTabProps } from './MentorWeeklyReportsTab.types';
 import styles from './MentorWeeklyReportsTab.module.css';
 
@@ -309,8 +309,8 @@ export const MentorWeeklyReportsTab: React.FC<MentorWeeklyReportsTabProps> = ({
         </div>
       )}
 
-      {/* Side Drawer Dual-Pane Đối Soát Báo Cáo Tuần */}
-      <MentorWeeklyReportDrawer
+      {/* Centered Modal Dual-Pane Đối Soát Báo Cáo Tuần */}
+      <MentorWeeklyReportModal
         intern={selectedIntern}
         isOpen={Boolean(selectedIntern)}
         onClose={() => setSelectedIntern(null)}

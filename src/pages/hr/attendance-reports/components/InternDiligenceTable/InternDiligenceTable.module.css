@@ -44,12 +44,12 @@
   background-color: var(--bg-surface, rgba(0, 0, 0, 0.02));
   color: var(--text-secondary);
   font-weight: 600;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border-default);
   white-space: nowrap;
-  font-size: 12.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  font-size: 0.8125rem;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .tr {
@@ -61,7 +61,7 @@
 }
 
 .td {
-  padding: 14px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border-default);
   color: var(--text-main);
   vertical-align: middle;
