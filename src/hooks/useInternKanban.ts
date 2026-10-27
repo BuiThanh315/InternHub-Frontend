@@ -2,12 +2,16 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { missionService } from '../services/missionService';
+import { useAuth } from '../contexts/AuthContext';
+import { useMissionKanbanSync } from './useMissionKanbanSync';
 import type {
   InternKanbanBoardResponse,
   MissionItemResponse,
   MissionItemStatus,
   MissionPriority,
   UpdateKanbanStatusRequest,
+  TaskActorPresence,
+  MissionItemSyncEvent,
 } from '../types';
 
 export interface InternKanbanFilters {
@@ -42,6 +46,10 @@ export interface UseInternKanbanReturn {
   isMutating: boolean;
   error: string | null;
 
+  // Realtime Sync Presence
+  presenceMap: Record<number, TaskActorPresence>;
+  isRealtimeConnected: boolean;
+
   // Actions
   refreshKanban: () => Promise<void>;
   updateTaskStatus: (
@@ -60,6 +68,7 @@ const isCancelError = (error: any): boolean =>
   error?.message === 'canceled';
 
 export const useInternKanban = (): UseInternKanbanReturn => {
+  const { user } = useAuth();
   const [kanbanData, setKanbanData] = useState<InternKanbanBoardResponse | null>(null);
 
   // Grouped Filters State
@@ -96,6 +105,65 @@ export const useInternKanban = (): UseInternKanbanReturn => {
       setAsyncState((prev) => ({ ...prev, isLoading: false }));
     }
   }, []);
+
+  // Callback khi nhận sự kiện đồng bộ từ WebSocket
+  const handleItemSyncEvent = useCallback((event: MissionItemSyncEvent) => {
+    setKanbanData((prev) => {
+      if (!prev) return prev;
+
+      // Tìm item hiện có trong bất kỳ cột nào
+      const allItems = [
+        ...prev.todoItems,
+        ...prev.inProgressItems,
+        ...prev.completedItems,
+      ];
+      const targetItem = allItems.find((it) => it.id === event.itemId);
+
+      if (!targetItem) {
+        // Nếu là item mới hoặc chưa có trên bảng hiện tại -> fetch lại ngầm
+        void fetchKanban();
+        return prev;
+      }
+
+      // Cập nhật thông tin item
+      const newStatus = event.newStatus || targetItem.status;
+      const updatedItem: MissionItemResponse = {
+        ...targetItem,
+        status: newStatus,
+        version: event.version !== undefined ? event.version : (targetItem.version || 0) + 1,
+        title: event.title || targetItem.title,
+        submissionUrl: event.submissionUrl !== undefined ? event.submissionUrl : targetItem.submissionUrl,
+        completionNote: event.completionNote !== undefined ? event.completionNote : targetItem.completionNote,
+      };
+
+      const filterOut = (list: MissionItemResponse[]) =>
+        list.filter((it) => it.id !== event.itemId);
+
+      const nextTodo = filterOut(prev.todoItems);
+      const nextInProgress = filterOut(prev.inProgressItems);
+      const nextCompleted = filterOut(prev.completedItems);
+
+      if (newStatus === 'TODO') nextTodo.unshift(updatedItem);
+      else if (newStatus === 'IN_PROGRESS') nextInProgress.unshift(updatedItem);
+      else if (newStatus === 'COMPLETED') nextCompleted.unshift(updatedItem);
+
+      return {
+        ...prev,
+        todoItems: nextTodo,
+        inProgressItems: nextInProgress,
+        completedItems: nextCompleted,
+        todoCount: nextTodo.length,
+        inProgressCount: nextInProgress.length,
+        completedCount: nextCompleted.length,
+      };
+    });
+  }, [fetchKanban]);
+
+  // Kích hoạt Realtime Kanban Sync
+  const { isConnected: isRealtimeConnected, presenceMap } = useMissionKanbanSync({
+    internId: user?.userId,
+    onItemStatusChanged: handleItemSyncEvent,
+  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -290,6 +358,9 @@ export const useInternKanban = (): UseInternKanbanReturn => {
     isLoading: asyncState.isLoading,
     isMutating: asyncState.isMutating,
     error: asyncState.error,
+
+    presenceMap,
+    isRealtimeConnected,
 
     refreshKanban: () => fetchKanban(),
     updateTaskStatus,

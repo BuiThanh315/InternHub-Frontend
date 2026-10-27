@@ -89,6 +89,17 @@ export const quizService = {
   },
 
   /**
+   * Lấy chi tiết bài Quiz theo Assignment ID (Phục vụ Mentor Kanban Inspection)
+   */
+  async getQuizDetailByAssignment(
+    assignmentId: number,
+    signal?: AbortSignal
+  ): Promise<QuizDetailResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.QUIZ.ASSIGNMENT_DETAIL(assignmentId), { signal });
+    return response.data?.data;
+  },
+
+  /**
    * Lấy danh sách bài Quiz theo chương trình thực tập
    */
   async getQuizzesByProgram(
@@ -118,6 +129,17 @@ export const quizService = {
     signal?: AbortSignal
   ): Promise<QuizReportResponse> {
     const response = await apiClient.get(API_ENDPOINTS.QUIZ.REPORT(id), { signal });
+    return response.data?.data;
+  },
+
+  /**
+   * Mentor xem chi tiết bài làm và đáp án của học viên
+   */
+  async getMentorSubmissionResult(
+    submissionId: number,
+    signal?: AbortSignal
+  ): Promise<QuizResultResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.QUIZ.MENTOR_SUBMISSION_RESULT(submissionId), { signal });
     return response.data?.data;
   },
 

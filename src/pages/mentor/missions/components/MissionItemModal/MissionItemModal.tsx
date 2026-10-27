@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Users, UserPlus, UserMinus, Sparkles } from 'lucide-react';
+import { X, Users, UserPlus, UserMinus, Sparkles, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { Modal, Input, Select, Button } from '../../../../../components/common';
 import { getAvatarUrl } from '../../../../../utils/avatar';
@@ -12,6 +12,7 @@ import type {
 } from './MissionItemModal.types';
 import type { MissionPriority } from '../../../../../types';
 import { AiQuizQuickModal } from './components/AiQuizQuickModal';
+import { ProgramQuizPickerModal } from './components/ProgramQuizPickerModal';
 import styles from './MissionItemModal.module.css';
 
 export const MissionItemModal: React.FC<MissionItemModalProps> = ({
@@ -54,11 +55,12 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
   // Phân hệ AI Quiz Ôn Tập Kiến Thức TM-104
   const [attachedQuiz, setAttachedQuiz] = useState<QuizDetailResponse | null>(null);
   const [isAiQuizModalOpen, setIsAiQuizModalOpen] = useState(false);
-  const { latestCompletedQuiz, consumeCompletedQuiz } = useAiJob();
+  const [isProgramQuizPickerOpen, setIsProgramQuizPickerOpen] = useState(false);
+  const { latestCompletedQuiz, consumeCompletedQuiz, clearCompletedQuiz } = useAiJob();
 
   // Auto-attach quiz khi tiến trình ngầm hoàn tất
   useEffect(() => {
-    if (isOpen && latestCompletedQuiz && !attachedQuiz) {
+    if (isOpen && latestCompletedQuiz && !attachedQuiz && !editingItem) {
       const quiz = consumeCompletedQuiz();
       if (quiz) {
         setAttachedQuiz(quiz);
@@ -67,7 +69,7 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
         });
       }
     }
-  }, [isOpen, latestCompletedQuiz, attachedQuiz, consumeCompletedQuiz]);
+  }, [isOpen, latestCompletedQuiz, attachedQuiz, consumeCompletedQuiz, editingItem]);
 
   const todayString = useMemo(() => {
     const now = new Date();
@@ -78,6 +80,8 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
   }, []);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (editingItem) {
       setFormData({
         title: editingItem.title || '',
@@ -86,6 +90,24 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
         dueDate: editingItem.dueDate ? editingItem.dueDate.split('T')[0] : '',
         assigneeInternIds: editingItem.assignees ? editingItem.assignees.map((a) => a.id) : [],
       });
+
+      // Nếu thẻ công việc có đính kèm Quiz (qua submissionUrl /intern/quizzes/{assignmentId}/take)
+      const quizMatch = editingItem.submissionUrl?.match(/\/intern\/quizzes\/(\d+)/);
+      if (quizMatch) {
+        const assignmentId = Number(quizMatch[1]);
+        quizService
+          .getQuizDetailByAssignment(assignmentId)
+          .then((detail) => {
+            if (detail) {
+              setAttachedQuiz(detail);
+            }
+          })
+          .catch((err) => {
+            console.error('Không thể nạp bài kiểm tra của thẻ công việc:', err);
+          });
+      } else {
+        setAttachedQuiz(null);
+      }
     } else {
       setFormData({
         title: initialTitle || '',
@@ -94,11 +116,16 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
         dueDate: '',
         assigneeInternIds: initialAssigneeId ? [initialAssigneeId] : [],
       });
+
+      // Nếu tạo mới và chưa có đề đính kèm nhưng đã có đề AI vừa sinh xong
+      if (!attachedQuiz && latestCompletedQuiz) {
+        setAttachedQuiz(latestCompletedQuiz);
+      }
+      // Lưu ý: Không reset attachedQuiz về null khi mở lại popup, bảo toàn đề vừa tạo!
     }
     setSearchInternQuery('');
     setSelectedGroupId('ALL');
     setFieldErrors({});
-    setAttachedQuiz(null);
   }, [editingItem, isOpen, initialAssigneeId, initialTitle]);
 
   // Lọc TTS theo từ khóa và theo nhóm
@@ -229,6 +256,8 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
         );
         await Promise.all(assignPromises);
         toast.success(`Đã giao bài kiểm tra "${attachedQuiz.title}" và tạo thẻ bài thi trên Kanban!`);
+        clearCompletedQuiz();
+        setAttachedQuiz(null);
         onRefreshBoard?.();
 
         if (keepOpen && !editingItem) {
@@ -411,23 +440,37 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
         {/* Phân hệ Đính kèm Bài Kiểm Tra Ôn Tập AI TM-104 */}
         <div className={styles.quizAttachSection}>
           {!attachedQuiz ? (
-            <button
-              type="button"
-              className={styles.attachQuizBtn}
-              onClick={() => setIsAiQuizModalOpen(true)}
-            >
-              <div className={styles.attachQuizBtnContent}>
-                <Sparkles size={18} className={styles.sparkleIcon} />
-                <div className={styles.attachQuizBtnText}>
-                  <span className={styles.attachQuizBtnTitle}>✦ Đính kèm bài kiểm tra ôn tập AI</span>
-                  <span className={styles.attachQuizBtnSub}>
-                    {formData.title.trim()
-                      ? `Tự động tạo trắc nghiệm đánh giá kiến thức cho: "${formData.title.slice(0, 45)}${formData.title.length > 45 ? '...' : ''}"`
-                      : 'Tự động tạo câu hỏi trắc nghiệm kiểm tra độ hiểu biết cho công việc này'}
-                  </span>
+            <div className={styles.quizButtonRow}>
+              <button
+                type="button"
+                className={styles.attachQuizBtn}
+                onClick={() => setIsAiQuizModalOpen(true)}
+              >
+                <div className={styles.attachQuizBtnContent}>
+                  <Sparkles size={18} className={styles.sparkleIcon} />
+                  <div className={styles.attachQuizBtnText}>
+                    <span className={styles.attachQuizBtnTitle}>✦ Tạo bài kiểm tra bằng AI</span>
+                    <span className={styles.attachQuizBtnSub}>
+                      {formData.title.trim()
+                        ? `Tự động tạo câu hỏi ôn tập cho: "${formData.title.slice(0, 35)}${formData.title.length > 35 ? '...' : ''}"`
+                        : 'Gemini AI tạo câu hỏi trắc nghiệm kiểm tra độ hiểu biết'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+
+              <button
+                type="button"
+                className={styles.selectExistingQuizBtn}
+                onClick={() => setIsProgramQuizPickerOpen(true)}
+                title="Chọn từ danh sách bài kiểm tra đã có sẵn của chương trình"
+              >
+                <span className={styles.selectExistingQuizBtnTitle}>
+                  <BookOpen size={14} /> Chọn đề có sẵn
+                </span>
+                <span className={styles.selectExistingQuizBtnSub}>Đề thi của kỳ</span>
+              </button>
+            </div>
           ) : (
             <div className={styles.attachedQuizCard}>
               <div className={styles.attachedQuizHeader}>
@@ -448,15 +491,26 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
                   <button
                     type="button"
                     className={styles.actionBtnSecondary}
-                    onClick={() => setIsAiQuizModalOpen(true)}
-                    title="Đổi bài kiểm tra khác"
+                    onClick={() => setIsProgramQuizPickerOpen(true)}
+                    title="Chọn bài kiểm tra khác từ chương trình"
                   >
-                    Thay đổi
+                    Đổi đề khác
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.actionBtnSecondary}
+                    onClick={() => setIsAiQuizModalOpen(true)}
+                    title="Tạo lại đề mới bằng AI"
+                  >
+                    Tạo đề AI mới
                   </button>
                   <button
                     type="button"
                     className={styles.actionBtnDanger}
-                    onClick={() => setAttachedQuiz(null)}
+                    onClick={() => {
+                      setAttachedQuiz(null);
+                      clearCompletedQuiz();
+                    }}
                     title="Gỡ bỏ bài kiểm tra"
                   >
                     Gỡ bỏ
@@ -688,6 +742,13 @@ export const MissionItemModal: React.FC<MissionItemModalProps> = ({
       programId={programId}
       initialTopic={formData.title.trim() || ''}
       onQuizAttached={(quiz) => setAttachedQuiz(quiz)}
+    />
+
+    <ProgramQuizPickerModal
+      isOpen={isProgramQuizPickerOpen}
+      onClose={() => setIsProgramQuizPickerOpen(false)}
+      programId={programId || 1}
+      onSelectQuiz={(quiz) => setAttachedQuiz(quiz)}
     />
   </>
   );

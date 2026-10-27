@@ -67,12 +67,60 @@
   font-weight: 600;
 }
 
-.subText {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.dateText {
-  font-size: 0.825rem;
-  color: var(--text-muted);
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
+
+.iconBtn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+  transform: translateY(-1px);
+}
+
+.exportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.exportBtn:hover {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: #059669;
+}
+
+.roleSelect {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+  font-size: 0.85rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+

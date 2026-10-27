@@ -87,7 +87,17 @@ export const CreateInterviewScheduleModal: React.FC<CreateInterviewScheduleModal
         loadProgramApplicants();
       }
       if (initialCandidates.length > 0) {
-        setCandidates(initialCandidates);
+        // Lọc deduplicate theo email
+        const uniqueInitial = initialCandidates.filter(
+          (c, idx, arr) => arr.findIndex((item) => item.email.toLowerCase() === c.email.toLowerCase()) === idx
+        );
+        setCandidates(uniqueInitial);
+        const initIds = uniqueInitial
+          .map((c) => c.candidateId)
+          .filter((id): id is number => id !== undefined);
+        setSelectedApplicantIds(new Set(initIds));
+      } else {
+        setSelectedApplicantIds(new Set());
       }
       if (editingScheduleId) {
         loadScheduleDetail(editingScheduleId);
@@ -95,7 +105,7 @@ export const CreateInterviewScheduleModal: React.FC<CreateInterviewScheduleModal
         setTitle(`Lịch Phỏng Vấn AI - ${new Date().toLocaleDateString('vi-VN')}`);
       }
     }
-  }, [isOpen, programId, editingScheduleId]);
+  }, [isOpen, programId, editingScheduleId, initialCandidates]);
 
   const loadScheduleDetail = async (scheduleId: number) => {
     try {
@@ -148,14 +158,20 @@ export const CreateInterviewScheduleModal: React.FC<CreateInterviewScheduleModal
       const next = new Set(prev);
       if (next.has(applicant.id)) {
         next.delete(applicant.id);
-        setCandidates((curr) => curr.filter((c) => c.email !== applicant.email));
+        setCandidates((curr) => curr.filter((c) => c.email.toLowerCase() !== applicant.email?.toLowerCase()));
       } else {
         next.add(applicant.id);
-        if (applicant.email && !candidates.some((c) => c.email === applicant.email)) {
-          setCandidates((curr) => [
-            ...curr,
-            { candidateId: applicant.id, email: applicant.email, fullName: applicant.fullName || 'Ứng viên' },
-          ]);
+        if (applicant.email) {
+          setCandidates((curr) => {
+            // Kiểm tra deduplicate trực tiếp trên state thực tế mới nhất curr
+            if (curr.some((c) => c.email.toLowerCase() === applicant.email.toLowerCase())) {
+              return curr;
+            }
+            return [
+              ...curr,
+              { candidateId: applicant.id, email: applicant.email, fullName: applicant.fullName || 'Ứng viên' },
+            ];
+          });
         }
       }
       return next;
@@ -167,19 +183,29 @@ export const CreateInterviewScheduleModal: React.FC<CreateInterviewScheduleModal
     const allSelected = validApplicants.every((a) => selectedApplicantIds.has(a.id));
 
     if (allSelected) {
-      // Bỏ chọn tất cả
+      // Bỏ chọn tất cả ứng viên gợi ý
+      const validEmailSet = new Set(validApplicants.map((a) => a.email.toLowerCase()));
       setSelectedApplicantIds(new Set());
-      setCandidates([]);
+      setCandidates((curr) => curr.filter((c) => !validEmailSet.has(c.email.toLowerCase())));
     } else {
-      // Chọn tất cả
+      // Chọn tất cả (tránh trùng lặp với ứng viên đã thêm thủ công trước đó)
       const newIds = new Set(validApplicants.map((a) => a.id));
       setSelectedApplicantIds(newIds);
-      const newCands = validApplicants.map((a) => ({
-        candidateId: a.id,
-        email: a.email,
-        fullName: a.fullName || 'Ứng viên',
-      }));
-      setCandidates(newCands);
+      setCandidates((curr) => {
+        const existingEmails = new Set(curr.map((c) => c.email.toLowerCase()));
+        const toAdd: CandidateInviteItem[] = [];
+        for (const a of validApplicants) {
+          if (!existingEmails.has(a.email.toLowerCase())) {
+            toAdd.push({
+              candidateId: a.id,
+              email: a.email,
+              fullName: a.fullName || 'Ứng viên',
+            });
+            existingEmails.add(a.email.toLowerCase());
+          }
+        }
+        return [...curr, ...toAdd];
+      });
     }
   };
 
@@ -266,7 +292,11 @@ export const CreateInterviewScheduleModal: React.FC<CreateInterviewScheduleModal
       return;
     }
 
-    setCandidates((prev) => [...prev, ...addedList]);
+    setCandidates((curr) => {
+      const existingEmails = new Set(curr.map((c) => c.email.toLowerCase()));
+      const toAdd = addedList.filter((item) => !existingEmails.has(item.email.toLowerCase()));
+      return [...curr, ...toAdd];
+    });
     setBulkText('');
     setErrorMessage(null);
   };

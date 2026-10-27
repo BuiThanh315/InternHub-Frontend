@@ -77,6 +77,7 @@ interface AiJobContextType {
   }) => Promise<string>;
   latestCompletedQuiz: QuizDetailResponse | null;
   consumeCompletedQuiz: () => QuizDetailResponse | null;
+  clearCompletedQuiz: () => void;
   dismissJob: () => void;
   completedVersion: number;
   viewingQuestionModal: ViewingQuestionModalState | null;
@@ -391,16 +392,19 @@ export const AiJobProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const consumeCompletedQuiz = useCallback(() => {
-    const q = latestCompletedQuiz;
-    setLatestCompletedQuiz(null);
-    return q;
+    // Không lập tức xóa null để tránh mất dữ liệu đề thi khi người dùng đóng/mở popup
+    return latestCompletedQuiz;
   }, [latestCompletedQuiz]);
+
+  const clearCompletedQuiz = useCallback(() => {
+    setLatestCompletedQuiz(null);
+  }, []);
 
   const dismissJob = useCallback(() => {
     stopPolling();
     setActiveJob(null);
     setIsExpanded(false);
-    setLatestCompletedQuiz(null);
+    // Giữ lại latestCompletedQuiz nếu job đã hoàn tất để modal giao việc có thể sử dụng
   }, [stopPolling]);
 
   const openQuestionModal = useCallback((params?: Partial<ViewingQuestionModalState>) => {
@@ -438,6 +442,7 @@ export const AiJobProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       startQuizJob,
       latestCompletedQuiz,
       consumeCompletedQuiz,
+      clearCompletedQuiz,
       dismissJob,
       completedVersion,
       viewingQuestionModal,
@@ -452,6 +457,7 @@ export const AiJobProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       startQuizJob,
       latestCompletedQuiz,
       consumeCompletedQuiz,
+      clearCompletedQuiz,
       dismissJob,
       completedVersion,
       viewingQuestionModal,

@@ -81,6 +81,32 @@ export const userService = {
     }
     throw new Error('Không thể thay đổi trạng thái người dùng trên máy chủ');
   },
+
+  /**
+   * Admin đặt lại mật khẩu về mặc định (hoặc mật khẩu chỉ định)
+   */
+  async resetPassword(id: number, newPassword?: string, signal?: AbortSignal): Promise<void> {
+    await apiClient.post(
+      `/api/users/${id}/reset-password`,
+      { newPassword: newPassword || '123456' },
+      { signal }
+    );
+  },
+
+  /**
+   * Admin thay đổi vai trò (Role) người dùng
+   */
+  async updateUserRole(id: number, role: string, signal?: AbortSignal): Promise<User> {
+    const response = await apiClient.patch<ApiResponse<RawUserPayload>>(
+      `/api/users/${id}/role`,
+      { role },
+      { signal }
+    );
+    if (response.data && response.data.data) {
+      return normalizeUser(response.data.data);
+    }
+    throw new Error('Không thể cập nhật vai trò người dùng');
+  },
 };
 
 export default userService;

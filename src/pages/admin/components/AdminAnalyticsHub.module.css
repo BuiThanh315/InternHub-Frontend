@@ -1,0 +1,579 @@
+.hubWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin-top: 1.25rem;
+}
+
+/* 1. HÀNG THẺ KPI */
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.kpiCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.kpiIconBox {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconTotal {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.iconToday {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.iconAlert {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.iconHealth {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: #7c3aed;
+}
+
+.kpiContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.kpiSub {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.kpiValueRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.kpiMainValue {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpiBadgeActive {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: #059669;
+  background-color: rgba(16, 185, 129, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.kpiBadgeSuccess {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: #2563eb;
+  background-color: rgba(59, 130, 246, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.kpiBadgeWarning {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: #d97706;
+  background-color: rgba(245, 158, 11, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.kpiHealthStatus {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.healthLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+.healthLink:hover {
+  transform: translateX(2px);
+  text-decoration: underline;
+}
+
+/* 2. KHU VỰC PHÂN TÍCH GRID */
+.analysisGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.5rem;
+}
+
+.panelCard {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.panelTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.headerIconBlue {
+  color: #2563eb;
+}
+
+.headerIconGreen {
+  color: #059669;
+}
+
+.panelTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.panelActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.panelActionBtn:hover {
+  text-decoration: underline;
+  transform: translateX(2px);
+}
+
+/* Stacked bar visualization */
+.barStackWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.barStack {
+  height: 14px;
+  width: 100%;
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--border-subtle);
+}
+
+.barIntern {
+  background-color: #8b5cf6;
+  transition: width 0.4s ease;
+}
+
+.barMentor {
+  background-color: #10b981;
+  transition: width 0.4s ease;
+}
+
+.barHr {
+  background-color: #3b82f6;
+  transition: width 0.4s ease;
+}
+
+.barAdmin {
+  background-color: #f59e0b;
+  transition: width 0.4s ease;
+}
+
+.legendGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background-color: var(--bg-main, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--border-subtle);
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotIntern {
+  background-color: #8b5cf6;
+}
+
+.dotMentor {
+  background-color: #10b981;
+}
+
+.dotHr {
+  background-color: #3b82f6;
+}
+
+.dotAdmin {
+  background-color: #f59e0b;
+}
+
+.legendText {
+  display: flex;
+  flex-direction: column;
+}
+
+.legendLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.legendVal {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.statusSubDivider {
+  margin-top: 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border-default);
+}
+
+.statusSummaryItem {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.statusLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.statusActiveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #059669;
+  background-color: rgba(16, 185, 129, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.statusInactiveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #dc2626;
+  background-color: rgba(239, 68, 68, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+/* Activity Feed */
+.activityFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.emptyFeed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.emptyIcon {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.feedRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background-color: var(--bg-main, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
+}
+
+.feedRow:hover {
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.04));
+}
+
+.feedStatusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+.statusIndicatorSuccess {
+  background-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.statusIndicatorFail {
+  background-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.feedMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.feedActionLine {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.feedActor {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.feedAction {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.feedModuleBadge {
+  font-size: 0.675rem;
+  font-weight: 600;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background-color: var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.feedDesc {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feedTime {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 3. KHỐI TÁC VỤ "CẦN XỬ LÝ" */
+.actionsSection {
+  margin-top: 0.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.actionCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.actionCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.actionCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.actionIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.actionIconUsers {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.actionIconRoles {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+
+.actionIconSystem {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.actionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.actionTopRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.actionTitle {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.actionAlertBadge {
+  font-size: 0.675rem;
+  font-weight: 700;
+  color: #dc2626;
+  background-color: rgba(239, 68, 68, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+}
+
+.actionStandardBadge {
+  font-size: 0.675rem;
+  font-weight: 600;
+  color: #d97706;
+  background-color: rgba(245, 158, 11, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+}
+
+.actionOkBadge {
+  font-size: 0.675rem;
+  font-weight: 600;
+  color: #059669;
+  background-color: rgba(16, 185, 129, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+}
+
+.actionDesc {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.actionArrow {
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.actionCard:hover .actionArrow {
+  transform: translateX(3px);
+  opacity: 1;
+  color: var(--primary);
+}

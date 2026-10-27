@@ -46,13 +46,13 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
               <tr>
                 <th className={`${styles.th} ${styles.stickyLeft}`}>Mã TTS</th>
                 <th className={styles.th}>Họ và tên</th>
-                <th className={styles.th}>Phòng ban & chương trình</th>
+                <th className={`${styles.th} ${styles.colDept}`}>Phòng ban & chương trình</th>
                 <th className={styles.th}>Ngày công</th>
                 <th className={styles.th}>Đi muộn / về sớm</th>
                 <th className={styles.th}>Nghỉ phép</th>
                 <th className={styles.th}>Vắng không phép</th>
                 <th className={styles.th}>Tỷ lệ</th>
-                <th className={styles.th}>Xếp loại</th>
+                <th className={`${styles.th} ${styles.colStatus}`}>Xếp loại</th>
                 <th className={`${styles.th} ${styles.stickyRight}`}>Thao tác</th>
               </tr>
             </thead>
@@ -162,13 +162,13 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
             <tr>
               <th className={`${styles.th} ${styles.stickyLeft}`}>Mã TTS</th>
               <th className={styles.th}>Họ và tên</th>
-              <th className={styles.th}>Phòng ban & chương trình</th>
+              <th className={`${styles.th} ${styles.colDept}`}>Phòng ban & chương trình</th>
               <th className={styles.th}>Ngày công</th>
               <th className={styles.th}>Đi muộn / về sớm</th>
               <th className={styles.th}>Nghỉ phép</th>
               <th className={styles.th}>Vắng không phép</th>
               <th className={styles.th}>Tỷ lệ</th>
-              <th className={styles.th}>Xếp loại</th>
+              <th className={`${styles.th} ${styles.colStatus}`}>Xếp loại</th>
               <th className={`${styles.th} ${styles.stickyRight}`}>Thao tác</th>
             </tr>
           </thead>
@@ -189,10 +189,12 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
                 </td>
 
                 {/* Cột 3: Phòng ban • Chương trình • Mentor */}
-                <td className={styles.td}>
+                <td className={`${styles.td} ${styles.colDept}`}>
                   <div className={styles.deptCell}>
                     <span className={styles.deptName}>{item.departmentName || '—'}</span>
-                    <span className={styles.progTitle}>{item.programTitle || '—'}</span>
+                    <span className={styles.progTitle} title={item.programTitle || ''}>
+                      {item.programTitle || '—'}
+                    </span>
                     {item.mentorName && (
                       <span className={styles.mentorTag}>
                         Mentor: {item.mentorName}
@@ -236,8 +238,8 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
                 </td>
 
                 {/* Cột 9: Xếp loại kỷ luật & Diễn giải cảnh báo */}
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <td className={`${styles.td} ${styles.colStatus}`}>
+                  <div className={styles.statusCell}>
                     <span className={`${styles.statusBadge} ${getStatusBadgeClass(item.diligenceStatus)}`}>
                       {item.diligenceStatusTitle || item.diligenceStatus}
                     </span>
@@ -248,7 +250,6 @@ export const InternDiligenceTable: React.FC<InternDiligenceTableProps> = ({
                     )}
                   </div>
                 </td>
-
 
                 {/* Cột 10: Thao tác (Sticky Right) */}
                 <td className={`${styles.td} ${styles.stickyRight}`}>

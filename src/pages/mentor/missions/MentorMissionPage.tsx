@@ -53,6 +53,8 @@ export const MentorMissionPage: React.FC = () => {
     isLoadingBoard,
     isMutating,
     error,
+    presenceMap,
+    isRealtimeConnected,
     refreshAll,
     createBoard,
     updateBoard,
@@ -254,6 +256,8 @@ export const MentorMissionPage: React.FC = () => {
           todoItems={todoItems}
           inProgressItems={inProgressItems}
           completedItems={completedItems}
+          presenceMap={presenceMap}
+          isRealtimeConnected={isRealtimeConnected}
           onCreateItem={() =>
             setItemModal({ isOpen: true, editingItem: null, initialAssigneeId: null, initialTitle: '' })
           }

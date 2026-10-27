@@ -19,10 +19,10 @@
 
 .mainContent {
   flex: 1;
-  padding: 1.25rem 1.5rem;
-  max-width: 1440px;
-  margin: 0 auto;
+  padding: 1rem 1.5rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {

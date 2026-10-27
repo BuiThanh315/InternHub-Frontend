@@ -50,7 +50,7 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
   className,
   onViewResults,
 }) => {
-  const { activeJob, isExpanded, setIsExpanded, dismissJob, openQuestionModal, consumeCompletedQuiz } = useAiJob();
+  const { activeJob, isExpanded, setIsExpanded, dismissJob, openQuestionModal } = useAiJob();
 
   if (!activeJob) {
     return null;
@@ -376,12 +376,10 @@ export const FloatingProgressWidget: React.FC<FloatingProgressWidgetProps> = ({
                   size="sm"
                   fullWidth
                   onClick={() => {
-                    consumeCompletedQuiz();
                     toast.info('Bài Quiz đã sẵn sàng! Hãy mở form giao việc để đính kèm.', {
-                      description: `Quiz "${activeJob.quizTopic || 'Ôn tập'}" có thể được đính kèm khi tạo công việc.`,
+                      description: `Quiz "${activeJob.quizTopic || 'Ôn tập'}" đã sẵn sàng và tự động giữ trong form giao việc.`,
                     });
                     setIsExpanded(false);
-                    dismissJob();
                   }}
                   leftIcon={<BookOpen size={14} />}
                   rightIcon={<ArrowRight size={14} />}

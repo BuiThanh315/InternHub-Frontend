@@ -230,6 +230,9 @@ export interface QuizInternReportDto {
   fullName: string;
   email: string;
   groupName?: string;
+  assignmentId?: number;
+  submissionId?: number | null;
+  latestSubmissionId?: number | null;
   attemptsCount: number;
   highestScore?: number | null;
   totalPoints: number;

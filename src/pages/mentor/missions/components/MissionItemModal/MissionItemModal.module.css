@@ -411,8 +411,14 @@
   margin: 0.25rem 0;
 }
 
+.quizButtonRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
 .attachQuizBtn {
-  width: 100%;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -429,6 +435,42 @@
   border-color: var(--primary);
   background: var(--primary-light);
   transform: translateY(-1px);
+}
+
+.selectExistingQuizBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface-alt, #F8FAFC);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.selectExistingQuizBtn:hover {
+  border-color: #0284C7;
+  background: #F0F9FF;
+  transform: translateY(-1px);
+}
+
+.selectExistingQuizBtnTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #0284C7;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.selectExistingQuizBtnSub {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
 }
 
 .attachQuizBtnContent {

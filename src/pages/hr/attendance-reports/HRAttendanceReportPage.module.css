@@ -1,31 +1,29 @@
 .pageContainer {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
   width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 8px 0 32px 0;
+  padding: 0 0 16px 0;
 }
 
 /* Layer 1: Page Header & Action Bar */
 .pageHeader {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .headerTextGroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .pageTitle {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
@@ -33,7 +31,7 @@
 }
 
 .pageSubtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -41,14 +39,14 @@
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* Layer 2: Filter and KPI Stack */
 .filterAndKpiSection {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 /* Layer 3: Table Section */

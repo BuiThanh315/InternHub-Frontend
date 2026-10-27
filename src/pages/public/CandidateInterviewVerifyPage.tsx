@@ -95,17 +95,22 @@ export const CandidateInterviewVerifyPage: React.FC = () => {
     const storedToken = sessionStorage.getItem('candidate_session_token');
     const storedSessionId = sessionStorage.getItem('candidate_session_id');
 
-    // 2. Bóc token từ URL Fragment (#token=...) nếu từ liên kết email
-    const hash = window.location.hash;
+    // 2. Bóc token từ Query Parameter (?token=...) hoặc URL Fragment (#token=...)
     let token = '';
-
-    if (hash && hash.includes('token=')) {
-      const match = hash.match(/token=([^&]+)/);
-      if (match && match[1]) {
-        token = match[1];
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('token')) {
+      token = searchParams.get('token')!;
+    } else {
+      const hash = window.location.hash;
+      if (hash && hash.includes('token=')) {
+        const match = hash.match(/token=([^&]+)/);
+        if (match && match[1]) {
+          token = match[1];
+        }
       }
     }
 
+    // 3. Nếu không có token trên URL nhưng có session trong storage, thử khôi phục trạng thái
     if (!token && storedToken && storedSessionId) {
       try {
         const recovery = await aiInterviewService.getCandidateRecoveryState(storedSessionId, storedToken);
@@ -133,8 +138,19 @@ export const CandidateInterviewVerifyPage: React.FC = () => {
         });
         setLoading(false);
         return;
-      } catch (e) {
-        console.warn('Could not restore session from storage:', e);
+      } catch (e: any) {
+        console.warn('Could not restore session from storage directly, checking if storedToken is raw invite token:', e);
+        // Nếu storedToken thực chất là rawInviteToken từ Dashboard, thử exchange sang JWT buồng thi
+        try {
+          const exchanged = await aiInterviewService.exchangeCandidateToken(storedToken);
+          setAccessData(exchanged);
+          sessionStorage.setItem('candidate_session_token', exchanged.candidateSessionToken);
+          sessionStorage.setItem('candidate_session_id', String(exchanged.sessionId));
+          setLoading(false);
+          return;
+        } catch (exchangeErr) {
+          console.warn('Fallback token exchange also failed:', exchangeErr);
+        }
       }
     }
 
@@ -144,7 +160,66 @@ export const CandidateInterviewVerifyPage: React.FC = () => {
       return;
     }
 
-    // 3. Dọn sạch URL Fragment chống rò rỉ qua lịch sử duyệt web
+    // 4. Kiểm tra loại Token:
+    // Nếu là JWT buồng thi (bắt đầu bằng eyJ... và có 3 phần tách bởi dấu chấm)
+    const isJwt = token.startsWith('eyJ') && token.split('.').length === 3;
+
+    if (isJwt) {
+      try {
+        // Decode payload của JWT để trích xuất sessionId, subject...
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        const jwtSessionId = payload.sessionId;
+
+        sessionStorage.setItem('candidate_session_token', token);
+        if (jwtSessionId) {
+          sessionStorage.setItem('candidate_session_id', String(jwtSessionId));
+        }
+
+        // Dọn sạch URL query/hash chống rò rỉ token
+        window.history.replaceState(null, '', window.location.pathname);
+
+        // Gọi recovery API để lấy cấu hình buổi thi (title, mode, duration, strikes...)
+        const recovery = await aiInterviewService.getCandidateRecoveryState(jwtSessionId, token);
+        if (recovery.status === 'SUBMITTED') {
+          sessionStorage.removeItem('candidate_session_token');
+          sessionStorage.removeItem('candidate_session_id');
+          navigate(`/interview/complete/${jwtSessionId}`);
+          return;
+        }
+
+        setAccessData({
+          candidateSessionToken: token,
+          sessionId: Number(jwtSessionId),
+          candidateName: recovery.candidateName || 'Thực tập sinh',
+          candidateEmail: recovery.candidateEmail || payload.sub || '',
+          interviewTitle: recovery.interviewTitle || 'Buổi Phỏng Vấn AI',
+          status: recovery.status as any,
+          interviewMode: recovery.interviewMode,
+          totalQuestions: recovery.totalQuestions,
+          durationPerQuestionSec: 180,
+          totalDurationMinutes: 30,
+          maxBlurStrikes: recovery.maxBlurStrikes,
+          allowRevisitQuestions: Boolean(recovery.allowRevisitQuestions),
+          autoSubmitOnExceed: true,
+        });
+      } catch (jwtErr: any) {
+        console.error('Error recovering session from JWT token:', jwtErr);
+        setErrorMessage(jwtErr.response?.data?.message || 'Không thể khôi phục phiên phỏng vấn từ mã phòng thi.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // 5. Nếu là Raw Invite Token (ngẫu nhiên từ email / HR invite link):
     window.history.replaceState(null, '', window.location.pathname);
 
     try {

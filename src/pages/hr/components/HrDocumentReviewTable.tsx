@@ -80,7 +80,7 @@ export const HrDocumentReviewTable: React.FC<HrDocumentReviewTableProps> = ({
                     </td>
                     <td>
                       <div className={styles.fileCell}>
-                        <FileText size={16} color="#64748b" style={{ flexShrink: 0 }} />
+                        <FileText size={16} color="var(--text-muted)" style={{ flexShrink: 0 }} />
                         <span className={styles.fileName} title={doc.originalFileName || doc.fileName}>
                           {doc.originalFileName || doc.fileName}
                         </span>

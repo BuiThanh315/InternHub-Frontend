@@ -15,6 +15,7 @@ import {
 import { Button, SearchBar, Select, Skeleton } from '../../../../../components/common';
 import { formatDate } from '../../../../../utils/formatters';
 import { MissionKanbanBoard } from '../MissionKanbanBoard';
+import { KanbanQuizInspectorModal } from '../KanbanQuizInspectorModal';
 import {
   MentorInternsAndGroupsTab,
   MentorAnalyticsTab,
@@ -22,6 +23,7 @@ import {
   MentorQuizzesTab,
 } from './tabs';
 import type { MentorProgramWorkspaceProps, WorkspaceTabKey } from './MentorProgramWorkspace.types';
+import type { MissionItemResponse } from '../../../../../types';
 import styles from './MentorProgramWorkspace.module.css';
 
 export const MentorProgramWorkspace: React.FC<MentorProgramWorkspaceProps> = ({
@@ -36,6 +38,7 @@ export const MentorProgramWorkspace: React.FC<MentorProgramWorkspaceProps> = ({
   todoItems,
   inProgressItems,
   completedItems,
+  presenceMap,
   onCreateItem,
   onEditItem,
   onDeleteItem,
@@ -55,9 +58,11 @@ export const MentorProgramWorkspace: React.FC<MentorProgramWorkspaceProps> = ({
   onAssignTaskToIntern,
   completionPercentage,
   isLoadingBoard,
+  isRealtimeConnected = false,
   className = '',
 }) => {
   const [activeTab, setActiveTab] = useState<WorkspaceTabKey>('kanban');
+  const [inspectingQuizItem, setInspectingQuizItem] = useState<MissionItemResponse | null>(null);
 
   const activeBoard = boards.find((b) => b.id === activeBoardId);
 
@@ -220,12 +225,14 @@ export const MentorProgramWorkspace: React.FC<MentorProgramWorkspaceProps> = ({
           todoItems={todoItems}
           inProgressItems={inProgressItems}
           completedItems={completedItems}
+          presenceMap={presenceMap}
           onAddNewItem={() => onCreateItem()}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
           onStatusChange={onStatusChange}
           onDropItem={onDropItem}
           onQuickAdd={onQuickAdd}
+          onViewQuizDetail={(item) => setInspectingQuizItem(item)}
         />
       </>
     );
@@ -241,6 +248,32 @@ export const MentorProgramWorkspace: React.FC<MentorProgramWorkspaceProps> = ({
           </button>
 
           <div className={styles.headerActionButtons}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.3rem 0.6rem',
+                borderRadius: '9999px',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                backgroundColor: isRealtimeConnected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(148, 163, 184, 0.12)',
+                color: isRealtimeConnected ? 'var(--success, #10b981)' : 'var(--text-muted, #94a3b8)',
+                border: `1px solid ${isRealtimeConnected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`,
+              }}
+              title={isRealtimeConnected ? 'Đang đồng bộ trực tiếp qua WebSocket' : 'Đang kết nối lại máy chủ...'}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  backgroundColor: isRealtimeConnected ? '#10b981' : '#94a3b8',
+                }}
+              />
+              <span>{isRealtimeConnected ? 'Live Sync' : 'Offline'}</span>
+            </div>
+
             <Button variant="outline" size="sm" onClick={onOpenGroupModal}>
               <Users size={14} /> Quản Lý Nhóm
             </Button>
@@ -370,6 +403,14 @@ export const MentorProgramWorkspace: React.FC<MentorProgramWorkspaceProps> = ({
           completedTasks={completedItems.length}
         />
       )}
+
+      {/* Modal Thanh Tra Đề Thi & Đánh Giá Ý Tưởng TM-104 */}
+      <KanbanQuizInspectorModal
+        isOpen={Boolean(inspectingQuizItem)}
+        onClose={() => setInspectingQuizItem(null)}
+        item={inspectingQuizItem}
+        program={program}
+      />
     </div>
   );
 };

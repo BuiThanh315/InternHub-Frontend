@@ -6,6 +6,7 @@ import type {
   MissionItemResponse,
   MissionItemStatus,
   MissionPriority,
+  TaskActorPresence,
 } from '../../../../../types';
 import type { InternGroup } from '../../../../../types/group.types';
 
@@ -27,6 +28,7 @@ export interface MentorProgramWorkspaceProps {
   todoItems: MissionItemResponse[];
   inProgressItems: MissionItemResponse[];
   completedItems: MissionItemResponse[];
+  presenceMap?: Record<number, TaskActorPresence>;
   onCreateItem: (defaultStatus?: MissionItemStatus) => void;
   onEditItem: (item: MissionItemResponse) => void;
   onDeleteItem: (item: MissionItemResponse) => void;
@@ -53,5 +55,6 @@ export interface MentorProgramWorkspaceProps {
   activeBoardDetail: MissionBoardDetailResponse | null;
   completionPercentage: number;
   isLoadingBoard: boolean;
+  isRealtimeConnected?: boolean;
   className?: string;
 }

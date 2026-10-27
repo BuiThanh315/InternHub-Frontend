@@ -4,6 +4,8 @@ import {
   Edit3,
   Trash2,
   AlertCircle,
+  Sparkles,
+  Eye,
 } from 'lucide-react';
 import { AssigneeAvatarStack } from '../AssigneeAvatarStack';
 import { formatDate } from '../../../../../utils/formatters';
@@ -12,12 +14,20 @@ import styles from './MissionCard.module.css';
 
 export const MissionCard: React.FC<MissionCardProps> = ({
   item,
+  presence,
   onEdit,
   onDelete,
   onStatusChange: _onStatusChange,
+  onViewQuizDetail,
   className = '',
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+
+  const isQuizTask = Boolean(
+    (item.submissionUrl && item.submissionUrl.includes('/quizzes/')) ||
+    item.title.startsWith('[Quiz]') ||
+    item.title.startsWith('[Quiz AI]')
+  );
 
   // Tính toán hạn chót: bình thường, khẩn cấp (<= 2 ngày) hoặc quá hạn
   const getDueDateStatus = () => {
@@ -78,6 +88,14 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      {/* Realtime Actor Presence Badge */}
+      {presence && (
+        <div className={styles.actorPresenceBadge} title={presence.actionText}>
+          <span>👤</span>
+          <span>{presence.actorName} {presence.actionText}</span>
+        </div>
+      )}
+
       {/* Header: Priority Badge & Action Buttons */}
       <div className={styles.cardHeader}>
         <span className={`${styles.priorityBadge} ${priorityConfig.class}`}>
@@ -118,6 +136,28 @@ export const MissionCard: React.FC<MissionCardProps> = ({
           <p className={styles.cardDescription}>{item.description}</p>
         )}
       </div>
+
+      {/* Phân hệ Quiz AI trên thẻ Kanban TM-104 */}
+      {isQuizTask && (
+        <div className={styles.quizCardSection}>
+          <span className={styles.quizAiBadge}>
+            <Sparkles size={11} /> Quiz AI
+          </span>
+          {onViewQuizDetail && (
+            <button
+              type="button"
+              className={styles.quizInspectBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewQuizDetail(item);
+              }}
+              title="Xem các câu hỏi và đối chiếu ý tưởng đề thi với bối cảnh dự án"
+            >
+              <Eye size={12} /> Xem Đề Thi & Đánh Giá
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Footer: Due date & Assignees */}
       <div className={styles.cardFooter}>
