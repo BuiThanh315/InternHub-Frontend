@@ -105,11 +105,21 @@ export const ProgramWorkspacePage: React.FC = () => {
         email: intern.email,
       });
 
-      if (res && res.sessionId) {
-        setDossierSessionId(res.sessionId);
-      } else {
-        toast.error(`Ứng viên "${intern.fullName}" chưa tham gia phiên phỏng vấn AI nào.`);
+      if (!res || !res.sessionId) {
+        toast.info(`Ứng viên "${intern.fullName}" chưa tham gia phiên phỏng vấn AI nào.`);
+        return;
       }
+
+      if (res.status !== 'COMPLETED') {
+        toast.info(
+          `Phiên phỏng vấn AI của "${intern.fullName}" ở trạng thái "${
+            res.status === 'EXPIRED' ? 'Hết hạn' : res.status
+          }" và chưa có kết quả đánh giá.`
+        );
+        return;
+      }
+
+      setDossierSessionId(res.sessionId);
     } catch (err: any) {
       console.error('Lỗi khi tra cứu phiên phỏng vấn của ứng viên:', err);
       toast.error('Không thể kiểm tra lịch sử phỏng vấn của ứng viên này.');

@@ -15,6 +15,11 @@
 | Phiên bản | Ngày | Người thực hiện | Task / Jira | Loại thay đổi | Lý do & Giải trình kỹ thuật (Rationale) |
 | :---: | :---: | :---: | :---: | :---: | :--- |
 | **v1.0** | 2026-10-14 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Tạo mới Đặc Tả | Khởi tạo tài liệu đặc tả kỹ thuật Frontend cho tính năng Mentor sử dụng AI tạo bài Quiz từ báo cáo tuần và giao cho TTS/nhóm TTS, đồng bộ thẻ Kanban; xây dựng trải nghiệm làm bài thi tĩnh tâm và đối soát kết quả chi tiết cho thực tập sinh theo quy chuẩn `frontend-design`. |
+| **v1.1** | 2026-10-26 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Tích hợp tạo Quiz vào Modal Giao Việc Kanban | Chuyển đổi luồng tạo đề: Nhúng nút `[✦ Tạo bài kiểm tra ôn tập AI]` vào trực tiếp trong modal `MissionItemModal` (khi giao task Kanban). Bổ sung popup nhập nhanh tham số (Số câu, độ khó, chủ đề bám theo task), tự động đính kèm Quiz vào Task Kanban. Dọn dẹp nút tạo đề lỗi cũ tại `MentorQuizzesTab`. |
+| **v1.2** | 2026-10-26 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Kiến Trúc Đa Luồng Chạy Ngầm Bất Đồng Bộ & Floating Progress Widget tương tự TM-103 | Tách luồng sinh câu hỏi AI sang chạy ngầm không chặn thao tác (Non-blocking Async Job). Khi bấm "Bắt đầu tạo câu hỏi" trong `AiQuizQuickModal`, modal đóng ngay lập tức, kích hoạt `startQuizJob` qua `AiJobContext`. Cửa sổ nổi `FloatingProgressWidget` góc phải dưới màn hình tự động hiển thị tiến độ 4 chặng (25% - 60% - 85% - 100%). Mentor hoàn toàn tự do tiếp tục soạn task Kanban hoặc chuyển trang. Khi hoàn tất, widget cung cấp nút "Đính kèm vào công việc" hoặc tự động liên kết vào task đang soạn thảo. |
+| **v1.3** | 2026-10-26 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Sửa Lỗi Hiển Thị Lượt Thi, Triệt Tiêu Thẻ Trùng Lặp & Chống Auto-Submit Lệch Múi Giờ | 1. Sửa lỗi `InternQuizListPage` hiển thị "Đã hết lượt thi" và "Lần làm: /1": Khai báo cả `attemptsUsed` lẫn `attemptsTaken` kèm toán tử null-coalescing `attemptsCount = a.attemptsUsed ?? a.attemptsTaken ?? 0`, hiển thị chính xác `0/1` và kích hoạt nút `Bắt đầu làm bài`.<br>2. Triệt tiêu lỗi tạo thừa công việc trong `MissionItemModal`: Khi có `attachedQuiz`, modal không gọi `onSubmit(payload)` mà ủy quyền trực tiếp cho `quizService.assignQuiz(..., { createKanbanTask: true })` để Backend tạo đúng duy nhất 1 thẻ bài thi `[Quiz]` kèm link làm bài cho mỗi TTS, đồng thời gọi callback `onRefreshBoard()` để cập nhật Kanban ngay lập tức.<br>3. Khắc phục lỗi tự động nộp bài khi vừa mở phòng thi `InternQuizTakingPage`: Triển khai cơ chế phòng thủ 3 lớp (3-tier fallback) đọc `remainingSeconds` từ máy chủ, parse UTC `Z`, và fallback về thời lượng trọn vẹn của đề thi nếu tính ra $\le 0$ ở lượt thi mới, bảo đảm an toàn 100%. |
+| **v1.4** | 2026-10-27 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Khắc Phục Mất Đề Quiz Khi Tắt Popup & Thanh Tra Câu Hỏi, Đánh Giá Ý Tưởng Trên Kanban | 1. Khắc phục triệt để lỗi mất đề Quiz khi tắt popup giao việc: Loại bỏ lệnh reset cưỡng bức `setAttachedQuiz(null)` trong `MissionItemModal`; lưu giữ đề vừa tạo trong state; bổ sung tính năng chọn từ danh sách đề có sẵn của kỳ thực tập (`quizService.getQuizzesByProgram`).<br>2. Nâng cấp thẻ Kanban `MissionCard`: Bổ sung huy hiệu `[Quiz AI]` và nút *"Xem đề thi & Đánh giá"* khi thẻ là bài kiểm tra Quiz.<br>3. Bổ sung `KanbanQuizInspectorModal` thiết kế theo quy chuẩn `frontend-design`: Tab 1 xem toàn bộ câu hỏi, đáp án, giải thích chi tiết; Tab 2 phân tích chất lượng ý tưởng ra đề và đối chiếu độ tương thích (% Match, Tech stack alignment, Gaps & AI recommendations) với bối cảnh dự án hiện tại (`program.name`, tech stack, JD). |
+| **v1.5** | 2026-10-27 | AI Senior Frontend Pair-Programmer & User | `TM-104` | Xem Lại Bài Làm Của Học Viên Từ Báo Cáo Điểm Số (`QuizSubmissionReviewModal`) | 1. Bổ sung `assignmentId` và `submissionId` trong `QuizInternReportDto`.<br>2. Cập nhật `QuizReportModal`: Thêm cột "Thao tác" và nút *"👁 Xem bài làm"* cho học viên có bài nộp (`attemptsCount > 0`).<br>3. Xây dựng component `QuizSubmissionReviewModal` tuân thủ quy chuẩn `frontend-design`: Bento metrics (Điểm số, Tỷ lệ đạt, Lượt thi, Thời gian làm bài), thanh tra chi tiết từng câu hỏi (lựa chọn của học viên, đáp án đúng/sai, điểm từng câu và giải thích kỹ thuật từ AI). |
 
 ---
 
@@ -81,6 +86,9 @@
 5. **Layouts & Workspace hiện hữu:**
    - [`MentorProgramWorkspace.tsx`](file:///d:/codegym_final_project/InternHub-Frontend/src/pages/mentor/missions/components/MentorProgramWorkspace/MentorProgramWorkspace.tsx): Tích hợp Tab thứ 4 `quizzes` vào hệ thống tab hiện tại.
    - [`MentorWeeklyReportsTab.tsx`](file:///d:/codegym_final_project/InternHub-Frontend/src/pages/mentor/missions/components/MentorProgramWorkspace/tabs/MentorWeeklyReportsTab.tsx): Thêm nút thao tác nhanh *"Tạo Quiz từ báo cáo này"*.
+6. **Hạ Tầng Tác Vụ Ngầm & Cửa Sổ Tiến Độ Nổi (Async Background & Floating Widget tương tự TM-103):**
+   - [`AiJobContext.tsx`](file:///d:/codegym_final_project/InternHub-Frontend/src/contexts/AiJobContext.tsx): Context toàn cục quản lý đa luồng chạy ngầm, mở rộng thêm kiểu tác vụ `jobType: 'QUIZ'`. Tự động polling ngầm trạng thái mỗi 2000ms mà không làm gián đoạn thao tác người dùng.
+   - [`FloatingProgressWidget.tsx`](file:///d:/codegym_final_project/InternHub-Frontend/src/components/common/FloatingProgressWidget/FloatingProgressWidget.tsx): Tái sử dụng 100% cửa sổ nổi đa năng góc phải dưới màn hình (hỗ trợ cả dạng Collapsed Pill và Expanded Card) để hiển thị tiến độ 4 chặng của bài Quiz AI kèm nút bấm thao tác nhanh.
 
 ### 3.2. Các thành phần tạo mới theo chuẩn Domain-Driven Modular:
 1. `src/constants/endpoints/quiz.endpoints.ts`: Khai báo tập trung URL endpoints Quiz của cả Mentor và Intern.
@@ -278,7 +286,8 @@ Khớp 100% với Backend Java:
   - `SubmitQuizRequest`: `{ answers: Array<{ questionId: number; selectedOptionIds: number[] }> }`
 - Response Interfaces:
   - `QuizDetailResponse`: Thông tin đề thi kèm danh sách câu hỏi và lựa chọn đầy đủ (dành cho Mentor duyệt).
-  - `QuizTakingResponse`: Dữ liệu bài thi gửi cho TTS (**Tuyệt đối không chứa `isCorrect`**).
+  - `QuizTakingResponse`: Dữ liệu bài thi gửi cho TTS (**Tuyệt đối không chứa `isCorrect`**; chứa `remainingSeconds?: number` tính từ máy chủ để đồng bộ timer đếm ngược).
+  - `QuizAssignmentResponse`: Thông tin phân công Quiz cho TTS (chứa cả `attemptsUsed?: number` và `attemptsTaken?: number`, cùng `latestSubmissionId?: number | null`).
   - `QuizResultResponse`: Kết quả điểm số, cờ `passed`, và `answerResults` kèm đáp án đúng và `explanation` (mở khóa sau khi submit).
   - `QuizReportResponse`: Thống kê tổng số giao, số hoàn thành, điểm trung bình, danh sách học viên.
 
@@ -365,6 +374,87 @@ Tất cả các method đều hỗ trợ tham số `signal?: AbortSignal` để 
 - Thống kê dạng Bento 4 ô: Tổng số giao, Số TTS đã hoàn thành, Số TTS thi đạt, Điểm trung bình.
 - Bảng danh sách kết quả học viên:
   - Cột: Mã TTS, Họ tên, Nhóm, Số lượt đã thi, Điểm cao nhất / Thang điểm, Kết quả (`ĐẠT` xanh lá / `CHƯA ĐẠT` đỏ), Thời điểm nộp gần nhất.
+
+#### F. Modal Thanh Tra Đề Thi & Đánh Giá Ý Tưởng Trên Kanban (`KanbanQuizInspectorModal.tsx`)
+- **Điểm kích hoạt:** Nút *"Xem Đề Thi & Đánh Giá"* trên thẻ nhiệm vụ `MissionCard` hoặc click trực tiếp vào thẻ mang tiền tố `[Quiz]` trên bảng Kanban.
+- **Tiêu chuẩn thiết kế:** Tuân thủ 100% kỹ năng [`frontend-design`](file:///d:/codegym_final_project/InternHub-Frontend/.agents/skills/frontend-design/SKILL.md) (Gắn kết với ngữ cảnh kỹ thuật, typography phân cấp rõ rệt, màu sắc có ý đồ, thông tin cấu trúc mang giá trị thực).
+- **Cấu trúc 2 Tab chuyên biệt:**
+  - **Tab 1: Câu Hỏi & Đáp Án (Question Inspection):**
+    - Header tóm tắt: Tiêu đề bài Quiz, thời lượng, điểm đạt, số câu, tổng điểm.
+    - Danh sách câu hỏi dạng thẻ thanh tra:
+      - Huy hiệu phân loại: `SINGLE_CHOICE` (Chọn 1) hoặc `MULTIPLE_CHOICE` (Chọn nhiều).
+      - Điểm câu hỏi (`points`), thẻ độ khó.
+      - Toàn bộ phương án A, B, C, D: Đánh dấu phương án đúng bằng viền xanh ngọc bích (`emerald`) và icon kiểm duyệt.
+      - Khối giải thích (`explanation`): Nền xám đen kỹ thuật, font monospace cho code snippet.
+  - **Tab 2: Đánh Giá Ý Tưởng & Đối Chiếu Dự Án (Idea Evaluation & Project Fit):**
+    - **Khối bối cảnh kỳ thực tập (Project Context Banner):** Tên chương trình, mã kỳ, phòng ban phụ trách.
+    - **Chỉ số tương thích dự án (% Match Gauge):** Thanh đo phần trăm độ phủ công nghệ giữa đề thi và tech stack của dự án (ví dụ: `88% Tương thích kiến trúc`).
+    - **Đánh giá ý tưởng ra đề (Idea Quality Assessment):**
+      - Mức độ thực tiễn & rèn luyện tư duy phản biện.
+      - Phân bổ độ khó: Cơ bản - Vận dụng - Chuyên sâu.
+    - **Ma trận đối chiếu dự án hiện tại (Project Alignment Matrix):**
+      - *Điểm bám sát dự án*: Các công nghệ, mô hình hoặc bài toán mà câu hỏi phản ánh trực tiếp công việc thực tế trong kỳ (Spring Boot, REST API, JPA, Clean Architecture).
+      - *Điểm mở rộng & Khoảng trống*: Các kỹ năng dự án đang cần nhưng đề chưa đề cập.
+      - *Khuyến nghị tối ưu (AI Recommendations)*: Gợi ý cho Mentor bổ sung hoặc điều chỉnh câu hỏi để học viên cọ xát với bài toán sản xuất thực tế.
+- **ASCII Wireframe:**
+```text
++-----------------------------------------------------------------------------------------+
+| [Thanh Tra Đề Thi] Spring Boot Data JPA & N+1 Query                       [ Đóng (X) ]  |
+| Kỳ thực tập: Java Backend Intern 2026 · Đơn vị: R&D Core                                |
++-----------------------------------------------------------------------------------------+
+| [ (o) 1. Bộ Câu Hỏi & Đáp Án (10 câu) ]     [ 2. Đánh Giá Ý Tưởng & Đối Chiếu Dự Án ]   |
++-----------------------------------------------------------------------------------------+
+|                                                                                         |
+|  [TAB 1: CÂU HỎI & ĐÁP ÁN]                                                              |
+|  Câu 1 / 10 · [SINGLE_CHOICE] · [10 Điểm]                                               |
+|  Nguyên nhân chính dẫn đến vấn đề N+1 Query trong Spring Data JPA là gì?                |
+|  -------------------------------------------------------------------------------------  |
+|  (v) A. Do cấu hình fetch type EAGER hoặc lặp qua lazy collection [ĐÁP ÁN ĐÚNG]          |
+|  ( ) B. Do không khai báo Primary Key cho Entity                                        |
+|  ( ) C. Do sử dụng Hibernate 6 thay vì Hibernate 5                                      |
+|  ( ) D. Do đặt tên method trong Repository sai chuẩn                                    |
+|  -------------------------------------------------------------------------------------  |
+|  [i] Giải thích chi tiết: N+1 Query xảy ra khi truy vấn 1 danh sách cha và sau đó...    |
+|                                                                                         |
+|  [TAB 2: ĐÁNH GIÁ Ý TƯỞNG & ĐỐI CHIẾU DỰ ÁN]                                            |
+|  +---------------------------+-------------------------------------------------------+  |
+|  | Độ Tương Thích Dự Án: 88% | Trọng tâm: Tối ưu hoá truy vấn Database & Persistence |  |
+|  +---------------------------+-------------------------------------------------------+  |
+|  1. Đánh Giá Ý Tưởng Ra Đề:                                                             |
+|     - Mức độ thực tiễn: 9/10 (Trực tiếp gắn với sự cố hiệu năng phổ biến nhất).         |
+|     - Phân bổ độ khó: 30% Cơ bản, 50% Xử lý tình huống, 20% Tối ưu chuyên sâu.          |
+|  2. Đối Chiếu Dự Án Hiện Tại (Java Backend Program):                                    |
+|     - Bám sát codebase: Phù hợp 100% với Spring Boot 3 & Hibernate 6 dự án đang chạy.   |
+|     - Điểm mở rộng: Bổ sung câu hỏi về Redis Caching để bao phủ kiến trúc cache.        |
+|     - Đề xuất tối ưu: Nên thêm câu hỏi về Indexing MySQL trong bảng mission_items.      |
++-----------------------------------------------------------------------------------------+
+| [ Giao bài này cho TTS ]                                                     [ Đóng ]   |
++-----------------------------------------------------------------------------------------+
+```
+
+#### G. Modal Xem Lại Bài Làm Của Học Viên Từ Báo Cáo Điểm Số (`QuizSubmissionReviewModal.tsx`)
+- **Điểm kích hoạt:** Tại cột "Thao tác" của bảng danh sách kết quả học viên trong `QuizReportModal.tsx`. Với các học viên đã có bài làm (`attemptsCount > 0` và có `submissionId`), Mentor bấm nút *"👁 Xem bài làm"*.
+- **Tiêu chuẩn thiết kế:** Tuân thủ 100% kỹ năng [`frontend-design`](file:///d:/codegym_final_project/InternHub-Frontend/.agents/skills/frontend-design/SKILL.md) (Giao diện kỹ thuật sâu sắc, không dùng template phẳng đại trà, màu sắc semantic rõ ràng, phân cấp bố cục Bento chặt chẽ).
+- **Cấu trúc Modal:**
+  - **Header:**
+    - Tiêu đề: `Bài Làm: {quizTitle}`
+    - Phụ đề: `Học viên: {fullName} ({internCode}) · Nhóm: {groupName}`
+  - **Bento 4 ô Metrics Tóm Tắt:**
+    - *Điểm số bài thi*: `{score} / {totalPoints}` ({percentageScore}%) kèm huy hiệu `ĐẠT` (xanh ngọc) hoặc `CHƯA ĐẠT` (đỏ ruby).
+    - *Lượt thi*: `Lần {attemptNumber} / {maxAttempts}`.
+    - *Thời gian làm bài*: `{durationFormatted}` (ví dụ: `14 phút 25 giây`) · Nộp lúc: `{submittedAtFormatted}`.
+    - *Tỷ lệ câu đúng*: `{correctCount} / {totalQuestions}` câu.
+  - **Danh Sách Đối Soát Chi Tiết Từng Câu Hỏi:**
+    - Mỗi câu hỏi hiển thị trong card riêng biệt:
+      - Header thẻ: Câu {orderIndex}, loại câu hỏi (`SINGLE_CHOICE` / `MULTIPLE_CHOICE`), badge kết quả (`Chính xác (+Xđ)` xanh lá hoặc `Chưa chính xác (0đ)` đỏ).
+      - Nội dung câu hỏi (`questionText`).
+      - Danh sách phương án A, B, C, D:
+        - Học viên chọn đúng: Viền & nền xanh ngọc (`emerald`), icon Check xanh, nhãn `[Học viên chọn đúng]`.
+        - Học viên chọn sai: Viền & nền đỏ nhạt (`rose`), icon X đỏ, nhãn `[Học viên chọn sai]`.
+        - Đáp án đúng bị bỏ sót: Viền xanh ngọc, nhãn `[Đáp án đúng]`.
+        - Phương án còn lại: Viền xám trung tính, giữ trạng thái bình thường.
+      - Khối giải thích kỹ thuật (`explanation`): Nền xám đen kỹ thuật `rgba(0,0,0,0.03)` / dark mode `rgba(255,255,255,0.05)`, icon `Sparkles`, font monospace cho code, giải thích tường tận nguyên nhân đúng/sai.
+  - **Footer:** Nút *"Đóng"*.
 
 ---
 
@@ -478,6 +568,15 @@ Tuân thủ nghiêm ngặt **Rule 15 (Giới hạn tối đa 3 - 4 State trong 1
    - Khi bài thi đang diễn ra, nếu người dùng click link ra ngoài hoặc đóng tab trình duyệt, hiển thị pop-up cảnh báo: *"Bài thi đang diễn ra! Bạn có chắc chắn muốn rời khỏi trang không?"*.
 4. **Chống gian lận nộp bài đúp (Idempotent Submission):**
    - Nút *"Nộp bài thi"* tự động set `disabled` và hiện spinner loader ngay khi click lần đầu, triệt tiêu nguy cơ gửi 2 request cùng lúc.
+5. **Đồng bộ thời gian đếm ngược & Chống Auto-Submit do lệch múi giờ (Timezone Defense):**
+   - Áp dụng cơ chế phòng thủ 3 lớp (3-tier fallback) trong `InternQuizTakingPage`:
+     1. Ưu tiên đọc `remainingSeconds` tính trực tiếp từ máy chủ (`QuizTakingResponse`).
+     2. Fallback: Parse chuỗi `startedAt` kèm chỉ định múi giờ UTC `Z`.
+     3. Fallback an toàn: Nếu kết quả tính toán $\le 0$ ở lượt thi mới, tự động khôi phục về trọn vẹn thời lượng đề thi (`timeLimitMinutes * 60`).
+   - Triệt tiêu hoàn toàn lỗi tự động nộp bài (auto-submit) khi vừa vào thi.
+6. **Nguyên tắc duy nhất thẻ nhiệm vụ Kanban (Single Kanban Card Principle):**
+   - Trong `MissionItemModal`, khi Mentor giao việc có đính kèm bài Quiz AI (`attachedQuiz`), modal bỏ qua lệnh tạo task thông thường `onSubmit(payload)` mà ủy quyền trực tiếp cho `quizService.assignQuiz(..., { createKanbanTask: true })`.
+   - Backend `QuizKanbanSyncHelper` chỉ tạo duy nhất 1 thẻ nhiệm vụ `[Quiz]` có `submissionUrl` cho mỗi thực tập sinh, đồng thời kích hoạt callback `onRefreshBoard()` để cập nhật bảng Kanban tức thời, loại bỏ triệt để tình trạng sinh thẻ thừa.
 
 ---
 
@@ -515,6 +614,10 @@ Tuân thủ nghiêm ngặt **Rule 15 (Giới hạn tối đa 3 - 4 State trong 1
   - `InternQuizResultPage.tsx` (Tạo mới: Đối soát kết quả & lời giải chi tiết)
   - `InternQuizResultPage.module.css` (Tạo mới)
   - `components/SubmitConfirmModal/` (Modal xác nhận nộp bài)
+- `src/pages/intern/missions/` (Chỉnh sửa: Hỗ trợ chuyển thẻ Quiz sang cột Hoàn thành trên Kanban của TTS)
+  - `components/InternTaskCard/InternTaskCard.tsx` (Bổ sung nút "Hoàn thành" & "Mở lại làm tiếp" cho task Quiz)
+  - `components/TaskDetailModal/` (Bổ sung nút "Hoàn thành nhiệm vụ" trong modal chi tiết task Quiz)
+  - `InternMissionPage.tsx` (Liên kết callback `onCompleteDirectly` đồng bộ trạng thái `COMPLETED`)
 - `src/App.tsx` (Chỉnh sửa: Đăng ký các routes `/intern/quizzes`, `/intern/quizzes/:assignmentId/take`, `/intern/quizzes/submissions/:submissionId`)
 
 ---
@@ -529,6 +632,7 @@ Tuân thủ nghiêm ngặt **Rule 15 (Giới hạn tối đa 3 - 4 State trong 1
 - [ ] **AC-5 (Chấm điểm All-or-Nothing):** Với câu hỏi nhiều đáp án, nếu chọn thiếu hoặc thừa thì câu đó nhận 0 điểm; chọn đúng và đủ nhận trọn vẹn điểm câu.
 - [ ] **AC-6 (Mở khóa đáp án sau khi nộp):** Sau khi nộp bài thành công, màn hình kết quả hiển thị điểm số, huy hiệu Đạt/Chưa đạt, và mở khóa đầy đủ đáp án đúng kèm lời giải thích chi tiết.
 - [ ] **AC-7 (Chặn làm quá số lần):** Khi TTS đã hết số lượt thi cho phép (`attemptCount >= maxAttempts`), nút làm bài bị khóa và thông báo rõ ràng.
+- [ ] **AC-8 (Đồng bộ & Chuyển cột Kanban cho Quiz):** Sau khi TTS hoàn thành nộp bài Quiz, thẻ nhiệm vụ Kanban tự động chuyển sang cột "Hoàn thiện" (`COMPLETED`) kèm điểm số. TTS cũng có thể chủ động bấm nút "Hoàn thành" trên thẻ hoặc modal chi tiết khi đang ở trạng thái `IN_PROGRESS`.
 
 ### 11.2. Tiêu chí nghiệm thu kỹ thuật & UX/UI (Non-Functional Criteria)
 - [ ] 100% màu sắc dùng CSS Variables từ `src/index.css`, không hardcode mã Hex.

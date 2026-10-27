@@ -60,7 +60,7 @@ export const MentorFinalEvaluationTab: React.FC<MentorFinalEvaluationTabProps> =
         const session = await aiInterviewService.getCandidateInterviewSession({
           email: '', // Backend fallback search by candidateId/code
         });
-        if (session?.sessionId) {
+        if (session?.sessionId && session.status === 'COMPLETED') {
           const dossier = await aiInterviewService.getEvaluationDossier(session.sessionId);
           setAiDossier(dossier);
           // Gợi ý tự động điền nếu đây là lần đầu mở form chưa lưu

@@ -11,5 +11,6 @@ export interface MissionKanbanBoardProps {
   onStatusChange: (itemId: number, newStatus: MissionItemStatus) => void;
   onDropItem?: (itemId: number, targetStatus: MissionItemStatus) => void;
   onQuickAdd?: (title: string) => Promise<boolean>;
+  onViewQuizDetail?: (item: MissionItemResponse) => void;
   className?: string;
 }

@@ -166,6 +166,7 @@ export interface QuizTakingResponse {
   attemptNumber: number;
   maxAttempts: number;
   startedAt: string;
+  remainingSeconds?: number;
   questions: QuizTakingQuestionResponse[];
 }
 
@@ -213,12 +214,14 @@ export interface QuizAssignmentResponse {
   totalQuestions: number;
   totalPoints: number;
   maxAttempts: number;
-  attemptsUsed: number;
+  attemptsUsed?: number;
+  attemptsTaken?: number;
   highestScore?: number | null;
   passed?: boolean | null;
   dueDate: string;
   status: AssignmentStatus;
   missionItemId?: number | null;
+  latestSubmissionId?: number | null;
 }
 
 export interface QuizInternReportDto {
@@ -227,6 +230,9 @@ export interface QuizInternReportDto {
   fullName: string;
   email: string;
   groupName?: string;
+  assignmentId?: number;
+  submissionId?: number | null;
+  latestSubmissionId?: number | null;
   attemptsCount: number;
   highestScore?: number | null;
   totalPoints: number;
@@ -243,3 +249,20 @@ export interface QuizReportResponse {
   averageScore: number;
   internReports: QuizInternReportDto[];
 }
+
+export interface QuizGenerationJobResponse {
+  jobId: string;
+  programId: number;
+  topic?: string;
+  difficulty?: string;
+  questionCount?: number;
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'NOT_FOUND';
+  percent: number;
+  currentStage?: string;
+  quizId?: number;
+  result?: QuizDetailResponse;
+  errorMessage?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

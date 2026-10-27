@@ -6,5 +6,6 @@ export interface TaskDetailModalProps {
   item: MissionItemResponse | null;
   onStartProgress?: (item: MissionItemResponse) => void;
   onOpenSubmission?: (item: MissionItemResponse) => void;
+  onCompleteDirectly?: (item: MissionItemResponse) => void;
   onReopen?: (item: MissionItemResponse) => void;
 }

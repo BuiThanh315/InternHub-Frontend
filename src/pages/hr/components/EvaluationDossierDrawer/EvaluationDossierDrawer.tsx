@@ -56,8 +56,10 @@ export const EvaluationDossierModal: React.FC<EvaluationDossierModalProps> = ({
         setExpandedQId(data.answers[0].questionId);
       }
     } catch (err: any) {
-      console.error('Không thể tải phiếu đánh giá:', err);
-      const msg = err.response?.data?.message || err.message || 'Lỗi kết nối máy chủ.';
+      const msg =
+        err.response?.status === 404
+          ? 'Phiên phỏng vấn này chưa có kết quả đánh giá (ứng viên chưa hoàn thành bài thi hoặc phiên thi đã hết hạn).'
+          : err.response?.data?.message || err.message || 'Lỗi kết nối máy chủ.';
       setErrorMessage(msg);
     } finally {
       setLoading(false);

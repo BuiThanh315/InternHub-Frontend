@@ -224,6 +224,10 @@ export const CandidateWorkspaceModal: React.FC<CandidateWorkspaceModalProps> = (
       toast.info('Ứng viên chưa có phiên phỏng vấn AI hợp lệ.');
       return;
     }
+    if (interviewSession.status !== 'COMPLETED') {
+      toast.info(`Phiên phỏng vấn AI hiện ở trạng thái "${interviewSession.status}" và chưa có kết quả đánh giá.`);
+      return;
+    }
     try {
       setIsLoadingDossier(true);
       const data = await aiInterviewService.getEvaluationDossier(interviewSession.sessionId);
@@ -790,7 +794,13 @@ export const CandidateWorkspaceModal: React.FC<CandidateWorkspaceModalProps> = (
                   <div>
                     <p className="text-xs text-slate-700 font-semibold mb-1">
                       {interviewSession
-                        ? `Trạng thái phiên: ${interviewSession.status}`
+                        ? `Trạng thái phiên: ${
+                            interviewSession.status === 'EXPIRED'
+                              ? 'Hết hạn (EXPIRED)'
+                              : interviewSession.status === 'COMPLETED'
+                              ? 'Đã hoàn thành (COMPLETED)'
+                              : interviewSession.status
+                          }`
                         : 'Chưa có phiên phỏng vấn AI được kích hoạt'}
                     </p>
                     <p className="text-xs text-slate-500">
@@ -811,14 +821,27 @@ export const CandidateWorkspaceModal: React.FC<CandidateWorkspaceModalProps> = (
                             fullName: candidate.fullName,
                           });
                         }}
-                        title="Đóng popup hiện tại và mở lịch mời phỏng vấn AI"
+                        title={
+                          interviewSession?.status === 'EXPIRED' || interviewSession?.status === 'CANCELLED'
+                            ? 'Phiên thi trước đã hết hạn/hủy. Bấm để mở lịch tạo phiên phỏng vấn AI mới cho ứng viên'
+                            : 'Đóng popup hiện tại và mở lịch mời phỏng vấn AI'
+                        }
                       >
-                        <Calendar size={14} />
-                        <span>Mời Phỏng Vấn AI</span>
+                        {interviewSession?.status === 'EXPIRED' || interviewSession?.status === 'CANCELLED' ? (
+                          <>
+                            <RotateCw size={14} className="text-amber-600" />
+                            <span>Mời Phỏng Vấn Lại</span>
+                          </>
+                        ) : (
+                          <>
+                            <Calendar size={14} />
+                            <span>Mời Phỏng Vấn AI</span>
+                          </>
+                        )}
                       </button>
                     )}
 
-                    {interviewSession?.sessionId && (
+                    {interviewSession?.sessionId && interviewSession.status === 'COMPLETED' ? (
                       <button
                         type="button"
                         className="btn btn-sm btn-primary flex items-center gap-1.5"
@@ -835,7 +858,16 @@ export const CandidateWorkspaceModal: React.FC<CandidateWorkspaceModalProps> = (
                             : 'Xem Phiếu Đánh Giá AI'}
                         </span>
                       </button>
-                    )}
+                    ) : interviewSession?.sessionId ? (
+                      <span className="text-xs text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 inline-flex items-center gap-1">
+                        <AlertTriangle size={13} className="text-amber-600 flex-shrink-0" />
+                        <span>
+                          {interviewSession.status === 'EXPIRED'
+                            ? 'Phiên thi đã hết hạn - Chưa có điểm'
+                            : `Đang chờ thi (${interviewSession.status})`}
+                        </span>
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>

@@ -14,6 +14,7 @@ export const MissionKanbanBoard: React.FC<MissionKanbanBoardProps> = ({
   onStatusChange,
   onDropItem,
   onQuickAdd,
+  onViewQuizDetail,
   className = '',
 }) => {
   return (
@@ -30,6 +31,7 @@ export const MissionKanbanBoard: React.FC<MissionKanbanBoardProps> = ({
         onStatusChange={onStatusChange}
         onDropItem={onDropItem}
         onQuickAdd={onQuickAdd}
+        onViewQuizDetail={onViewQuizDetail}
       />
 
       {/* Cột 2: Đang làm (IN_PROGRESS) */}
@@ -43,6 +45,7 @@ export const MissionKanbanBoard: React.FC<MissionKanbanBoardProps> = ({
         onDeleteItem={onDeleteItem}
         onStatusChange={onStatusChange}
         onDropItem={onDropItem}
+        onViewQuizDetail={onViewQuizDetail}
       />
 
       {/* Cột 3: Hoàn thiện (COMPLETED) */}
@@ -56,6 +59,7 @@ export const MissionKanbanBoard: React.FC<MissionKanbanBoardProps> = ({
         onDeleteItem={onDeleteItem}
         onStatusChange={onStatusChange}
         onDropItem={onDropItem}
+        onViewQuizDetail={onViewQuizDetail}
       />
     </div>
   );

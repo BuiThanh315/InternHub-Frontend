@@ -236,3 +236,52 @@
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0);
   }
 }
+
+/* Phân hệ Quiz AI trên thẻ Kanban TM-104 */
+.quizCardSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  background: var(--bg-surface-alt, #F8FAFC);
+  border: 1px solid var(--border-subtle, #E2E8F0);
+  border-radius: var(--radius-sm, 6px);
+  margin-top: 0.15rem;
+}
+
+.quizAiBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 0.125rem 0.4rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.quizInspectBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #0284C7;
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quizInspectBtn:hover {
+  background: #0284C7;
+  color: #FFFFFF;
+  border-color: #0284C7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}

@@ -57,8 +57,12 @@
        - Nút bấm: "Quét thẩm định AI ngay" (nếu chưa quét hoặc muốn thẩm định lại).
      - **Tab 3: 🎙️ Phỏng vấn AI (AI Interview Service):**
        - Sinh / Xem bộ câu hỏi phỏng vấn AI theo hồ sơ ứng viên.
-       - Nút bấm: "Mời phỏng vấn AI trực tuyến" (mở modal lên lịch).
-       - Phiếu đánh giá phỏng vấn AI (nếu ứng viên đã hoàn thành buổi phỏng vấn).
+       - Nút bấm ngữ cảnh:
+         + Khi chưa có phiên thi: Hiển thị nút **"Mời Phỏng Vấn AI"**.
+         + Khi phiên thi đã `EXPIRED` hoặc `CANCELLED`: Tự động chuyển thành nút **"Mời Phỏng Vấn Lại"** (Re-invite), mở modal lên lịch thi mới với thông tin ứng viên được điền sẵn.
+       - Phiếu đánh giá phỏng vấn AI:
+         + **Chặn lỗi 404:** Chỉ gọi API lấy điểm và hiển thị nút "Xem Phiếu Đánh Giá AI" khi `session.status === 'COMPLETED'`.
+         + Khi phiên chưa hoàn thành (`EXPIRED`, `IN_PROGRESS`...): Hiển thị badge trạng thái thân thiện, không gửi request vô ích tới `/evaluation`.
   4. **Footer:** Các thông tin metadata thời gian tạo, cập nhật lần cuối.
 
 ### 2.2. Tinh giản bảng dữ liệu `ApplicationsTab.tsx`

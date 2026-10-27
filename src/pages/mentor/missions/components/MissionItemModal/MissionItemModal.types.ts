@@ -11,6 +11,7 @@ export interface MissionItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateMissionItemRequest) => Promise<boolean>;
+  onRefreshBoard?: () => void;
   programInterns: AssigneeResponse[];
   groups?: InternGroup[];
   internWorkloadMap?: Record<number, number>;
@@ -19,4 +20,5 @@ export interface MissionItemModalProps {
   editingItem?: MissionItemResponse | null;
   defaultStatus?: string;
   isLoading?: boolean;
+  programId?: number;
 }

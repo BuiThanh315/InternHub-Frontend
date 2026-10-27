@@ -8,3 +8,4 @@ export * from './MissionItemModal';
 export * from './DeleteConfirmModal';
 export * from './MentorProgramHub';
 export * from './MentorProgramWorkspace';
+export * from './KanbanQuizInspectorModal';
