@@ -12,9 +12,8 @@ import {
   FileCheck,
   Check,
   X,
-  Loader2,
 } from 'lucide-react';
-import { Button } from '../../../../components/common';
+import { Button, Skeleton } from '../../../../components/common';
 import { formatDate } from '../../../../utils/formatters';
 import { quizService } from '../../../../services/quizService';
 import { QUIZ_ROUTES } from '../../../../constants/routes/quiz.routes';
@@ -73,9 +72,17 @@ export const InternQuizResultPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={styles.loadingBox}>
-        <Loader2 size={36} className="animate-spin" style={{ color: 'var(--primary)' }} />
-        <p>Đang tải kết quả bài thi và phân tích từ AI...</p>
+      <div className={styles.container}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <Skeleton height="140px" style={{ borderRadius: '16px' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            <Skeleton height="90px" style={{ borderRadius: '12px' }} />
+            <Skeleton height="90px" style={{ borderRadius: '12px' }} />
+            <Skeleton height="90px" style={{ borderRadius: '12px' }} />
+          </div>
+          <Skeleton height="260px" style={{ borderRadius: '16px' }} />
+          <Skeleton height="180px" style={{ borderRadius: '16px' }} />
+        </div>
       </div>
     );
   }

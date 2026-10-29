@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import { toast } from 'sonner';
 import { API_ENDPOINTS } from '../constants/endpoints';
 import type {
   ContractResponse,
@@ -289,7 +290,7 @@ export const contractService = {
       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
     } catch (err: any) {
       console.error('Lỗi khi xem hợp đồng:', err);
-      alert(err.response?.data?.message || err.message || 'Không thể xem tệp hợp đồng này.');
+      toast.error(err.response?.data?.message || err.message || 'Không thể xem tệp hợp đồng này.');
     }
   },
 
@@ -314,7 +315,7 @@ export const contractService = {
       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
     } catch (err: any) {
       console.error('Lỗi khi tải hợp đồng:', err);
-      alert(err.response?.data?.message || err.message || 'Không thể tải tệp hợp đồng này.');
+      toast.error(err.response?.data?.message || err.message || 'Không thể tải tệp hợp đồng này.');
     }
   },
 };

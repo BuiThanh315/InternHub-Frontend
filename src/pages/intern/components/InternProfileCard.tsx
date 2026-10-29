@@ -1,7 +1,7 @@
 import React from 'react';
 import { User as UserIcon } from 'lucide-react';
 import type { InternProfile } from '../../../types';
-import { formatDate } from '../../../utils/formatters';
+import { formatDate, getInternStatusLabel } from '../../../utils/formatters';
 import styles from './InternProfileCard.module.css';
 
 interface InternProfileCardProps {
@@ -30,7 +30,7 @@ export const InternProfileCard: React.FC<InternProfileCardProps> = React.memo(({
       <div className="card">
         <div className={styles.header}>
           <h4 className={styles.title}>Thông Tin Cá Nhân & Học Vấn</h4>
-          <span className={`badge ${getBadgeClass(profile.status)}`}>{profile.status}</span>
+          <span className={`badge ${getBadgeClass(profile.status)}`}>{getInternStatusLabel(profile.status)}</span>
         </div>
 
         <div className={styles.infoGrid}>

@@ -8,6 +8,8 @@ import {
   type PromptTemplateData,
   type PreviewPromptTemplateResponse,
 } from '../../services/aiService';
+import { ConfirmModal } from '../../components/common/Modal/ConfirmModal';
+import { toast } from 'sonner';
 import styles from './AiSettingsPage.module.css';
 
 export const AiSettingsPage: React.FC = () => {
@@ -69,6 +71,8 @@ export const AiSettingsPage: React.FC = () => {
   const [editKeyPriority, setEditKeyPriority] = useState<number>(1);
   const [editKeyStatus, setEditKeyStatus] = useState<string>('ACTIVE');
   const [savingEditKey, setSavingEditKey] = useState(false);
+  const [deleteVaultTarget, setDeleteVaultTarget] = useState<{ id: number; keyName: string } | null>(null);
+  const [deletingVaultKey, setDeletingVaultKey] = useState(false);
 
   // Realtime countdown ticker: Giảm cooldownSecondsRemaining mỗi giây
   useEffect(() => {
@@ -433,19 +437,28 @@ export const AiSettingsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteVaultKey = async (id: number, keyName: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa khóa "${keyName}" khỏi Kho Khóa API?`)) {
-      return;
-    }
+  const handleDeleteVaultKey = (id: number, keyName: string) => {
+    setDeleteVaultTarget({ id, keyName });
+  };
+
+  const handleConfirmDeleteVaultKey = async () => {
+    if (!deleteVaultTarget) return;
     setErrorBanner(null);
     setSuccessBanner(null);
     try {
-      await aiService.deleteVaultKey(id);
-      setSuccessBanner(`Đã xóa khóa "${keyName}" thành công.`);
+      setDeletingVaultKey(true);
+      await aiService.deleteVaultKey(deleteVaultTarget.id);
+      setSuccessBanner(`Đã xóa khóa "${deleteVaultTarget.keyName}" thành công.`);
+      toast.success(`Đã xóa khóa "${deleteVaultTarget.keyName}" thành công.`);
+      setDeleteVaultTarget(null);
       await fetchVaultKeys();
     } catch (err: any) {
       console.error('[AiSettingsPage] Lỗi xóa vault key:', err);
-      setErrorBanner(err.response?.data?.message || err.message || 'Không thể xóa khóa API.');
+      const msg = err.response?.data?.message || err.message || 'Không thể xóa khóa API.';
+      setErrorBanner(msg);
+      toast.error(msg);
+    } finally {
+      setDeletingVaultKey(false);
     }
   };
 
@@ -1578,6 +1591,18 @@ export const AiSettingsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={deleteVaultTarget !== null}
+        title="Xác nhận xóa khóa API"
+        message={`Bạn có chắc chắn muốn xóa khóa "${deleteVaultTarget?.keyName || ''}" khỏi Kho Khóa API? Các tính năng sử dụng khóa này có thể bị gián đoạn nếu không có khóa dự phòng.`}
+        confirmText="Xóa khóa API"
+        cancelText="Hủy bỏ"
+        variant="danger"
+        isLoading={deletingVaultKey}
+        onConfirm={handleConfirmDeleteVaultKey}
+        onClose={() => setDeleteVaultTarget(null)}
+      />
     </div>
   );
 };

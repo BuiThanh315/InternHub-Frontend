@@ -10,6 +10,7 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { ConfirmModal } from "../../../components/common";
 import { Header } from "../../../components/layout/Header";
+import { toast } from "sonner";
 import { useAuth } from "../../../contexts/AuthContext";
 import { groupService } from "../../../services/groupService";
 import { internService } from "../../../services/internService";
@@ -110,7 +111,7 @@ export const HrProgramManagementPage: React.FC = () => {
       setSuccessToast("Đã lưu và áp dụng phân bổ nhóm thành công!");
       fetchPrograms();
     } catch (err: any) {
-      alert(
+      toast.error(
         err.response?.data?.message ||
           err.message ||
           "Lỗi khi áp dụng chia nhóm",
@@ -128,7 +129,7 @@ export const HrProgramManagementPage: React.FC = () => {
       setSuccessToast("Đã giải tán nhóm thành công");
       fetchPrograms();
     } catch (err: any) {
-      alert(
+      toast.error(
         err.response?.data?.message || err.message || "Lỗi khi giải tán nhóm",
       );
     } finally {
@@ -242,7 +243,7 @@ export const HrProgramManagementPage: React.FC = () => {
       );
       void fetchPrograms();
     } catch (err: any) {
-      alert(
+      toast.error(
         err.response?.data?.message ||
           err.message ||
           "Không thể thay đổi trạng thái nhận hồ sơ.",
@@ -269,7 +270,7 @@ export const HrProgramManagementPage: React.FC = () => {
       fetchPrograms();
       fetchPendingCounts();
     } catch (err: any) {
-      alert(
+      toast.error(
         err.response?.data?.message ||
           err.message ||
           "Không thể xóa chương trình.",

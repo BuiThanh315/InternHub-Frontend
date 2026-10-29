@@ -8,6 +8,7 @@ import { MentorFinalEvaluationTab } from './MentorFinalEvaluationTab';
 import { documentService } from '../../../services/documentService';
 import { meetingService } from '../../../services/meetingService';
 import { Button } from '../../../components/common/Button/Button';
+import { getInternStatusLabel } from '../../../utils/formatters';
 import styles from './MentorInternDetailDrawer.module.css';
 
 export interface MentorInternDetailModalProps {
@@ -292,7 +293,7 @@ export const MentorInternDetailModal: React.FC<MentorInternDetailModalProps> = (
                   <span className={styles.profileLabel}>Trạng thái hiện tại:</span>
                   <div className={styles.profileValue}>
                     <span className={`badge ${intern.status === 'INTERNING' ? 'badge-success' : 'badge-warning'}`}>
-                      {intern.status}
+                      {getInternStatusLabel(intern.status)}
                     </span>
                   </div>
                 </div>

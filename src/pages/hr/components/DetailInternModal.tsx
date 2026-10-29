@@ -17,11 +17,21 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { InternProfile, DocumentResponse, ContractResponse, MentorAssignmentResponse } from '../../../types';
-import { Modal, Button } from '../../../components/common';
+import { Modal, Button, Skeleton } from '../../../components/common';
 import { documentService } from '../../../services/documentService';
 import { internService } from '../../../services/internService';
 import { contractService } from '../../../services/contractService';
-import { formatFileSize, formatDateTime, formatPhoneNumber, formatDate, formatCurrency, getContractStatusLabel } from '../../../utils/formatters';
+import {
+  formatFileSize,
+  formatDateTime,
+  formatPhoneNumber,
+  formatDate,
+  formatCurrency,
+  getContractStatusLabel,
+  getInternStatusLabel,
+  getDocumentStatusLabel,
+  getDocumentTypeLabel,
+} from '../../../utils/formatters';
 import { AiScreeningDossierTab } from './AiScreeningDossierTab';
 import { AiInterviewEvaluationTab } from './AiInterviewEvaluationTab';
 
@@ -288,7 +298,7 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className={`badge ${getBadgeClass(intern.status)}`}>
-                {intern.status}
+                {getInternStatusLabel(intern.status)}
               </span>
               <button
                 type="button"
@@ -602,7 +612,7 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
                           {doc.originalFileName || doc.fileName}
                         </div>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {doc.documentType} • {formatFileSize(doc.fileSize)} • Trạng thái: {doc.status}
+                          {getDocumentTypeLabel(doc.documentType)} • {formatFileSize(doc.fileSize)} • Trạng thái: {getDocumentStatusLabel(doc.status)}
                         </span>
                       </div>
                     </div>
@@ -798,8 +808,9 @@ export const DetailInternModal: React.FC<DetailInternModalProps> = ({
           </div>
 
           {contractState.loading ? (
-            <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              Đang tải danh sách hợp đồng...
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', padding: '0.5rem 0' }}>
+              <Skeleton width="100%" height="52px" style={{ borderRadius: '8px' }} />
+              <Skeleton width="100%" height="52px" style={{ borderRadius: '8px' }} />
             </div>
           ) : contractState.list.length === 0 ? (
             <div

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Briefcase } from 'lucide-react';
 import type { InternProfile } from '../../../../types';
+import { getInternStatusLabel } from '../../../../utils/formatters';
 import styles from './Workspaces.module.css';
 
 interface WorkspaceHeaderProps {
@@ -50,7 +51,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
                 const pid = p.programId ?? p.id;
                 return (
                   <option key={p.id} value={pid}>
-                    {p.programName || `Kỳ #${p.programCode || pid}`} ({p.status})
+                    {p.programName || `Kỳ #${p.programCode || pid}`} ({getInternStatusLabel(p.status)})
                   </option>
                 );
               })}

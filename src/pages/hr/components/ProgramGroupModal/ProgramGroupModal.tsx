@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import type { InternProfile } from '../../../../types/intern.types';
 import type { InternGroup, BatchGroupItem } from '../../../../types/group.types';
+import { ConfirmModal } from '../../../../components/common/Modal/ConfirmModal';
+import { toast } from 'sonner';
 import styles from './ProgramGroupModal.module.css';
 
 interface ProgramGroupModalProps {
@@ -63,6 +65,8 @@ export const ProgramGroupModal: React.FC<ProgramGroupModalProps> = ({
   const [numPerGroup, setNumPerGroup] = useState<number>(4);
   const [numGroups, setNumGroups] = useState<number>(3);
   const [namePrefix] = useState<string>('Nhóm ');
+  const [disbandTargetGroup, setDisbandTargetGroup] = useState<LocalGroup | null>(null);
+  const [isDisbanding, setIsDisbanding] = useState<boolean>(false);
 
   // State các nhóm trên Kanban Preview
   const [groups, setGroups] = useState<LocalGroup[]>(() => {
@@ -110,7 +114,7 @@ export const ProgramGroupModal: React.FC<ProgramGroupModalProps> = ({
   // Thuật toán Round-Robin CHỈ chia cho danh sách ungroupedInterns (BR-1)
   const handleAutoSplit = () => {
     if (ungroupedInterns.length === 0) {
-      alert('Tất cả thực tập sinh trong chương trình này đã được xếp nhóm.');
+      toast.info('Tất cả thực tập sinh trong chương trình này đã được xếp nhóm.');
       return;
     }
 
@@ -145,6 +149,7 @@ export const ProgramGroupModal: React.FC<ProgramGroupModalProps> = ({
     });
 
     setGroups((prev) => [...prev, ...newCreatedGroups]);
+    toast.success(`Đã tự động chia ${available.length} thực tập sinh vào ${targetGroupCount} nhóm.`);
   };
 
   const handleAddEmptyGroup = () => {
@@ -162,13 +167,25 @@ export const ProgramGroupModal: React.FC<ProgramGroupModalProps> = ({
 
   const handleRemoveGroup = async (group: LocalGroup) => {
     if (group.dbId) {
-      if (window.confirm(`Giải tán "${group.name}"? Tất cả thành viên sẽ trở về trạng thái chưa có nhóm.`)) {
-        await onDisbandGroup(group.dbId);
-        setGroups((prev) => prev.filter((g) => g.id !== group.id));
-      }
+      setDisbandTargetGroup(group);
     } else {
       // Nhóm mới tạo ở local state
       setGroups((prev) => prev.filter((g) => g.id !== group.id));
+    }
+  };
+
+  const handleConfirmDisband = async () => {
+    if (!disbandTargetGroup || !disbandTargetGroup.dbId) return;
+    try {
+      setIsDisbanding(true);
+      await onDisbandGroup(disbandTargetGroup.dbId);
+      setGroups((prev) => prev.filter((g) => g.id !== disbandTargetGroup.id));
+      toast.success(`Đã giải tán "${disbandTargetGroup.name}" thành công.`);
+      setDisbandTargetGroup(null);
+    } catch (err: any) {
+      toast.error('Lỗi khi giải tán nhóm: ' + (err.message || 'Lỗi hệ thống'));
+    } finally {
+      setIsDisbanding(false);
     }
   };
 
@@ -228,7 +245,7 @@ export const ProgramGroupModal: React.FC<ProgramGroupModalProps> = ({
     // Chỉ gửi các nhóm mới tạo cần apply
     const newGroupsToApply = groups.filter((g) => !g.dbId);
     if (newGroupsToApply.length === 0) {
-      alert('Không có nhóm mới nào cần lưu.');
+      toast.warning('Không có nhóm mới nào cần lưu.');
       return;
     }
 
@@ -488,6 +505,18 @@ export const ProgramGroupModal: React.FC<ProgramGroupModalProps> = ({
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={!!disbandTargetGroup}
+        title="Xác nhận giải tán nhóm"
+        message={`Bạn có chắc chắn muốn giải tán "${disbandTargetGroup?.name || ''}"? Tất cả thành viên sẽ trở về trạng thái chưa có nhóm.`}
+        confirmText="Giải tán nhóm"
+        cancelText="Hủy bỏ"
+        variant="danger"
+        isLoading={isDisbanding}
+        onConfirm={handleConfirmDisband}
+        onClose={() => setDisbandTargetGroup(null)}
+      />
     </div>
   );
 };

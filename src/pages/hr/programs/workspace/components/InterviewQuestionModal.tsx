@@ -98,9 +98,9 @@ export const InterviewQuestionModal: React.FC<InterviewQuestionModalProps> = ({
       let text = `==============================\n${activeSet.title.toUpperCase()}\n${scopeLabel}\n==============================\n\n`;
 
       const categories = [
-        { key: 'TECHNICAL_FOUNDATION', title: 'I. KIẾN THỨC NỀN TẢNG (TECHNICAL FOUNDATION)' },
-        { key: 'PROJECT_DEEP_DIVE', title: 'II. ĐÀO SÂU DỰ ÁN KHAI BÁO (PROJECT DEEP-DIVE)' },
-        { key: 'BEHAVIORAL_AND_CULTURE_FIT', title: 'III. VĂN HÓA & KỸ NĂNG MỀM (BEHAVIORAL & CULTURE FIT)' },
+        { key: 'TECHNICAL_FOUNDATION', title: 'I. KIẾN THỨC NỀN TẢNG' },
+        { key: 'PROJECT_DEEP_DIVE', title: 'II. ĐÀO SÂU DỰ ÁN THỰC TẾ' },
+        { key: 'BEHAVIORAL_AND_CULTURE_FIT', title: 'III. VĂN HÓA & KỸ NĂNG MỀM' },
       ];
 
       categories.forEach((cat) => {
@@ -431,7 +431,7 @@ export const InterviewQuestionModal: React.FC<InterviewQuestionModalProps> = ({
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                 }`}
               >
-                #{s.id} ({s.questions.length} câu - {s.status})
+                #{s.id} ({s.questions.length} câu - {s.status === 'FINALIZED' ? 'Chính thức' : 'Bản nháp'})
               </button>
             ))}
           </div>
@@ -477,7 +477,7 @@ export const InterviewQuestionModal: React.FC<InterviewQuestionModalProps> = ({
               </label>
 
               <div className="text-xs font-medium text-slate-500 border-l border-slate-200 pl-3">
-                Trạng thái: <strong className={activeSet.status === 'FINALIZED' ? 'text-emerald-600' : 'text-amber-600'}>{activeSet.status}</strong>
+                Trạng thái: <strong className={activeSet.status === 'FINALIZED' ? 'text-emerald-600' : 'text-amber-600'}>{activeSet.status === 'FINALIZED' ? 'Đã chốt chính thức' : 'Bản nháp'}</strong>
               </div>
             </div>
           </div>

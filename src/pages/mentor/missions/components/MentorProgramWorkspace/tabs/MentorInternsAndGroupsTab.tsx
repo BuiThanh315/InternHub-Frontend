@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Users, FolderKanban, Plus, CheckCircle, AlertTriangle } from 'lucide-react';
-import { SearchBar, Select, Button, Pagination } from '../../../../../../components/common';
+import { SearchBar, Select, Button, Pagination, Skeleton } from '../../../../../../components/common';
 import { getAvatarUrl } from '../../../../../../utils/avatar';
 import type { MentorInternsAndGroupsTabProps } from './MentorInternsAndGroupsTab.types';
 import styles from './MentorInternsAndGroupsTab.module.css';
@@ -200,7 +200,28 @@ export const MentorInternsAndGroupsTab: React.FC<MentorInternsAndGroupsTabProps>
               </tr>
             </thead>
             <tbody>
-              {paginatedInterns.length === 0 ? (
+              {isLoading ? (
+                [1, 2, 3, 4, 5].map((idx) => (
+                  <tr key={`interns-skel-${idx}`}>
+                    <td><Skeleton width="24px" height="16px" /></td>
+                    <td>
+                      <div className={styles.internCell}>
+                        <Skeleton width="36px" height="36px" variant="circular" />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <Skeleton width="120px" height="16px" />
+                          <Skeleton width="80px" height="12px" />
+                        </div>
+                      </div>
+                    </td>
+                    <td><Skeleton width="160px" height="16px" /></td>
+                    <td><Skeleton width="100px" height="24px" style={{ borderRadius: '12px' }} /></td>
+                    <td><Skeleton width="120px" height="24px" style={{ borderRadius: '6px' }} /></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <Skeleton width="80px" height="28px" style={{ borderRadius: '6px' }} />
+                    </td>
+                  </tr>
+                ))
+              ) : paginatedInterns.length === 0 ? (
                 <tr>
                   <td colSpan={6} className={styles.emptyTableRow}>
                     {programInterns.length === 0
@@ -255,6 +276,7 @@ export const MentorInternsAndGroupsTab: React.FC<MentorInternsAndGroupsTabProps>
                           className={styles.quickAssignBtn}
                           onClick={() => onAssignTaskToIntern(intern.id)}
                           title={`Giao công việc trực tiếp cho ${intern.fullName}`}
+                          aria-label={`Giao công việc trực tiếp cho ${intern.fullName} (${intern.internCode})`}
                         >
                           <Plus size={13} /> Giao task
                         </button>

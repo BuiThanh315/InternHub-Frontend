@@ -11,10 +11,12 @@ import {
 } from 'lucide-react';
 import { assessmentService } from '../../../services/assessmentService';
 import { programService } from '../../../services/programService';
+import { toast } from 'sonner';
 import type { HrEvaluationSummaryItem } from '../../../types/assessment.types';
 import type { ProgramDetailResponse } from '../../../types/program.types';
 import { ApproveEvaluationModal } from './components/ApproveEvaluationModal';
 import { InternshipTranscriptPrintView } from './components/InternshipTranscriptPrintView';
+import { Skeleton } from '../../../components/common/Skeleton';
 import styles from './HrEvaluationManagementPage.module.css';
 
 type StatusFilterTab = 'ALL' | 'PENDING_HR' | 'APPROVED' | 'INCOMPLETE';
@@ -154,11 +156,12 @@ export const HrEvaluationManagementPage: React.FC = () => {
     try {
       setIsApproving(true);
       await assessmentService.hrApproveEvaluation(internCode, payload);
+      toast.success('Đã phê duyệt đánh giá thực tập sinh thành công!');
       setSelectedInternForApprove(null);
       await fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Lỗi khi phê duyệt đánh giá:', error);
-      alert('Không thể phê duyệt đánh giá. Vui lòng kiểm tra kết nối mạng hoặc thử lại.');
+      toast.error(error.response?.data?.message || error.message || 'Không thể phê duyệt đánh giá. Vui lòng kiểm tra kết nối mạng hoặc thử lại.');
     } finally {
       setIsApproving(false);
     }
@@ -373,9 +376,40 @@ export const HrEvaluationManagementPage: React.FC = () => {
       {/* Main Table */}
       <div className={styles.tableCard}>
         {loading ? (
-          <div className={styles.loadingSpinner}>
-            <Clock size={28} className="animate-spin text-primary" />
-            <span>Đang tải danh sách đánh giá thực tập...</span>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{ width: '40px', textAlign: 'center' }}>
+                    <Skeleton variant="rectangular" width="16px" height="16px" />
+                  </th>
+                  <th>Thực tập sinh</th>
+                  <th>Chương trình</th>
+                  <th>Điểm Mentor</th>
+                  <th>Điểm Quiz</th>
+                  <th>Điểm Cuối kỳ</th>
+                  <th>Trạng thái</th>
+                  <th style={{ textAlign: 'right' }}>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i}>
+                    <td style={{ textAlign: 'center' }}><Skeleton variant="rectangular" width="16px" height="16px" /></td>
+                    <td>
+                      <Skeleton variant="text" width="140px" height="18px" />
+                      <div style={{ marginTop: '4px' }}><Skeleton variant="text" width="90px" height="14px" /></div>
+                    </td>
+                    <td><Skeleton variant="text" width="160px" height="18px" /></td>
+                    <td><Skeleton variant="text" width="60px" height="18px" /></td>
+                    <td><Skeleton variant="text" width="60px" height="18px" /></td>
+                    <td><Skeleton variant="text" width="70px" height="18px" /></td>
+                    <td><Skeleton variant="rectangular" width="90px" height="24px" /></td>
+                    <td style={{ textAlign: 'right' }}><Skeleton variant="rectangular" width="80px" height="30px" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className={styles.emptyState}>
@@ -395,6 +429,7 @@ export const HrEvaluationManagementPage: React.FC = () => {
                       onChange={handleToggleSelectAll}
                       disabled={approvedInFiltered.length === 0}
                       title="Chọn tất cả hồ sơ ĐÃ PHÊ DUYỆT"
+                      aria-label="Chọn tất cả hồ sơ đã phê duyệt"
                     />
                   </th>
                   <th>Thực tập sinh</th>
@@ -425,6 +460,7 @@ export const HrEvaluationManagementPage: React.FC = () => {
                               ? 'Tích chọn để xuất PDF hàng loạt'
                               : 'Chỉ có thể chọn các hồ sơ ĐÃ PHÊ DUYỆT'
                           }
+                          aria-label={`Chọn hồ sơ của ${item.internName} (${item.internCode})`}
                         />
                       </td>
 
@@ -465,6 +501,7 @@ export const HrEvaluationManagementPage: React.FC = () => {
                               type="button"
                               className={styles.btnPrimary}
                               onClick={() => setSelectedInternForApprove(item)}
+                              aria-label={`Ký duyệt đánh giá của ${item.internName}`}
                             >
                               <Award size={14} /> Ký Duyệt
                             </button>
@@ -477,6 +514,7 @@ export const HrEvaluationManagementPage: React.FC = () => {
                                 className={styles.btnSecondary}
                                 onClick={() => setSelectedInternForApprove(item)}
                                 title="Xem lại chi tiết phê duyệt"
+                                aria-label={`Xem lại chi tiết phê duyệt của ${item.internName}`}
                               >
                                 Chi tiết
                               </button>
@@ -486,6 +524,7 @@ export const HrEvaluationManagementPage: React.FC = () => {
                                 style={{ background: '#059669' }}
                                 onClick={() => handlePrintSingle(item)}
                                 title="In hoặc lưu PDF Bảng điểm A4"
+                                aria-label={`In transcript bảng điểm của ${item.internName}`}
                               >
                                 <Printer size={14} /> In Transcript
                               </button>
@@ -498,6 +537,7 @@ export const HrEvaluationManagementPage: React.FC = () => {
                               className={styles.btnSecondary}
                               onClick={() => setSelectedInternForApprove(item)}
                               title="Xem tiến độ đánh giá"
+                              aria-label={`Xem tiến độ đánh giá của ${item.internName}`}
                             >
                               Xem trước
                             </button>

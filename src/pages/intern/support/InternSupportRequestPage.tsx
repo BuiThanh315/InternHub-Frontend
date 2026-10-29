@@ -10,11 +10,13 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmModal } from '../../../components/common/Modal/ConfirmModal';
 import {
   supportRequestService,
   type SupportRequestResponse,
   type SupportRequestType,
 } from '../../../services/supportRequestService';
+import { getSupportRequestStatusLabel } from '../../../utils/formatters';
 
 const TYPE_OPTIONS: { value: SupportRequestType; label: string; desc: string }[] = [
   {
@@ -60,6 +62,8 @@ export const InternSupportRequestPage: React.FC = () => {
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const fetchMyRequests = useCallback(async () => {
     try {
@@ -106,14 +110,22 @@ export const InternSupportRequestPage: React.FC = () => {
     }
   };
 
-  const handleCancelRequest = async (id: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy yêu cầu này không?')) return;
+  const handleCancelRequest = (id: number) => {
+    setCancelTargetId(id);
+  };
+
+  const handleConfirmCancelRequest = async () => {
+    if (!cancelTargetId) return;
     try {
-      await supportRequestService.cancelRequest(id);
+      setIsCancelling(true);
+      await supportRequestService.cancelRequest(cancelTargetId);
       toast.success('Đã hủy yêu cầu thành công');
+      setCancelTargetId(null);
       fetchMyRequests();
     } catch (err: any) {
       toast.error('Lỗi hủy yêu cầu: ' + (err.message || 'Không thể hủy'));
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -206,7 +218,7 @@ export const InternSupportRequestPage: React.FC = () => {
                         : 'bg-amber-100 text-amber-800'
                     }`}
                   >
-                    {item.status}
+                    {getSupportRequestStatusLabel(item.status)}
                   </span>
                 </div>
                 <h3 className="font-bold text-slate-900 text-base">{item.title}</h3>
@@ -382,6 +394,18 @@ export const InternSupportRequestPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={cancelTargetId !== null}
+        title="Xác nhận hủy yêu cầu"
+        message="Bạn có chắc chắn muốn hủy yêu cầu hỗ trợ này không? Hành động này sẽ dừng việc tiếp nhận và xử lý từ phía bộ phận Nhân sự."
+        confirmText="Hủy yêu cầu"
+        cancelText="Quay lại"
+        variant="danger"
+        isLoading={isCancelling}
+        onConfirm={handleConfirmCancelRequest}
+        onClose={() => setCancelTargetId(null)}
+      />
     </div>
   );
 };

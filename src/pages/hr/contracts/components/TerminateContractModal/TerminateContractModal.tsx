@@ -78,7 +78,7 @@ export const TerminateContractModal: React.FC<TerminateContractModalProps> = ({
           <div className={styles.warningBox}>
             <p className={styles.warningTitle}>Quy tắc bảo vệ pháp lý (Non-Deletable & Audit Trail):</p>
             <p className={styles.warningText}>
-              Hợp đồng này sẽ được đánh dấu <strong>TERMINATED</strong> và lưu lại toàn bộ lịch sử (người chấm dứt, thời gian, lý do). Dữ liệu văn bản pháp lý trên hệ thống S3 hoàn toàn không bị xóa vật lý.
+              Hợp đồng này sẽ được đánh dấu <strong>Đã chấm dứt (TERMINATED)</strong> và lưu lại toàn bộ lịch sử (người chấm dứt, thời gian, lý do). Dữ liệu văn bản pháp lý trên hệ thống S3 hoàn toàn không bị xóa vật lý.
             </p>
           </div>
 

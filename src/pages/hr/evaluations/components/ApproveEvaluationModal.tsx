@@ -211,7 +211,7 @@ export const ApproveEvaluationModal: React.FC<ApproveEvaluationModalProps> = ({
               <AlertTriangle size={18} style={{ color: 'var(--warning)', flexShrink: 0 }} />
               <span>
                 <strong>Lưu ý quan trọng:</strong> Hành động phê duyệt sẽ chuyển trạng thái của hồ sơ thực tập sinh sang{' '}
-                <strong>COMPLETED</strong> và khóa điểm chính thức để xuất phiếu gửi Nhà trường.
+                <strong>Đã hoàn thành</strong> và khóa điểm chính thức để xuất phiếu gửi Nhà trường.
               </span>
             </div>
           </form>

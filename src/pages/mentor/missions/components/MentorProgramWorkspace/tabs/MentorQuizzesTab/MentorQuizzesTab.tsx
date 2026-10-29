@@ -136,6 +136,7 @@ export const MentorQuizzesTab: React.FC<MentorQuizzesTabProps> = ({
               type="button"
               className={`button ${styles.aiGenerateBtn}`}
               onClick={() => setIsAiGenModalOpen(true)}
+              aria-label="Tạo đề trắc nghiệm thông minh với AI Copilot"
             >
               <Sparkles size={16} /> Tạo Đề Với AI Copilot
             </button>
@@ -159,6 +160,8 @@ export const MentorQuizzesTab: React.FC<MentorQuizzesTabProps> = ({
                 type="button"
                 className={`${styles.filterPill} ${filterState.status === st ? styles.filterPillActive : ''}`}
                 onClick={() => setFilterState((prev) => ({ ...prev, status: st }))}
+                aria-pressed={filterState.status === st}
+                aria-label={`Lọc bài kiểm tra theo trạng thái: ${st === 'ALL' ? 'Tất cả' : st === 'DRAFT' ? 'Bản nháp' : st === 'PUBLISHED' ? 'Đã xuất bản' : 'Đã lưu trữ'}`}
               >
                 {st === 'ALL' && 'Tất cả'}
                 {st === 'DRAFT' && 'Bản nháp'}

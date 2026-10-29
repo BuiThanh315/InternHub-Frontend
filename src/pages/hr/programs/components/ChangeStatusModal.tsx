@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, AlertCircle, RefreshCw } from 'lucide-react';
 import type { ProgramDetailResponse, ProgramStatusType, ChangeProgramStatusRequest } from '../../../../types';
+import { getProgramStatusLabel } from '../../../../utils/formatters';
 import styles from '../styles/ProgramModal.module.css';
 
 interface ChangeStatusModalProps {
@@ -112,7 +113,7 @@ export const ChangeStatusModal: React.FC<ChangeStatusModalProps> = ({
         {nextStatuses.length === 0 ? (
           <div className={styles.body}>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>
-              Chương trình đã ở trạng thái kết thúc (<strong>{program.status}</strong>), không thể chuyển đổi trạng thái nào khác.
+              Chương trình đã ở trạng thái kết thúc (<strong>{getProgramStatusLabel(program.status)}</strong>), không thể chuyển đổi trạng thái nào khác.
             </p>
             <div className={styles.footer} style={{ padding: 0, border: 'none', background: 'none' }}>
               <button type="button" className="btn btn-secondary" onClick={onClose}>
@@ -137,7 +138,7 @@ export const ChangeStatusModal: React.FC<ChangeStatusModalProps> = ({
                   <span className="font-tabular">[{program.programCode}]</span> {program.name}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-                  Trạng thái hiện tại: <strong>{program.status}</strong>
+                  Trạng thái hiện tại: <strong>{getProgramStatusLabel(program.status)}</strong>
                 </div>
               </div>
 
