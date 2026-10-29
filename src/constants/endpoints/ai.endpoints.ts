@@ -4,6 +4,8 @@ export const AI_ENDPOINTS = {
   JOB_STATUS: (jobId: string) => `/api/ai/screening/jobs/${jobId}`,
   INTERN_EVALUATION: (internId: number | string) => `/api/ai/screening/interns/${internId}`,
   INTERVIEW_GENERATE: '/api/ai/interview-questions/generate',
+  INTERVIEW_GENERATE_ASYNC: '/api/ai/interview-questions/generate-async',
+  INTERVIEW_JOB_STATUS: (jobId: string) => `/api/ai/interview-questions/jobs/${jobId}`,
   INTERVIEW_SET_DETAIL: (id: number | string) => `/api/ai/interview-questions/sets/${id}`,
   INTERVIEW_SETS: '/api/ai/interview-questions/sets',
   INTERVIEW_REGENERATE_QUESTION: (setId: number | string, questionId: number | string) =>

@@ -28,15 +28,15 @@ export const InternAllowanceHistoryPage: React.FC = () => {
   }, [fetchHistory]);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-          <DollarSign size={26} />
+        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+          <DollarSign size={22} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Lịch Sử Phụ Cấp Thực Tập</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-xl font-bold text-slate-900">Lịch Sử Phụ Cấp Thực Tập</h1>
+          <p className="text-xs text-slate-500">
             Minh bạch chi tiết ngày công hợp lệ, mức trợ cấp, thưởng và truy lĩnh/truy thu theo từng tháng
           </p>
         </div>
@@ -50,7 +50,7 @@ export const InternAllowanceHistoryPage: React.FC = () => {
           Bạn chưa có bản ghi phụ cấp nào được duyệt hoặc công bố.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {history.map((item) => (
             <div
               key={item.id}

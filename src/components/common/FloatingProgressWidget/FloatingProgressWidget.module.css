@@ -317,6 +317,53 @@
   color: var(--text-main);
 }
 
+/* Interview Question Stages */
+.stagesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.stageItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
+}
+
+.stageItemDone {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.stageItemCurrent {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.stageItemPending {
+  color: var(--text-muted);
+}
+
+.scopeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
 .cardFooter {
   padding: 10px 16px;
   border-top: 1px solid var(--border-default);

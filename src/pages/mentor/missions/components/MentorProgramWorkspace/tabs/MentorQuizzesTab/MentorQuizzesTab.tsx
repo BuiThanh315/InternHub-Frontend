@@ -17,7 +17,6 @@ import { useMentorQuiz } from '../../../../../../../hooks/useMentorQuiz';
 import type { QuizSummaryResponse, QuizDetailResponse, QuizStatus } from '../../../../../../../types/quiz.types';
 import type { MentorQuizzesTabProps } from './MentorQuizzesTab.types';
 import {
-  AiQuizGeneratorModal,
   QuizEditorModal,
   AssignQuizModal,
   QuizReportModal,
@@ -50,7 +49,6 @@ export const MentorQuizzesTab: React.FC<MentorQuizzesTabProps> = ({
   });
 
   // Modal states
-  const [isAiGenModalOpen, setIsAiGenModalOpen] = useState(false);
   const [isEditorModalOpen, setIsEditorModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -93,12 +91,6 @@ export const MentorQuizzesTab: React.FC<MentorQuizzesTabProps> = ({
     setIsReportModalOpen(true);
   };
 
-  // After AI generates quiz draft
-  const handleAiGenerated = (generatedQuiz: QuizDetailResponse) => {
-    setSelectedQuizForEdit(generatedQuiz);
-    setIsEditorModalOpen(true);
-  };
-
   // Proceed to assign from editor
   const handleProceedToAssign = (savedQuiz: QuizDetailResponse) => {
     setSelectedQuizForAssign(savedQuiz);
@@ -132,14 +124,6 @@ export const MentorQuizzesTab: React.FC<MentorQuizzesTabProps> = ({
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Làm mới
             </Button>
-            <button
-              type="button"
-              className={`button ${styles.aiGenerateBtn}`}
-              onClick={() => setIsAiGenModalOpen(true)}
-              aria-label="Tạo đề trắc nghiệm thông minh với AI Copilot"
-            >
-              <Sparkles size={16} /> Tạo Đề Với AI Copilot
-            </button>
           </div>
         </div>
 
@@ -206,17 +190,8 @@ export const MentorQuizzesTab: React.FC<MentorQuizzesTabProps> = ({
           <p className={styles.emptyDesc}>
             {filterState.search || filterState.status !== 'ALL'
               ? 'Thử điều chỉnh lại từ khóa tìm kiếm hoặc bỏ chọn các bộ lọc trạng thái.'
-              : 'Sử dụng AI Copilot để tự động phân tích báo cáo tuần của học viên và sinh đề thi trắc nghiệm củng cố kiến thức chỉ trong vài giây!'}
+              : 'Chưa có bài kiểm tra ôn tập nào trong chương trình. Bạn có thể đính kèm bài trắc nghiệm AI trực tiếp khi giao việc trên bảng nhiệm vụ Kanban!'}
           </p>
-          {!filterState.search && filterState.status === 'ALL' && (
-            <button
-              type="button"
-              className={`button ${styles.aiGenerateBtn}`}
-              onClick={() => setIsAiGenModalOpen(true)}
-            >
-              <Sparkles size={16} /> Tạo Bài Quiz Đầu Tiên Với AI
-            </button>
-          )}
         </div>
       ) : (
         <div className={styles.quizzesGrid}>
@@ -327,14 +302,7 @@ export const MentorQuizzesTab: React.FC<MentorQuizzesTabProps> = ({
         </div>
       )}
 
-      {/* 4 Modals */}
-      <AiQuizGeneratorModal
-        isOpen={isAiGenModalOpen}
-        onClose={() => setIsAiGenModalOpen(false)}
-        programId={programId}
-        groups={groups}
-        onGenerated={handleAiGenerated}
-      />
+      {/* 3 Modals */}
 
       <QuizEditorModal
         isOpen={isEditorModalOpen}

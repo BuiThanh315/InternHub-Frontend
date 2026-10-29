@@ -5,6 +5,7 @@ import type {
   InterviewQuestionItem,
   GenerateInterviewQuestionsPayload,
   UpdateInterviewQuestionSetPayload,
+  QuestionGenerationJobResponse,
 } from '../types/aiInterview.types';
 
 export const aiInterviewService = {
@@ -22,6 +23,36 @@ export const aiInterviewService = {
         signal,
         timeout: 90000, // AI generation có thể mất 15-45s
       }
+    );
+    return response.data;
+  },
+
+  /**
+   * Sinh bộ câu hỏi phỏng vấn ĐA LUỒNG BẤT ĐỒNG BỘ (Non-blocking)
+   * Trả về jobId ngay lập tức < 50ms để kích hoạt FloatingProgressWidget
+   */
+  async generateQuestionsAsync(
+    payload: GenerateInterviewQuestionsPayload,
+    signal?: AbortSignal
+  ): Promise<QuestionGenerationJobResponse> {
+    const response = await apiClient.post<QuestionGenerationJobResponse>(
+      API_ENDPOINTS.AI.INTERVIEW_GENERATE_ASYNC,
+      payload,
+      { signal }
+    );
+    return response.data;
+  },
+
+  /**
+   * Thăm dò trạng thái tiến trình sinh câu hỏi thời gian thực
+   */
+  async getQuestionJobStatus(
+    jobId: string,
+    signal?: AbortSignal
+  ): Promise<QuestionGenerationJobResponse> {
+    const response = await apiClient.get<QuestionGenerationJobResponse>(
+      API_ENDPOINTS.AI.INTERVIEW_JOB_STATUS(jobId),
+      { signal }
     );
     return response.data;
   },

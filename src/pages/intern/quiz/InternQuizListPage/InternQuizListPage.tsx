@@ -35,7 +35,9 @@ export const InternQuizListPage: React.FC = () => {
   // Calculate metrics
   const metrics = useMemo(() => {
     const total = assignments.length;
-    const completed = assignments.filter((a: QuizAssignmentResponse) => (a.attemptsUsed || 0) > 0).length;
+    const completed = assignments.filter(
+      (a: QuizAssignmentResponse) => (a.attemptsUsed ?? a.attemptsTaken ?? 0) > 0
+    ).length;
     const completedWithScores = assignments.filter(
       (a: QuizAssignmentResponse) => a.highestScore !== undefined && a.highestScore !== null
     );
@@ -195,8 +197,9 @@ export const InternQuizListPage: React.FC = () => {
           {filteredAssignments.map((a: QuizAssignmentResponse) => {
             const isActive = a.status === 'ACTIVE';
             const isClosed = a.status === 'CLOSED';
-            const canTake = isActive && a.attemptsUsed < a.maxAttempts;
-            const hasTaken = a.attemptsUsed > 0;
+            const attemptsCount = a.attemptsUsed ?? a.attemptsTaken ?? 0;
+            const canTake = isActive && attemptsCount < a.maxAttempts;
+            const hasTaken = attemptsCount > 0;
 
             return (
               <div key={a.assignmentId} className={styles.quizCard}>
@@ -241,7 +244,7 @@ export const InternQuizListPage: React.FC = () => {
                     </div>
                     <div className={styles.detailItem}>
                       <RotateCcw size={13} className={styles.detailIcon} />
-                      <span>Lần làm: {a.attemptsUsed}/{a.maxAttempts}</span>
+                      <span>Lần làm: {attemptsCount}/{a.maxAttempts}</span>
                     </div>
                   </div>
 
@@ -277,12 +280,22 @@ export const InternQuizListPage: React.FC = () => {
                     >
                       <Play size={14} />
                       {hasTaken
-                        ? `Làm lại (${a.maxAttempts - a.attemptsUsed} lượt còn)`
+                        ? `Làm lại (${a.maxAttempts - attemptsCount} lượt còn)`
                         : 'Bắt đầu làm bài'}
                     </Button>
                   ) : (
                     <Button variant="outline" size="sm" disabled>
                       {isClosed ? 'Đã đóng bài thi' : 'Đã hết lượt thi'}
+                    </Button>
+                  )}
+
+                  {hasTaken && a.latestSubmissionId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(QUIZ_ROUTES.RESULT(a.latestSubmissionId!))}
+                    >
+                      <Award size={14} /> Xem kết quả
                     </Button>
                   )}
                 </div>

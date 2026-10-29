@@ -12,19 +12,45 @@ import type {
   QuizResultResponse,
   QuizAssignmentResponse,
   QuizReportResponse,
+  QuizGenerationJobResponse,
 } from '../types/quiz.types';
 
 export const quizService = {
   // --- Mentor Services ---
 
   /**
-   * Yêu cầu AI sinh câu hỏi và tạo bản nháp Quiz từ báo cáo tuần
+   * Yêu cầu AI sinh câu hỏi và tạo bản nháp Quiz từ báo cáo tuần (Đồng bộ)
    */
   async generateAiQuiz(
     payload: GenerateAiQuizRequest,
     signal?: AbortSignal
   ): Promise<QuizDetailResponse> {
-    const response = await apiClient.post(API_ENDPOINTS.QUIZ.GENERATE_AI, payload, { signal });
+    const response = await apiClient.post(API_ENDPOINTS.QUIZ.GENERATE_AI, payload, {
+      signal,
+      timeout: 60000, // Gemini AI sinh 10 câu hỏi trắc nghiệm nâng cao kèm lời giải thích có thể mất 12-25s
+    });
+    return response.data?.data;
+  },
+
+  /**
+   * Khởi tạo tác vụ bất đồng bộ đa luồng sinh bài Quiz bằng AI (Non-blocking tương tự TM-103)
+   */
+  async generateAiQuizAsync(
+    payload: GenerateAiQuizRequest,
+    signal?: AbortSignal
+  ): Promise<QuizGenerationJobResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.QUIZ.GENERATE_AI_ASYNC, payload, { signal });
+    return response.data?.data;
+  },
+
+  /**
+   * Kiểm tra tiến độ và kết quả của tác vụ AI sinh bài Quiz
+   */
+  async getQuizJobStatus(
+    jobId: string,
+    signal?: AbortSignal
+  ): Promise<QuizGenerationJobResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.QUIZ.JOB_STATUS(jobId), { signal });
     return response.data?.data;
   },
 
@@ -63,6 +89,17 @@ export const quizService = {
   },
 
   /**
+   * Lấy chi tiết bài Quiz theo Assignment ID (Phục vụ Mentor Kanban Inspection)
+   */
+  async getQuizDetailByAssignment(
+    assignmentId: number,
+    signal?: AbortSignal
+  ): Promise<QuizDetailResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.QUIZ.ASSIGNMENT_DETAIL(assignmentId), { signal });
+    return response.data?.data;
+  },
+
+  /**
    * Lấy danh sách bài Quiz theo chương trình thực tập
    */
   async getQuizzesByProgram(
@@ -92,6 +129,17 @@ export const quizService = {
     signal?: AbortSignal
   ): Promise<QuizReportResponse> {
     const response = await apiClient.get(API_ENDPOINTS.QUIZ.REPORT(id), { signal });
+    return response.data?.data;
+  },
+
+  /**
+   * Mentor xem chi tiết bài làm và đáp án của học viên
+   */
+  async getMentorSubmissionResult(
+    submissionId: number,
+    signal?: AbortSignal
+  ): Promise<QuizResultResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.QUIZ.MENTOR_SUBMISSION_RESULT(submissionId), { signal });
     return response.data?.data;
   },
 

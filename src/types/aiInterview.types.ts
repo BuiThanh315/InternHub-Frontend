@@ -62,3 +62,21 @@ export interface UpdateInterviewQuestionSetPayload {
     displayOrder?: number;
   }[];
 }
+
+export type QuestionGenerationJobStatus = 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'NOT_FOUND';
+
+export interface QuestionGenerationJobResponse {
+  jobId: string;
+  programId: number;
+  internId?: number | null;
+  targetRole?: string;
+  status: QuestionGenerationJobStatus;
+  percent: number;
+  currentStage?: string;
+  questionSetId?: number | null;
+  result?: InterviewQuestionSet | null;
+  errorMessage?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

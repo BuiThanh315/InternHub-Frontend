@@ -15,6 +15,7 @@ export const MissionKanbanColumn: React.FC<MissionKanbanColumnProps> = ({
   onStatusChange,
   onDropItem,
   onQuickAdd,
+  onViewQuizDetail,
   className = '',
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -121,6 +122,7 @@ export const MissionKanbanColumn: React.FC<MissionKanbanColumnProps> = ({
               onEdit={onEditItem}
               onDelete={onDeleteItem}
               onStatusChange={onStatusChange}
+              onViewQuizDetail={onViewQuizDetail}
             />
           ))
         )}

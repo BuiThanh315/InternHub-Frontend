@@ -6,5 +6,6 @@ export interface MissionCardProps {
   onEdit: (item: MissionItemResponse) => void;
   onDelete: (item: MissionItemResponse) => void;
   onStatusChange: (itemId: number, newStatus: MissionItemStatus) => void;
+  onViewQuizDetail?: (item: MissionItemResponse) => void;
   className?: string;
 }

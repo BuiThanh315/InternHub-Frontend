@@ -1,31 +1,32 @@
 .pageContainer {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
-  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  padding-bottom: 1rem;
 }
 
 .pageHeader {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
+  align-items: center;
+  margin-bottom: 12px;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
 .titleArea h1 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-main, #111827);
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .titleArea p {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-muted, #6b7280);
   margin: 0;
 }
@@ -33,26 +34,26 @@
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Stats Cards */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .statCard {
   background: var(--bg-card, #ffffff);
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
-  padding: 16px 20px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -62,13 +63,13 @@
 }
 
 .statIconWrap {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .statInfo {
@@ -77,16 +78,16 @@
 }
 
 .statLabel {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted, #6b7280);
   font-weight: 500;
 }
 
 .statValue {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-main, #111827);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* Filter Card */
@@ -94,12 +95,12 @@
   background: var(--bg-card, #ffffff);
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .filterRow {
@@ -258,13 +259,13 @@
   background: var(--bg-table-header, #f9fafb);
   color: var(--text-muted, #4b5563);
   font-weight: 600;
-  padding: 12px 14px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-color, #e5e7eb);
   white-space: nowrap;
 }
 
 .table td {
-  padding: 13px 14px;
+  padding: 7px 12px;
   border-bottom: 1px solid var(--border-color, #f3f4f6);
   color: var(--text-main, #1f2937);
   vertical-align: middle;

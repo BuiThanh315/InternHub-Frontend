@@ -221,6 +221,54 @@
   pointer-events: none;
 }
 
+/* Quiz Card Styling */
+.cardQuiz {
+  border-left: 3px solid #8b5cf6 !important;
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.03) 0%, var(--bg-card) 100%);
+}
+
+.quizBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-md, 8px);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.18));
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  letter-spacing: 0.02em;
+  width: fit-content;
+}
+
+.actionBtnTakeQuiz {
+  background: linear-gradient(135deg, var(--primary, #6366f1), #8b5cf6);
+  color: #ffffff !important;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 2px 8px var(--primary-glow, rgba(99, 102, 241, 0.3));
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.actionBtnTakeQuiz:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--primary-glow, rgba(99, 102, 241, 0.4));
+  opacity: 0.95;
+}
+
+.actionBtnViewResult {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: var(--success) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-weight: 600;
+}
+
+.actionBtnViewResult:hover:not(:disabled) {
+  background-color: var(--success);
+  color: #ffffff !important;
+}
+
 /* Actor Presence Badge cho Realtime Sync */
 .actorPresenceBadge {
   display: inline-flex;
@@ -246,3 +294,4 @@
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0);
   }
 }
+

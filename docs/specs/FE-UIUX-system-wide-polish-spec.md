@@ -15,6 +15,7 @@
 | Phiên bản | Ngày | Người thực hiện | Phạm vi | Loại thay đổi | Lý do & Giải trình kỹ thuật (Rationale) |
 | :---: | :---: | :---: | :---: | :---: | :--- |
 | **v1.0** | 2026-10-23 | Senior Frontend AI Pair-Programmer | Toàn bộ Frontend | Khảo sát, Kiểm toán & Đặc tả Nâng cấp Toàn diện | **Đặc tả cải tổ toàn diện giao diện Frontend theo yêu cầu người dùng:**<br>1. *Khảo sát & Kiểm toán mã nguồn:* Quét toàn bộ hệ thống layouts, components và 26 bảng dữ liệu. Phát hiện hơn 2,600+ vị trí hardcode mã màu Hex trong CSS Modules làm đứt gãy Dark Mode, lỗi cộng dồn khoảng trắng (negative margin hack giữa Header và MainContent tạo khoảng hở 48px–72px), và hiện tượng "ô nhiễm icon" (Icon Pollution) tràn lan trên từng dòng dữ liệu.<br>2. *Ứng dụng triệt để kỹ năng `frontend-design`:* Chuyển hóa InternHub thành một nền tảng vận hành nhân sự cao cấp (Enterprise Operations Platform). Chống các bẫy mòn AI cliché (không dùng warm cream/terracotta rập khuôn, không dùng SaaS-card kit chia cắt manh mún, loại bỏ hoàn toàn chữ ALL-CAPS ở nhãn bảng, không dùng mũi tên `→` tùy tiện).<br>3. *Chiến dịch "Remove One Accessory" cho Bảng Dữ Liệu:* Bỏ toàn bộ icon thừa trong từng ô dữ liệu (bỏ icon Calendar, Phone, Mail, Building, Users lặp lại vô nghĩa), chuẩn hóa Status Badge với chấm phát sáng (Dot Indicator) tinh tế.<br>4. *Quy chuẩn nhịp thở 8pt Grid:* Tinh gọn khoảng cách lỏng lẻo, cố định App Shell, đảm bảo tỷ lệ vàng 10 dòng/bảng vừa khít màn hình 1080p và tự động ẩn phân trang khi $\le 10$ dòng. |
+| **v1.1** | 2026-10-26 | Senior Frontend AI Pair-Programmer | Candidate Workspace & AI Interview | Chuẩn Hóa Phỏng Vấn AI & Nút Mời Phỏng Vấn Lại | **Khắc phục lỗi 404 khi xem điểm ứng viên chưa hoàn thành phỏng vấn:**<br>1. *Chặn gọi API khi chưa hoàn thành:* Kiểm tra điều kiện `session.status === 'COMPLETED'` trước khi gọi `GET .../evaluation` tại `CandidateWorkspaceModal`, `AiInterviewEvaluationTab`, `ProgramWorkspacePage` và `MentorFinalEvaluationTab`, triệt tiêu hoàn toàn lỗi 404 Not Found trong DevTools Network.<br>2. *Chuyển đổi nút ngữ cảnh:* Khi phiên phỏng vấn ở trạng thái `EXPIRED` hoặc `CANCELLED`, nút thao tác tự động chuyển thành **"Mời Phỏng Vấn Lại"** (Re-invite), nút "Xem Phiếu Đánh Giá AI" được thay thế bằng badge thông báo trạng thái thân thiện. |
 
 ---
 
@@ -461,3 +462,26 @@ Tuân thủ nghiêm ngặt Trụ cột II trong [`AGENTS.md`](file:///d:/codegym
 - [ ] **Tiêu chí 5 (Zero Hex):** Giảm thiểu tối đa mã màu Hex cứng trong `.module.css`, 100% màu sắc thích ứng mượt mà cả Dark Mode lẫn Light Mode.
 - [ ] **Tiêu chí 6 (Phân trang):** Tự động ẩn thanh phân trang khi tổng số bản ghi $\le 10$ hoặc $\le 1$ trang trên toàn bộ các bảng.
 - [ ] **Tiêu chí 7 (Clean Code & Quality):** Dự án pass 100% `tsc -b` và `oxlint` không có lỗi.
+- [ ] **Tiêu chí 8 (Phỏng vấn AI & Chống 404):** Khi ứng viên chưa thi xong hoặc phiên thi `EXPIRED`/`CANCELLED`, hệ thống không gọi API `/evaluation`, giao diện tự động chuyển nút thành **"Mời Phỏng Vấn Lại"** và hiển thị badge trạng thái thân thiện.
+
+---
+
+## 9. Đặc Tả Xử Lý Ngữ Cảnh Phỏng Vấn AI (AI Interview State & Re-invite Specification)
+
+### 9.1. Ma trận Trạng Thái Phiên Phỏng Vấn AI (Session State Matrix)
+
+| Trạng thái phiên | Ý nghĩa thực tế | Nút thao tác lên lịch | Nút xem kết quả chấm điểm AI | Hành vi gọi API `/evaluation` |
+| :--- | :--- | :--- | :--- | :--- |
+| **Chưa có phiên** (`null`) | Ứng viên chưa được lên lịch phỏng vấn AI | **"Mời Phỏng Vấn AI"** (Icon `Calendar`) | Không hiển thị | **Không gọi** |
+| **`EXPIRED`** | Phiên phỏng vấn đã hết hạn làm bài (ứng viên chưa thi hoặc bỏ dở) | **"Mời Phỏng Vấn Lại"** (Icon `RotateCw` cam) | Thay bằng Badge: `Phiên thi đã hết hạn - Chưa có điểm` | **Chặn tuyệt đối (Không gọi)** |
+| **`CANCELLED`** | Phiên phỏng vấn đã bị HR thu hồi/hủy bỏ | **"Mời Phỏng Vấn Lại"** (Icon `RotateCw` cam) | Thay bằng Badge: `Phiên thi đã hủy` | **Chặn tuyệt đối (Không gọi)** |
+| **`IN_PROGRESS`** / **`NOT_STARTED`** | Ứng viên đang trong quá trình làm bài hoặc chưa bấm bắt đầu | Nút phụ: Mời lại nếu cần | Thay bằng Badge: `Đang chờ thi / Đang làm bài` | **Chặn tuyệt đối (Không gọi)** |
+| **`COMPLETED`** | Ứng viên đã nộp bài, AI Grader Engine đã chấm điểm xong | Nút phụ: Mời lại nếu cần | **"Xem Phiếu Đánh Giá AI"** (Icon `Sparkles` tím) | **Thực hiện gọi API:** `GET .../evaluation` |
+
+### 9.2. Quy Tắc Phòng Thủ Chiều Sâu (Defense-in-Depth Guardrail)
+1. **Chặn tại tầng Component trước khi gọi:**
+   - Tại `CandidateWorkspaceModal`, `AiInterviewEvaluationTab`, `ProgramWorkspacePage`, `MentorFinalEvaluationTab`: Luôn kiểm tra `session.status === 'COMPLETED'` trước khi kích hoạt `aiInterviewService.getEvaluationDossier(sessionId)`.
+2. **Fallback thân thiện tại Drawer:**
+   - Nếu có bất kỳ trường hợp nào nhận lỗi HTTP 404 từ máy chủ, `EvaluationDossierDrawer` tự động chuyển đổi thông điệp kỹ thuật thành câu văn tiếng Việt thân thiện:
+     *"Phiên phỏng vấn này chưa có kết quả đánh giá (ứng viên chưa hoàn thành bài thi hoặc phiên thi đã hết hạn)."*
+

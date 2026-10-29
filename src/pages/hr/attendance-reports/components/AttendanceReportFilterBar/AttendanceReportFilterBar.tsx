@@ -92,98 +92,52 @@ export const AttendanceReportFilterBar: React.FC<AttendanceReportFilterBarProps>
 
   return (
     <div className={styles.filterBar}>
-      <div className={styles.topRow}>
-        <div className={styles.controlsGroup}>
-          {/* Chọn Tháng */}
-          <div className={styles.selectMonth}>
-            <Select
-              options={MONTH_OPTIONS}
-              value={month}
-              onChange={(e) => onFilterChange({ month: Number(e.target.value) })}
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Chọn Năm */}
-          <div className={styles.selectYear}>
-            <Select
-              options={YEAR_OPTIONS}
-              value={year}
-              onChange={(e) => onFilterChange({ year: Number(e.target.value) })}
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Chọn Phòng ban */}
-          <div className={styles.selectDepartment}>
-            <Select
-              options={departmentOptions}
-              value={departmentId !== undefined ? departmentId : ''}
-              onChange={(e) =>
-                onFilterChange({
-                  departmentId: e.target.value ? Number(e.target.value) : undefined,
-                })
-              }
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Chọn Chương trình */}
-          <div className={styles.selectProgram}>
-            <Select
-              options={programOptions}
-              value={programId !== undefined ? programId : ''}
-              onChange={(e) =>
-                onFilterChange({
-                  programId: e.target.value ? Number(e.target.value) : undefined,
-                })
-              }
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Chọn Người hướng dẫn (Mentor) */}
-          {!isMentorRole && (
-            <div className={styles.selectMentor}>
-              <Select
-                options={mentorOptions}
-                value={mentorId !== undefined ? mentorId : ''}
-                onChange={(e) =>
-                  onFilterChange({
-                    mentorId: e.target.value ? Number(e.target.value) : undefined,
-                  })
-                }
-                disabled={isLoading}
-              />
-            </div>
-          )}
-
-          {/* Chọn Mức kỷ luật */}
-          <div className={styles.selectStatus}>
-            <Select
-              options={STATUS_OPTIONS}
-              value={diligenceStatus}
-              onChange={(e) =>
-                onFilterChange({
-                  diligenceStatus: e.target.value as any,
-                })
-              }
-              disabled={isLoading}
-            />
-          </div>
-
-
-          {/* Ô Tìm Kiếm TTS */}
-          <div className={styles.searchWrapper}>
-            <SearchBar
-              value={keyword}
-              onChange={(val) => onFilterChange({ keyword: val })}
-              placeholder="Tìm theo tên hoặc mã TTS..."
-            />
-          </div>
+      {/* Hàng 1: Ngữ cảnh Thời gian, Phòng ban, Chương trình & Nút Đặt lại */}
+      <div className={styles.filterRow}>
+        <div className={styles.selectMonth}>
+          <Select
+            options={MONTH_OPTIONS}
+            value={month}
+            onChange={(e) => onFilterChange({ month: Number(e.target.value) })}
+            disabled={isLoading}
+          />
         </div>
 
-        {/* Nút Đặt Lại */}
+        <div className={styles.selectYear}>
+          <Select
+            options={YEAR_OPTIONS}
+            value={year}
+            onChange={(e) => onFilterChange({ year: Number(e.target.value) })}
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className={styles.selectDepartment}>
+          <Select
+            options={departmentOptions}
+            value={departmentId !== undefined ? departmentId : ''}
+            onChange={(e) =>
+              onFilterChange({
+                departmentId: e.target.value ? Number(e.target.value) : undefined,
+              })
+            }
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className={styles.selectProgram}>
+          <Select
+            options={programOptions}
+            value={programId !== undefined ? programId : ''}
+            onChange={(e) =>
+              onFilterChange({
+                programId: e.target.value ? Number(e.target.value) : undefined,
+              })
+            }
+            disabled={isLoading}
+          />
+        </div>
+
         <div className={styles.actionsGroup}>
           <Button
             variant="outline"
@@ -195,6 +149,45 @@ export const AttendanceReportFilterBar: React.FC<AttendanceReportFilterBarProps>
           >
             Đặt lại
           </Button>
+        </div>
+      </div>
+
+      {/* Hàng 2: Phân nhóm Mentor, Mức kỷ luật & Ô Tìm Kiếm TTS */}
+      <div className={styles.filterRow}>
+        {!isMentorRole && (
+          <div className={styles.selectMentor}>
+            <Select
+              options={mentorOptions}
+              value={mentorId !== undefined ? mentorId : ''}
+              onChange={(e) =>
+                onFilterChange({
+                  mentorId: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+              disabled={isLoading}
+            />
+          </div>
+        )}
+
+        <div className={styles.selectStatus}>
+          <Select
+            options={STATUS_OPTIONS}
+            value={diligenceStatus}
+            onChange={(e) =>
+              onFilterChange({
+                diligenceStatus: e.target.value as any,
+              })
+            }
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className={styles.searchWrapper}>
+          <SearchBar
+            value={keyword}
+            onChange={(val) => onFilterChange({ keyword: val })}
+            placeholder="Tìm theo tên hoặc mã TTS..."
+          />
         </div>
       </div>
     </div>

@@ -1,27 +1,27 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: var(--bg-overlay, rgba(15, 23, 42, 0.75));
-  backdrop-filter: blur(6px);
+  background: var(--bg-overlay, rgba(15, 23, 42, 0.7));
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
-  animation: fadeIn 0.2s ease;
+  padding: 1.5rem;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modalContent {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-xl, 16px);
+  border-radius: var(--radius-2xl, 20px);
   width: 100%;
-  max-width: 480px;
-  box-shadow: var(--shadow-xl);
+  max-width: 520px;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.2s ease;
+  animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
@@ -29,96 +29,237 @@
   to { opacity: 1; }
 }
 
-@keyframes slideUp {
-  from { transform: translateY(16px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+@keyframes modalPop {
+  from {
+    transform: scale(0.96) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
 .modalHeader {
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem 1.75rem;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+}
+
+.headerTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.headerIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-light, rgba(99, 102, 241, 0.12));
+  border: 1px solid var(--primary-border, rgba(99, 102, 241, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .headerTitle {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-main);
   margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.headerSubtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0.15rem 0 0 0;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.closeBtn:hover {
+  background: var(--bg-main);
+  color: var(--text-main);
 }
 
 .modalBody {
-  padding: 1.5rem;
+  padding: 1.5rem 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
+/* Progress bar */
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progressInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.progressInfo strong {
+  color: var(--text-main);
+}
+
+.progressBarTrack {
+  height: 8px;
+  background: var(--bg-main);
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Stats Row */
 .statsRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
 }
 
 .statBox {
   background: var(--bg-main);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md, 8px);
-  padding: 1rem;
+  border-radius: var(--radius-lg, 12px);
+  padding: 0.875rem 0.75rem;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.35rem;
+  transition: border-color 0.15s ease;
+}
+
+.statBox:hover {
+  border-color: var(--border-default);
 }
 
 .statNum {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statTotal {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 0.25rem;
 }
 
 .statLabel {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Alert boxes */
+.warningAlert,
+.flagNotice,
+.successNotice {
+  border-radius: var(--radius-lg, 12px);
+  padding: 1rem 1.15rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.alertIcon,
+.flagIcon,
+.successIcon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.alertText strong {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.alertText p {
+  margin: 0;
 }
 
 .warningAlert {
   background: var(--warning-light, rgba(245, 158, 11, 0.1));
-  border: 1px solid var(--warning-border, rgba(245, 158, 11, 0.3));
-  border-radius: var(--radius-md, 8px);
-  padding: 1rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  color: var(--warning, #f59e0b);
-  font-size: 0.875rem;
-  line-height: 1.45;
+  border: 1px solid var(--warning-border, rgba(245, 158, 11, 0.35));
+  color: var(--warning, #d97706);
+}
+
+.warningAlert .alertText p {
+  color: var(--text-secondary);
+}
+
+.flagNotice {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+.flagNotice .alertText p {
+  color: var(--text-secondary);
 }
 
 .successNotice {
   background: var(--success-light, rgba(16, 185, 129, 0.1));
-  border: 1px solid var(--success-border, rgba(16, 185, 129, 0.3));
-  border-radius: var(--radius-md, 8px);
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--success, #10b981);
-  font-size: 0.875rem;
-  line-height: 1.45;
+  border: 1px solid var(--success-border, rgba(16, 185, 129, 0.35));
+  color: var(--success, #059669);
+}
+
+.successNotice .alertText p {
+  color: var(--text-secondary);
 }
 
 .modalFooter {
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem 1.75rem;
   border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
   background: var(--bg-main);
+}
+
+.resumeBtn {
+  font-weight: 500;
+}
+
+.confirmBtn {
+  font-weight: 600;
+  box-shadow: 0 4px 12px var(--primary-glow, rgba(99, 102, 241, 0.25));
 }
