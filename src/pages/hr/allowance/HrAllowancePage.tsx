@@ -14,7 +14,8 @@ import {
   type AllowanceRecord,
   type AllowanceAuditLog,
 } from '../../../services/allowanceService';
-import { formatCurrency } from '../../../utils/formatters';
+import { formatCurrency, getAllowanceStatusLabel } from '../../../utils/formatters';
+import { Skeleton } from '../../../components/common/Skeleton';
 import styles from './HrAllowancePage.module.css';
 
 export const HrAllowancePage: React.FC = () => {
@@ -281,6 +282,7 @@ export const HrAllowancePage: React.FC = () => {
                     selectedIds.length > 0 &&
                     selectedIds.length === records.filter((r) => r.status === 'DRAFT').length
                   }
+                  aria-label="Chọn tất cả bản ghi phụ cấp nháp để phê duyệt"
                 />
               </th>
               <th>Mã / Tên TTS</th>
@@ -298,11 +300,31 @@ export const HrAllowancePage: React.FC = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={11} style={{ textAlign: 'center', padding: '2rem' }}>
-                  Đang tải bảng phụ cấp...
-                </td>
-              </tr>
+              [1, 2, 3, 4, 5].map((idx) => (
+                <tr key={`allowance-skel-${idx}`}>
+                  <td><Skeleton width="18px" height="18px" style={{ borderRadius: '4px' }} /></td>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <Skeleton width="130px" height="16px" />
+                      <Skeleton width="160px" height="12px" />
+                    </div>
+                  </td>
+                  <td><Skeleton width="80px" height="22px" style={{ borderRadius: '12px' }} /></td>
+                  <td><Skeleton width="100px" height="16px" /></td>
+                  <td><Skeleton width="100px" height="16px" /></td>
+                  <td><Skeleton width="90px" height="16px" /></td>
+                  <td><Skeleton width="80px" height="16px" /></td>
+                  <td><Skeleton width="80px" height="16px" /></td>
+                  <td><Skeleton width="95px" height="18px" /></td>
+                  <td><Skeleton width="85px" height="22px" style={{ borderRadius: '12px' }} /></td>
+                  <td style={{ textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                      <Skeleton width="30px" height="30px" style={{ borderRadius: '6px' }} />
+                      <Skeleton width="30px" height="30px" style={{ borderRadius: '6px' }} />
+                    </div>
+                  </td>
+                </tr>
+              ))
             ) : records.length === 0 ? (
               <tr>
                 <td colSpan={11} style={{ textAlign: 'center', padding: '2rem' }}>
@@ -318,6 +340,7 @@ export const HrAllowancePage: React.FC = () => {
                       checked={selectedIds.includes(rec.id)}
                       disabled={rec.status !== 'DRAFT'}
                       onChange={() => toggleSelectId(rec.id)}
+                      aria-label={`Chọn phụ cấp của ${rec.internFullName || rec.internEmail || rec.internUserId}`}
                     />
                   </td>
                   <td>
@@ -407,7 +430,7 @@ export const HrAllowancePage: React.FC = () => {
                           : styles.badgePaid
                       }`}
                     >
-                      {rec.status}
+                      {getAllowanceStatusLabel(rec.status)}
                     </span>
                   </td>
                   <td>
@@ -417,6 +440,7 @@ export const HrAllowancePage: React.FC = () => {
                           className={styles.actionBtn}
                           onClick={() => openAdjustModal(rec)}
                           title="Điều chỉnh thưởng/phạt"
+                          aria-label={`Điều chỉnh thưởng phạt cho ${rec.internFullName || rec.internUserId}`}
                         >
                           <Edit3 size={14} />
                         </button>
@@ -425,6 +449,7 @@ export const HrAllowancePage: React.FC = () => {
                         className={styles.actionBtn}
                         onClick={() => openAuditLogs(rec)}
                         title="Xem lịch sử thay đổi"
+                        aria-label={`Xem lịch sử thay đổi phụ cấp của ${rec.internFullName || rec.internUserId}`}
                       >
                         <History size={14} />
                       </button>

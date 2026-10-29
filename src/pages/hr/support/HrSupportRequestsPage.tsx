@@ -13,6 +13,8 @@ import {
   type SupportRequestResponse,
   type SupportRequestType,
 } from '../../../services/supportRequestService';
+import { getSupportRequestStatusLabel } from '../../../utils/formatters';
+import { Skeleton } from '../../../components/common/Skeleton';
 import styles from './HrSupportRequestsPage.module.css';
 
 const TYPE_LABELS: Record<SupportRequestType, string> = {
@@ -179,11 +181,25 @@ export const HrSupportRequestsPage: React.FC = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={9} style={{ textAlign: 'center', padding: '2rem' }}>
-                  Đang tải danh sách yêu cầu...
-                </td>
-              </tr>
+              [1, 2, 3, 4, 5].map((i) => (
+                <tr key={i}>
+                  <td><Skeleton variant="text" width="40px" height="18px" /></td>
+                  <td>
+                    <Skeleton variant="text" width="130px" height="18px" />
+                    <div style={{ marginTop: '4px' }}><Skeleton variant="text" width="90px" height="13px" /></div>
+                  </td>
+                  <td><Skeleton variant="rectangular" width="110px" height="22px" /></td>
+                  <td>
+                    <Skeleton variant="text" width="150px" height="18px" />
+                    <div style={{ marginTop: '4px' }}><Skeleton variant="text" width="200px" height="14px" /></div>
+                  </td>
+                  <td><Skeleton variant="text" width="100px" height="16px" /></td>
+                  <td><Skeleton variant="text" width="100px" height="16px" /></td>
+                  <td><Skeleton variant="rectangular" width="85px" height="24px" /></td>
+                  <td><Skeleton variant="text" width="90px" height="16px" /></td>
+                  <td><Skeleton variant="rectangular" width="80px" height="30px" /></td>
+                </tr>
+              ))
             ) : requests.length === 0 ? (
               <tr>
                 <td colSpan={9} style={{ textAlign: 'center', padding: '2rem' }}>
@@ -215,6 +231,7 @@ export const HrSupportRequestsPage: React.FC = () => {
                         className={styles.fileLinkBtn}
                         onClick={() => handleDownloadAttachment(req)}
                         title="Tải file đính kèm của TTS"
+                        aria-label={`Tải file đính kèm yêu cầu #${req.id} của ${req.internFullName || req.internName || req.internUserId}`}
                       >
                         <Download size={13} />
                         <span>Tải file</span>
@@ -248,7 +265,7 @@ export const HrSupportRequestsPage: React.FC = () => {
                           : styles.statusRejected
                       }`}
                     >
-                      {req.status}
+                      {getSupportRequestStatusLabel(req.status)}
                     </span>
                   </td>
                   <td>
@@ -265,6 +282,7 @@ export const HrSupportRequestsPage: React.FC = () => {
                             setResponseNote(req.hrResponse || req.responseNote || '');
                           }}
                           title="Xử lý và phản hồi yêu cầu"
+                          aria-label={`Xử lý và phản hồi yêu cầu #${req.id} của ${req.internFullName || req.internName || req.internUserId}`}
                         >
                           Xử lý
                         </button>
@@ -274,6 +292,7 @@ export const HrSupportRequestsPage: React.FC = () => {
                           className={styles.fileLinkBtn}
                           onClick={() => handleDownloadResponseAttachment(req)}
                           title="Tải file phản hồi đã cấp"
+                          aria-label={`Tải file văn bản phản hồi đã cấp cho yêu cầu #${req.id}`}
                         >
                           <FileCheck size={13} />
                           <span>File cấp</span>

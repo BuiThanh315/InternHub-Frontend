@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '../../../components/common/Button/Button';
 import { Skeleton } from '../../../components/common/Skeleton';
+import { ConfirmModal } from '../../../components/common/Modal/ConfirmModal';
 import { rbacService } from '../../../services/rbacService';
 import type { RoleItem, PermissionGroup, PermissionItem } from '../../../types';
 import styles from './AdminRoleTab.module.css';
@@ -96,6 +97,7 @@ export const AdminRoleTab: React.FC = () => {
   // Bộ lọc hiển thị và tìm kiếm
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'ALL' | 'GRANTED' | 'UNGRANTED'>('ALL');
+  const [pendingRoleSwitch, setPendingRoleSwitch] = useState<RoleItem | null>(null);
 
   // Nạp danh sách vai trò và nhóm quyền ban đầu
   const fetchData = useCallback(async () => {
@@ -206,14 +208,20 @@ export const AdminRoleTab: React.FC = () => {
   const handleSelectTab = (role: RoleItem) => {
     if (selectedRole?.id === role.id) return;
     if (isDirty) {
-      const confirmSwitch = window.confirm(
-        `Bạn có thay đổi chưa lưu cho vai trò "${selectedRole?.name}". Bạn có chắc muốn chuyển tab và hủy bỏ các thay đổi này?`
-      );
-      if (!confirmSwitch) return;
+      setPendingRoleSwitch(role);
+      return;
     }
     setSelectedRole(role);
     setFilterMode('ALL');
     setSearchQuery('');
+  };
+
+  const handleConfirmSwitchRole = () => {
+    if (!pendingRoleSwitch) return;
+    setSelectedRole(pendingRoleSwitch);
+    setFilterMode('ALL');
+    setSearchQuery('');
+    setPendingRoleSwitch(null);
   };
 
   // Toggle 1 mã quyền (Bảo vệ Security Lockout)
@@ -808,6 +816,17 @@ export const AdminRoleTab: React.FC = () => {
           )}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={pendingRoleSwitch !== null}
+        title="Xác nhận hủy thay đổi chưa lưu"
+        message={`Bạn có thay đổi phân quyền chưa lưu cho vai trò "${selectedRole?.name}". Bạn có chắc muốn chuyển tab và hủy bỏ các thay đổi này?`}
+        confirmText="Chuyển tab & Hủy thay đổi"
+        cancelText="Ở lại trang này"
+        variant="warning"
+        onConfirm={handleConfirmSwitchRole}
+        onClose={() => setPendingRoleSwitch(null)}
+      />
     </div>
   );
 };

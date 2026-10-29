@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import { toast } from 'sonner';
 import { API_ENDPOINTS } from '../constants/endpoints';
 import type { DocumentResponse, DocumentType, ReviewDocumentRequest } from '../types';
 
@@ -202,7 +203,7 @@ export const documentService = {
       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
     } catch (err: any) {
       console.error('Lỗi khi xem tài liệu:', err);
-      alert(err.response?.data?.message || err.message || 'Không thể xem tài liệu này.');
+      toast.error(err.response?.data?.message || err.message || 'Không thể xem tài liệu này.');
     }
   },
 
@@ -227,7 +228,7 @@ export const documentService = {
       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
     } catch (err: any) {
       console.error('Lỗi khi tải tài liệu:', err);
-      alert(err.response?.data?.message || err.message || 'Không thể tải tài liệu này.');
+      toast.error(err.response?.data?.message || err.message || 'Không thể tải tài liệu này.');
     }
   },
 

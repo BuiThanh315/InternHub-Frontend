@@ -22,7 +22,12 @@ import { toast } from 'sonner';
 import { documentService } from '../../../../../../services/documentService';
 import { aiService } from '../../../../../../services/aiService';
 import { aiInterviewService } from '../../../../../../services/aiInterviewService';
-import { formatDate } from '../../../../../../utils/formatters';
+import {
+  formatDate,
+  getDifficultyLabel,
+  getQuestionCategoryLabel,
+  getInterviewSessionStatusLabel,
+} from '../../../../../../utils/formatters';
 import type { DocumentResponse, ScreeningResultDto } from '../../../../../../types';
 import type { InterviewQuestionSet, InterviewQuestionItem } from '../../../../../../types/aiInterview.types';
 import type { EvaluationDossier, AnswerEvaluationDetail } from '../../../../../../types/aiEvaluation.types';
@@ -467,8 +472,8 @@ export const CandidateWorkspaceModal: React.FC<CandidateWorkspaceModalProps> = (
             <MessageSquare size={16} />
             <span>Phỏng Vấn AI</span>
             {interviewSession?.status && (
-              <span className="ml-1 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
-                {interviewSession.status}
+              <span className="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                {getInterviewSessionStatusLabel(interviewSession.status)}
               </span>
             )}
           </button>
@@ -794,13 +799,7 @@ export const CandidateWorkspaceModal: React.FC<CandidateWorkspaceModalProps> = (
                   <div>
                     <p className="text-xs text-slate-700 font-semibold mb-1">
                       {interviewSession
-                        ? `Trạng thái phiên: ${
-                            interviewSession.status === 'EXPIRED'
-                              ? 'Hết hạn (EXPIRED)'
-                              : interviewSession.status === 'COMPLETED'
-                              ? 'Đã hoàn thành (COMPLETED)'
-                              : interviewSession.status
-                          }`
+                        ? `Trạng thái phiên: ${getInterviewSessionStatusLabel(interviewSession.status)}`
                         : 'Chưa có phiên phỏng vấn AI được kích hoạt'}
                     </p>
                     <p className="text-xs text-slate-500">
@@ -1068,10 +1067,10 @@ export const CandidateWorkspaceModal: React.FC<CandidateWorkspaceModalProps> = (
                         <div key={q.id || idx} className={styles.questionBox}>
                           <div className={styles.questionHeader}>
                             <span className={styles.questionBadge}>
-                              Câu {idx + 1} · {q.category || 'Chuyên môn'}
+                              Câu {idx + 1} · {getQuestionCategoryLabel(q.category)}
                             </span>
                             <span className="text-[11px] text-slate-400">
-                              {q.difficulty || 'Trung bình'}
+                              {getDifficultyLabel(q.difficulty)}
                             </span>
                           </div>
                           <p className={styles.questionText}>{q.questionText}</p>

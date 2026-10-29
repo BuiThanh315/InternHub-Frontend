@@ -144,6 +144,8 @@ export const MentorQuizzesTab: React.FC<MentorQuizzesTabProps> = ({
                 type="button"
                 className={`${styles.filterPill} ${filterState.status === st ? styles.filterPillActive : ''}`}
                 onClick={() => setFilterState((prev) => ({ ...prev, status: st }))}
+                aria-pressed={filterState.status === st}
+                aria-label={`Lọc bài kiểm tra theo trạng thái: ${st === 'ALL' ? 'Tất cả' : st === 'DRAFT' ? 'Bản nháp' : st === 'PUBLISHED' ? 'Đã xuất bản' : 'Đã lưu trữ'}`}
               >
                 {st === 'ALL' && 'Tất cả'}
                 {st === 'DRAFT' && 'Bản nháp'}

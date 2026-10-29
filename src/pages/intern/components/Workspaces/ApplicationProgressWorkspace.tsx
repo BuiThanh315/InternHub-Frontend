@@ -7,6 +7,7 @@ import { InternAiInterviewWidget } from '../InternAiInterviewWidget';
 import { InternDocumentList } from '../InternDocumentList';
 import { InternUploadForm } from '../InternUploadForm';
 import { InternContractSection } from '../InternContractSection';
+import { getInternStatusLabel } from '../../../../utils/formatters';
 import styles from './Workspaces.module.css';
 
 interface ApplicationProgressWorkspaceProps {
@@ -73,7 +74,7 @@ export const ApplicationProgressWorkspace: React.FC<ApplicationProgressWorkspace
           <div className={`${styles.statusBanner} ${styles.pending}`}>
             <Info size={22} style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
-              <div className={styles.statusBannerTitle}>Trạng thái hồ sơ: {profile.status}</div>
+              <div className={styles.statusBannerTitle}>Trạng thái hồ sơ: {getInternStatusLabel(profile.status)}</div>
               <div>Theo dõi tiến độ chi tiết của kỳ thực tập qua lộ trình bên dưới.</div>
             </div>
           </div>

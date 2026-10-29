@@ -3,6 +3,7 @@ import { BookOpen, FileText, Eye, Download, Sparkles } from 'lucide-react';
 
 import { Button } from '../../../components/common/Button/Button';
 import { documentService } from '../../../services/documentService';
+import { getDocumentTypeLabel } from '../../../utils/formatters';
 import type { InternProfile, DocumentResponse } from '../../../types';
 import styles from './MentorDetailPanel.module.css';
 
@@ -91,7 +92,7 @@ export const MentorDetailPanel: React.FC<MentorDetailPanelProps> = ({
                   <FileText size={16} color="var(--primary)" />
                   <div>
                     <p className={styles.docName}>{doc.fileName}</p>
-                    <span className={styles.docType}>{doc.documentType}</span>
+                    <span className={styles.docType}>{getDocumentTypeLabel(doc.documentType)}</span>
                   </div>
                 </div>
                 <div className={styles.docActions}>

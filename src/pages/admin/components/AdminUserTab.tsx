@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 
 import { Button, Alert, Skeleton, Pagination, ConfirmModal, Modal } from '../../../components/common';
 import { userService } from '../../../services/userService';
-import { formatDateTime, formatPhoneNumber } from '../../../utils/formatters';
+import { formatDateTime, formatPhoneNumber, getUserRoleLabel } from '../../../utils/formatters';
 import type { User } from '../../../types';
 import styles from './AdminUserTab.module.css';
 
@@ -104,7 +104,7 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
       if (onUsersChange) {
         onUsersChange(updatedList);
       }
-      toast.success(`Đã đổi vai trò của ${updated.fullName} thành ${updated.role} thành công.`);
+      toast.success(`Đã đổi vai trò của ${updated.fullName} thành ${getUserRoleLabel(updated.role)} thành công.`);
       setUserToUpdateRole(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể thay đổi vai trò người dùng';
@@ -312,7 +312,7 @@ export const AdminUserTab: React.FC<AdminUserTabProps> = ({ onUsersChange }) => 
                   </td>
                   <td>
                     <span className={`badge ${getRoleBadgeClass(u.role || '')}`}>
-                      {u.role}
+                      {getUserRoleLabel(u.role)}
                     </span>
                   </td>
                   <td>

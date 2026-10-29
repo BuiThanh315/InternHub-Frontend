@@ -22,6 +22,7 @@ import { CreateMentorModal } from '../components/CreateMentorModal';
 import { internService } from '../../../services/internService';
 import { programService } from '../../../services/programService';
 import { DepartmentBentoCard } from '../departments/components/DepartmentBentoCard';
+import { getInternStatusLabel } from '../../../utils/formatters';
 import type { MentorOption, InternProfile, CreateMentorRequest, DepartmentCapacityOverview, DepartmentCapacityItem } from '../../../types';
 import styles from './HrMentorManagementPage.module.css';
 
@@ -696,7 +697,7 @@ export const HrMentorManagementPage: React.FC = () => {
                   </div>
                   <div>
                     <span className={`badge ${intern.status === 'INTERNING' ? 'badge-success' : 'badge-sky'}`}>
-                      {intern.status}
+                      {getInternStatusLabel(intern.status)}
                     </span>
                   </div>
                 </div>

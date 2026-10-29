@@ -88,11 +88,11 @@ export const HrDashboard: React.FC = () => {
     try {
       setIsRemovingProgram(true);
       await groupService.removeInternFromProgram(intern.programId, intern.id);
-      setSuccessToast(`Đã gỡ thực tập sinh ${intern.fullName} khỏi chương trình`);
+      toast.success(`Đã gỡ thực tập sinh ${intern.fullName} khỏi chương trình`);
       setRemoveProgramIntern(null);
       loadData();
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || 'Lỗi khi gỡ thực tập sinh khỏi chương trình');
+      toast.error(err.response?.data?.message || err.message || 'Lỗi khi gỡ thực tập sinh khỏi chương trình');
     } finally {
       setIsRemovingProgram(false);
     }

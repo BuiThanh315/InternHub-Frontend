@@ -122,7 +122,7 @@ const InternMissionContent: React.FC = () => {
             <Clock size={22} />
           </div>
           <div className={styles.metricInfo}>
-            <span className={styles.metricLabel}>Chưa làm (TODO)</span>
+            <span className={styles.metricLabel}>Chờ thực hiện</span>
             <span className={styles.metricValue}>{todoCount}</span>
           </div>
         </div>
@@ -132,7 +132,7 @@ const InternMissionContent: React.FC = () => {
             <PlayCircle size={22} />
           </div>
           <div className={styles.metricInfo}>
-            <span className={styles.metricLabel}>Đang làm (IN_PROGRESS)</span>
+            <span className={styles.metricLabel}>Đang thực hiện</span>
             <span className={styles.metricValue}>{inProgressCount}</span>
           </div>
         </div>
@@ -142,7 +142,7 @@ const InternMissionContent: React.FC = () => {
             <CheckCircle2 size={22} />
           </div>
           <div className={styles.metricInfo}>
-            <span className={styles.metricLabel}>Đã hoàn thiện (COMPLETED)</span>
+            <span className={styles.metricLabel}>Đã hoàn thành</span>
             <span className={styles.metricValue}>{completedCount}</span>
           </div>
         </div>

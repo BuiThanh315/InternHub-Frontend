@@ -24,6 +24,7 @@ import { ContractBuilderModal } from './components/ContractBuilderModal/Contract
 import { ContractDocumentViewer } from '../../../components/contract/ContractDocumentViewer';
 import { Modal } from '../../../components/common/Modal/Modal';
 import { Button } from '../../../components/common/Button/Button';
+import { Skeleton } from '../../../components/common/Skeleton';
 import styles from './HrContractManagementPage.module.css';
 
 type StatusTab = 'ALL' | 'PENDING' | 'ACTIVE' | 'EXPIRING' | 'FEEDBACK' | 'HISTORY';
@@ -420,9 +421,39 @@ export const HrContractManagementPage: React.FC = () => {
       {/* 4. Table / Content Area */}
       <div className={styles.tableCard}>
         {loading ? (
-          <div className={styles.loadingContainer}>
-            <RefreshCw size={28} className={styles.spinning} />
-            <p>Đang tải danh sách hợp đồng từ Object Storage S3...</p>
+          <div className={styles.tableResponsive}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Mã Hợp Đồng</th>
+                  <th>Thực Tập Sinh</th>
+                  <th>Loại Hợp Đồng</th>
+                  <th>Thời Hạn & Ngày Ký</th>
+                  <th>Mức Phụ Cấp</th>
+                  <th>Trạng Thái</th>
+                  <th>Hành Động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i}>
+                    <td><Skeleton variant="text" width="100px" height="20px" /></td>
+                    <td>
+                      <Skeleton variant="text" width="130px" height="18px" />
+                      <div style={{ marginTop: '4px' }}><Skeleton variant="text" width="90px" height="13px" /></div>
+                    </td>
+                    <td><Skeleton variant="rectangular" width="80px" height="22px" /></td>
+                    <td>
+                      <Skeleton variant="text" width="120px" height="16px" />
+                      <div style={{ marginTop: '4px' }}><Skeleton variant="text" width="100px" height="13px" /></div>
+                    </td>
+                    <td><Skeleton variant="text" width="100px" height="18px" /></td>
+                    <td><Skeleton variant="rectangular" width="85px" height="24px" /></td>
+                    <td><Skeleton variant="rectangular" width="90px" height="30px" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : filteredContracts.length === 0 ? (
           <div className={styles.emptyContainer}>
@@ -521,6 +552,7 @@ export const HrContractManagementPage: React.FC = () => {
                             contractService.previewContractFile(contract.id);
                           }}
                           title="Xem trước văn bản hợp đồng"
+                          aria-label={`Xem trước hợp đồng ${contract.contractNumber} của ${contract.internFullName}`}
                         >
                           <ExternalLink size={16} />
                         </button>
@@ -546,6 +578,7 @@ export const HrContractManagementPage: React.FC = () => {
                             contractService.downloadContractFile(contract.id, contract.originalFileName);
                           }}
                           title="Tải tệp hợp đồng về máy"
+                          aria-label={`Tải tệp hợp đồng ${contract.contractNumber} về máy`}
                         >
                           <Download size={16} />
                         </button>
@@ -557,6 +590,7 @@ export const HrContractManagementPage: React.FC = () => {
                             className={`${styles.actionBtn} ${styles.remindBtn}`}
                             onClick={() => handleSendReminder(contract.id, contract.internFullName)}
                             title="Gửi email nhắc nhở thực tập sinh ký hợp đồng"
+                            aria-label={`Gửi email nhắc nhở ký hợp đồng cho ${contract.internFullName}`}
                           >
                             <Send size={15} />
                           </button>
@@ -569,6 +603,7 @@ export const HrContractManagementPage: React.FC = () => {
                             className={`${styles.actionBtn} ${styles.terminateBtn}`}
                             onClick={() => handleRevokeContract(contract.id, contract.internFullName)}
                             title="Thu hồi hợp đồng đã phát hành (Chống ứng viên ký nhầm)"
+                            aria-label={`Thu hồi hợp đồng ${contract.contractNumber} của ${contract.internFullName}`}
                           >
                             <RotateCcw size={15} />
                           </button>
@@ -581,6 +616,7 @@ export const HrContractManagementPage: React.FC = () => {
                             className={`${styles.actionBtn} ${styles.extendBtn}`}
                             onClick={() => setExtensionTarget(contract)}
                             title="Tạo phụ lục gia hạn thời gian thực tập"
+                            aria-label={`Tạo phụ lục gia hạn hợp đồng cho ${contract.internFullName}`}
                           >
                             <PlusCircle size={15} />
                           </button>
@@ -593,6 +629,7 @@ export const HrContractManagementPage: React.FC = () => {
                             className={`${styles.actionBtn} ${styles.terminateBtn}`}
                             onClick={() => setTerminateTarget(contract)}
                             title="Chấm dứt hợp đồng trước hạn (Bảo toàn lịch sử pháp lý)"
+                            aria-label={`Chấm dứt trước hạn hợp đồng ${contract.contractNumber} của ${contract.internFullName}`}
                           >
                             <Ban size={15} />
                           </button>

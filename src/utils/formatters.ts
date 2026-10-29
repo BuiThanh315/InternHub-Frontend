@@ -168,6 +168,76 @@ export function formatTime(dateInput?: string | Date | null, includeSeconds: boo
 }
 
 /**
+ * Lấy nhãn tiếng Việt cho Quiz & Question Difficulty (EASY, MEDIUM, HARD)
+ */
+export function getDifficultyLabel(diff?: string | null): string {
+  switch (diff?.toUpperCase()) {
+    case 'EASY':
+      return 'Cơ bản';
+    case 'MEDIUM':
+      return 'Trung bình';
+    case 'HARD':
+      return 'Nâng cao';
+    default:
+      return diff || 'Cơ bản';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho Danh mục câu hỏi phỏng vấn
+ */
+export function getQuestionCategoryLabel(cat?: string | null): string {
+  switch (cat?.toUpperCase()) {
+    case 'TECHNICAL_FOUNDATION':
+      return 'Kiến thức nền tảng';
+    case 'CODING_LOGIC':
+      return 'Tư duy logic & Thuật toán';
+    case 'ARCHITECTURE_SYSTEM':
+      return 'Kiến trúc & Hệ thống';
+    case 'BEHAVIORAL_SCENARIOS':
+      return 'Tình huống & Kỹ năng mềm';
+    case 'CULTURE_FIT':
+      return 'Văn hóa & Động lực';
+    default:
+      return cat || 'Chuyên môn';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho HR Evaluation Status
+ */
+export function getHrEvaluationStatusLabel(status?: string | null): string {
+  switch (status?.toUpperCase()) {
+    case 'PENDING_REVIEW':
+      return 'Chờ duyệt';
+    case 'APPROVED':
+      return 'Đã duyệt đạt';
+    case 'REJECTED':
+      return 'Từ chối';
+    default:
+      return status || 'Chờ duyệt';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho Mission / Task Status
+ */
+export function getTaskStatusLabel(status?: string | null): string {
+  switch (status?.toUpperCase()) {
+    case 'TODO':
+      return 'Cần làm';
+    case 'IN_PROGRESS':
+      return 'Đang thực hiện';
+    case 'COMPLETED':
+      return 'Đã hoàn thành';
+    case 'CANCELLED':
+      return 'Đã hủy';
+    default:
+      return status || '—';
+  }
+}
+
+/**
  * Lấy nhãn tiếng Việt cho AttendanceStatus
  */
 export function getAttendanceStatusLabel(status?: string | null): string {
@@ -186,4 +256,140 @@ export function getAttendanceStatusLabel(status?: string | null): string {
       return status || 'Chưa vào ca';
   }
 }
+
+/**
+ * Lấy nhãn tiếng Việt cho SupportRequestStatus
+ */
+export function getSupportRequestStatusLabel(status?: string | null): string {
+  switch (status?.toUpperCase()) {
+    case 'PENDING':
+      return 'Chờ tiếp nhận';
+    case 'IN_PROGRESS':
+      return 'Đang xử lý';
+    case 'RESOLVED':
+      return 'Đã giải quyết';
+    case 'REJECTED':
+      return 'Từ chối hỗ trợ';
+    case 'CANCELLED':
+      return 'Đã hủy yêu cầu';
+    default:
+      return status || '—';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho DocumentType
+ */
+export function getDocumentTypeLabel(type?: string | null): string {
+  switch (type?.toUpperCase()) {
+    case 'ID_CARD':
+      return 'Căn cước công dân';
+    case 'STUDENT_CARD':
+      return 'Thẻ sinh viên';
+    case 'DEGREE':
+    case 'DIPLOMA':
+      return 'Bằng tốt nghiệp';
+    case 'TRANSCRIPT':
+      return 'Bảng điểm học tập';
+    case 'CV':
+      return 'Hồ sơ lý lịch (CV)';
+    case 'CERTIFICATE':
+      return 'Chứng chỉ chuyên môn';
+    case 'RECOMMENDATION_LETTER':
+      return 'Thư giới thiệu';
+    case 'HEALTH_CERTIFICATE':
+      return 'Giấy khám sức khỏe';
+    default:
+      return type || 'Tài liệu khác';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho InterviewSessionStatus
+ */
+export function getInterviewSessionStatusLabel(status?: string | null): string {
+  switch (status?.toUpperCase()) {
+    case 'INVITED':
+      return 'Đã mời phỏng vấn';
+    case 'IN_PROGRESS':
+      return 'Đang phỏng vấn';
+    case 'SUBMITTED':
+      return 'Đã hoàn thành';
+    case 'EXPIRED':
+      return 'Đã hết hạn';
+    case 'CANCELLED':
+      return 'Đã hủy';
+    default:
+      return status || '—';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho User Role
+ */
+export function getUserRoleLabel(role?: string | null): string {
+  switch (role?.toUpperCase()) {
+    case 'ADMIN':
+    case 'ROLE_ADMIN':
+      return 'Quản trị viên';
+    case 'HR':
+    case 'ROLE_HR':
+      return 'Nhân sự (HR)';
+    case 'MENTOR':
+    case 'ROLE_MENTOR':
+      return 'Người hướng dẫn (Mentor)';
+    case 'INTERN':
+    case 'ROLE_INTERN':
+      return 'Thực tập sinh';
+    case 'COORDINATOR':
+    case 'ROLE_COORDINATOR':
+      return 'Điều phối viên';
+    default:
+      return role || 'Người dùng';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho AllowanceStatus
+ */
+export function getAllowanceStatusLabel(status?: string | null): string {
+  switch (status?.toUpperCase()) {
+    case 'DRAFT':
+      return 'Bản nháp';
+    case 'PENDING':
+    case 'PENDING_APPROVAL':
+      return 'Chờ phê duyệt';
+    case 'APPROVED':
+      return 'Đã phê duyệt';
+    case 'PAID':
+      return 'Đã thanh toán';
+    case 'REJECTED':
+      return 'Bị từ chối';
+    default:
+      return status || '—';
+  }
+}
+
+/**
+ * Lấy nhãn tiếng Việt cho ProgramStatus
+ */
+export function getProgramStatusLabel(status?: string | null): string {
+  switch (status?.toUpperCase()) {
+    case 'PLANNING':
+      return 'Lên kế hoạch';
+    case 'OPENING':
+    case 'OPEN':
+      return 'Đang mở tuyển';
+    case 'ONGOING':
+      return 'Đang diễn ra';
+    case 'COMPLETED':
+      return 'Đã kết thúc';
+    case 'CANCELLED':
+      return 'Đã hủy';
+    default:
+      return status || '—';
+  }
+}
+
+
 

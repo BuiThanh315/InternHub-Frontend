@@ -17,6 +17,7 @@ import type {
   ProctoringAlertEvent,
 } from '../../../../../types/proctoring.types';
 import { toast } from 'sonner';
+import { ConfirmModal } from '../../../../../components/common/Modal/ConfirmModal';
 
 interface LiveProctoringModalProps {
   isOpen: boolean;
@@ -34,28 +35,32 @@ export const LiveProctoringModal: React.FC<LiveProctoringModalProps> = ({
   const { candidates, eventFeed, isConnected } = useLiveProctoring(isOpen ? scheduleId : null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSeverity, setFilterSeverity] = useState<'ALL' | 'WARNING' | 'VIOLATED'>('ALL');
+  const [disqualifyTarget, setDisqualifyTarget] = useState<{ sessionId: number; candidateName: string } | null>(null);
+  const [isDisqualifying, setIsDisqualifying] = useState(false);
 
-  if (!isOpen) return null;
+  const handleDisqualify = (sessionId: number, candidateName: string) => {
+    setDisqualifyTarget({ sessionId, candidateName });
+  };
 
-  const handleDisqualify = async (sessionId: number, candidateName: string) => {
-    if (
-      !window.confirm(
-        `XÁC NHẬN: Bạn có chắc chắn muốn ĐÌNH CHỈ THI và THU BÀI của thí sinh ${candidateName}? Hành động này không thể hoàn tác.`
-      )
-    ) {
-      return;
-    }
+  const handleConfirmDisqualify = async () => {
+    if (!disqualifyTarget) return;
 
     try {
+      setIsDisqualifying(true);
       await aiInterviewService.disqualifySession(
-        sessionId,
+        disqualifyTarget.sessionId,
         'Giám thị phát hiện gian lận và chủ động đình chỉ thi.'
       );
-      toast.success(`Đã đình chỉ thành công thí sinh ${candidateName}.`);
+      toast.success(`Đã đình chỉ thành công thí sinh ${disqualifyTarget.candidateName}.`);
+      setDisqualifyTarget(null);
     } catch (err: any) {
       toast.error('Lỗi khi thực hiện đình chỉ thi: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsDisqualifying(false);
     }
   };
+
+  if (!isOpen) return null;
 
   const filteredCandidates = candidates.filter((c: CandidateLiveProctoringState) => {
     const matchSearch =
@@ -268,6 +273,18 @@ export const LiveProctoringModal: React.FC<LiveProctoringModalProps> = ({
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={disqualifyTarget !== null}
+        title="Xác nhận đình chỉ thi"
+        message={`Bạn có chắc chắn muốn ĐÌNH CHỈ THI và THU BÀI của thí sinh ${disqualifyTarget?.candidateName || ''}? Hành động này sẽ lập tức kết thúc buổi thi của thí sinh và không thể hoàn tác.`}
+        confirmText="Đình chỉ thi"
+        cancelText="Quay lại"
+        variant="danger"
+        isLoading={isDisqualifying}
+        onConfirm={handleConfirmDisqualify}
+        onClose={() => setDisqualifyTarget(null)}
+      />
     </div>
   );
 };

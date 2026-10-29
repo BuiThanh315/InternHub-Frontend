@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styles from './EvaluationDossierDrawer.module.css';
 import { Modal } from '../../../../components/common/Modal/Modal';
+import { ConfirmModal } from '../../../../components/common/Modal/ConfirmModal';
+import { toast } from 'sonner';
 import { aiInterviewService } from '../../../../services/aiInterviewService';
 import type { EvaluationDossier, AnswerEvaluationDetail } from '../../../../types/aiEvaluation.types';
 
@@ -25,6 +27,7 @@ export const EvaluationDossierModal: React.FC<EvaluationDossierModalProps> = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [downloadingPdf, setDownloadingPdf] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isRevokeConfirmOpen, setIsRevokeConfirmOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen && sessionId) {
@@ -87,25 +90,27 @@ export const EvaluationDossierModal: React.FC<EvaluationDossierModalProps> = ({
         notes: hrNotes,
         questionOverrides,
       });
+      toast.success(status === 'APPROVED' ? 'Đã phê duyệt đạt kết quả phỏng vấn!' : 'Đã từ chối kết quả phỏng vấn.');
       await loadDossier(dossier.sessionId);
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      alert('Lỗi phê duyệt: ' + (err.response?.data?.message || err.message));
+      toast.error('Lỗi phê duyệt: ' + (err.response?.data?.message || err.message));
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleRevoke = async () => {
+  const handleRevokeConfirm = async () => {
     if (!dossier) return;
-    if (!window.confirm('Bạn có chắc chắn muốn hủy phê duyệt hồ sơ này để sửa điểm/chấm lại?')) return;
     try {
       setSubmitting(true);
       await aiInterviewService.revokeApproval(dossier.sessionId);
+      toast.success('Đã hủy phê duyệt hồ sơ thành công.');
+      setIsRevokeConfirmOpen(false);
       await loadDossier(dossier.sessionId);
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      alert('Lỗi hủy phê duyệt: ' + (err.response?.data?.message || err.message));
+      toast.error('Lỗi hủy phê duyệt: ' + (err.response?.data?.message || err.message));
     } finally {
       setSubmitting(false);
     }
@@ -118,11 +123,11 @@ export const EvaluationDossierModal: React.FC<EvaluationDossierModalProps> = ({
     try {
       setSubmitting(true);
       await aiInterviewService.triggerRegrade(dossier.sessionId, { reason: reason.trim() });
-      alert('Đã kích hoạt chấm lại bài thi trong nền. Vui lòng tải lại sau ít phút.');
+      toast.success('Đã kích hoạt chấm lại bài thi trong nền. Vui lòng tải lại sau ít phút.');
       await loadDossier(dossier.sessionId);
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      alert('Lỗi kích hoạt chấm lại: ' + (err.response?.data?.message || err.message));
+      toast.error('Lỗi kích hoạt chấm lại: ' + (err.response?.data?.message || err.message));
     } finally {
       setSubmitting(false);
     }
@@ -141,8 +146,9 @@ export const EvaluationDossierModal: React.FC<EvaluationDossierModalProps> = ({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      toast.success('Tải hồ sơ PDF thành công!');
     } catch (err: any) {
-      alert('Lỗi tải file PDF: ' + (err.message || 'Không thể xuất file'));
+      toast.error('Lỗi tải file PDF: ' + (err.message || 'Không thể xuất file'));
     } finally {
       setDownloadingPdf(false);
     }
@@ -176,7 +182,7 @@ export const EvaluationDossierModal: React.FC<EvaluationDossierModalProps> = ({
           <button
             type="button"
             className={styles.btnWarning}
-            onClick={handleRevoke}
+            onClick={() => setIsRevokeConfirmOpen(true)}
             disabled={submitting}
           >
             🔓 Hủy phê duyệt
@@ -437,6 +443,18 @@ export const EvaluationDossierModal: React.FC<EvaluationDossierModalProps> = ({
           </>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={isRevokeConfirmOpen}
+        title="Xác nhận hủy phê duyệt"
+        message="Bạn có chắc chắn muốn hủy phê duyệt hồ sơ này để sửa điểm/chấm lại? Dữ liệu đánh giá sẽ quay về trạng thái chờ xử lý."
+        confirmText="Hủy phê duyệt"
+        cancelText="Đóng"
+        variant="warning"
+        isLoading={submitting}
+        onConfirm={handleRevokeConfirm}
+        onClose={() => setIsRevokeConfirmOpen(false)}
+      />
     </Modal>
   );
 };

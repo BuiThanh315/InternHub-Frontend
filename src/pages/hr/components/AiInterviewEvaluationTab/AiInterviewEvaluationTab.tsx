@@ -17,6 +17,7 @@ import { internService } from '../../../../services/internService';
 import { AssignMentorModal } from '../AssignMentorModal';
 import type { InternProfile } from '../../../../types';
 import type { EvaluationDossier, HrEvaluationStatus } from '../../../../types/aiEvaluation.types';
+import { getHrEvaluationStatusLabel } from '../../../../utils/formatters';
 import styles from './AiInterviewEvaluationTab.module.css';
 
 interface AiInterviewEvaluationTabProps {
@@ -291,7 +292,7 @@ export const AiInterviewEvaluationTab: React.FC<AiInterviewEvaluationTabProps> =
                     : 'badge-neutral'
                 }`}
               >
-                HR: {dossier.hrReview?.status || 'PENDING_REVIEW'}
+                HR: {getHrEvaluationStatusLabel(dossier.hrReview?.status)}
               </span>
               {dossier.proctoringStatus === 'CLEAN' ? (
                 <span className="badge badge-success flex items-center gap-1">
