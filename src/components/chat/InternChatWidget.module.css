@@ -73,12 +73,47 @@
   z-index: 9999;
   border: 1px solid rgba(226, 232, 240, 0.85);
   animation: slideUpFade 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  transition: height 0.25s ease;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .minimizedContainer {
-  height: 64px !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  height: 48px !important;
+  width: 210px !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 10px 25px -4px rgba(79, 70, 229, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  cursor: pointer;
+}
+
+.minimizedContainer .header {
+  padding: 8px 12px 8px 10px;
+  height: 100%;
+  border-bottom: none;
+}
+
+.minimizedContainer .avatarGlow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.minimizedContainer .headerTitle {
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.minimizedContainer .headerStatusText {
+  display: none;
+}
+
+.minimizedContainer .actionBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.minimizedContainer .clearBtn {
+  display: none;
 }
 
 @keyframes slideUpFade {

@@ -425,7 +425,14 @@ export const InternChatWidget: React.FC = () => {
           }`}
         >
           {/* Header */}
-          <div className={styles.header}>
+          <div
+            className={styles.header}
+            onClick={() => {
+              if (isMinimized) {
+                setIsMinimized(false);
+              }
+            }}
+          >
             <div className={styles.headerTitleWrap}>
               <div className={styles.avatarGlow}>
                 <Sparkles size={16} />
@@ -441,24 +448,33 @@ export const InternChatWidget: React.FC = () => {
             <div className={styles.headerActions}>
               <button
                 className={styles.actionBtn}
-                onClick={() => setIsMinimized((prev) => !prev)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMinimized((prev) => !prev);
+                }}
                 title={isMinimized ? 'Mở rộng' : 'Thu nhỏ'}
               >
-                {isMinimized ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
+                {isMinimized ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
               </button>
               <button
-                className={styles.actionBtn}
-                onClick={() => setShowConfirmModal(true)}
+                className={`${styles.actionBtn} ${styles.clearBtn}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowConfirmModal(true);
+                }}
                 title="Làm mới cuộc trò chuyện"
               >
-                <Trash2 size={14} />
+                <Trash2 size={13} />
               </button>
               <button
                 className={styles.actionBtn}
-                onClick={() => setIsOpen(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                }}
                 title="Đóng widget"
               >
-                <X size={14} />
+                <X size={13} />
               </button>
             </div>
           </div>
