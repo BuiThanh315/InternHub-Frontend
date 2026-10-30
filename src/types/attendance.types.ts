@@ -231,6 +231,8 @@ export interface InternAttendanceDetailReportResponse {
   mentorName: string;
   month: number;
   year: number;
+  isAllowanceLocked?: boolean;
+  allowanceStatus?: string;
   summary: {
     expectedWorkDays: number;
     actualWorkDays: number;
