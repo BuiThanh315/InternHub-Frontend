@@ -1,118 +1,275 @@
+/* ==========================================================================
+   INTERN CHAT WIDGET - MODERN GLASSMORPHISM DESIGN SYSTEM
+   ========================================================================== */
+
+/* 1. Nút mở Floating Action Button */
 .floatingBtn {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: #ffffff;
-  border: none;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 24px -4px rgba(79, 70, 229, 0.45), 0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 9999;
+  backdrop-filter: blur(8px);
 }
 
 .floatingBtn:hover {
-  transform: scale(1.06);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 12px 28px -4px rgba(79, 70, 229, 0.6), 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
+.floatingIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.sparkleIcon {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: 0.9; }
+}
+
+.floatingStatusDot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
+  background-color: #10b981;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}
+
+/* 2. Cửa sổ khung Chatbot chính */
 .chatWidgetContainer {
   position: fixed;
-  bottom: 92px;
+  bottom: 94px;
   right: 24px;
-  width: 380px;
-  height: 540px;
-  max-width: calc(100vw - 48px);
+  width: 410px;
+  height: 580px;
+  max-width: calc(100vw - 36px);
   max-height: calc(100vh - 120px);
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.2), 0 10px 20px -5px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   z-index: 9999;
-  border: 1px solid #e2e8f0;
-  animation: slideUp 0.25s ease-out;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  animation: slideUpFade 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: height 0.25s ease;
 }
 
-@keyframes slideUp {
+.minimizedContainer {
+  height: 64px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideUpFade {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(20px) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
+/* 3. Header thanh tiêu đề */
 .header {
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.headerTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatarGlow {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .headerTitle {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.headerStatusText {
+  font-size: 11px;
+  opacity: 0.9;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
+}
+
+.onlineDot {
+  width: 7px;
+  height: 7px;
+  background-color: #34d399;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px #34d399;
 }
 
 .headerActions {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
 }
 
 .actionBtn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  padding: 4px 8px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
-  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
 }
 
 .actionBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
+/* 4. Dải cảnh báo quyền riêng tư */
 .warningBanner {
   background: #fffbeb;
-  color: #b45309;
+  color: #92400e;
   font-size: 11px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-bottom: 1px solid #fef3c7;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
+.shieldIcon {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+/* 5. Khung danh sách tin nhắn */
 .messagesList {
   flex: 1;
-  padding: 14px;
+  padding: 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   background: #f8fafc;
+  scroll-behavior: smooth;
 }
 
-.messageBubble {
-  max-width: 82%;
-  padding: 10px 14px;
+/* Welcome Hero Card */
+.welcomeHero {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.welcomeHeroIcon {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px auto;
+}
+
+.welcomeHeroTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+}
+
+.welcomeHeroDesc {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0 0 14px 0;
+  line-height: 1.5;
+}
+
+.heroShortcutGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.heroShortcutBtn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: #334155;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.heroShortcutBtn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  transform: translateX(3px);
+}
+
+.shortcutIconAttendance { color: #3b82f6; }
+.shortcutIconAllowance { color: #10b981; }
+.shortcutIconMission { color: #8b5cf6; }
+
+/* Message Bubbles */
+.messageBubble {
+  max-width: 86%;
+  padding: 10px 14px;
+  border-radius: 16px;
   font-size: 13.5px;
   line-height: 1.5;
   word-break: break-word;
@@ -120,9 +277,14 @@
 
 .userBubble {
   align-self: flex-end;
-  background: #4f46e5;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: #ffffff;
-  border-bottom-right-radius: 2px;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+}
+
+.userText {
+  white-space: pre-wrap;
 }
 
 .assistantBubble {
@@ -130,96 +292,442 @@
   background: #ffffff;
   color: #1e293b;
   border: 1px solid #e2e8f0;
-  border-bottom-left-radius: 2px;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
-.disclaimer {
+.assistantContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.markdownBody {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.markdownBody p {
+  margin: 0 0 8px 0;
+}
+.markdownBody p:last-child {
+  margin-bottom: 0;
+}
+
+.markdownBody ul, .markdownBody ol {
+  margin: 4px 0 8px 18px;
+  padding: 0;
+}
+
+.markdownLink {
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.bubbleActionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.bubbleCopyBtn {
+  background: transparent;
+  border: none;
   font-size: 11px;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.bubbleCopyBtn:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.disclaimerText {
+  font-size: 10.5px;
   color: #94a3b8;
-  margin-top: 6px;
   font-style: italic;
 }
 
-.typingIndicator {
+/* 6. Thẻ dữ liệu trực tiếp (Direct API Cards) */
+.customCardWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 280px;
+}
+
+.cardLoading, .cardError {
+  padding: 12px;
+  border-radius: 10px;
   font-size: 12px;
-  color: #64748b;
-  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardLoading {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.cardError {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.loadingSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.attendanceCard, .allowanceCard, .missionCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cardHeaderTitle {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1e293b;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.quickPromptsSection {
+.cardSourceBadge {
+  font-size: 10px;
+  font-weight: 600;
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.cardSourceBadgeAllowance {
+  font-size: 10px;
+  font-weight: 600;
+  background: #ecfdf5;
+  color: #059669;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.cardStatsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cardStatItem {
+  background: #f8fafc;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+}
+
+.cardStatLabel {
+  display: block;
+  font-size: 10.5px;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.cardStatValue {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.cardFooterLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 6px;
+  font-size: 11.5px;
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: none;
+  border-top: 1px dashed #f1f5f9;
+}
+
+.cardFooterLink:hover {
+  text-decoration: underline;
+}
+
+/* Allowance Card Styles */
+.allowanceAmountRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.allowanceAmountLabel {
+  font-size: 12px;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.allowanceAmountValue {
+  font-size: 16px;
+  color: #047857;
+  font-weight: 800;
+}
+
+.allowanceMetaList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statusPill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.pillPaid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.pillApproved {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.pillDraft {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.cardEmptyNotice {
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Mission Card Styles */
+.kanbanCountsStrip {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.kanbanCountBadge, .kanbanCountBadgeActive, .kanbanCountBadgeDone {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.kanbanCountBadge {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.kanbanCountBadgeActive {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.kanbanCountBadgeDone {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* 7. Typing Indicator Bubble */
+.typingIndicatorBubble {
+  align-self: flex-start;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #64748b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.typingDot {
+  width: 5px;
+  height: 5px;
+  background: #6366f1;
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+.typingDot:nth-child(2) { animation-delay: 0.2s; }
+.typingDot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* 8. Action Chips Shortcut Strip (Sticky trên khung nhập) */
+.actionChipsBar {
   padding: 8px 12px;
   background: #ffffff;
   border-top: 1px solid #f1f5f9;
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
 
-.quickPromptBtn {
+.actionChipsBar::-webkit-scrollbar {
+  display: none;
+}
+
+.actionChip {
+  white-space: nowrap;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.18s ease;
+}
+
+.actionChip:hover:not(:disabled) {
+  background: #e0e7ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+  transform: translateY(-1px);
+}
+
+.actionChipPrompt {
   white-space: nowrap;
   background: #f1f5f9;
   color: #475569;
   border: 1px solid #e2e8f0;
-  padding: 4px 10px;
-  border-radius: 14px;
-  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 11.5px;
   cursor: pointer;
-  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.18s ease;
 }
 
-.quickPromptBtn:hover {
+.actionChipPrompt:hover:not(:disabled) {
   background: #e2e8f0;
   color: #1e293b;
 }
 
+/* 9. Input Section */
 .inputSection {
-  padding: 12px;
+  padding: 12px 14px;
   background: #ffffff;
   border-top: 1px solid #e2e8f0;
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 .chatInput {
   flex: 1;
-  padding: 8px 12px;
+  padding: 9px 14px;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 13.5px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  background: #f8fafc;
 }
 
 .chatInput:focus {
-  border-color: #4f46e5;
+  background: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 .sendBtn {
-  background: #4f46e5;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: #ffffff;
   border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 13px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
 }
 
 .sendBtn:hover:not(:disabled) {
-  background: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
 }
 
 .sendBtn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Modal xác nhận xóa lịch sử chat (thay thế window.confirm) */
+/* 10. Modal xác nhận xóa lịch sử */
 .confirmModalOverlay {
   position: absolute;
   top: 0;
@@ -227,41 +735,22 @@
   right: 0;
   bottom: 0;
   background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10001;
   padding: 16px;
-  animation: fadeIn 0.15s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .confirmModalCard {
   background: #ffffff;
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 20px 18px;
   width: 100%;
-  max-width: 290px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  max-width: 300px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
   text-align: center;
-  border: 1px solid #f1f5f9;
-  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.92);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
 }
 
 .confirmIconWrap {
@@ -269,66 +758,55 @@
   height: 44px;
   border-radius: 50%;
   background: #fee2e2;
-  color: #dc2626;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  margin: 0 auto 12px;
+  margin: 0 auto 10px auto;
 }
 
 .confirmTitle {
+  font-weight: 700;
   font-size: 15px;
-  font-weight: 600;
-  color: #0f172a;
+  color: #1e293b;
   margin-bottom: 6px;
 }
 
 .confirmDesc {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #64748b;
-  line-height: 1.45;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
+  line-height: 1.5;
 }
 
 .confirmActions {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 8px;
+}
+
+.cancelConfirmBtn, .deleteConfirmBtn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
 }
 
 .cancelConfirmBtn {
-  flex: 1;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
   background: #f1f5f9;
   color: #475569;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .cancelConfirmBtn:hover {
   background: #e2e8f0;
-  color: #1e293b;
 }
 
 .deleteConfirmBtn {
-  flex: 1;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  background: #dc2626;
+  background: #ef4444;
   color: #ffffff;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35);
-  transition: all 0.15s ease;
 }
 
 .deleteConfirmBtn:hover {
-  background: #b91c1c;
+  background: #dc2626;
 }

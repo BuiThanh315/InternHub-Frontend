@@ -1,16 +1,50 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import {
+  Sparkles,
+  Send,
+  Trash2,
+  X,
+  Minimize2,
+  Maximize2,
+  Copy,
+  Check,
+  CalendarCheck,
+  Banknote,
+  Kanban,
+  FileQuestion,
+  ExternalLink,
+  ChevronRight,
+  ShieldAlert,
+} from 'lucide-react';
 import { aiService, type ChatMessage, type QuickPromptsData } from '../../services/aiService';
+import { attendanceService } from '../../services/attendanceService';
+import { allowanceService, type AllowanceRecord } from '../../services/allowanceService';
+import { missionService } from '../../services/missionService';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './InternChatWidget.module.css';
 
+interface CustomCardPayload {
+  type: 'ATTENDANCE_SUMMARY' | 'ALLOWANCE_INFO' | 'MISSION_TASKS';
+  data?: any;
+  loading?: boolean;
+  error?: string;
+}
+
+interface EnhancedChatMessage extends ChatMessage {
+  customCard?: CustomCardPayload;
+}
+
 export const InternChatWidget: React.FC = () => {
-  const { role, hasPermission } = useAuth();
+  const { role, hasPermission, user } = useAuth();
   // Trợ lý ảo FAQ này dành riêng cho Thực Tập Sinh (INTERN / USER)
   const isInternRole = role === 'INTERN' || role === 'USER';
   const canUseChat = isInternRole && (isInternRole || hasPermission('AI_CHAT_USE'));
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const [sessionId, setSessionId] = useState<string>(() => {
     const saved = sessionStorage.getItem('ai_chat_session_id');
     if (saved) return saved;
@@ -19,7 +53,7 @@ export const InternChatWidget: React.FC = () => {
     return newId;
   });
 
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+  const [messages, setMessages] = useState<EnhancedChatMessage[]>(() => {
     try {
       const saved = sessionStorage.getItem('ai_chat_messages');
       return saved ? JSON.parse(saved) : [];
@@ -53,11 +87,221 @@ export const InternChatWidget: React.FC = () => {
     }
   }, [isOpen, quickPrompts.length]);
 
+  const handleCopyText = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // ==========================================
+  // GIAI ĐOẠN B: Direct API Data Cards (Zero LLM)
+  // ==========================================
+
+  // 1. Tra cứu Chuyên cần & Điểm danh trực tiếp từ AttendanceService
+  const handleTriggerAttendanceCard = async () => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const cardMsgId = crypto.randomUUID();
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Tin nhắn người dùng
+    const userMsg: EnhancedChatMessage = {
+      id: crypto.randomUUID(),
+      sender: 'user',
+      text: 'Xem tóm tắt bảng công tháng này',
+      timestamp: timeStr,
+    };
+
+    // Placeholder thẻ bot
+    const botMsg: EnhancedChatMessage = {
+      id: cardMsgId,
+      sender: 'assistant',
+      text: '',
+      timestamp: timeStr,
+      customCard: {
+        type: 'ATTENDANCE_SUMMARY',
+        loading: true,
+      },
+    };
+
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+
+    try {
+      const summary = await attendanceService.getMyAttendanceHistory({
+        month: currentMonth,
+        year: currentYear,
+      });
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === cardMsgId
+            ? {
+                ...m,
+                customCard: {
+                  type: 'ATTENDANCE_SUMMARY',
+                  loading: false,
+                  data: {
+                    month: currentMonth,
+                    year: currentYear,
+                    summary,
+                  },
+                },
+              }
+            : m
+        )
+      );
+    } catch (err: any) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === cardMsgId
+            ? {
+                ...m,
+                customCard: {
+                  type: 'ATTENDANCE_SUMMARY',
+                  loading: false,
+                  error: err?.message || 'Không thể tải dữ liệu bảng công từ hệ thống chấm công.',
+                },
+              }
+            : m
+        )
+      );
+    }
+  };
+
+  // 2. Tra cứu Phụ cấp trực tiếp từ AllowanceService (Zero LLM)
+  const handleTriggerAllowanceCard = async () => {
+    const cardMsgId = crypto.randomUUID();
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const userMsg: EnhancedChatMessage = {
+      id: crypto.randomUUID(),
+      sender: 'user',
+      text: 'Kiểm tra tình trạng phụ cấp thực tập',
+      timestamp: timeStr,
+    };
+
+    const botMsg: EnhancedChatMessage = {
+      id: cardMsgId,
+      sender: 'assistant',
+      text: '',
+      timestamp: timeStr,
+      customCard: {
+        type: 'ALLOWANCE_INFO',
+        loading: true,
+      },
+    };
+
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+
+    try {
+      const records: AllowanceRecord[] = await allowanceService.getMyHistory();
+      const latestRecord = records && records.length > 0 ? records[0] : null;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === cardMsgId
+            ? {
+                ...m,
+                customCard: {
+                  type: 'ALLOWANCE_INFO',
+                  loading: false,
+                  data: {
+                    record: latestRecord,
+                    totalRecords: records.length,
+                  },
+                },
+              }
+            : m
+        )
+      );
+    } catch (err: any) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === cardMsgId
+            ? {
+                ...m,
+                customCard: {
+                  type: 'ALLOWANCE_INFO',
+                  loading: false,
+                  error: err?.message || 'Không thể kết nối đến Dịch vụ Phụ cấp (AllowanceService).',
+                },
+              }
+            : m
+        )
+      );
+    }
+  };
+
+  // 3. Tra cứu Nhiệm vụ Kanban trực tiếp từ MissionService
+  const handleTriggerMissionCard = async () => {
+    const cardMsgId = crypto.randomUUID();
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const userMsg: EnhancedChatMessage = {
+      id: crypto.randomUUID(),
+      sender: 'user',
+      text: 'Xem nhiệm vụ thực tập đang thực hiện',
+      timestamp: timeStr,
+    };
+
+    const botMsg: EnhancedChatMessage = {
+      id: cardMsgId,
+      sender: 'assistant',
+      text: '',
+      timestamp: timeStr,
+      customCard: {
+        type: 'MISSION_TASKS',
+        loading: true,
+      },
+    };
+
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+
+    try {
+      const kanban = await missionService.getMyMissionKanban();
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === cardMsgId
+            ? {
+                ...m,
+                customCard: {
+                  type: 'MISSION_TASKS',
+                  loading: false,
+                  data: kanban,
+                },
+              }
+            : m
+        )
+      );
+    } catch (err: any) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === cardMsgId
+            ? {
+                ...m,
+                customCard: {
+                  type: 'MISSION_TASKS',
+                  loading: false,
+                  error: err?.message || 'Không thể tải bảng nhiệm vụ cá nhân.',
+                },
+              }
+            : m
+        )
+      );
+    }
+  };
+
+  // ==========================================
+  // GIAI ĐOẠN A: Chat Hỏi Đáp AI thông thường (Streaming SSE)
+  // ==========================================
   const handleSend = async (textToSend?: string) => {
     const text = (textToSend || inputMsg).trim();
     if (!text || isLoading) return;
 
-    const userMsg: ChatMessage = {
+    const userMsg: EnhancedChatMessage = {
       id: crypto.randomUUID(),
       sender: 'user',
       text,
@@ -71,7 +315,6 @@ export const InternChatWidget: React.FC = () => {
     const botMsgId = crypto.randomUUID();
     const botMsgTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Tạo sẵn message placeholder rỗng cho bot
     setMessages((prev) => [
       ...prev,
       {
@@ -150,174 +393,487 @@ export const InternChatWidget: React.FC = () => {
     sessionStorage.removeItem('ai_chat_messages');
   };
 
-  const handleClearSession = () => {
-    setShowConfirmModal(true);
-  };
-
   if (!canUseChat) {
     return null;
   }
 
   return (
     <>
-      {/* Floating Button góc phải */}
-      <button
-        className={styles.floatingBtn}
-        onClick={() => setIsOpen((prev) => !prev)}
-        title="Trợ lý ảo AI InternHub"
-      >
-        💬
-      </button>
+      {/* 1. Nút mở Chat Floating Button Glassmorphism */}
+      {!isOpen && (
+        <button
+          className={styles.floatingBtn}
+          onClick={() => {
+            setIsOpen(true);
+            setIsMinimized(false);
+          }}
+          title="Trợ lý ảo AI Thực tập sinh"
+          aria-label="Mở trợ lý ảo AI InternHub"
+        >
+          <div className={styles.floatingIconWrapper}>
+            <Sparkles size={24} className={styles.sparkleIcon} />
+          </div>
+          <span className={styles.floatingStatusDot} />
+        </button>
+      )}
 
-      {/* Cửa sổ chat */}
+      {/* 2. Cửa sổ Chatbot chính */}
       {isOpen && (
-        <div className={styles.chatWidgetContainer}>
+        <div
+          className={`${styles.chatWidgetContainer} ${
+            isMinimized ? styles.minimizedContainer : ''
+          }`}
+        >
+          {/* Header */}
           <div className={styles.header}>
-            <div className={styles.headerTitle}>
-              <span>🤖</span> Trợ lý ảo InternHub
+            <div className={styles.headerTitleWrap}>
+              <div className={styles.avatarGlow}>
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <div className={styles.headerTitle}>Trợ lý Thực tập sinh</div>
+                <div className={styles.headerStatusText}>
+                  <span className={styles.onlineDot} /> AI & Dữ liệu trực tuyến
+                </div>
+              </div>
             </div>
+
             <div className={styles.headerActions}>
               <button
                 className={styles.actionBtn}
-                onClick={handleClearSession}
-                title="Xóa đoạn chat"
+                onClick={() => setIsMinimized((prev) => !prev)}
+                title={isMinimized ? 'Mở rộng' : 'Thu nhỏ'}
               >
-                Xóa
+                {isMinimized ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
+              </button>
+              <button
+                className={styles.actionBtn}
+                onClick={() => setShowConfirmModal(true)}
+                title="Làm mới cuộc trò chuyện"
+              >
+                <Trash2 size={14} />
               </button>
               <button
                 className={styles.actionBtn}
                 onClick={() => setIsOpen(false)}
-                title="Đóng"
+                title="Đóng widget"
               >
-                ✕
+                <X size={14} />
               </button>
             </div>
           </div>
 
-          <div className={styles.warningBanner}>
-            ⚠️ Không nhập mật khẩu, CCCD, số tài khoản hay thông tin nhạy cảm.
-          </div>
-
-          <div className={styles.messagesList}>
-            {messages.length === 0 && (
-              <div style={{ color: '#64748b', textAlign: 'center', margin: 'auto', fontSize: '13px' }}>
-                👋 Xin chào! Mình là Trợ lý ảo của InternHub.<br />
-                Hãy hỏi mình về nội quy điểm danh, quy chế nghỉ phép hoặc tiền phụ cấp nhé!
+          {!isMinimized && (
+            <>
+              {/* Security Privacy Warning Strip */}
+              <div className={styles.warningBanner}>
+                <ShieldAlert size={12} className={styles.shieldIcon} />
+                <span>Không nhập CCCD, mật khẩu hoặc dữ liệu nhạy cảm.</span>
               </div>
-            )}
 
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`${styles.messageBubble} ${
-                  m.sender === 'user' ? styles.userBubble : styles.assistantBubble
-                }`}
-              >
-                {/* Render an toàn: User text dạng thuần, Assistant dạng Markdown không cho phép HTML raw */}
-                {m.sender === 'user' ? (
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
-                ) : (
-                  <div className={styles.markdownBody}>
-                    <ReactMarkdown
-                      components={{
-                        a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
-                          <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#4f46e5', textDecoration: 'underline' }}>
-                            {children}
-                          </a>
-                        ),
-                        img: () => null, // Chặn hoàn toàn render thẻ img để chống SSRF / Image tracking
-                      }}
-                    >
-                      {m.text}
-                    </ReactMarkdown>
+              {/* Message List */}
+              <div className={styles.messagesList}>
+                {messages.length === 0 && (
+                  <div className={styles.welcomeHero}>
+                    <div className={styles.welcomeHeroIcon}>
+                      <Sparkles size={28} />
+                    </div>
+                    <h4 className={styles.welcomeHeroTitle}>
+                      Xin chào {user?.fullName ? `${user.fullName}` : 'bạn'}! 👋
+                    </h4>
+                    <p className={styles.welcomeHeroDesc}>
+                      Mình là Trợ lý ảo thực tập. Bạn có thể hỏi mình về nội quy, quy chế thực tập hoặc bấm nhanh các thẻ dữ liệu trực tiếp bên dưới:
+                    </p>
+
+                    {/* Action Chips Shortcut Cards */}
+                    <div className={styles.heroShortcutGrid}>
+                      <button
+                        className={styles.heroShortcutBtn}
+                        onClick={handleTriggerAttendanceCard}
+                      >
+                        <CalendarCheck size={16} className={styles.shortcutIconAttendance} />
+                        <span>Xem bảng công tháng này</span>
+                      </button>
+
+                      <button
+                        className={styles.heroShortcutBtn}
+                        onClick={handleTriggerAllowanceCard}
+                      >
+                        <Banknote size={16} className={styles.shortcutIconAllowance} />
+                        <span>Tra cứu phụ cấp thực tập</span>
+                      </button>
+
+                      <button
+                        className={styles.heroShortcutBtn}
+                        onClick={handleTriggerMissionCard}
+                      >
+                        <Kanban size={16} className={styles.shortcutIconMission} />
+                        <span>Nhiệm vụ Kanban cá nhân</span>
+                      </button>
+                    </div>
                   </div>
                 )}
-                {m.sender === 'assistant' && (
-                  <div className={styles.disclaimer}>
-                    * Thông tin chỉ mang tính tham khảo, vui lòng liên hệ HR/Mentor để xác nhận.
+
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`${styles.messageBubble} ${
+                      m.sender === 'user' ? styles.userBubble : styles.assistantBubble
+                    }`}
+                  >
+                    {/* Render Nội dung người dùng */}
+                    {m.sender === 'user' && (
+                      <div className={styles.userText}>{m.text}</div>
+                    )}
+
+                    {/* Render Thẻ dữ liệu trực tiếp (Direct API Cards) */}
+                    {m.customCard && (
+                      <div className={styles.customCardWrapper}>
+                        {m.customCard.loading && (
+                          <div className={styles.cardLoading}>
+                            <div className={styles.loadingSpinner} />
+                            <span>Đang truy xuất dữ liệu từ máy chủ...</span>
+                          </div>
+                        )}
+
+                        {m.customCard.error && (
+                          <div className={styles.cardError}>
+                            <ShieldAlert size={16} />
+                            <span>{m.customCard.error}</span>
+                          </div>
+                        )}
+
+                        {/* 1. THẺ ĐIỂM DANH & CHUYÊN CẦN */}
+                        {!m.customCard.loading &&
+                          !m.customCard.error &&
+                          m.customCard.type === 'ATTENDANCE_SUMMARY' && (
+                            <div className={styles.attendanceCard}>
+                              <div className={styles.cardHeader}>
+                                <div className={styles.cardHeaderTitle}>
+                                  <CalendarCheck size={16} color="#3b82f6" />
+                                  <span>
+                                    Bảng Công Tháng {m.customCard.data?.month}/{m.customCard.data?.year}
+                                  </span>
+                                </div>
+                                <span className={styles.cardSourceBadge}>API Trực tiếp</span>
+                              </div>
+
+                              <div className={styles.cardStatsGrid}>
+                                <div className={styles.cardStatItem}>
+                                  <span className={styles.cardStatLabel}>Ngày làm thực tế</span>
+                                  <span className={styles.cardStatValue}>
+                                    {m.customCard.data?.summary?.actualWorkDays ?? 0} ngày
+                                  </span>
+                                </div>
+                                <div className={styles.cardStatItem}>
+                                  <span className={styles.cardStatLabel}>Muộn / Sớm</span>
+                                  <span className={styles.cardStatValue}>
+                                    {m.customCard.data?.summary?.lateCount ?? 0}m •{' '}
+                                    {m.customCard.data?.summary?.earlyLeaveCount ?? 0}s
+                                  </span>
+                                </div>
+                                <div className={styles.cardStatItem}>
+                                  <span className={styles.cardStatLabel}>Nghỉ có phép</span>
+                                  <span className={styles.cardStatValue}>
+                                    {m.customCard.data?.summary?.approvedLeaveDays ?? 0} ngày
+                                  </span>
+                                </div>
+                                <div className={styles.cardStatItem}>
+                                  <span className={styles.cardStatLabel}>Tỷ lệ chuyên cần</span>
+                                  <span
+                                    className={styles.cardStatValue}
+                                    style={{ color: '#10b981', fontWeight: 700 }}
+                                  >
+                                    {(m.customCard.data?.summary?.diligenceRate ?? 0).toFixed(1)}%
+                                  </span>
+                                </div>
+                              </div>
+
+                              <a href="/intern/attendance" className={styles.cardFooterLink}>
+                                <span>Xem lịch sử chi tiết & check-in</span>
+                                <ExternalLink size={12} />
+                              </a>
+                            </div>
+                          )}
+
+                        {/* 2. THẺ PHỤ CẤP THỰC TẬP (AllowanceService) */}
+                        {!m.customCard.loading &&
+                          !m.customCard.error &&
+                          m.customCard.type === 'ALLOWANCE_INFO' && (
+                            <div className={styles.allowanceCard}>
+                              <div className={styles.cardHeader}>
+                                <div className={styles.cardHeaderTitle}>
+                                  <Banknote size={16} color="#10b981" />
+                                  <span>
+                                    Phụ Cấp Kỳ {m.customCard.data?.record?.periodMonth || 'Hiện tại'}
+                                  </span>
+                                </div>
+                                <span className={styles.cardSourceBadgeAllowance}>
+                                  Nguồn: AllowanceService
+                                </span>
+                              </div>
+
+                              {m.customCard.data?.record ? (
+                                <>
+                                  <div className={styles.allowanceAmountRow}>
+                                    <span className={styles.allowanceAmountLabel}>Thực nhận:</span>
+                                    <span className={styles.allowanceAmountValue}>
+                                      {new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND',
+                                      }).format(
+                                        m.customCard.data.record.actualAmount ??
+                                          m.customCard.data.record.baseAllowance ??
+                                          0
+                                      )}
+                                    </span>
+                                  </div>
+
+                                  <div className={styles.allowanceMetaList}>
+                                    <div className={styles.metaRow}>
+                                      <span>Trạng thái:</span>
+                                      <span
+                                        className={`${styles.statusPill} ${
+                                          m.customCard.data.record.status === 'PAID'
+                                            ? styles.pillPaid
+                                            : m.customCard.data.record.status === 'APPROVED'
+                                              ? styles.pillApproved
+                                              : styles.pillDraft
+                                        }`}
+                                      >
+                                        {m.customCard.data.record.status === 'PAID'
+                                          ? 'Đã chi trả'
+                                          : m.customCard.data.record.status === 'APPROVED'
+                                            ? 'Đã phê duyệt'
+                                            : 'Đang lập dự thảo'}
+                                      </span>
+                                    </div>
+                                    <div className={styles.metaRow}>
+                                      <span>Số ngày công tính lương:</span>
+                                      <strong>
+                                        {m.customCard.data.record.actualWorkingDays ?? 0} /{' '}
+                                        {m.customCard.data.record.standardWorkingDays ?? 22} ngày
+                                      </strong>
+                                    </div>
+                                    {m.customCard.data.record.paymentDate && (
+                                      <div className={styles.metaRow}>
+                                        <span>Ngày chuyển khoản:</span>
+                                        <strong>{m.customCard.data.record.paymentDate}</strong>
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className={styles.cardEmptyNotice}>
+                                  Chưa phát sinh bản ghi phụ cấp nào cho kỳ này.
+                                </div>
+                              )}
+
+                              <a href="/intern/allowance-history" className={styles.cardFooterLink}>
+                                <span>Xem lịch sử phiếu phụ cấp</span>
+                                <ExternalLink size={12} />
+                              </a>
+                            </div>
+                          )}
+
+                        {/* 3. THẺ NHIỆM VỤ KANBAN */}
+                        {!m.customCard.loading &&
+                          !m.customCard.error &&
+                          m.customCard.type === 'MISSION_TASKS' && (
+                            <div className={styles.missionCard}>
+                              <div className={styles.cardHeader}>
+                                <div className={styles.cardHeaderTitle}>
+                                  <Kanban size={16} color="#8b5cf6" />
+                                  <span>Bảng Nhiệm Vụ Kanban</span>
+                                </div>
+                                <span className={styles.cardSourceBadge}>MissionService</span>
+                              </div>
+
+                              <div className={styles.kanbanCountsStrip}>
+                                <span className={styles.kanbanCountBadge}>
+                                  Chưa làm: {m.customCard.data?.todoItems?.length ?? 0}
+                                </span>
+                                <span className={styles.kanbanCountBadgeActive}>
+                                  Đang làm: {m.customCard.data?.inProgressItems?.length ?? 0}
+                                </span>
+                                <span className={styles.kanbanCountBadgeDone}>
+                                  Hoàn thành: {m.customCard.data?.completedItems?.length ?? 0}
+                                </span>
+                              </div>
+
+                              <a href="/intern/missions" className={styles.cardFooterLink}>
+                                <span>Mở bảng kéo thả nhiệm vụ đầy đủ</span>
+                                <ChevronRight size={14} />
+                              </a>
+                            </div>
+                          )}
+                      </div>
+                    )}
+
+                    {/* Render Nội dung Markdown của Trợ lý AI */}
+                    {m.sender === 'assistant' && m.text && (
+                      <div className={styles.assistantContent}>
+                        <div className={styles.markdownBody}>
+                          <ReactMarkdown
+                            components={{
+                              a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={styles.markdownLink}
+                                >
+                                  {children}
+                                </a>
+                              ),
+                              img: () => null, // Chặn hoàn toàn ảnh raw để chống SSRF
+                            }}
+                          >
+                            {m.text}
+                          </ReactMarkdown>
+                        </div>
+
+                        {/* Action Bar dưới phản hồi */}
+                        <div className={styles.bubbleActionRow}>
+                          <button
+                            className={styles.bubbleCopyBtn}
+                            onClick={() => handleCopyText(m.id, m.text)}
+                            title="Sao chép nội dung"
+                          >
+                            {copiedId === m.id ? (
+                              <>
+                                <Check size={12} color="#10b981" /> <span>Đã sao chép</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={12} /> <span>Sao chép</span>
+                              </>
+                            )}
+                          </button>
+                          <span className={styles.disclaimerText}>
+                            * Thông tin AI chỉ mang tính tham khảo
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className={styles.typingIndicatorBubble}>
+                    <div className={styles.typingDot} />
+                    <div className={styles.typingDot} />
+                    <div className={styles.typingDot} />
+                    <span>AI đang phản hồi...</span>
                   </div>
                 )}
-              </div>
-            ))}
 
-            {isLoading && (!messages[messages.length - 1] || messages[messages.length - 1].sender !== 'assistant' || !messages[messages.length - 1].text) && (
-              <div className={styles.typingIndicator}>
-                <span>🤖 AI đang soạn câu trả lời...</span>
+                <div ref={messagesEndRef} />
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
 
-          {/* Quick Prompts */}
-          {quickPrompts.length > 0 && (
-            <div className={styles.quickPromptsSection}>
-              {quickPrompts.map((prompt, idx) => (
+              {/* Action Chips Shortcut Strip (Sticky trên khung nhập) */}
+              <div className={styles.actionChipsBar}>
                 <button
-                  key={idx}
-                  className={styles.quickPromptBtn}
-                  onClick={() => handleSend(prompt)}
+                  className={styles.actionChip}
+                  onClick={handleTriggerAttendanceCard}
                   disabled={isLoading}
                 >
-                  {prompt}
+                  <CalendarCheck size={13} />
+                  <span>Bảng công</span>
                 </button>
-              ))}
-            </div>
-          )}
-
-          {/* Input Chat */}
-          <div className={styles.inputSection}>
-            <input
-              type="text"
-              className={styles.chatInput}
-              placeholder="Nhập câu hỏi..."
-              value={inputMsg}
-              onChange={(e) => setInputMsg(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSend();
-              }}
-              disabled={isLoading}
-            />
-            <button
-              className={styles.sendBtn}
-              onClick={() => handleSend()}
-              disabled={isLoading || !inputMsg.trim()}
-            >
-              Gửi
-            </button>
-          </div>
-
-          {/* Modal xác nhận xóa lịch sử chat tùy biến thay thế window.confirm */}
-          {showConfirmModal && (
-            <div className={styles.confirmModalOverlay} onClick={() => setShowConfirmModal(false)}>
-              <div className={styles.confirmModalCard} onClick={(e) => e.stopPropagation()}>
-                <div className={styles.confirmIconWrap}>
-                  🗑️
-                </div>
-                <div className={styles.confirmTitle}>Xóa lịch sử đoạn chat?</div>
-                <div className={styles.confirmDesc}>
-                  Toàn bộ nội dung hội thoại hiện tại sẽ được làm mới và xóa khỏi bộ nhớ phiên.
-                </div>
-                <div className={styles.confirmActions}>
+                <button
+                  className={styles.actionChip}
+                  onClick={handleTriggerAllowanceCard}
+                  disabled={isLoading}
+                >
+                  <Banknote size={13} />
+                  <span>Phụ cấp</span>
+                </button>
+                <button
+                  className={styles.actionChip}
+                  onClick={handleTriggerMissionCard}
+                  disabled={isLoading}
+                >
+                  <Kanban size={13} />
+                  <span>Nhiệm vụ</span>
+                </button>
+                {quickPrompts.slice(0, 3).map((prompt, idx) => (
                   <button
-                    type="button"
-                    className={styles.cancelConfirmBtn}
-                    onClick={() => setShowConfirmModal(false)}
+                    key={idx}
+                    className={styles.actionChipPrompt}
+                    onClick={() => handleSend(prompt)}
+                    disabled={isLoading}
                   >
-                    Hủy
+                    <FileQuestion size={13} />
+                    <span>{prompt}</span>
                   </button>
-                  <button
-                    type="button"
-                    className={styles.deleteConfirmBtn}
-                    onClick={executeClearSession}
-                  >
-                    Xác nhận xóa
-                  </button>
-                </div>
+                ))}
               </div>
-            </div>
+
+              {/* Input Section */}
+              <div className={styles.inputSection}>
+                <input
+                  type="text"
+                  className={styles.chatInput}
+                  placeholder="Nhập câu hỏi hoặc yêu cầu..."
+                  value={inputMsg}
+                  onChange={(e) => setInputMsg(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSend();
+                  }}
+                  disabled={isLoading}
+                />
+                <button
+                  className={styles.sendBtn}
+                  onClick={() => handleSend()}
+                  disabled={isLoading || !inputMsg.trim()}
+                  title="Gửi câu hỏi"
+                >
+                  <Send size={15} />
+                </button>
+              </div>
+
+              {/* Confirm Clear Modal */}
+              {showConfirmModal && (
+                <div
+                  className={styles.confirmModalOverlay}
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  <div
+                    className={styles.confirmModalCard}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className={styles.confirmIconWrap}>
+                      <Trash2 size={24} color="#ef4444" />
+                    </div>
+                    <div className={styles.confirmTitle}>Làm mới phiên trò chuyện?</div>
+                    <div className={styles.confirmDesc}>
+                      Toàn bộ tin nhắn trao đổi trong phiên hiện tại sẽ được dọn dẹp sạch sẽ.
+                    </div>
+                    <div className={styles.confirmActions}>
+                      <button
+                        type="button"
+                        className={styles.cancelConfirmBtn}
+                        onClick={() => setShowConfirmModal(false)}
+                      >
+                        Giữ lại
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deleteConfirmBtn}
+                        onClick={executeClearSession}
+                      >
+                        Xác nhận xóa
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
     </>
   );
 };
+export default InternChatWidget;
