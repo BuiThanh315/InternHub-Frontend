@@ -16,6 +16,7 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldAlert,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { aiService, type ChatMessage, type QuickPromptsData } from '../../services/aiService';
 import { attendanceService } from '../../services/attendanceService';
@@ -33,6 +34,7 @@ interface CustomCardPayload {
 
 interface EnhancedChatMessage extends ChatMessage {
   customCard?: CustomCardPayload;
+  suggestedPrompts?: string[];
 }
 
 export const InternChatWidget: React.FC = () => {
@@ -334,12 +336,37 @@ export const InternChatWidget: React.FC = () => {
         {
           onChunk: (chunk: string) => {
             accumulatedText += chunk;
+            // Issue 1: Giấu đoạn tag SUGGESTIONS ngay khi đang stream để không lộ ra màn hình
+            const tagIndex = accumulatedText.indexOf('<<<SUGGESTIONS:');
+            const displayText = tagIndex !== -1 ? accumulatedText.substring(0, tagIndex).trimEnd() : accumulatedText;
             setMessages((prev) =>
-              prev.map((m) => (m.id === botMsgId ? { ...m, text: accumulatedText } : m))
+              prev.map((m) => (m.id === botMsgId ? { ...m, text: displayText } : m))
             );
           },
           onDone: () => {
             setIsLoading(false);
+            // Dọn tag SUGGESTIONS và bóc tách gợi ý câu hỏi nếu có
+            setMessages((prev) =>
+              prev.map((m) => {
+                if (m.id === botMsgId) {
+                  const match = m.text.match(/<<<SUGGESTIONS:\s*(\[.*?\])\s*>>>/s);
+                  if (match) {
+                    try {
+                      const parsed = JSON.parse(match[1]);
+                      const cleanText = m.text.replace(/<<<SUGGESTIONS:\s*(.*?)\s*>>>/s, '').trim();
+                      return {
+                        ...m,
+                        text: cleanText,
+                        suggestedPrompts: Array.isArray(parsed) ? parsed : [],
+                      };
+                    } catch {
+                      return m;
+                    }
+                  }
+                }
+                return m;
+              })
+            );
           },
           onError: (err: Error) => {
             console.error('Lỗi stream chat:', err);
@@ -360,9 +387,25 @@ export const InternChatWidget: React.FC = () => {
       try {
         const responseData = await aiService.chat(sessionId, text);
         if (responseData && responseData.reply) {
+          let cardPayload: CustomCardPayload | undefined = undefined;
+          if (responseData.customCard) {
+            const cc = responseData.customCard;
+            cardPayload = {
+              type: cc.cardType,
+              loading: false,
+              data: cc.payload,
+            };
+          }
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === botMsgId ? { ...m, text: responseData.reply } : m
+              m.id === botMsgId
+                ? {
+                    ...m,
+                    text: responseData.reply,
+                    customCard: cardPayload,
+                    suggestedPrompts: responseData.suggestedPrompts || [],
+                  }
+                : m
             )
           );
         } else {
@@ -530,17 +573,22 @@ export const InternChatWidget: React.FC = () => {
                   </div>
                 )}
 
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`${styles.messageBubble} ${
-                      m.sender === 'user' ? styles.userBubble : styles.assistantBubble
-                    }`}
-                  >
-                    {/* Render Nội dung người dùng */}
-                    {m.sender === 'user' && (
-                      <div className={styles.userText}>{m.text}</div>
-                    )}
+                {messages.map((m, index) => {
+                  const isLatestBotMessage =
+                    m.sender === 'assistant' &&
+                    !messages.slice(index + 1).some((nextMsg) => nextMsg.sender === 'assistant');
+
+                  return (
+                    <div
+                      key={m.id}
+                      className={`${styles.messageBubble} ${
+                        m.sender === 'user' ? styles.userBubble : styles.assistantBubble
+                      }`}
+                    >
+                      {/* Render Nội dung người dùng */}
+                      {m.sender === 'user' && (
+                        <div className={styles.userText}>{m.text}</div>
+                      )}
 
                     {/* Render Thẻ dữ liệu trực tiếp (Direct API Cards) */}
                     {m.customCard && (
@@ -770,10 +818,33 @@ export const InternChatWidget: React.FC = () => {
                             * Thông tin AI chỉ mang tính tham khảo
                           </span>
                         </div>
+
+                        {/* Contextual Suggested Prompts (Gợi ý câu hỏi tiếp theo - Chỉ hiển thị ở tin nhắn bot mới nhất) */}
+                        {isLatestBotMessage && m.suggestedPrompts && m.suggestedPrompts.length > 0 && (
+                          <div className={styles.contextualSuggestionsContainer}>
+                            <div className={styles.contextualSuggestionsLabel}>
+                              <MessageSquarePlus size={13} />
+                              <span>Gợi ý câu hỏi tiếp theo:</span>
+                            </div>
+                            <div className={styles.contextualSuggestionsList}>
+                              {m.suggestedPrompts.map((prompt, idx) => (
+                                <button
+                                  key={idx}
+                                  className={styles.contextualSuggestionChip}
+                                  onClick={() => handleSend(prompt)}
+                                  disabled={isLoading}
+                                >
+                                  <span>{prompt}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
 
                 {isLoading && (
                   <div className={styles.typingIndicatorBubble}>

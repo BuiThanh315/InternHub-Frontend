@@ -16,6 +16,12 @@ export interface ChatMessage {
 
 export interface ChatResponseData {
   reply: string;
+  customCard?: {
+    cardType: 'ATTENDANCE_SUMMARY' | 'ALLOWANCE_INFO' | 'MISSION_TASKS';
+    title: string;
+    payload: any;
+  };
+  suggestedPrompts?: string[];
 }
 
 export interface QuickPromptsData {
