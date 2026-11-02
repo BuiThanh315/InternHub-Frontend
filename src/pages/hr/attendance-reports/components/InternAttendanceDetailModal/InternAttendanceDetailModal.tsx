@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarDays, AlertCircle, ExternalLink } from 'lucide-react';
+import { CalendarDays, AlertCircle, ExternalLink, Lock } from 'lucide-react';
 import { Modal, Button, Skeleton } from '../../../../../components/common';
 
 import { formatDate } from '../../../../../utils/formatters';
@@ -98,20 +98,40 @@ export const InternAttendanceDetailModal: React.FC<InternAttendanceDetailModalPr
         )}
       </div>
 
-      {data?.summary && (
-        <div className={styles.headerBadges}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {data?.isAllowanceLocked && (
           <span
             className={styles.dayBadge}
             style={{
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              color: 'var(--primary)',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              color: 'var(--danger, #ef4444)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
               fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
             }}
+            title="Kỳ phụ cấp tháng này đã được duyệt hoặc chi trả. Bảng công đã bị khóa sổ chống chỉnh sửa."
           >
-            {getDiligenceStatusTitle(data.summary.diligenceStatus)} ({data.summary.diligenceRate.toFixed(1)}%)
+            <Lock size={12} /> ĐÃ KHÓA SỔ PHỤ CẤP
           </span>
-        </div>
-      )}
+        )}
+
+        {data?.summary && (
+          <div className={styles.headerBadges}>
+            <span
+              className={styles.dayBadge}
+              style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                color: 'var(--primary)',
+                fontWeight: 700,
+              }}
+            >
+              {getDiligenceStatusTitle(data.summary.diligenceStatus)} ({data.summary.diligenceRate.toFixed(1)}%)
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -149,6 +169,29 @@ export const InternAttendanceDetailModal: React.FC<InternAttendanceDetailModalPr
 
         {!isLoading && !error && data && (
           <>
+            {data.isAllowanceLocked && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '12px 16px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  borderRadius: '8px',
+                  color: 'var(--danger, #ef4444)',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  marginBottom: '16px',
+                }}
+              >
+                <Lock size={18} style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>Bảng công đã khóa sổ:</strong> Kỳ phụ cấp tháng {data.month}/{data.year} của thực tập sinh đã được HR/Ban quản lý phê duyệt hoặc chi trả. Mọi thao tác bổ sung hoặc điều chỉnh dữ liệu chấm công trong kỳ này đã bị vô hiệu hóa để bảo đảm tính toàn vẹn tài chính.
+                </span>
+              </div>
+            )}
+
             {/* 1. Mini Summary Strip */}
             <div className={styles.miniStrip}>
               <div className={styles.miniStripItem}>
